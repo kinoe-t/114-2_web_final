@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1分鐘極速種花挑戰！</title>
+    <style>
+        :root {
+            --bg-color: #f7f9fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --primary-flower: #ff6b6b;
+            --water-color: #4cc9f0;
+            --fertilizer-color: #b5e2fa;
+            --bug-color: #49a078;
+            --snow-color: #a2d2ff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            color: #ff4757;
+            margin-top: 0;
+            font-size: 1.8rem;
+        }
+
+        /* 倒數計時與狀態 */
+        .header-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            background: #ffeaa7;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .timer { color: #d63031; }
+
+        .status-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            background: #f1f2f6;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .status-value {
+            display: block;
+            font-size: 1.3rem;
+            margin-top: 5px;
+        }
+
+        /* 進度條 */
+        .progress-container {
+            background-color: #dfe6e9;
+            border-radius: 10px;
+            height: 24px;
+            width: 100%;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #ff7675, #fd79a8);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 0;
+            left: 0;
+            line-height: 24px;
+            font-size: 0.9rem;
+            color: #2d3436;
+            font-weight: bold;
+        }
+
+        /* 遊戲舞台區 */
+        .garden-plot {
+            height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+            background: linear-gradient(180deg, #e0f7fa 0%, #fff 100%);
+            border-radius: 15px;
+            border: 2px solid #eee;
+            transition: background 0.5s ease;
+        }
+
+        /* 暴風雪環境濾鏡 */
+        .blizzard-active {
+            background: linear-gradient(180deg, #b2bec3 0%, #dfe6e9 100%) !important;
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            100% { transform: translate(-1px, -2px) rotate(-0.5deg); }
+        }
+
+        .plant-display {
+            font-size: 85px;
+            line-height: 1;
+            z-index: 2;
+            transition: transform 0.2s;
+        }
+
+        .pot {
+            font-size: 55px;
+            line-height: 0.8;
+            margin-top: -10px;
+            z-index: 1;
+        }
+
+        /* 危機事件覆蓋層 */
+        .event-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        /* 毛毛蟲按鈕 */
+        .caterpillar {
+            position: absolute;
+            font-size: 40px;
+            cursor: pointer;
+            pointer-events: auto;
+            animation: crawl 1s infinite alternate;
+        }
+
+        @keyframes crawl {
+            0% { transform: scale(1) translateX(0); }
+            100% { transform: scale(1.1) translateX(5px); }
+        }
+
+        /* 控制區 */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.1s ease;
+        }
+
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #ccc !important; color: #888 !important; cursor: not-allowed; }
+
+        .btn-water { background: #74b9ff; color: white; }
+        .btn-fertilize { background: #a29bfe; color: white; }
+        
+        /* 特殊防禦按鈕 */
+        .btn-defense {
+            grid-column: span 2;
+            background: #ff7675;
+            color: white;
+            display: none; /* 只有暴風雪才出現 */
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.9; }
+            50% { opacity: 1; background: #d63031; }
+            100% { opacity: 0.9; }
+        }
+
+        .btn-reset {
+            grid-column: span 2;
+            background: #2ed573;
+            color: white;
+            display: none;
+            font-size: 1.2rem;
+        }
+
+        /* 訊息欄 */
+        .message-box {
+            min-height: 45px;
+            color: #2d3436;
+            font-weight: bold;
+            background: #f1f2f6;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        /* 飄字特效 */
+        .float-text {
+            position: absolute;
+            font-weight: bold;
+            font-size: 1.2rem;
+            animation: floatUp 0.8s ease-out forwards;
+            pointer-events: none;
+            z-index: 10;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>⏱️ 60秒種花大挑戰！</h1>
+        
+        <div class="header-status">
+            <div>剩餘時間: <span id="timer" class="timer">60</span> 秒</div>
+            <div id="game-status-text">倒數計時中...</div>
+        </div>
+
+        <div class="status-panel">
+            <div class="status-item" style="border-bottom: 4px solid #74b9ff;">
+                水分 💧 <span id="water-val" class="status-value">50%</span>
+            </div>
+            <div class="status-item" style="border-bottom: 4px solid #a29bfe;">
+                養分 🧫 <span id="fert-val" class="status-value">50%</span>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div id="progress-bar" class="progress-bar"></div>
+            <div id="progress-text" class="progress-text">0% (種子)</div>
+        </div>
+
+        <div class="garden-plot" id="garden-plot">
+            <div class="event-overlay" id="event-overlay"></div>
+            <div id="plant" class="plant-display">🫘</div>
+            <div class="pot">🪴</div>
+        </div>
+
+        <div class="controls">
+            <button id="btn-water" class="btn-water" onclick="waterPlant()">💧 澆水 (+20)</button>
+            <button id="btn-fertilize" class="btn-fertilize" onclick="fertilizePlant()">🧫 施肥 (+20)</button>
+            <button id="btn-defense" class="btn-defense" onclick="clearBlizzard()">🔥 生火抗暴風雪！</button>
+            <button id="btn-reset" class="btn-reset" onclick="resetGame()">🔄 再挑戰一次</button>
+        </div>
+
+        <div id="msg" class="message-box">
+            遊戲開始！請維持水分與養分在 40%~80% 之間，讓花朵快速成長！注意隨時發生的災害！
+        </div>
+    </div>
+
+    <script>
+        // 遊戲核心變數
+        let timeLeft = 60;
+        let growth = 0;
+        let water = 50;
+        let fertilizer = 50;
+        let isCaterpillarPresent = false;
+        let isBlizzardPresent = false;
+        let gameActive = true;
+        let stage = 0;
+
+        const STAGES = [
+            { min: 0,  emoji: '🫘', name: '種子' },
+            { min: 25, emoji: '🌱', name: '發芽' },
+            { min: 50, emoji: '🌿', name: '幼苗' },
+            { min: 75, emoji: '🌹', name: '花苞' },
+            { min: 100, emoji: '💐', name: '璀璨盛開！' }
+        ];
+
+        // 綁定 DOM
+        const timerEl = document.getElementById('timer');
+        const waterEl = document.getElementById('water-val');
+        const fertEl = document.getElementById('fert-val');
+        const barEl = document.getElementById('progress-bar');
+        const barTextEl = document.getElementById('progress-text');
+        const plantEl = document.getElementById('plant');
+        const gardenPlot = document.getElementById('garden-plot');
+        const overlay = document.getElementById('event-overlay');
+        const msgEl = document.getElementById('msg');
+        
+        const btnWater = document.getElementById('btn-water');
+        const btnFertilize = document.getElementById('btn-fertilize');
+        const btnDefense = document.getElementById('btn-defense');
+        const btnReset = document.getElementById('btn-reset');
+
+        // 主遊戲迴圈（每秒執行一次）
+        const gameLoop = setInterval(() => {
+            if (!gameActive) return;
+
+            // 1. 時間倒數
+            timeLeft--;
+            timerEl.innerText = timeLeft;
+
+            // 2. 資源自然消耗 (速度加快)
+            water = Math.max(0, water - 4);
+            fertilizer = Math.max(0, fertilizer - 3);
+
+            // 3. 計算成長/扣血邏輯
+            let growthChange = 0;
+
+            if (isCaterpillarPresent) {
+                growthChange = -4; // 有蟲咬：扣血
+                msgEl.innerText = "🐛 警告：毛毛蟲正在瘋狂啃食植物！快點擊毛毛蟲消滅它！";
+                plantEl.style.filter = "sepia(50%)";
+            } else if (isBlizzardPresent) {
+                growthChange = -5; // 暴風雪：大扣血
+                msgEl.innerText = "❄️ 暴雪來襲：植物快被凍死了！快按下方的「生火」按鈕抵禦！";
+                plantEl.style.filter = "hue-rotate(180deg) brightness(1.2)";
+            } else {
+                // 正常環境檢查
+                plantEl.style.filter = "none";
+                if (water >= 40 && water <= 80 && fertilizer >= 40 && fertilizer <= 80) {
+                    growthChange = 4; // 完美狀態：高速成長
+                    msgEl.innerText = "✨ 完美的土壤與水分！花朵正在極速生長中！";
+                } else if (water === 0 || fertilizer === 0 || water === 100 || fertilizer === 100) {
+                    growthChange = -3; // 極端差（乾枯或淹死）
+                    msgEl.innerText = "⚠️ 土壤狀況極度惡劣（太乾、太濕或缺乏養分），植物正在枯萎！";
+                    plantEl.style.filter = "grayscale(50%)";
+                } else {
+                    growthChange = 1.5; // 普通狀態
+                    msgEl.innerText = "花朵正在緩慢成長。試著調整水與肥料到最佳區間（40%~80%）！";
+                }
+            }
+
+            // 更新成長度
+            growth = Math.min(100, Math.max(0, growth + growthChange));
+            updateUI();
+
+            // 4. 隨機事件觸發機制 (時間在 10 ~ 50 秒之間機率觸發)
+            if (timeLeft < 55 && timeLeft > 5 && !isCaterpillarPresent && !isBlizzardPresent) {
+                let rand = Math.random();
+                if (rand < 0.15) {
+                    spawnCaterpillar();
+                } else if (rand > 0.88) {
+                    triggerBlizzard();
+                }
+            }
+
+            // 5. 檢查勝負條件
+            checkGameEnd();
+
+        }, 1000);
+
+        // 更新畫面 UI
+        function updateUI() {
+            waterEl.innerText = `${water}%`;
+            fertEl.innerText = `${fertilizer}%`;
+            barEl.style.width = `${growth}%`;
+
+            // 判斷階段
+            let curStage = 0;
+            for (let i = 0; i < STAGES.length; i++) {
+                if (growth >= STAGES[i].min) curStage = i;
+            }
+
+            if (curStage !== stage) {
+                stage = curStage;
+                plantEl.innerText = STAGES[stage].emoji;
+            }
+            barTextEl.innerText = `${Math.floor(growth)}% (${STAGES[stage].name})`;
+        }
+
+        // 澆水與施肥
+        function waterPlant() {
+            if (!gameActive) return;
+            water = Math.min(100, water + 20);
+            createFloatText('💧 水分+20', '#4cc9f0');
+            updateUI();
+        }
+
+        function fertilizePlant() {
+            if (!gameActive) return;
+            fertilizer = Math.min(100, fertilizer + 20);
+            createFloatText('🧫 養分+20', '#a29bfe');
+            updateUI();
+        }
+
+        // 事件：毛毛蟲
+        function spawnCaterpillar() {
+            isCaterpillarPresent = true;
+            const bug = document.createElement('div');
+            bug.className = 'caterpillar';
+            bug.id = 'caterpillar-bug';
+            bug.innerText = '🐛';
+            
+            // 讓蟲隨機出現在花盆周圍
+            bug.style.bottom = `${Math.floor(Math.random() * 40) + 60}px`;
+            bug.style.left = `${Math.floor(Math.random() * 60) + 35}%`;
+            
+            bug.onclick = function() {
+                isCaterpillarPresent = false;
+                bug.remove();
+                createFloatText('💥 已消滅害蟲！', '#49a078');
+                msgEl.innerText = "你一巴掌拍死了毛毛蟲！危機解除！";
+                plantEl.style.filter = "none";
+            };
+
+            overlay.appendChild(bug);
+        }
+
+        // 事件：暴風雪
+        function triggerBlizzard() {
+            isBlizzardPresent = true;
+            gardenPlot.classList.add('blizzard-active');
+            btnDefense.style.display = 'block'; // 顯示防禦按鈕
+        }
+
+        function clearBlizzard() {
+            if (!isBlizzardPresent) return;
+            isBlizzardPresent = false;
+            gardenPlot.classList.remove('blizzard-active');
+            btnDefense.style.display = 'none';
+            createFloatText('🔥 溫暖火焰', '#ff7675');
+            msgEl.innerText = "你升起了營火，融化冰雪！植物暖和起來了！";
+            plantEl.style.filter = "none";
+        }
+
+        // 檢查結束遊戲
+        function checkGameEnd() {
+            // 條件一：時間到
+            if (timeLeft <= 0) {
+                endGame(growth >= 80 ? 'win' : 'lose_time');
+            }
+            // 條件二：提早達到100%盛開
+            if (growth >= 100) {
+                endGame('win');
+            }
+            // 條件三：植物枯死到 0% (且時間還沒到，被倒扣完)
+            if (growth <= 0 && timeLeft < 55 && (water === 0 || fertilizer === 0 || isCaterpillarPresent || isBlizzardPresent)) {
+                endGame('lose_dead');
+            }
+        }
+
+        // 結束遊戲處理
+        function endGame(result) {
+            gameActive = false;
+            clearInterval(gameLoop);
+            
+            // 清除畫面上可能殘留的蟲
+            overlay.innerHTML = '';
+            gardenPlot.classList.remove('blizzard-active');
+            btnDefense.style.display = 'none';
+            
+            btnWater.disabled = true;
+            btnFertilize.disabled = true;
+            btnReset.style.display = 'block';
+
+            if (result === 'win') {
+                plantEl.innerText = '💐';
+                document.getElementById('game-status-text').innerText = '🎉 挑戰成功！';
+                msgEl.innerHTML = `<span style="color: #2ed573; font-size: 1.1rem;">【大獲全勝】你在限定時間內成功培育出完美盛開的花朵!</span>`;
+            } else if (result === 'lose_dead') {
+                plantEl.innerText = '🥀';
+                document.getElementById('game-status-text').innerText = '💀 挑戰失敗！';
+                msgEl.innerHTML = `<span style="color: #ff4757; font-size: 1.1rem;">【植物死亡】太遺憾了，花朵在途中因為災害或缺乏照顧而枯死了... 😭</span>`;
+            } else {
+                plantEl.innerText = '🌵';
+                document.getElementById('game-status-text').innerText = '⏱️ 時間到！';
+                msgEl.innerHTML = `<span style="color: #ffa502; font-size: 1.1rem;">【未達盛開】時間到了！但花朵最終只有 ${Math.floor(growth)}% 熟度，未能迎來大盛開！再接再厲！</span>`;
+            }
+        }
+
+        // 飄字
+        function createFloatText(text, color) {
+            const f = document.createElement('div');
+            f.className = 'float-text';
+            f.innerText = text;
+            f.style.color = color;
+            f.style.left = `calc(50% + ${(Math.random() * 60 - 30)}px)`;
+            f.style.bottom = '120px';
+            gardenPlot.appendChild(f);
+            setTimeout(() => f.remove(), 800);
+        }
+
+        // 重開
+        function resetGame() {
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>

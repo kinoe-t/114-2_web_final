@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>搶票練習模擬器</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a26;
+    --border: #2a2a40;
+    --accent: #ff3c3c;
+    --accent2: #ff8c00;
+    --gold: #ffd700;
+    --text: #e8e8f0;
+    --muted: #6666aa;
+    --success: #00e676;
+    --danger: #ff1744;
+    --glow: rgba(255,60,60,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans TC', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Animated scanlines */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.15) 2px,
+      rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Noise overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    opacity: 0.3;
+    z-index: 9998;
+  }
+
+  /* Header */
+  header {
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(10,10,15,0.95);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-shadow: 0 0 20px var(--glow);
+  }
+
+  .logo span { color: var(--text); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+    animation: pulse 1s infinite;
+    display: inline-block;
+    margin-right: 6px;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Main layout */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+
+  /* Event Card */
+  .event-banner {
+    position: relative;
+    background: linear-gradient(135deg, #1a0a2e 0%, #0d0d1a 50%, #1a0808 100%);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 36px 40px;
+    margin-bottom: 32px;
+    overflow: hidden;
+  }
+
+  .event-banner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--gold));
+  }
+
+  .event-meta {
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .event-poster {
+    width: 110px;
+    height: 140px;
+    background: linear-gradient(145deg, #2a1040, #400020);
+    border-radius: 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    flex-shrink: 0;
+    border: 1px solid rgba(255,60,60,0.3);
+    box-shadow: 0 0 30px rgba(255,60,60,0.15);
+  }
+
+  .event-info { flex: 1; }
+
+  .event-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 3px 10px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  .event-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.6rem;
+    line-height: 1;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .event-subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+  }
+
+  .event-details {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .event-detail-item {
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  .event-detail-item strong {
+    display: block;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  /* Countdown */
+  .countdown-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .countdown-section.active-sale {
+    border-color: var(--success);
+    box-shadow: 0 0 30px rgba(0,230,118,0.1);
+  }
+
+  .countdown-label {
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .countdown-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cd-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .cd-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.5rem;
+    line-height: 1;
+    color: var(--accent);
+    text-shadow: 0 0 20px var(--glow);
+    background: var(--surface2);
+    padding: 8px 18px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    min-width: 80px;
+    text-align: center;
+    transition: color 0.1s;
+  }
+
+  .cd-label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-top: 6px;
+    text-transform: uppercase;
+  }
+
+  .cd-sep {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    color: var(--border);
+    margin-bottom: 20px;
+  }
+
+  /* Ticket section */
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 3px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  .ticket-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .ticket-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 22px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    user-select: none;
+  }
+
+  .ticket-card:hover {
+    border-color: rgba(255,60,60,0.5);
+    background: var(--surface2);
+    transform: translateY(-1px);
+  }
+
+  .ticket-card.selected {
+    border-color: var(--accent);
+    background: rgba(255,60,60,0.08);
+    box-shadow: 0 0 20px rgba(255,60,60,0.2);
+  }
+
+  .ticket-card.sold-out {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .ticket-name {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+
+  .ticket-price {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+
+  .ticket-price span {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .ticket-avail {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .ticket-avail.low { color: var(--accent2); font-weight: 700; }
+  .ticket-avail.critical { color: var(--danger); font-weight: 700; }
+
+  .ticket-badge {
+    position: absolute;
+    top: 12px; right: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 2px;
+    text-transform: uppercase;
+  }
+
+  .badge-hot { background: var(--accent); color: #fff; }
+  .badge-vip { background: var(--gold); color: #000; }
+  .badge-soldout { background: var(--border); color: var(--muted); }
+
+  /* Qty + submit */
+  .purchase-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+
+  .qty-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .qty-label { font-size: 0.85rem; color: var(--muted); }
+
+  .qty-btn {
+    width: 36px; height: 36px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s;
+  }
+
+  .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .qty-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    min-width: 40px;
+    text-align: center;
+    color: var(--text);
+  }
+
+  .captcha-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .captcha-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 8px 16px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 6px;
+    color: var(--accent2);
+    min-width: 120px;
+    text-align: center;
+    position: relative;
+    user-select: none;
+    filter: url('#distort');
+  }
+
+  .captcha-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 1rem;
+    width: 120px;
+    outline: none;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: border-color 0.15s;
+  }
+
+  .captcha-input:focus { border-color: var(--accent); }
+
+  .captcha-refresh {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 4px;
+    transition: color 0.15s;
+  }
+  .captcha-refresh:hover { color: var(--text); }
+
+  /* THE BIG BUTTON */
+  .rush-btn {
+    flex: 1;
+    min-width: 200px;
+    padding: 16px 28px;
+    background: var(--accent);
+    border: none;
+    border-radius: 3px;
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 4px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.1s;
+    text-transform: uppercase;
+    box-shadow: 0 4px 20px rgba(255,60,60,0.4);
+  }
+
+  .rush-btn:hover {
+    background: #ff5555;
+    box-shadow: 0 6px 30px rgba(255,60,60,0.6);
+    transform: translateY(-1px);
+  }
+
+  .rush-btn:active { transform: translateY(1px); }
+
+  .rush-btn:disabled {
+    background: var(--border);
+    color: var(--muted);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .rush-btn .btn-ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    transform: scale(0);
+    animation: ripple 0.5s linear;
+    pointer-events: none;
+  }
+
+  @keyframes ripple {
+    to { transform: scale(4); opacity: 0; }
+  }
+
+  /* Queue & Result */
+  .queue-area {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px 28px;
+    margin-bottom: 28px;
+    min-height: 120px;
+    display: none;
+  }
+
+  .queue-area.visible { display: block; }
+
+  .queue-bar-wrap {
+    background: var(--surface2);
+    border-radius: 2px;
+    height: 8px;
+    margin: 14px 0;
+    overflow: hidden;
+  }
+
+  .queue-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.3s;
+    box-shadow: 0 0 10px rgba(255,60,60,0.5);
+  }
+
+  .queue-status { font-size: 0.85rem; color: var(--muted); }
+
+  .queue-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    color: var(--accent2);
+    letter-spacing: 2px;
+  }
+
+  /* Log */
+  .log-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .log-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .log-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    color: var(--muted);
+  }
+
+  .log-clear {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: all 0.15s;
+  }
+
+  .log-clear:hover { border-color: var(--accent); color: var(--accent); }
+
+  .log-body {
+    height: 200px;
+    overflow-y: auto;
+    padding: 12px 20px;
+    font-size: 0.8rem;
+    font-family: monospace;
+    line-height: 1.8;
+  }
+
+  .log-body::-webkit-scrollbar { width: 4px; }
+  .log-body::-webkit-scrollbar-track { background: var(--surface2); }
+  .log-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .log-line { display: flex; gap: 12px; align-items: baseline; }
+  .log-time { color: var(--border); min-width: 60px; flex-shrink: 0; }
+  .log-msg { color: var(--muted); }
+  .log-msg.ok { color: var(--success); }
+  .log-msg.err { color: var(--danger); }
+  .log-msg.warn { color: var(--accent2); }
+  .log-msg.info { color: #4488ff; }
+
+  /* Stats bar */
+  .stats-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .stat-card {
+    flex: 1;
+    min-width: 140px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 20px;
+    text-align: center;
+  }
+
+  .stat-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--text);
+    letter-spacing: 1px;
+  }
+
+  .stat-lbl {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* Overlay Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 40px 48px;
+    max-width: 480px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes modalIn {
+    from { transform: scale(0.85) translateY(20px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .modal-icon { font-size: 4rem; margin-bottom: 16px; }
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    letter-spacing: 3px;
+    margin-bottom: 12px;
+  }
+  .modal-title.success { color: var(--success); text-shadow: 0 0 20px rgba(0,230,118,0.5); }
+  .modal-title.fail { color: var(--danger); }
+
+  .modal-body { color: var(--muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 24px; }
+
+  .modal-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 3px;
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 3px;
+    padding: 12px 32px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .modal-btn:hover { background: #ff5555; }
+
+  .ticket-stub {
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: 3px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    text-align: left;
+  }
+
+  .stub-row { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px; }
+  .stub-key { color: var(--muted); }
+  .stub-val { color: var(--text); font-weight: 700; }
+  .stub-code {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-align: center;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+  }
+
+  /* Shake animation */
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-8px)}
+    40%{transform:translateX(8px)}
+    60%{transform:translateX(-6px)}
+    80%{transform:translateX(6px)}
+  }
+
+  .shake { animation: shake 0.4s ease; }
+
+  /* Flash */
+  @keyframes flash {
+    0%,100%{opacity:1}
+    50%{opacity:0.3}
+  }
+
+  .cd-num.tick { animation: flash 0.1s; }
+
+  /* Settings panel */
+  .settings-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+  }
+
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+  }
+
+  .setting-item label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .setting-item select,
+  .setting-item input[type=range] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    padding: 8px 12px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .setting-item select:focus,
+  .setting-item input[type=range]:focus { border-color: var(--accent); }
+
+  .setting-val {
+    font-size: 0.8rem;
+    color: var(--accent2);
+    text-align: right;
+    margin-top: 4px;
+  }
+
+  /* Collapsible */
+  .collapse-toggle {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 0.78rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: color 0.15s;
+  }
+  .collapse-toggle:hover { color: var(--text); }
+  .collapse-toggle .arrow { transition: transform 0.2s; }
+  .collapse-toggle.open .arrow { transform: rotate(90deg); }
+
+  /* Timer ring */
+  .rush-speed-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+
+  .speed-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    header { padding: 16px 20px; }
+    main { padding: 24px 14px; }
+    .event-meta { flex-direction: column; gap: 16px; }
+    .event-title { font-size: 2rem; }
+    .cd-num { font-size: 2.5rem; min-width: 60px; }
+    .purchase-bar { flex-direction: column; align-items: stretch; }
+    .captcha-group { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<svg style="position:absolute;width:0;height:0">
+  <defs>
+    <filter id="distort">
+      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="2" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<header>
+  <div class="logo">RUSH<span>TICKET</span></div>
+  <div class="header-right">
+    <span><span class="live-dot"></span>練習模式</span>
+    <span id="serverTime">--:--:--</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- Event Banner -->
+  <div class="event-banner">
+    <div class="event-meta">
+      <div class="event-poster">🎤<br><small style="font-size:0.5rem;color:var(--muted);font-family:'Noto Sans TC'">LIVE</small></div>
+      <div class="event-info">
+        <div class="event-tag">演唱會 · 限定場次</div>
+        <div class="event-title">NEON ECLIPSE<br>WORLD TOUR 2026</div>
+        <div class="event-subtitle">台北大巨蛋 · 場館容納 40,000 人</div>
+        <div class="event-details">
+          <div class="event-detail-item"><strong>2026 / 08 / 15</strong>演出日期</div>
+          <div class="event-detail-item"><strong>19:00</strong>開演時間</div>
+          <div class="event-detail-item"><strong>台北市</strong>地點</div>
+          <div class="event-detail-item" id="totalTicketsInfo"><strong>計算中…</strong>票券總量</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val" id="statAttempts">0</div>
+      <div class="stat-lbl">搶票次數</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="statSuccess">0</div>
+      <div class="stat-lbl">成功次數</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="statRate">0%</div>
+      <div class="stat-lbl">成功率</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="statBestTime">--</div>
+      <div class="stat-lbl">最快反應 (秒)</div>
+    </div>
+  </div>
+
+  <!-- Countdown -->
+  <div class="countdown-section" id="countdownSection">
+    <div class="countdown-label" id="countdownLabel">售票倒數計時</div>
+    <div class="countdown-display">
+      <div class="cd-unit"><div class="cd-num" id="cdH">00</div><div class="cd-label">時</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><div class="cd-num" id="cdM">00</div><div class="cd-label">分</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><div class="cd-num" id="cdS">00</div><div class="cd-label">秒</div></div>
+    </div>
+    <div class="rush-speed-indicator" id="speedIndicator" style="justify-content:center;margin-top:16px;display:none">
+      <span class="speed-dot" id="speedDot"></span>
+      <span id="speedText"></span>
+    </div>
+  </div>
+
+  <!-- Difficulty Settings -->
+  <button class="collapse-toggle open" id="settingsToggle" onclick="toggleSettings()">
+    <span class="arrow">▶</span> 練習難度設定
+  </button>
+  <div id="settingsPanel" class="settings-panel">
+    <div class="settings-grid">
+      <div class="setting-item">
+        <label>難度模式</label>
+        <select id="diffMode" onchange="applyDifficulty()">
+          <option value="easy">簡單 — 慢速開放</option>
+          <option value="normal" selected>普通 — 模擬熱門演唱會</option>
+          <option value="hard">困難 — 超搶手票</option>
+          <option value="extreme">地獄 — Taylor Swift 等級</option>
+        </select>
+      </div>
+      <div class="setting-item">
+        <label>票源總量</label>
+        <input type="number" id="ticketPool" min="10" max="9999" value="200" oninput="updateTicketPool()" style="background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:8px 12px;font-family:'Noto Sans TC',sans-serif;font-size:0.85rem;outline:none;width:100%;transition:border-color 0.15s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+        <div class="setting-val" id="ticketPoolVal">200 張</div>
+      </div>
+      <div class="setting-item">
+        <label>排隊競爭人數</label>
+        <input type="range" id="competitorCount" min="500" max="50000" step="500" value="10000" oninput="updateCompetitors()">
+        <div class="setting-val" id="competitorVal">10,000 人</div>
+      </div>
+      <div class="setting-item">
+        <label>驗證碼難度</label>
+        <select id="captchaDiff">
+          <option value="easy">簡單 (4碼數字)</option>
+          <option value="normal" selected>普通 (6碼英數)</option>
+          <option value="hard">困難 (8碼含符號概念)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ticket Types -->
+  <div class="section-title">選擇票種</div>
+  <div class="ticket-grid" id="ticketGrid"></div>
+
+  <!-- Purchase Bar -->
+  <div class="purchase-bar">
+    <div class="qty-control">
+      <div class="qty-label">張數</div>
+      <button class="qty-btn" onclick="changeQty(-1)">−</button>
+      <div class="qty-val" id="qtyVal">1</div>
+      <button class="qty-btn" onclick="changeQty(1)">+</button>
+    </div>
+
+    <div class="captcha-group">
+      <div class="captcha-box" id="captchaDisplay">------</div>
+      <button class="captcha-refresh" onclick="refreshCaptcha()" title="換一題">↻</button>
+      <input class="captcha-input" type="text" id="captchaInput" placeholder="輸入驗證碼" maxlength="8" autocomplete="off" onkeydown="if(event.key==='Enter')doRush()">
+    </div>
+
+    <button class="rush-btn" id="rushBtn" onclick="doRush()" disabled>
+      立即搶票
+    </button>
+  </div>
+
+  <!-- Queue Area -->
+  <div class="queue-area" id="queueArea">
+    <div class="section-title">排隊進度</div>
+    <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:4px">你的排隊號碼</div>
+        <div class="queue-number" id="queueNumber">#-----</div>
+      </div>
+      <div style="flex:1">
+        <div class="queue-status" id="queueStatus">等待中…</div>
+        <div class="queue-bar-wrap">
+          <div class="queue-bar" id="queueBar" style="width:0%"></div>
+        </div>
+        <div class="queue-status" id="queueEta"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="log-section">
+    <div class="log-header">
+      <div class="log-title">系統日誌</div>
+      <button class="log-clear" onclick="clearLog()">清除</button>
+    </div>
+    <div class="log-body" id="logBody"></div>
+  </div>
+
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalBox">
+    <div class="modal-icon" id="modalIcon"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div id="ticketStub"></div>
+    <button class="modal-btn" onclick="closeModal()">確認</button>
+  </div>
+</div>
+
+<script>
+// =============================================
+//  RUSH TICKET SIMULATOR — Core Logic
+// =============================================
+
+const TICKET_TYPES = [
+  { id: 'vip', name: 'VIP 貴賓席', price: 12000, badge: 'vip', badgeText: 'VIP' },
+  { id: 'a', name: 'A 區搖滾區', price: 5800, badge: 'hot', badgeText: '熱門' },
+  { id: 'b', name: 'B 區一般席', price: 3600, badge: null },
+  { id: 'c', name: 'C 區後排席', price: 2200, badge: null },
+  { id: 'earlybird', name: '早鳥優惠席', price: 1800, badge: null },
+];
+
+let state = {
+  saleOpen: false,
+  ticketAvail: {},
+  selectedType: null,
+  qty: 1,
+  attempts: 0,
+  successes: 0,
+  bestTime: null,
+  captchaAnswer: '',
+  countdownTarget: null,
+  queueActive: false,
+  competitors: 10000,
+  totalPool: 200,
+  rushStartTime: null,
+};
+
+let settings = {
+  diff: 'normal',
+  captchaDiff: 'normal',
+};
+
+// Difficulty presets
+const DIFF_PRESETS = {
+  easy:    { pool: 300, competitors: 2000,  queueMin: 500,   queueMax: 2000,  successRate: 0.85 },
+  normal:  { pool: 200, competitors: 10000, queueMin: 3000,  queueMax: 12000, successRate: 0.55 },
+  hard:    { pool: 80,  competitors: 30000, queueMin: 10000, queueMax: 35000, successRate: 0.3  },
+  extreme: { pool: 30,  competitors: 80000, queueMin: 40000, queueMax: 90000, successRate: 0.1  },
+};
+
+// =============================================
+//  INIT
+// =============================================
+function init() {
+  applyDifficulty();
+  renderTickets();
+  generateCaptcha();
+  startServerClock();
+  scheduleSaleOpen();
+  log('模擬器已啟動', 'info');
+  log('選擇票種並準備搶票', 'info');
+}
+
+function applyDifficulty() {
+  const diff = document.getElementById('diffMode').value;
+  settings.diff = diff;
+  const p = DIFF_PRESETS[diff];
+  
+  document.getElementById('ticketPool').value = p.pool;
+  document.getElementById('competitorCount').value = p.competitors;
+  state.totalPool = p.pool;
+  state.competitors = p.competitors;
+  updateTicketPool();
+  updateCompetitors();
+  initTicketInventory();
+  renderTickets();
+  scheduleSaleOpen();
+}
+
+function initTicketInventory() {
+  const total = state.totalPool;
+  state.ticketAvail = {
+    vip:       Math.max(2, Math.floor(total * 0.05)),
+    a:         Math.floor(total * 0.20),
+    b:         Math.floor(total * 0.35),
+    c:         Math.floor(total * 0.25),
+    earlybird: Math.floor(total * 0.15),
+  };
+  document.getElementById('totalTicketsInfo').querySelector('strong').textContent =
+    total.toLocaleString() + ' 張';
+}
+
+// =============================================
+//  COUNTDOWN & SALE TIMING
+// =============================================
+function scheduleSaleOpen() {
+  // Reset
+  state.saleOpen = false;
+  document.getElementById('rushBtn').disabled = true;
+  document.getElementById('countdownSection').classList.remove('active-sale');
+  document.getElementById('speedIndicator').style.display = 'none';
+
+  const delay = Math.floor(Math.random() * 20 + 10); // 10-29 seconds
+  state.countdownTarget = Date.now() + delay * 1000;
+
+  document.getElementById('countdownLabel').textContent = '售票開放倒數';
+  log(`本場售票將於 ${delay} 秒後開放，請做好準備！`, 'warn');
+  updateCountdown();
+}
+
+function updateCountdown() {
+  if (!state.countdownTarget) return;
+  const now = Date.now();
+  const diff = Math.max(0, state.countdownTarget - now);
+
+  if (diff === 0 && !state.saleOpen) {
+    openSale();
+    return;
+  }
+
+  if (state.saleOpen) return;
+
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+
+  const setNum = (id, val) => {
+    const el = document.getElementById(id);
+    const v = String(val).padStart(2, '0');
+    if (el.textContent !== v) {
+      el.classList.remove('tick');
+      void el.offsetWidth;
+      el.classList.add('tick');
+      el.textContent = v;
+    }
+  };
+  setNum('cdH', h);
+  setNum('cdM', m);
+  setNum('cdS', s);
+
+  setTimeout(updateCountdown, 200);
+}
+
+function openSale() {
+  state.saleOpen = true;
+  initTicketInventory();
+  renderTickets();
+
+  document.getElementById('countdownSection').classList.add('active-sale');
+  document.getElementById('countdownLabel').textContent = '🔥 售票進行中';
+  document.getElementById('cdH').textContent = '00';
+  document.getElementById('cdM').textContent = '00';
+  document.getElementById('cdS').textContent = '00';
+  document.getElementById('cdH').style.color = 'var(--success)';
+  document.getElementById('cdM').style.color = 'var(--success)';
+  document.getElementById('cdS').style.color = 'var(--success)';
+
+  if (state.selectedType) {
+    document.getElementById('rushBtn').disabled = false;
+  }
+
+  // Show speed indicator
+  document.getElementById('speedIndicator').style.display = 'flex';
+  startSaleTimer();
+
+  log('🔥 售票已開放！現在可以搶票！', 'ok');
+
+  // Simulate tickets being depleted
+  simulateCompetitors();
+}
+
+let saleSeconds = 0;
+function startSaleTimer() {
+  saleSeconds = 0;
+  const interval = setInterval(() => {
+    if (!state.saleOpen) { clearInterval(interval); return; }
+    saleSeconds++;
+    updateSpeedIndicator();
+  }, 1000);
+}
+
+function updateSpeedIndicator() {
+  const dot = document.getElementById('speedDot');
+  const txt = document.getElementById('speedText');
+  const p = DIFF_PRESETS[settings.diff];
+  const ratio = state.competitors / 1000;
+
+  if (ratio > 50) {
+    dot.style.background = 'var(--danger)';
+    dot.style.boxShadow = '0 0 8px var(--danger)';
+    txt.textContent = `極度擁擠 — ${state.competitors.toLocaleString()} 人同時搶票`;
+  } else if (ratio > 15) {
+    dot.style.background = 'var(--accent2)';
+    dot.style.boxShadow = '0 0 8px var(--accent2)';
+    txt.textContent = `非常熱門 — ${state.competitors.toLocaleString()} 人競爭`;
+  } else {
+    dot.style.background = 'var(--success)';
+    dot.style.boxShadow = '0 0 8px var(--success)';
+    txt.textContent = `一般流量 — ${state.competitors.toLocaleString()} 人在線`;
+  }
+}
+
+function simulateCompetitors() {
+  if (!state.saleOpen) return;
+
+  const depletionSpeed = DIFF_PRESETS[settings.diff].successRate;
+  const tick = () => {
+    if (!state.saleOpen) return;
+
+    // Each second, competitors buy some tickets
+    const bought = Math.floor(Math.random() * 3 * depletionSpeed * 3);
+    let depleted = 0;
+    const types = ['a', 'b', 'c', 'earlybird', 'vip'];
+    for (let i = 0; i < bought && depleted < bought; i++) {
+      const t = types[Math.floor(Math.random() * types.length)];
+      if (state.ticketAvail[t] > 0) {
+        state.ticketAvail[t]--;
+        depleted++;
+      }
+    }
+
+    renderTickets();
+
+    // Check if all sold out
+    const totalLeft = Object.values(state.ticketAvail).reduce((a, b) => a + b, 0);
+    if (totalLeft === 0) {
+      state.saleOpen = false;
+      log('全部票種已售罄！', 'err');
+      document.getElementById('countdownLabel').textContent = '⚠ 票券已售罄';
+      document.getElementById('rushBtn').disabled = true;
+      return;
+    }
+
+    setTimeout(tick, 800 + Math.random() * 1200);
+  };
+  setTimeout(tick, 600);
+}
+
+// =============================================
+//  TICKET RENDERING
+// =============================================
+function renderTickets() {
+  const grid = document.getElementById('ticketGrid');
+  grid.innerHTML = '';
+
+  TICKET_TYPES.forEach(t => {
+    const avail = state.ticketAvail[t.id] ?? 0;
+    const soldOut = avail === 0;
+    const low = avail > 0 && avail <= 5;
+    const critical = avail > 0 && avail <= 2;
+
+    const card = document.createElement('div');
+    card.className = 'ticket-card' +
+      (state.selectedType === t.id ? ' selected' : '') +
+      (soldOut ? ' sold-out' : '');
+    card.onclick = () => selectTicket(t.id);
+
+    let availClass = '';
+    let availText = soldOut ? '已售罄' : `剩餘 ${avail} 張`;
+    if (critical) { availClass = 'critical'; availText = `⚡ 最後 ${avail} 張！`; }
+    else if (low) { availClass = 'low'; availText = `⚠ 僅剩 ${avail} 張`; }
+
+    let badgeHtml = '';
+    if (soldOut) badgeHtml = `<span class="ticket-badge badge-soldout">售罄</span>`;
+    else if (t.badge) badgeHtml = `<span class="ticket-badge badge-${t.badge}">${t.badgeText}</span>`;
+
+    card.innerHTML = `
+      ${badgeHtml}
+      <div class="ticket-name">${t.name}</div>
+      <div class="ticket-price">NT$ ${t.price.toLocaleString()} <span>/ 張</span></div>
+      <div class="ticket-avail ${availClass}">${availText}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function selectTicket(id) {
+  if (!state.saleOpen) {
+    log('售票尚未開放，請等待倒數', 'warn');
+    return;
+  }
+  if (state.ticketAvail[id] === 0) return;
+
+  state.selectedType = id;
+  renderTickets();
+
+  const t = TICKET_TYPES.find(x => x.id === id);
+  document.getElementById('rushBtn').disabled = false;
+  log(`已選擇：${t.name}`, 'info');
+}
+
+// =============================================
+//  CAPTCHA
+// =============================================
+const CHARS_EASY   = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+const CHARS_NORMAL = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+const CHARS_HARD   = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz';
+
+// 確保驗證碼一定同時含有數字和英文字母
+function ensureMixed(code, chars) {
+  const hasNum = /[0-9]/.test(code);
+  const hasAlpha = /[A-Za-z]/.test(code);
+  if (!hasNum) {
+    const pos = Math.floor(Math.random() * code.length);
+    const digits = '0123456789';
+    code = code.slice(0, pos) + digits[Math.floor(Math.random() * digits.length)] + code.slice(pos + 1);
+  }
+  if (!hasAlpha) {
+    const pos = Math.floor(Math.random() * code.length);
+    const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    code = code.slice(0, pos) + letters[Math.floor(Math.random() * letters.length)] + code.slice(pos + 1);
+  }
+  return code;
+}
+
+function generateCaptcha() {
+  const diff = document.getElementById('captchaDiff').value;
+  let len, chars;
+  if (diff === 'easy')   { len = 4; chars = CHARS_EASY; }
+  else if (diff === 'hard') { len = 8; chars = CHARS_HARD; }
+  else { len = 6; chars = CHARS_NORMAL; }
+
+  let code = '';
+  for (let i = 0; i < len; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  code = ensureMixed(code, chars);
+  state.captchaAnswer = code;
+  document.getElementById('captchaDisplay').textContent = code;
+  document.getElementById('captchaInput').value = '';
+}
+
+function refreshCaptcha() {
+  generateCaptcha();
+  log('驗證碼已更換', 'info');
+}
+
+// =============================================
+//  RUSH LOGIC
+// =============================================
+function doRush() {
+  if (!state.saleOpen) { log('售票未開放', 'err'); return; }
+  if (!state.selectedType) { log('請先選擇票種', 'warn'); shake('#rushBtn'); return; }
+
+  const captchaInput = document.getElementById('captchaInput').value.trim().toUpperCase();
+  const expected = state.captchaAnswer.toUpperCase();
+
+  if (captchaInput !== expected) {
+    log('驗證碼錯誤！', 'err');
+    shake('.purchase-bar');
+    generateCaptcha();
+    return;
+  }
+
+  // Check availability
+  const avail = state.ticketAvail[state.selectedType] ?? 0;
+  if (avail < state.qty) {
+    log(`票券不足，目前剩餘 ${avail} 張`, 'err');
+    generateCaptcha();
+    return;
+  }
+
+  state.rushStartTime = Date.now();
+  state.attempts++;
+  updateStats();
+  log(`正在搶票中… 競爭人數: ${state.competitors.toLocaleString()}`, 'warn');
+
+  startQueueSimulation();
+}
+
+function startQueueSimulation() {
+  const queueArea = document.getElementById('queueArea');
+  queueArea.classList.add('visible');
+  document.getElementById('rushBtn').disabled = true;
+
+  const p = DIFF_PRESETS[settings.diff];
+  const myNum = Math.floor(Math.random() * (p.queueMax - p.queueMin) + p.queueMin);
+  const total = myNum + Math.floor(Math.random() * 5000 + 1000);
+
+  document.getElementById('queueNumber').textContent = '#' + myNum.toLocaleString();
+  document.getElementById('queueStatus').textContent = `前方還有 ${myNum.toLocaleString()} 人`;
+  document.getElementById('queueBar').style.width = '0%';
+
+  log(`取得排隊號碼 #${myNum.toLocaleString()}`, 'info');
+
+  // Determine success
+  const success = Math.random() < p.successRate;
+  const duration = success
+    ? 1500 + Math.random() * 2000
+    : 1000 + Math.random() * 1500;
+
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += Math.random() * 8 + 2;
+    if (progress >= 100) progress = 100;
+    document.getElementById('queueBar').style.width = progress + '%';
+
+    const left = Math.max(0, Math.floor(myNum * (1 - progress / 100)));
+    document.getElementById('queueStatus').textContent =
+      left > 0 ? `前方還有 ${left.toLocaleString()} 人` : '即將進入結帳…';
+
+    if (progress >= 100) {
+      clearInterval(interval);
+      setTimeout(() => finishRush(success), 400);
+    }
+  }, duration / 20);
+}
+
+function finishRush(success) {
+  const elapsed = Date.now() - state.rushStartTime;
+  document.getElementById('rushBtn').disabled = false;
+  document.getElementById('queueArea').classList.remove('visible');
+  generateCaptcha();
+
+  if (success && state.ticketAvail[state.selectedType] >= state.qty) {
+    // Success!
+    state.ticketAvail[state.selectedType] -= state.qty;
+    state.successes++;
+    if (!state.bestTime || elapsed < state.bestTime) state.bestTime = elapsed;
+    updateStats();
+    renderTickets();
+    log(`✅ 搶票成功！${getTicketName(state.selectedType)} x${state.qty}  (耗時 ${elapsed}ms)`, 'ok');
+    showSuccessModal();
+  } else {
+    // Fail
+    updateStats();
+    const reasons = [
+      '票券已被搶完，本次未成功',
+      '系統壅塞，交易逾時',
+      '結帳階段失敗，票券釋回',
+      '付款連線中斷',
+      '選位期間票券遭他人搶先',
+    ];
+    const reason = reasons[Math.floor(Math.random() * reasons.length)];
+    log(`❌ 搶票失敗：${reason}`, 'err');
+    showFailModal(reason);
+  }
+}
+
+function getTicketName(id) {
+  return TICKET_TYPES.find(t => t.id === id)?.name ?? id;
+}
+
+// =============================================
+//  STATS
+// =============================================
+function updateStats() {
+  document.getElementById('statAttempts').textContent = state.attempts;
+  document.getElementById('statSuccess').textContent = state.successes;
+  const rate = state.attempts > 0 ? Math.round(state.successes / state.attempts * 100) : 0;
+  document.getElementById('statRate').textContent = rate + '%';
+  document.getElementById('statBestTime').textContent = state.bestTime ? (state.bestTime / 1000).toFixed(1) + 's' : '--';
+}
+
+// =============================================
+//  MODALS
+// =============================================
+function showSuccessModal() {
+  const t = TICKET_TYPES.find(x => x.id === state.selectedType);
+  const orderCode = randomCode(12);
+  const seatZone = ['A', 'B', 'C', 'D', 'E'][Math.floor(Math.random() * 5)];
+  const seatNum = Math.floor(Math.random() * 80 + 1);
+
+  document.getElementById('modalIcon').textContent = '🎉';
+  document.getElementById('modalTitle').className = 'modal-title success';
+  document.getElementById('modalTitle').textContent = '搶票成功！';
+  document.getElementById('modalBody').innerHTML =
+    `恭喜！你已成功搶到 <strong>${t.name}</strong> × <strong>${state.qty}</strong> 張。<br>
+     請在 <strong style="color:var(--accent)">15 分鐘</strong> 內完成付款，否則票券將自動釋出。`;
+
+  document.getElementById('ticketStub').innerHTML = `
+    <div class="ticket-stub">
+      <div class="stub-row"><span class="stub-key">活動</span><span class="stub-val">NEON ECLIPSE WORLD TOUR 2026</span></div>
+      <div class="stub-row"><span class="stub-key">票種</span><span class="stub-val">${t.name}</span></div>
+      <div class="stub-row"><span class="stub-key">數量</span><span class="stub-val">${state.qty} 張</span></div>
+      <div class="stub-row"><span class="stub-key">座位</span><span class="stub-val">${seatZone} 區 第 ${seatNum} 號</span></div>
+      <div class="stub-row"><span class="stub-key">金額</span><span class="stub-val" style="color:var(--gold)">NT$ ${(t.price * state.qty).toLocaleString()}</span></div>
+      <div class="stub-code">${orderCode}</div>
+    </div>`;
+
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function showFailModal(reason) {
+  document.getElementById('modalIcon').textContent = '😢';
+  document.getElementById('modalTitle').className = 'modal-title fail';
+  document.getElementById('modalTitle').textContent = '搶票失敗';
+  document.getElementById('modalBody').textContent = reason + '。\n不要灰心，繼續練習！';
+  document.getElementById('ticketStub').innerHTML = '';
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+// =============================================
+//  QTY CONTROL
+// =============================================
+function changeQty(delta) {
+  state.qty = Math.max(1, Math.min(4, state.qty + delta));
+  document.getElementById('qtyVal').textContent = state.qty;
+}
+
+// =============================================
+//  LOG
+// =============================================
+function log(msg, type = '') {
+  const body = document.getElementById('logBody');
+  const now = new Date();
+  const time = now.toTimeString().slice(0, 8);
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-time">${time}</span><span class="log-msg ${type}">${msg}</span>`;
+  body.appendChild(line);
+  body.scrollTop = body.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('logBody').innerHTML = '';
+}
+
+// =============================================
+//  SERVER CLOCK
+// =============================================
+function startServerClock() {
+  const update = () => {
+    const now = new Date();
+    document.getElementById('serverTime').textContent = now.toTimeString().slice(0, 8);
+  };
+  update();
+  setInterval(update, 1000);
+}
+
+// =============================================
+//  HELPERS
+// =============================================
+function randomCode(len) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+  let s = '';
+  for (let i = 0; i < len; i++) {
+    if (i > 0 && i % 4 === 0) s += '-';
+    s += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return s;
+}
+
+function shake(selector) {
+  const el = typeof selector === 'string'
+    ? document.querySelector(selector)
+    : selector;
+  if (!el) return;
+  el.classList.remove('shake');
+  void el.offsetWidth;
+  el.classList.add('shake');
+}
+
+function toggleSettings() {
+  const btn = document.getElementById('settingsToggle');
+  const panel = document.getElementById('settingsPanel');
+  const isOpen = btn.classList.contains('open');
+  btn.classList.toggle('open', !isOpen);
+  panel.style.display = isOpen ? 'none' : 'block';
+}
+
+function updateTicketPool() {
+  const val = Math.max(10, Math.min(9999, +document.getElementById('ticketPool').value || 200));
+  state.totalPool = val;
+  document.getElementById('ticketPoolVal').textContent = val.toLocaleString() + ' 張';
+  if (state.saleOpen) initTicketInventory();
+}
+
+function updateCompetitors() {
+  const val = +document.getElementById('competitorCount').value;
+  state.competitors = val;
+  document.getElementById('competitorVal').textContent = val.toLocaleString() + ' 人';
+}
+
+// Ripple effect on rush button
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('rushBtn').addEventListener('click', function(e) {
+    const btn = this;
+    const rect = btn.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const ripple = document.createElement('span');
+    ripple.className = 'btn-ripple';
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.cssText = `width:${size}px;height:${size}px;top:${y-size/2}px;left:${x-size/2}px`;
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  });
+
+  init();
+});
+</script>
+</body>
+</html>

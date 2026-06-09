@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎵 音樂時光機 Music Time Machine</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Segoe UI","Microsoft JhengHei",sans-serif;
+}
+
+body{
+    background:linear-gradient(135deg,#141e30,#243b55);
+    min-height:100vh;
+    color:white;
+}
+
+header{
+    text-align:center;
+    padding:40px 20px;
+}
+
+header h1{
+    font-size:3rem;
+    margin-bottom:10px;
+}
+
+header p{
+    color:#ddd;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:20px;
+}
+
+.selector{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+select{
+    padding:12px 20px;
+    border:none;
+    border-radius:10px;
+    font-size:18px;
+    cursor:pointer;
+}
+
+.info-card{
+    background:rgba(255,255,255,0.08);
+    backdrop-filter:blur(12px);
+    border-radius:20px;
+    padding:25px;
+    margin-bottom:30px;
+}
+
+.info-card h2{
+    margin-bottom:10px;
+    color:#ffd166;
+}
+
+.genre{
+    display:inline-block;
+    background:#ff006e;
+    padding:8px 15px;
+    border-radius:20px;
+    margin:5px;
+}
+
+.song-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+}
+
+.song-card{
+    background:rgba(255,255,255,0.1);
+    border-radius:20px;
+    overflow:hidden;
+    transition:0.3s;
+}
+
+.song-card:hover{
+    transform:translateY(-5px);
+}
+
+.song-card img{
+    width:100%;
+    height:250px;
+    object-fit:cover;
+}
+
+.song-content{
+    padding:15px;
+}
+
+.song-content h3{
+    margin-bottom:5px;
+}
+
+.song-content p{
+    color:#ccc;
+    margin-bottom:10px;
+}
+
+.spotify-btn{
+    display:inline-block;
+    text-decoration:none;
+    background:#1DB954;
+    color:white;
+    padding:10px 15px;
+    border-radius:10px;
+    font-weight:bold;
+}
+
+footer{
+    text-align:center;
+    padding:30px;
+    color:#aaa;
+}
+
+@media(max-width:768px){
+    header h1{
+        font-size:2rem;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🎵 音樂時光機</h1>
+    <p>探索每個年代最流行的音樂風格與經典歌曲</p>
+</header>
+
+<div class="container">
+
+    <div class="selector">
+        <select id="decadeSelect">
+            <option value="1950s">1950年代</option>
+            <option value="1960s">1960年代</option>
+            <option value="1970s">1970年代</option>
+            <option value="1980s">1980年代</option>
+            <option value="1990s">1990年代</option>
+            <option value="2000s">2000年代</option>
+            <option value="2010s">2010年代</option>
+            <option value="2020s">2020年代</option>
+        </select>
+    </div>
+
+    <div id="decadeInfo"></div>
+
+</div>
+
+<footer>
+    Music Time Machine © 2026
+</footer>
+
+<script>
+
+const musicData = {
+
+"1950s":{
+title:"1950年代",
+description:"搖滾樂誕生的年代，Rock & Roll 開始席捲全球。",
+genres:["Rock & Roll","Rhythm & Blues","Doo-Wop"],
+songs:[
+{
+title:"Johnny B. Goode",
+artist:"Chuck Berry",
+cover:"https://lastfm.freetls.fastly.net/i/u/ar0/5d1e88f0783cfcbb8c8cd9942086a11a.jpg",
+spotify:"https://open.spotify.com/track/2QfiRTz5Yc8DdShCxG1tB2"
+},
+{
+title:"Jailhouse Rock",
+artist:"Elvis Presley",
+cover:"https://i.scdn.co/image/ab67616d0000b27365e7f92b6667ac6cbb239845",
+spotify:"https://open.spotify.com/album/0C3t1htEDTFKcg7F2rNbek?highlight=spotify:track:4gphxUgq0JSFv2BCLhNDiE"
+}
+]
+},
+
+"1960s":{
+title:"1960年代",
+description:"英倫搖滾與迷幻搖滾興起，流行文化全面爆發。",
+genres:["Rock","Psychedelic Rock","Soul"],
+songs:[
+{
+title:"Hey Jude",
+artist:"The Beatles",
+cover:"https://i.ytimg.com/vi/mQER0A0ej0M/maxresdefault.jpg",
+spotify:"https://open.spotify.com/track/3H7sv3Krffn15BufUuXzf3"
+},
+{
+title:"Respect",
+artist:"Aretha Franklin",
+cover:"https://i.ytimg.com/vi/JzqGZjFnYnA/maxresdefault.jpg",
+spotify:"https://open.spotify.com/track/7s25THrKz86DM225dOYwnr"
+}
+]
+},
+
+"1970s":{
+title:"1970年代",
+description:"迪斯可與經典搖滾盛行。",
+genres:["Disco","Classic Rock","Funk"],
+songs:[
+{
+title:"Stayin' Alive",
+artist:"Bee Gees",
+cover:"https://f4.bcbits.com/img/a1021948836_10.jpg",
+spotify:"https://open.spotify.com/track/5ubvP9oKmxLUVq506fgLhk"
+},
+{
+title:"Bohemian Rhapsody",
+artist:"Queen",
+cover:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQI2WTrvaElijPp7A0moZrRY0MQvYvu9AzBw&s",
+spotify:"https://open.spotify.com/track/7tFiyTwD0nx5a1eklYtX2J"
+}
+]
+},
+
+"1980s":{
+title:"1980年代",
+description:"MTV 時代來臨，流行音樂與合成器風格席捲全球。",
+genres:["Synth-pop","Pop","New Wave"],
+songs:[
+{
+title:"Billie Jean",
+artist:"Michael Jackson",
+cover:"https://cdn-images.dzcdn.net/images/cover/92a024220a9532489c75c9d994835697/1900x1900-000000-80-0-0.jpg",
+spotify:"https://open.spotify.com/track/5ChkMS8OtdzJeqyybCc9R5"
+},
+{
+title:"Take On Me",
+artist:"a-ha",
+cover:"https://i.scdn.co/image/ab67616d0000b273e8dd4db47e7177c63b0b7d53",
+spotify:"https://open.spotify.com/track/2WfaOiMkCvy7F5fcp2zZ8L"
+}
+]
+},
+
+"1990s":{
+title:"1990年代",
+description:"Grunge、Hip-Hop 與流行樂全面崛起。",
+genres:["Grunge","Hip-Hop","Pop"],
+songs:[
+{
+title:"Smells Like Teen Spirit",
+artist:"Nirvana",
+cover:"https://i.scdn.co/image/ab67616d0000b273e175a19e530c898d167d39bf",
+spotify:"https://open.spotify.com/track/5ghIJDpPoe3CfHMGu71E6T"
+},
+{
+title:"Baby One More Time",
+artist:"Britney Spears",
+cover:"https://i.scdn.co/image/ab67616d00001e0236cf58e3e7cf36a145b1da18",
+spotify:"https://open.spotify.com/track/3MjUtNVVq3C8Fn0MP3zhXa"
+}
+]
+},
+
+"2000s":{
+title:"2000年代",
+description:"數位音樂時代開始，R&B與流行音樂高度商業化。",
+genres:["Pop","R&B","Alternative Rock"],
+songs:[
+{
+title:"Crazy In Love",
+artist:"Beyoncé",
+cover:"https://i.scdn.co/image/ab67616d0000b27345680a4a57c97894490a01c1",
+spotify:"https://open.spotify.com/album/6oxVabMIqCMJRYN1GqR3Vf?highlight=spotify:track:5IVuqXILoxVWvWEPm82Jxr"
+},
+{
+title:"In The End",
+artist:"Linkin Park",
+cover:"https://i.kfs.io/album/global/67918,3v1/fit/500x500.jpg",
+spotify:"https://open.spotify.com/track/60a0Rd6pjrkxjPbaKzXjfq"
+}
+]
+},
+
+"2010s":{
+title:"2010年代",
+description:"串流平台崛起，EDM、Trap 與全球流行音樂興盛。",
+genres:["EDM","Trap","Pop"],
+songs:[
+{
+title:"Shape of You",
+artist:"Ed Sheeran",
+cover:"https://i.scdn.co/image/ab67616d0000b273ba5db46f4b838ef6027e6f96",
+spotify:"https://open.spotify.com/track/7qiZfU4dY1lWllzX7mPBI3"
+},
+{
+title:"Blinding Lights",
+artist:"The Weeknd",
+cover:"https://i.scdn.co/image/ab67616d0000b2738863bc11d2aa12b54f5aeb36",
+spotify:"https://open.spotify.com/track/0VjIjW4GlUZAMYd2vXMi3b"
+}
+]
+},
+
+"2020s":{
+title:"2020年代",
+description:"TikTok 與串流媒體深刻影響全球音樂趨勢。",
+genres:["Hyperpop","Bedroom Pop","Modern Pop"],
+songs:[
+{
+title:"Flowers",
+artist:"Miley Cyrus",
+cover:"https://m.media-amazon.com/images/M/MV5BYzU3ZTFkZDctYmNlNi00ZjMxLTgwNGItYTI1YjdmOWJiNTQzXkEyXkFqcGc@._V1_.jpg",
+spotify:"https://open.spotify.com/track/0yLdNVWF3Srea0uzk55zFn"
+},
+{
+title:"Espresso",
+artist:"Sabrina Carpenter",
+cover:"https://upload.wikimedia.org/wikipedia/en/7/71/Espresso_-_Sabrina_Carpenter.png",
+spotify:"https://open.spotify.com/track/2qSkIjg1o9h3YT9RAgYN75"
+}
+]
+}
+
+};
+
+function renderDecade(decade){
+
+const data = musicData[decade];
+
+let html = `
+<div class="info-card">
+    <h2>${data.title}</h2>
+    <p>${data.description}</p>
+    <br>
+    ${data.genres.map(g=>`<span class="genre">${g}</span>`).join("")}
+</div>
+
+<div class="song-grid">
+`;
+
+data.songs.forEach(song=>{
+html += `
+<div class="song-card">
+    <img src="${song.cover}" alt="${song.title}">
+    <div class="song-content">
+        <h3>${song.title}</h3>
+        <p>${song.artist}</p>
+        <a class="spotify-btn" href="${song.spotify}" target="_blank">
+            🎧 Spotify
+        </a>
+    </div>
+</div>
+`;
+});
+
+html += `</div>`;
+
+document.getElementById("decadeInfo").innerHTML = html;
+}
+
+document
+.getElementById("decadeSelect")
+.addEventListener("change",(e)=>{
+    renderDecade(e.target.value);
+});
+
+renderDecade("1950s");
+
+</script>
+
+</body>
+</html>

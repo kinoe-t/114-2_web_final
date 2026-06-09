@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>亞洲人生模擬器：地獄難度</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, 'Microsoft JhengHei';
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #game-container {
+            background: #34495e;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            border: 2px solid #e74c3c;
+        }
+        h1 {
+            color: #e74c3c;
+            margin-bottom: 5px;
+            font-size: 2em;
+        }
+        .subtitle {
+            font-size: 0.9em;
+            color: #bdc3c7;
+            margin-bottom: 25px;
+        }
+        #question-text {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            min-height: 60px;
+            line-height: 1.5;
+            color: #f1c40f;
+        }
+        .option-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #2980b9;
+            color: white;
+            border: 2px solid #2980b9;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            line-height: 1.4;
+        }
+        .option-btn:hover {
+            background-color: #3498db;
+            border-color: #ecf0f1;
+            transform: translateX(5px);
+        }
+        #result-container {
+            display: none;
+        }
+        .result-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        #result-message {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .game-over { color: #e74c3c; }
+        .victory { color: #2ecc71; }
+        
+        #restart-btn {
+            background-color: #e67e22;
+            border-color: #e67e22;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        #restart-btn:hover {
+            background-color: #d35400;
+            transform: none;
+        }
+        .progress {
+            font-size: 1em;
+            color: #bdc3c7;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>⛩️ 亞洲人生模擬器 ⛩️</h1>
+    <div class="subtitle">【地獄難度】高情商與潛規則的終極考驗</div>
+    
+    <div id="quiz-container">
+        <div class="progress" id="progress-text">STAGE 1 / 10</div>
+        <div id="question-text">載入中...</div>
+        <div id="options-container"></div>
+    </div>
+
+    <div id="result-container">
+        <div class="result-title" id="result-title"></div>
+        <div id="result-message"></div>
+        <button class="option-btn" id="restart-btn" onclick="startGame()">再次輪迴</button>
+    </div>
+</div>
+
+<script>
+    // 地獄難度題庫
+    const questions = [
+        {
+            question: "你剛出生，迎來了人生的第一次考驗「抓周」。面前擺滿了物品，你該如何抉擇？",
+            options: [
+                { text: "一把抓起計算機，展現你的理科天賦。", correct: false, failMsg: "太普通了。隔壁王太太的兒子抓了兩台計算機，你已經輸在起跑點。遊戲結束！" },
+                { text: "抓起畫筆，展現你的藝術氣息。", correct: false, failMsg: "爸媽臉色鐵青，認定你未來會靠家裡養。你當場被剝奪繼承權。遊戲結束！" },
+                { text: "什麼都不抓，直接大哭。", correct: false, failMsg: "長輩覺得你不夠聰明，帶你去做智力測驗。遊戲結束！" },
+                { text: "你假裝猶豫，直到爸媽強行把「聽診器」塞進你手裡，你才笑著握緊。", correct: true }
+            ]
+        },
+        {
+            question: "小學三年級，數學期末考你考了99分，班上最高分。回家後你該怎麼跟媽媽說？",
+            options: [
+                { text: "「媽！我考了全班最高分，99分！」", correct: false, failMsg: "媽媽冷笑：「驕兵必敗！為什麼沒考100？那1分被鬼吃了嗎？」你被罰寫考卷十遍。遊戲結束！" },
+                { text: "「媽，對不起，我不夠細心被扣了1分，我會寫檢討報告，並且現在就開始預習下學期的進度。」", correct: true },
+                { text: "「小明才考60分，我已經考很好了。」", correct: false, failMsg: "「你為什麼不跟考100分的比，要去跟考60分的比？！」你遭遇了降維打擊。遊戲結束！" }
+            ]
+        },
+        {
+            question: "過年了，親戚塞給你一包超厚的壓歲錢。面對媽媽「幫你存起來」的經典台詞，你該如何應對？",
+            options: [
+                { text: "死死抱住紅包：「這是我自己的錢！」", correct: false, failMsg: "「你吃我的、穿我的、住我的，哪來的自己的錢？」你慘遭物理超渡。遊戲結束！" },
+                { text: "乖乖交出去，並相信長大後媽媽真的會還給你。", correct: false, failMsg: "你的天真害了你。這筆錢在高中時變成了你的補習費。心態崩潰，遊戲結束！" },
+                { text: "主動雙手奉上，並說：「媽媽照顧我辛苦了，這筆錢請媽媽拿去貼補家用或幫我繳學費。」", correct: true }
+            ]
+        },
+        {
+            question: "國中時期，你必須選擇課後活動。哪一種組合最能確保你在家族中的生存？",
+            options: [
+                { text: "參加籃球隊，因為你想長高。", correct: false, failMsg: "「長高能當飯吃嗎？能保送台大嗎？」你被迫退隊。遊戲結束！" },
+                { text: "參加電競社，目標成為世界冠軍。", correct: false, failMsg: "在父母眼裡，這不叫電競，這叫「網路成癮」。你被送去戒網癮中心。遊戲結束！" },
+                { text: "同時報名鋼琴班(目標考過8級)、奧林匹亞數學班、以及全美語補習班，且從不抱怨。", correct: true },
+                { text: "回家幫忙做家事，成為貼心的小孩。", correct: false, failMsg: "「做家事能加分嗎？快去讀書，家事不用你管！」你因成績退步被罵。遊戲結束！" }
+            ]
+        },
+        {
+            question: "大學志願選填時間。你其實對文學很感興趣，但你該怎麼填志願表？",
+            options: [
+                { text: "堅持夢想，填寫中國文學系。", correct: false, failMsg: "爆發家庭革命。父親揚言斷絕父子關係，你沒有生活費了。遊戲結束！" },
+                { text: "為了賺錢，填寫財務金融系。", correct: false, failMsg: "雖然可以，但長輩覺得「金融水太深」，不如當醫生穩定。你承受不住親情勒索。遊戲結束！" },
+                { text: "填寫醫學系或電機系，並告訴父母這是你從小的夢想，救死扶傷/科技報國。", correct: true },
+                { text: "說你要去澳洲打工度假，尋找自我。", correct: false, failMsg: "「尋找自我？我看你是想氣死我！」父母雙雙高血壓發作。遊戲結束！" }
+            ]
+        },
+        {
+            question: "你順利進入頂尖科技公司。關於下班時間，你的策略是？",
+            options: [
+                { text: "合約寫幾點下班，我就幾點下班，注重 Work-Life Balance。", correct: false, failMsg: "主管覺得你不具備「狼性」，試用期滿立刻被開除。遊戲結束！" },
+                { text: "每天加班到晚上10點，雖然很累但為了績效。", correct: false, failMsg: "你加班到10點，但你的同事睡在公司。你還是被淘汰了。遊戲結束！" },
+                { text: "主管沒走你絕對不走，就算沒事做也要對著螢幕皺眉敲鍵盤，並在深夜發一則僅主管可見的認真工作動態。", correct: true }
+            ]
+        },
+        {
+            question: "26歲，過年親戚聚會。三姑六婆開始逼問薪水與感情狀況，你該如何完美脫身？",
+            options: [
+                { text: "嚴正聲明這是個人隱私，請長輩尊重。", correct: false, failMsg: "「這孩子書讀多了，連長輩都不放在眼裡了！」你在家族中徹底社死。遊戲結束！" },
+                { text: "誠實報出高薪，並展示自己新買的名牌錶。", correct: false, failMsg: "隔天，所有親戚都來找你借錢。你不借就是忘恩負義。遊戲結束！" },
+                { text: "謙虛地說「就混口飯吃啦，還是表哥在國營企業穩定最棒」，然後順勢把話題轉移到表哥何時生第二胎。", correct: true },
+                { text: "坐在角落低頭滑手機裝死。", correct: false, failMsg: "「現在的年輕人啊，只會滑手機...」你成為了長輩訓話兩個小時的素材。遊戲結束！" }
+            ]
+        },
+        {
+            question: "你交了伴侶，準備帶回家見父母。你該找什麼樣的對象才能順利過關？",
+            options: [
+                { text: "一個熱愛自由的街頭藝術家，雖然沒錢但很有才華。", correct: false, failMsg: "父母心臟病發。遊戲結束！" },
+                { text: "一個跟你一樣是工程師或醫生，家世清白，生辰八字與你相合的人。", correct: true },
+                { text: "一個外國人，你們打算婚後搬去國外。", correct: false, failMsg: "「那以後孫子不會講中文怎麼辦？誰來拜祖先？」反對到底。遊戲結束！" },
+                { text: "決定不婚不生，領養三隻貓。", correct: false, failMsg: "「不孝有三，無後為大！」你每天遭受長輩的奪命連環call，精神崩潰。遊戲結束！" }
+            ]
+        },
+        {
+            question: "你30歲，事業有成。家族聚餐結束，服務生拿著帳單走過來，這是展現你成熟度的時刻：",
+            options: [
+                { text: "默默去櫃檯把帳結了，不告訴任何人。", correct: false, failMsg: "沒人知道是你付的，長輩還以為是阿伯付的，你白花了錢又沒賺到面子。遊戲結束！" },
+                { text: "安靜坐在位置上，讓長輩去付。", correct: false, failMsg: "「這孩子三十歲了還不懂事，連頓飯都不會請。」名聲掃地。遊戲結束！" },
+                { text: "在位置上大喊「我來付！」，但其實身體完全沒離開椅子。", correct: false, failMsg: "演技太差被看穿，被認為虛偽。遊戲結束！" },
+                { text: "施展「結帳太極拳」：先與長輩進行三回合的推拉撕扯，把錢塞進長輩口袋又被塞回來，最後以「這頓算我的，下次再給叔叔請！」完美收尾。", correct: true }
+            ]
+        },
+        {
+            question: "你35歲，看著剛出生的孩子。回首自己充滿壓力的一生，你對孩子的教育理念是？",
+            options: [
+                { text: "「我要讓他快樂長大，絕對不給他任何課業壓力！」", correct: false, failMsg: "直到孩子5歲時，你發現鄰居小孩已經會背唐詩三百首和用英文點餐。你恐慌發作，馬上報名了菁英幼稚園。理念破功，遊戲結束！" },
+                { text: "「讓他自己選擇未來，只要不學壞就好。」", correct: false, failMsg: "孩子長大後說要當YouTuber，你氣到差點中風，發現自己終究還是傳統亞洲父母。遊戲結束！" },
+                { text: "一邊發誓要打破世代創傷，一邊默默地在「雙語全美幼稚園」的排隊名單上填下了孩子的名字，因為「我們不能輸在起跑點」。", correct: true }
+            ]
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+
+    const quizContainer = document.getElementById('quiz-container');
+    const resultContainer = document.getElementById('result-container');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const progressText = document.getElementById('progress-text');
+    const resultTitle = document.getElementById('result-title');
+    const resultMessage = document.getElementById('result-message');
+
+    function startGame() {
+        currentQuestionIndex = 0;
+        quizContainer.style.display = 'block';
+        resultContainer.style.display = 'none';
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const currentQuestion = questions[currentQuestionIndex];
+        progressText.innerText = `STAGE ${currentQuestionIndex + 1} / ${questions.length}`;
+        questionText.innerText = currentQuestion.question;
+        
+        optionsContainer.innerHTML = '';
+        currentQuestion.options.forEach((option) => {
+            const button = document.createElement('button');
+            button.innerText = option.text;
+            button.classList.add('option-btn');
+            button.onclick = () => selectOption(option);
+            optionsContainer.appendChild(button);
+        });
+    }
+
+    function selectOption(option) {
+        if (option.correct) {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showWinScreen();
+            }
+        } else {
+            showGameOverScreen(option.failMsg);
+        }
+    }
+
+    function showGameOverScreen(message) {
+        quizContainer.style.display = 'none';
+        resultContainer.style.display = 'block';
+        resultTitle.innerText = "🩸 社會性死亡 🩸";
+        resultTitle.className = "result-title game-over";
+        resultMessage.innerText = message || "你做出了錯誤的選擇，無法在亞洲社會生存！";
+    }
+
+    function showWinScreen() {
+        quizContainer.style.display = 'none';
+        resultContainer.style.display = 'block';
+        resultTitle.innerText = "🐉 成為人中之龍 🐉";
+        resultTitle.className = "result-title victory";
+        resultMessage.innerText = "太可怕了！你竟然完美掌握了亞洲社會的高情商、潛規則與人情世故。你成功地活成了父母口中的「別人家的孩子」，並順利將這份沉重的期待傳承給了下一代！";
+    }
+
+    // Initialize the game
+    startGame();
+</script>
+
+</body>
+</html>

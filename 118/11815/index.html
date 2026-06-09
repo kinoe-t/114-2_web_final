@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>測測你是哪種人?👍</title>
+    <style>
+        /* 基礎樣式與修改後的紅紅漸層背景 */
+        * {
+            box-sizing: border-box;
+            font-family: 'Helvetica Neue', Arial, 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+        }
+        body {
+            /* 這裡改成富有質感的深紅漸層色 */
+            background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+
+        /* 測驗主容器 */
+        .quiz-card {
+            background-color: #ffffff;
+            max-width: 680px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            transition: all 0.3s ease;
+        }
+
+
+        /* 頂部進度條動畫（改成配合紅色的橘黃漸層） */
+        .progress-container {
+            width: 100%;
+            background-color: #edf2f7;
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff8c00 0%, #ff0055 100%);
+            width: 0%;
+            transition: width 0.4s ease-in-out;
+        }
+        .progress-text {
+            font-size: 14px;
+            color: #718096;
+            text-align: right;
+            font-weight: bold;
+            margin-bottom: 25px;
+        }
+
+
+        /* 題目樣式 */
+        .question-title {
+            font-size: 22px;
+            color: #2d3748;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+
+        /* 選項按鈕群組 */
+        .options-group {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .option-btn {
+            background-color: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+            padding: 16px 24px;
+            font-size: 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            line-height: 1.5;
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover {
+            /* 滑鼠懸停時變成淡紅色系 */
+            background-color: #fff5f5;
+            border-color: #e53e3e;
+            color: #c53030;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(229, 62, 62, 0.15);
+        }
+
+
+        /* 結果區域（預設隱藏） */
+        #result-section {
+            display: none;
+            text-align: center;
+        }
+        .result-badge {
+            font-size: 14px;
+            background-color: #fed7d7;
+            color: #9b2c2c;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        .result-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #c53030;
+            margin-bottom: 25px;
+        }
+        .result-body {
+            text-align: left;
+            background-color: #f7fafc;
+            padding: 25px;
+            border-radius: 16px;
+            border-left: 6px solid #e53e3e;
+            line-height: 1.8;
+            color: #4a5568;
+            margin-bottom: 35px;
+            font-size: 16px;
+        }
+
+
+        /* 重來一次按鈕（改成紅色系漸層） */
+        .restart-btn {
+            background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(239, 71, 58, 0.3);
+        }
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px rgba(239, 71, 58, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+
+    <div class="quiz-card">
+        <div id="quiz-section">
+            <div class="progress-container">
+                <div class="progress-bar" id="bar-fill"></div>
+            </div>
+            <div class="progress-text" id="progress-text">測驗進度：1 / 10</div>
+           
+            <div class="question-title" id="question-text">題目載入中...</div>
+           
+            <div class="options-group">
+                <button class="option-btn" id="optA" onclick="handleSelect('A')">選項 A</button>
+                <button class="option-btn" id="optB" onclick="handleSelect('B')">選項 B</button>
+                <button class="option-btn" id="optC" onclick="handleSelect('C')">選項 C</button>
+                <button class="option-btn" id="optD" onclick="handleSelect('D')">選項 D</button>
+                <button class="option-btn" id="optE" onclick="handleSelect('E')">選項 E</button>
+            </div>
+        </div>
+
+
+        <div id="result-section">
+            <span class="result-badge">分析報告</span>
+            <div class="result-title" id="result-type">核心人格計算中...</div>
+            <div class="result-body" id="result-desc"></div>
+            <button class="restart-btn" onclick="resetQuiz()">重新測試</button>
+        </div>
+    </div>
+
+
+    <script>
+        // 完整的 10 道題目與 5 個精準選項資料庫
+        const quizDatabase = [
+            {
+                q: "1. 分手多年的前任突然傳來好消息，你會怎麼做？",
+                a: "A. 真心誠意恭喜他。",
+                b: "B. 徹夜研究他的IG主頁的蛛絲馬跡，打聽他現任的消息。",
+                c: "C. Oi我等你喜酒哦，蹭一頓大的。",
+                d: "D. 激情舞蹈，立刻上傳大跳的reels。",
+                e: "E. 他只不過是前任而已，又能拿我怎樣，姐就是最美的。"
+            },
+            {
+                q: "2. 同學開始訂午餐，你很想吃，但外送不便宜，你會怎麼辦？",
+                a: "A. 不揪+1，今天吃點好的，之後省一點就好了。",
+                b: "B. 先訂再說，我就只是想看看今天的外送員叫什麼。",
+                c: "C. 唉喲!我錢包又不見了，我還是吃福利社好了。",
+                d: "D. 一起吃，吃這麼好，開心的手舞足蹈。",
+                e: "E. 強勢介入，很貴的飯還是要吃，吃飯女王大。"
+            },
+            {
+                q: "3. 班上開冷氣，此時你開門走出教室，你的下一步是什麼？",
+                a: "A. 把門輕輕關上。",
+                b: "B. 探頭看看走廊有沒有情侶在偷偷談戀愛。",
+                c: "C. 看看外面地上有沒有一塊錢，趕快撿起來。",
+                d: "D. 在門口邊跳邊唱的跑出去。",
+                e: "E. 門只是我的子民，女王從不關門。"
+            },
+            {
+                q: "4. 出去吃火鍋，點心裡有沒熟的雞蛋糕，你會怎麼做？",
+                a: "A. 唉呦!趕緊丟掉，拉肚子就不好了。",
+                b: "B. 是不是有人偷偷把我的雞蛋糕掉包了，躲在吧台旁邊監視大家。",
+                c: "C. 沒熟的雞蛋糕也是雞蛋糕，要當不浪費食物的好孩子。",
+                d: "D. 跳首Spaghetti(by LE SSERAFIM)把雞蛋糕吐掉。",
+                e: "E. 對著雞蛋糕說:我現在命令你自己變熟，否則我殺無赦。"
+            },
+            {
+                q: "5. 忙碌了一整週，好不容易迎來完全屬於自己的週末，你通常會想怎麼度過？",
+                a: "A. 不要叫我！我要睡到下午三點！這一週被小考和補習榨乾了，週末唯一的救贖就是躺在床上玩手機。",
+                b: "B. 偷偷在網路上觀察朋友的限動，看看有沒有人在約會。",
+                c: "C. 冷氣很貴，吹電風扇就好，然後一邊吃特價買回來的零食，一邊躺在沙發上，完全不用花到一毛錢。",
+                d: "D. 週末？當然是把音響開到最大，身體不能停，音樂不能停。",
+                e: "E. 推掉所有無效的社交，包下電影院、遊樂園。我的時間很貴，只留給能取悅我、或對我有價值的事物。"
+            },
+            {
+                q: "6. 當你走進一家新開的質感咖啡廳，第一眼最先吸引你注意的會是什麼？",
+                a: "A. 等一下一定要在門口拍張照發限動，這裡適不適合帶課本來裝認真？幸好低消一杯飲料的價格我還付得起。",
+                b: "B. 門口監視器的死角位置、店員對待奧客時嘴角不自覺抽動的微表情、還有角落那桌情侶僵硬的肢體互動。",
+                c: "C. 天啊，一杯美式竟然要 180 元？今天有打折嗎？這裡的低消是一杯飲料嗎？店裡有沒有提供免費的 WiFi 和插座？",
+                d: "D. 這裡的木地板看起來很好滑步耶！如果中間那個桌子移開，超適合當作舞台。",
+                e: "E. 這家店的裝潢是否有品味？動線設計是否流暢？服務生有沒有眼色？"
+            },
+            {
+                q: "7. 好朋友突然打電話來向你哭訴他遇到挫折，你會怎麼辦？",
+                a: "A. 情緒價值給滿，陪你一起難過、一起罵。",
+                b: "B. 這種問題交給我，我去跟蹤那個壞人，看有什麼把柄。",
+                c: "C. 你今天晚上來我家，我用冰箱剩的食材煮泡麵給你吃，還加兩顆蛋，吃飽了、心情也就好了",
+                d: "D. 去找那個欺負他的人，跟他舞蹈battle，讓他心服口服。",
+                e: "E. 哭解決不了問題，別人欺負你，我教你怎麼優雅地反擊回去。"
+            },
+            {
+                q: "8. 下個月你計畫要去一個心儀已久的地方旅行，你通常會怎麼準備？",
+                a: "A. 腦袋裡想得很美好，但行動力通常在上課時摸魚完成。",
+                b: "B. 我已經用 Google Earth 把當地的街道實景走過三遍了，到時候就是實地考察了。",
+                c: "C. 在各大訂房網站比價，但出發前一天晚上：我的護照呢？我的錢包呢？又不見了。",
+                d: "D. 行李箱裡絕對不能漏掉藍牙喇叭，我走到哪裡，哪裡就是我的 MV 現場。",
+                e: "E. 行程當然是交給別人安排，我負責出發、享受、和驚豔全場就好。"
+            },
+            {
+                q: "9. 如果你在一座迷霧森林裡迷路了，眼前出現了三條路，此時你最接近哪種情況？",
+                a: "A. 拜託文昌帝君、觀世音菩薩保佑我走得出去，我發誓我回去一定會認真讀書，絕對不摸魚了！",
+                b: "B. 觀察青苔生長的方向可以判斷南北，注意風流動的聲音能推測出口，中間那條路的落葉形狀有被踩踏過的痕跡。",
+                c: "C. 怎麼辦迷路了，而且我的手機好像掉在剛剛走過的地方了，錢包好像也不見了。",
+                d: "D. 開始原地踩拍子，反正都迷路了，那就隨便點兵點將選一條，或者跟著心跳的節奏走。",
+                e: "E. 迷路？這座森林只是暫時還沒被我征服而已，誰說只有三條路，老娘自己開路。"
+            },
+            {
+                q: "10. 想像你獲得了一種超能力，你最希望這個能力能幫你達成什麼事？",
+                a: "A. 希望能把課本拍一下大腦就能自動記住，這樣就不用每天背英文單字、算數學算到瘋掉，隨便考都能滿分。",
+                b: "B. 我希望能看穿這個世界上所有的謊言與秘密，當個隱形的觀察者，掌控所有八卦資訊。",
+                c: "C. 我絕對要擁有物品自動召喚術，只要拍拍手，錢包就會自己飛回我手裡。如果每天自動多一千元，那就更完美了！",
+                d: "D. 擁有音樂一放，全人類強制共舞的能力！只要我開始 whiplash，路上的阿伯都會忍不住跟著我的節奏一起 shake 起來。",
+                e: "E. 把全天下的萬物都變成我的子民。"
+            }
+        ];
+
+
+        // 狀態變數管理
+        let currentIndex = 0;
+        let scoreTracker = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+
+
+        // 核心函數：渲染當前題目
+        function renderQuestion() {
+            if (currentIndex < quizDatabase.length) {
+                // 計算進度條比例
+                const progressPercentage = ((currentIndex + 1) / quizDatabase.length) * 100;
+                document.getElementById("bar-fill").style.width = `${progressPercentage}%`;
+                document.getElementById("progress-text").innerText = `測驗進度：${currentIndex + 1} / ${quizDatabase.length}`;
+               
+                // 替換題目與各選項文字
+                const currentData = quizDatabase[currentIndex];
+                document.getElementById("question-text").innerText = currentData.q;
+                document.getElementById("optA").innerText = currentData.a;
+                document.getElementById("optB").innerText = currentData.b;
+                document.getElementById("optC").innerText = currentData.c;
+                document.getElementById("optD").innerText = currentData.d;
+                document.getElementById("optE").innerText = currentData.e;
+            } else {
+                // 答題完畢，呈現結果
+                calculateAndShowResult();
+            }
+        }
+
+
+        // 核心函數：處理使用者點擊選項
+        function handleSelect(selectedLetter) {
+            scoreTracker[selectedLetter]++; // 對應的字母分數累加 1
+            currentIndex++;                 // 進入下一題
+            renderQuestion();
+        }
+
+
+        // 核心函數：計算最高分並產出特質報告
+        function calculateAndShowResult() {
+            // 隱藏題目區，顯示結果區
+            document.getElementById("quiz-section").style.display = "none";
+            document.getElementById("result-section").style.display = "block";
+
+
+            const typeTitle = document.getElementById("result-type");
+            const typeDesc = document.getElementById("result-desc");
+
+
+            // 演算法：比對 A, B, C, D, E 誰被選中的次數最多
+            let highestLetter = 'A';
+            const remainingLetters = ['B', 'C', 'D', 'E'];
+            for(let letter of remainingLetters) {
+                if (scoreTracker[letter] > scoreTracker[highestLetter]) {
+                    highestLetter = letter;
+                }
+            }
+
+
+            // 根據得分最高的字母，輸出高質感的富文本報告
+            if (highestLetter === 'A') {
+                typeTitle.innerText = "【學生型：正常善良的高中學牲】";
+                typeTitle.style.color = "#c53030";
+                typeDesc.innerHTML = `<strong>✨ 核心人格優勢：</strong>最好相處的超級隊友，驚人的極限抗壓與耐操能力。<br><br>
+                                       <strong>⚠️ 潛力盲點警告：</strong>因為善良，他們遇到不順心或委屈時，往往選擇自己吞下去，但生活壓力本來就大，長期缺乏宣洩管道的壓抑，容易在某個微不足道的小事上瞬間崩潰。`;
+            } else if (highestLetter === 'B') {
+                typeTitle.innerText = "【視監型：拿著放大鏡觀察世間萬物的genius】";
+                typeTitle.style.color = "#c53030";
+                typeDesc.innerHTML = `<strong>✨ 核心人格優勢：</strong>無與倫比的情緒與心理捕手，驚人的記憶與資訊檢索庫。<br><br>
+                                       <strong>⚠️ 潛力盲點警告：</strong>外界的一舉一動、一絲噪音、別人的小表情都會不斷湧入大腦，這種嚴重的資訊過載，會導致他們極易精神疲憊、失眠。`;
+            } else if (highestLetter === 'C') {
+                typeTitle.innerText = "【乞丐型：經常錢包失蹤勤儉持家的兒童】";
+                typeTitle.style.color = "#c53030";
+                typeDesc.innerHTML = `<strong>✨ 核心人格優勢：</strong>精神上的「金錢清流」，樂觀豁達、生存能力極強，充滿童心與人緣磁場。<br><br>
+                                       <strong>⚠️ 潛力盲點警告：</strong>在需要極度嚴謹、細心的工作或重要場合，這種迷糊的特質容易產生問題，只要一亮出「找不到錢包」的慌亂狀態。`;
+            } else if (highestLetter === 'D') {
+                typeTitle.innerText = "【鴿子型：隨時開始whiplash的天生dancer】";
+                typeTitle.style.color = "#c53030";
+                typeDesc.innerHTML = `<strong>✨ 核心人格優勢：</strong>令人起雞皮疙瘩的「卡點」能力，強大的舞台存在感。<br><br>
+                                       <strong>⚠️ 潛力盲點警告：</strong>由於習慣用「燃燒生命」的方式去輸出能量，他們在生理上更容易累積運動傷害（如關節、肌肉拉傷），在心理上，也容易陷入焦慮疲憊或職業倦怠。`;
+            } else {
+                typeTitle.innerText = "【女王型：昂首闊步的女王大人】";
+                typeTitle.style.color = "#c53030";
+                typeDesc.innerHTML = `<strong>✨ 核心人格優勢：</strong>無懼風浪的決斷力，自帶氣場的領導力，極高的精神獨立性。<br><br>
+                                       <strong>⚠️ 潛力盲點警告：</strong>既然是女王，就不能在臣民面前流淚。她們習慣把脆弱、焦慮和疲憊隱藏在精緻的面具背後，往往有著「高處不勝寒」的深刻孤獨感，極少人能真正走進她們的心裡。`;
+            }
+        }
+
+
+        // 核心函數：重置所有狀態重新測驗
+        function resetQuiz() {
+            currentIndex = 0;
+            scoreTracker = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+            document.getElementById("quiz-section").style.display = "block";
+            document.getElementById("result-section").style.display = "none";
+            renderQuestion();
+        }
+
+
+        // 網頁開啟時，自動初始化第一頁題目
+        renderQuestion();
+    </script>
+
+
+</body>
+</html>

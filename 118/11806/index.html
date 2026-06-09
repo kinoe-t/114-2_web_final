@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幫酷拉皮卡下船！(直覺拖曳版)</title>
+    <style>
+        :root {
+            --bg-color: #12161a;
+            --container-bg: #1a222d;
+            --board-bg: #0d1117;
+            --text-color: #ffffff;
+            --text-secondary: #7f8c9d;
+            
+            --kurapika-color: #f1c40f;
+            --kurapika-glow: #e74c3c;
+            
+            --togashi-bg: #2c3e50;
+            --togashi-border: #34495e;
+            --togashi-text: #ecf0f1;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        h1 {
+            margin: 5px 0;
+            font-size: 26px;
+            letter-spacing: 2px;
+            text-align: center;
+            color: var(--kurapika-color);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .game-container {
+            background-color: var(--container-bg);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 420px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .status-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 15px;
+            color: var(--text-secondary);
+            padding: 0 5px;
+            box-sizing: border-box;
+        }
+
+        .steps-count {
+            color: #fff;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .board-wrapper {
+            position: relative;
+            padding-bottom: 25px; 
+        }
+
+        #board {
+            width: 320px;
+            height: 400px;
+            background-color: var(--board-bg);
+            border: 6px solid #2c3540;
+            border-radius: 12px;
+            position: relative;
+            overflow: visible;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.8);
+            touch-action: none; /* 防止手機瀏覽器拖曳時網頁跟著滾動 */
+        }
+
+        /* 船隻出口提示 */
+        .exit-gate {
+            position: absolute;
+            bottom: -5px;
+            left: 86px; 
+            width: 160px;
+            height: 24px;
+            background: linear-gradient(to bottom, transparent, #2ecc71);
+            border-left: 3px dashed #2ecc71;
+            border-right: 3px dashed #2ecc71;
+            text-align: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: #fff;
+            line-height: 24px;
+            letter-spacing: 1px;
+            animation: pulse 1.5s infinite alternate;
+            z-index: 1;
+        }
+
+        @keyframes pulse {
+            from { opacity: 0.6; filter: drop-shadow(0 0 2px #2ecc71); }
+            to { opacity: 1; filter: drop-shadow(0 0 8px #2ecc71); }
+        }
+
+        /* 方塊基礎樣式 */
+        .block {
+            position: absolute;
+            border-radius: 8px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            text-align: center;
+            cursor: grab;
+            transition: left 0.12s ease-out, top 0.12s ease-out;
+            padding: 5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.1);
+            border: 2px solid var(--togashi-border);
+            background-color: var(--togashi-bg);
+            color: var(--togashi-text);
+        }
+        .block:active {
+            cursor: grabbing;
+        }
+
+        /* 讓內部文字不干擾拖曳事件阻擋 */
+        .block * {
+            pointer-events: none;
+        }
+
+        /* 酷拉皮卡 (2x2 主角) */
+        .block.main-hero {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            border: 3px solid var(--kurapika-color);
+            color: #fff;
+            z-index: 3;
+        }
+        .block.main-hero .title {
+            font-size: 18px;
+            color: var(--kurapika-color);
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .block.main-hero .subtitle-txt {
+            font-size: 11px;
+            color: #74b9ff;
+        }
+
+        .block.vert { font-size: 14px; background: #34495e; }
+        .block.horiz { font-size: 14px; background: #2e4053; }
+        .block.soldier { font-size: 12px; background: #212f3d; color: #bdc3c7;}
+
+        .control-panel {
+            width: 100%;
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-reset {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+            transition: all 0.2s;
+        }
+        .btn-reset:hover {
+            background-color: #c0392b;
+            transform: translateY(-1px);
+        }
+
+        /* 結算彈窗 */
+        #win-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        .modal-content {
+            background-color: var(--container-bg);
+            padding: 35px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 360px;
+            width: 80%;
+            border: 2px solid var(--kurapika-color);
+        }
+        .modal-content h2 {
+            color: var(--kurapika-color);
+            margin-top: 0;
+        }
+        .modal-content p {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #ecf0f1;
+            margin: 15px 0 25px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>幫酷拉皮卡下船！</h1>
+    <div class="subtitle">滑動或點擊方塊移開「富樫腰痛休刊」大軍</div>
+
+    <div class="game-container">
+        <div class="status-bar">
+            <div>航行步數: <span id="steps-txt" class="steps-count">0</span></div>
+            <div style="font-size:12px; color: var(--kurapika-color);">下船目標：最下方中央</div>
+        </div>
+
+        <div class="board-wrapper">
+            <div id="board">
+                <!-- 由 JavaScript 動態生成方塊 -->
+            </div>
+            <div class="exit-gate">🚢 鯨魚號出口 (下船)</div>
+        </div>
+
+        <div class="control-panel">
+            <button class="btn-reset" onclick="resetGame()">重置新局</button>
+        </div>
+    </div>
+
+    <!-- 成功下船彈窗 -->
+    <div id="win-modal">
+        <div class="modal-content">
+            <h2>🎉 成功下船！！</h2>
+            <p>酷拉皮卡歷經千辛萬苦，終於繞過富樫的各種腰痛與拖延藉口，成功踏上暗黑大陸的土地！<br><br><b>總計花費：<span id="final-steps" style="color:#2ecc71; font-size:18px;">0</span> 步</b></p>
+            <button class="btn-reset" onclick="closeModal()" style="background-color:var(--kurapika-color); color:#000; width:100%;">再幫他下船一次</button>
+        </div>
+    </div>
+
+    <script>
+        const initialBlocks = [
+            { id: 'kurapika', name: '<div class="title">酷拉皮卡</div><div class="subtitle-txt">下船執念</div>', w: 2, h: 2, x: 1, y: 0, type: 'main-hero' },
+            
+            { id: 'v1', name: '嚴重<br>腰痛', w: 1, h: 2, x: 0, y: 0, type: 'vert' },
+            { id: 'v2', name: '宣佈<br>休刊', w: 1, h: 2, x: 3, y: 0, type: 'vert' },
+            { id: 'v3', name: '脊椎<br>炎親訪', w: 1, h: 2, x: 0, y: 2, type: 'vert' },
+            { id: 'v4', name: '編輯部<br>不敢催', w: 1, h: 2, x: 3, y: 2, type: 'vert' },
+            
+            { id: 'h1', name: '🎮 勇者鬥惡龍發售', w: 2, h: 1, x: 1, y: 2, type: 'horiz' },
+            
+            { id: 's1', name: '🀄<br>打麻將', w: 1, h: 1, x: 1, y: 3, type: 'soldier' },
+            { id: 's2', name: '躺平<br>畫畫', w: 1, h: 1, x: 2, y: 3, type: 'soldier' },
+            { id: 's3', name: '📱<br>發推特', w: 1, h: 1, x: 0, y: 4, type: 'soldier' },
+            { id: 's4', name: '原稿<br>塗鴉', w: 1, h: 1, x: 3, y: 4, type: 'soldier' }
+        ];
+
+        let blocks = [];
+        let steps = 0;
+        let isWon = false;
+        const CELL_SIZE = 80;
+
+        function initGame() {
+            blocks = JSON.parse(JSON.stringify(initialBlocks));
+            steps = 0;
+            isWon = false;
+            document.getElementById('steps-txt').innerText = steps;
+            renderAll();
+        }
+
+        function renderAll() {
+            const board = document.getElementById('board');
+            board.innerHTML = ''; 
+
+            blocks.forEach(b => {
+                const el = document.createElement('div');
+                el.className = `block ${b.type}`;
+                
+                el.style.width = `${b.w * CELL_SIZE - 6}px`;
+                el.style.height = `${b.h * CELL_SIZE - 6}px`;
+                el.style.left = `${b.x * CELL_SIZE + 3}px`;
+                el.style.top = `${b.y * CELL_SIZE + 3}px`;
+                
+                el.innerHTML = b.name;
+
+                // 綁定極其流暢的 Pointer Events (同時支援滑鼠與手機觸控)
+                let startX = 0, startY = 0;
+                
+                el.addEventListener('pointerdown', (e) => {
+                    if (isWon) return;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    el.setPointerCapture(e.pointerId);
+                });
+
+                el.addEventListener('pointerup', (e) => {
+                    if (isWon) return;
+                    const diffX = e.clientX - startX;
+                    const diffY = e.clientY - startY;
+                    const threshold = 30; // 判定滑動的最小像素值
+
+                    // 如果滑動距離太小，視為「純點擊」，觸發自動移向唯一空格
+                    if (Math.abs(diffX) < 10 && Math.abs(diffY) < 10) {
+                        autoMoveBlock(b.id);
+                        return;
+                    }
+
+                    // 判斷滑動的主方向 (水平或垂直)
+                    if (Math.abs(diffX) > Math.abs(diffY)) {
+                        if (Math.abs(diffX) > threshold) {
+                            moveBlock(b.id, diffX > 0 ? 1 : -1, 0);
+                        }
+                    } else {
+                        if (Math.abs(diffY) > threshold) {
+                            moveBlock(b.id, 0, diffY > 0 ? 1 : -1);
+                        }
+                    }
+                });
+
+                board.appendChild(el);
+            });
+        }
+
+        // 計算目前被其他方塊佔用的網格
+        function getOccupiedGrid(excludeId) {
+            let grid = Array(5).fill(null).map(() => Array(4).fill(false));
+            blocks.forEach(b => {
+                if (b.id === excludeId) return;
+                for (let r = 0; r < b.h; r++) {
+                    for (let c = 0; c < b.w; c++) {
+                        let ny = b.y + r;
+                        let nx = b.x + c;
+                        if (ny >= 0 && ny < 5 && nx >= 0 && nx < 4) {
+                            grid[ny][nx] = true;
+                        }
+                    }
+                }
+            });
+            return grid;
+        }
+
+        // 驗證移動合法性
+        function canMove(block, dx, dy) {
+            let newX = block.x + dx;
+            let newY = block.y + dy;
+
+            // 酷拉皮卡成功逃出邊界的特殊通道
+            if (block.id === 'kurapika' && newX === 1 && newY === 4) {
+                return true;
+            }
+
+            // 越界檢查
+            if (newX < 0 || newX + block.w > 4 || newY < 0 || newY + block.h > 5) {
+                return false;
+            }
+
+            // 碰撞檢查
+            const grid = getOccupiedGrid(block.id);
+            for (let r = 0; r < block.h; r++) {
+                for (let c = 0; c < block.w; c++) {
+                    if (grid[newY + r][newX + c]) {
+                        return false; 
+                    }
+                }
+            }
+            return true;
+        }
+
+        // 執行方塊移動
+        function moveBlock(blockId, dx, dy) {
+            const block = blocks.find(b => b.id === blockId);
+            if (!block) return;
+
+            if (canMove(block, dx, dy)) {
+                block.x += dx;
+                block.y += dy;
+                steps++;
+                document.getElementById('steps-txt').innerText = steps;
+                renderAll();
+                checkWin();
+            }
+        }
+
+        // 當玩家只是「輕點」方塊時，若四周只有唯一的空格可走，就自動滑過去
+        function autoMoveBlock(blockId) {
+            const block = blocks.find(b => b.id === blockId);
+            if (!block) return;
+
+            const directions = [
+                {dx: 0, dy: -1}, // 上
+                {dx: 0, dy: 1},  // 下
+                {dx: -1, dy: 0}, // 左
+                {dx: 1, dy: 0}   // 右
+            ];
+
+            const validMoves = directions.filter(d => canMove(block, d.dx, d.dy));
+            // 只有在恰好只有一條路可走時自動移動，避免混淆
+            if (validMoves.length === 1) {
+                moveBlock(blockId, validMoves[0].dx, validMoves[0].dy);
+            }
+        }
+
+        function checkWin() {
+            const kurapika = blocks.find(b => b.id === 'kurapika');
+            if (kurapika && kurapika.x === 1 && kurapika.y === 4) {
+                isWon = true;
+                setTimeout(() => {
+                    document.getElementById('final-steps').innerText = steps;
+                    document.getElementById('win-modal').style.display = 'flex';
+                }, 150);
+            }
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        function closeModal() {
+            document.getElementById('win-modal').style.display = 'none';
+            initGame();
+        }
+
+        window.onload = initGame;
+    </script>
+</body>
+</html>

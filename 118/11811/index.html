@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>貓咪調色生成器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f7f9fa;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: #ffffff;
+            min-height: 600px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 封面頁面樣式 */
+        #home-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url('home_banner_cat.jpg');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            padding: 20px;
+            transition: opacity 0.5s ease, pointer-events 0.5s;
+            z-index: 10;
+        }
+
+        #home-page.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #home-page h1 {
+            font-size: 3rem;
+            margin-bottom: 24px;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        }
+
+        .start-btn {
+            padding: 14px 40px;
+            font-size: 1.2rem;
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .start-btn:hover {
+            background-color: #ff5252;
+            transform: translateY(-2px);
+        }
+
+        /* 主調色器頁面樣式 */
+        #generator-page {
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #generator-page.active {
+            opacity: 1;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 4px;
+            background-color: #ff6b6b;
+            border-radius: 2px;
+        }
+
+        .palette-section {
+            width: 100%;
+            margin-bottom: 25px;
+        }
+
+        .palette-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #7f8c8d;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .palette-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            background: #f1f2f6;
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        /* 按鈕基本樣式 */
+        .color-btn {
+            padding: 10px 20px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .color-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .color-btn.selected {
+            border-color: #2c3e50;
+            transform: scale(1.05);
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        /* 顯示結果圖片區域 */
+        .result-section {
+            margin-top: 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .image-frame {
+            width: 100%;
+            max-width: 450px;
+            height: 350px;
+            border: 3px dashed #ced6e0;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: #fafafa;
+            position: relative;
+        }
+
+        .image-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        .placeholder-text {
+            color: #a4b0be;
+            font-size: 1rem;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* 瞳色特殊效果（彩色按鈕） */
+        .rainbow-text {
+            background: linear-gradient(to right, #ef5350, #f57c00, #fbc02d, #388e3c, #1976d2, #7b1fa2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        .color-btn.selected .rainbow-text {
+            -webkit-text-fill-color: inherit;
+            background: none;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="home-page">
+        <h1>貓咪調色生成器</h1>
+        <button class="start-btn" onclick="startGenerator()">點擊開始</button>
+    </div>
+
+    <div id="generator-page">
+        <h2 class="page-title">貓咪調色生成器</h2>
+
+        <div class="palette-section">
+            <div class="palette-title">🐾 選擇貓咪毛色：</div>
+            <div class="palette-grid" id="coat-palette">
+                <button class="color-btn" data-type="coat" data-value="紅" style="background-color: #ffcccc; color: #b30000;">紅</button>
+                <button class="color-btn" data-type="coat" data-value="橘" style="background-color: #ffe0b2; color: #e65100;">橘</button>
+                <button class="color-btn" data-type="coat" data-value="黃" style="background-color: #fff9c4; color: #f57f17;">黃</button>
+                <button class="color-btn" data-type="coat" data-value="綠" style="background-color: #c8e6c9; color: #1b5e20;">綠</button>
+                <button class="color-btn" data-type="coat" data-value="藍" style="background-color: #bbdefb; color: #0d47a1;">藍</button>
+                <button class="color-btn" data-type="coat" data-value="紫" style="background-color: #e1bee7; color: #4a148c;">紫</button>
+                <button class="color-btn" data-type="coat" data-value="黑" style="background-color: #333333; color: #ffffff;">黑</button>
+                <button class="color-btn" data-type="coat" data-value="白" style="background-color: #ffffff; color: #333333; border: 1px solid #ccc;">白</button>
+                <button class="color-btn" data-type="coat" data-value="灰" style="background-color: #b2bec3; color: #2d3436;">灰</button>
+                <button class="color-btn" data-type="coat" data-value="三花" style="background: linear-gradient(135deg, #ffb366 33%, #ffffff 33% 66%, #4d4d4d 66%); color: #000; text-shadow: 0 0 2px #fff;">三花</button>
+                <button class="color-btn" data-type="coat" data-value="虎斑" style="background: repeating-linear-gradient(45deg, #e67e22, #e67e22 10px, #d35400 10px, #d35400 20px); color: #fff;">虎斑</button>
+                <button class="color-btn" data-type="coat" data-value="玳瑁" style="background: linear-gradient(45deg, #2c3e50, #f39c12); color: #fff;">玳瑁</button>
+            </div>
+        </div>
+
+        <div class="palette-section">
+            <div class="palette-title">👁️ 選擇眼睛瞳色：</div>
+            <div class="palette-grid" id="eye-palette">
+                <button class="color-btn" data-type="eye" data-value="紅" style="background-color: #ff8585; color: #850000;">紅</button>
+                <button class="color-btn" data-type="eye" data-value="橘" style="background-color: #ffb885; color: #853c00;">橘</button>
+                <button class="color-btn" data-type="eye" data-value="黃" style="background-color: #fff485; color: #857a00;">黃</button>
+                <button class="color-btn" data-type="eye" data-value="綠" style="background-color: #85ff87; color: #008502;">綠</button>
+                <button class="color-btn" data-type="eye" data-value="藍" style="background-color: #85c4ff; color: #004585;">藍</button>
+                <button class="color-btn" data-type="eye" data-value="紫" style="background-color: #df85ff; color: #5c0085;">紫</button>
+                <button class="color-btn" data-type="eye" data-value="彩色" style="background-color: #ffffff;"><span class="rainbow-text">彩色</span></button>
+            </div>
+        </div>
+
+        <div class="result-section">
+            <div class="image-frame">
+                <div class="placeholder-text" id="placeholder">請同時選擇上方一種「毛色」與一種「瞳色」來查看對應的貓咪照片</div>
+                <img id="cat-img" src="" alt="貓咪圖片結果">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedCoat = null;
+    let selectedEye = null;
+
+    // 進入調色器頁面
+    function startGenerator() {
+        const homePage = document.getElementById('home-page');
+        const genPage = document.getElementById('generator-page');
+        
+        homePage.classList.add('hidden');
+        genPage.classList.add('active');
+    }
+
+    // 為所有按鈕綁定點擊事件
+    document.querySelectorAll('.color-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const type = this.getAttribute('data-type');
+            const value = this.getAttribute('data-value');
+
+            if (type === 'coat') {
+                document.querySelectorAll('.color-btn[data-type="coat"]').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedCoat = value;
+            } else if (type === 'eye') {
+                document.querySelectorAll('.color-btn[data-type="eye"]').forEach(b => b.classList.remove('selected'));
+                
+                if(value === '彩色') {
+                    this.style.background = 'linear-gradient(to right, #ef5350, #f57c00, #fbc02d, #388e3c, #1976d2, #7b1fa2)';
+                } else {
+                    document.querySelector('.color-btn[data-value="彩色"]').style.background = '#ffffff';
+                }
+
+                this.classList.add('selected');
+                selectedEye = value;
+            }
+
+            updateCatImage();
+        });
+    });
+
+    // 核心邏輯：判斷配對並更新對應的圖片檔名
+    function updateCatImage() {
+        const catImg = document.getElementById('cat-img');
+        const placeholder = document.getElementById('placeholder');
+
+        if (selectedCoat && selectedEye) {
+            
+            let eyeName = selectedEye;
+            if (selectedEye === '彩色') {
+                eyeName = '彩';
+            }
+
+            // 副檔名判斷
+            let extension = '.png';
+            if (selectedCoat === '三花' || selectedCoat === '玳瑁' || selectedCoat === '虎斑') {
+                if (eyeName === '彩') {
+                    extension = '.png';
+                } else {
+                    extension = '.jpg';
+                }
+            }
+
+            const fileName = `${selectedCoat}${eyeName}${extension}`;
+
+            catImg.src = fileName;
+            catImg.style.display = 'block';
+            placeholder.style.display = 'none';
+
+            catImg.onerror = function() {
+                catImg.style.display = 'none';
+                placeholder.style.display = 'block';
+                placeholder.innerText = `找不到檔案：(${fileName})\n請確認圖片是否有和這個 .html 檔擺在同一個資料夾喔！`;
+            };
+        }
+    }
+</script>
+
+</body>
+</html>

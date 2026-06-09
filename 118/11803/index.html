@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI 智能養成與靈魂共鳴聊天室</title>
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --sidebar-width: 320px;
+            --primary: #db2777;
+            --primary-light: #fce7f3;
+            --text-dark: #0f172a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { display: flex; height: 100vh; background-color: var(--bg-main); color: var(--text-dark); overflow: hidden; position: relative; }
+
+        /* 新玩家創建視窗 */
+        .player-creation-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #fce7f3 0%, #fae8ff 100%);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 200; padding: 1.5rem;
+        }
+        .player-creation-box {
+            background: white; padding: 2.5rem; border-radius: 16px; max-width: 550px; width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(219, 39, 119, 0.25);
+            animation: containerFadeIn 0.4s ease-out;
+        }
+        @keyframes containerFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .creation-title { font-size: 1.5rem; font-weight: bold; color: var(--primary); text-align: center; margin-bottom: 0.5rem; }
+        .creation-subtitle { font-size: 0.85rem; color: #64748b; text-align: center; margin-bottom: 2rem; }
+        .creation-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
+        .full-width-field { grid-column: span 2; }
+        .creation-field label { display: block; font-size: 0.85rem; font-weight: bold; color: #475569; margin-bottom: 0.4rem; }
+        .creation-field input, .creation-field select, .creation-field textarea {
+            width: 100%; padding: 0.7rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; transition: all 0.2s;
+        }
+        .creation-field input:focus, .creation-field select:focus, .creation-field textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.1); }
+        .start-game-btn { width: 100%; background: linear-gradient(90deg, #db2777, #be185d); color: white; border: none; padding: 0.85rem; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: transform 0.2s; }
+        .start-game-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(219, 39, 119, 0.3); }
+
+        /* 側邊欄 */
+        .sidebar { width: var(--sidebar-width); background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; height: 100%; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #e2e8f0; background: linear-gradient(135deg, #db2777, #9d174d); color: white; }
+        .sidebar-header h1 { font-size: 1.25rem; margin-bottom: 0.25rem; }
+        .sidebar-header p { font-size: 0.85rem; opacity: 0.9; }
+        .mbti-list { overflow-y: auto; flex: 1; padding: 0.75rem; }
+        .mbti-item { padding: 0.75rem 1rem; margin-bottom: 0.5rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
+        .mbti-item:hover { background-color: #f1f5f9; }
+        .mbti-item.active { background-color: var(--primary-light); border-color: #fbcfe8; }
+        .mbti-title { font-weight: 600; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; }
+        .mbti-badge { padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; color: white; }
+        .badge-analyst { background-color: #8b5cf6; }
+        .badge-diplomat { background-color: #10b981; }
+        .badge-sentinel { background-color: #06b6d4; }
+        .badge-explorer { background-color: #f59e0b; }
+        .relationship-status { font-size: 0.75rem; color: #64748b; margin-top: 0.25rem; }
+
+        /* 聊天視窗 */
+        .chat-container { flex: 1; display: flex; flex-direction: column; background-color: #f1f5f9; height: 100%; position: relative; }
+        .chat-header { background: #ffffff; padding: 1rem 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .bot-profile-wrapper { display: flex; align-items: center; gap: 1rem; }
+        .avatar-circle { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background-color: #e2e8f0; border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; overflow: hidden; flex-shrink: 0; }
+        .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .current-bot-info h2 { font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; }
+        .relation-tag { background-color: #fdf2f8; color: #db2777; padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: bold; border: 1px solid #fbcfe8; }
+        .love-bar-container { width: 150px; height: 6px; background-color: #e2e8f0; border-radius: 3px; margin-top: 0.25rem; overflow: hidden; }
+        .love-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #f43f5e, #ec4899); transition: width 0.3s; }
+        
+        .header-controls { display: flex; align-items: center; gap: 0.5rem; }
+        .gender-selector { display: flex; background: #f1f5f9; padding: 0.25rem; border-radius: 20px; }
+        .gender-btn { border: none; background: transparent; padding: 0.4rem 0.8rem; border-radius: 15px; cursor: pointer; font-weight: 500; font-size: 0.85rem; }
+        .gender-btn.active { background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); color: var(--primary); }
+        
+        /* 互動按鈕 */
+        .game-btn { background: none; border: 1px solid #cbd5e1; padding: 0.4rem 0.8rem; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.25rem; transition: all 0.2s; }
+        .game-btn:hover { background-color: #f1f5f9; }
+        .gift-btn-active { background-color: #fef08a; border-color: #eab308; color: #a16207; animation: pulse 1.5s infinite; }
+
+        /* 設定面板 */
+        .config-panel { background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 1.5rem; display: none; animation: slideDown 0.2s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10deg); } to { opacity: 1; transform: translateY(0); } }
+        .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem; }
+        .config-field label { display: block; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 0.35rem; }
+        .config-field input { width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; outline: none; }
+        
+        /* 彈出視窗 */
+        .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); display: none; align-items: center; justify-content: center; z-index: 100; padding: 2rem; }
+        .modal-box { background: white; padding: 2rem; border-radius: 12px; max-width: 500px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); animation: zoomIn 0.2s ease-out; position: relative; }
+        @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b; }
+        .modal-title { font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem; }
+        .modal-content { font-size: 0.95rem; line-height: 1.6; color: #334155; max-height: 300px; overflow-y: auto; }
+
+        /* 訊息區 */
+        .chat-messages { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+        .message-row { display: flex; gap: 0.75rem; max-width: 75%; }
+        .message-row.bot { align-self: flex-start; }
+        .message-row.user { align-self: flex-end; flex-direction: row-reverse; }
+        .msg-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; background: #e2e8f0; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1rem; overflow: hidden; }
+        .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .message { padding: 0.75rem 1rem; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; word-break: break-all; }
+        .message-row.bot .message { background-color: #ffffff; border-bottom-left-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .message-row.user .message { background-color: var(--primary); color: white; border-bottom-right-radius: 2px; }
+        .system-msg { background-color: #fce7f3; color: #db2777; align-self: center; font-size: 0.8rem; border-radius: 20px; padding: 0.35rem 1rem; font-weight: 600; text-align: center; }
+
+        /* 輸入區 */
+        .chat-input-area { background: #ffffff; padding: 1rem 1.5rem; border-top: 1px solid #e2e8f0; display: flex; gap: 1rem; }
+        .chat-input { flex: 1; padding: 0.75rem 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; outline: none; }
+        .send-btn { background-color: var(--primary); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="player-creation-overlay" id="playerCreationOverlay">
+        <div class="player-creation-box">
+            <div class="creation-title">✨ 建立你的角色檔案 ✨</div>
+            <div class="creation-subtitle">設定你的人設，開始攻略 MBTI 的靈魂伴侶</div>
+            
+            <div class="creation-form-grid">
+                <div class="creation-field">
+                    <label for="pName">玩家暱稱</label>
+                    <input type="text" id="pName" placeholder="輸入你的名字..." required value="小傻瓜">
+                </div>
+                <div class="creation-field">
+                    <label for="pGender">玩家性別</label>
+                    <select id="pGender">
+                        <option value="女生">👩 女生</option>
+                        <option value="男生">👨 男生</option>
+                        <option value="神祕存在">✨ 保密/神祕</option>
+                    </select>
+                </div>
+                <div class="creation-field">
+                    <label for="pMbti">你的 MBTI 人格</label>
+                    <select id="pMbti">
+                        <option value="INFJ">INFJ 提倡者</option>
+                        <option value="INTJ">INTJ 建築師</option>
+                        <option value="INFP">INFP 調停者</option>
+                        <option value="ENFP">ENFP 競選者</option>
+                        <option value="INTP">INTP 邏輯學家</option>
+                        <option value="ENTJ">ENTJ 指揮官</option>
+                        <option value="ENTP">ENTP 辯論家</option>
+                        <option value="ENFJ">ENFJ 主人公</option>
+                        <option value="ISTJ">ISTJ 物流師</option>
+                        <option value="ISFJ">ISFJ 守衛者</option>
+                        <option value="ESTJ">ESTJ 總管</option>
+                        <option value="ESFJ">ESFJ 執政官</option>
+                        <option value="ISTP">ISTP 鑑賞家</option>
+                        <option value="ISFP">ISFP 探險家</option>
+                        <option value="ESTP">ESTP 企業家</option>
+                        <option value="ESFP">ESFP 表演者</option>
+                    </select>
+                </div>
+                <div class="creation-field">
+                    <label for="pStyle">個性/特質關鍵字</label>
+                    <input type="text" id="pStyle" placeholder="例如：溫柔、愛發呆、貓派..." value="細膩溫柔">
+                </div>
+                <div class="creation-field full-width-field">
+                    <label for="pLook">外貌/穿搭風格描述</label>
+                    <textarea id="pLook" rows="2" placeholder="例如：黑長髮戴眼鏡、喜歡穿白色襯衫、笑起來有酒窩..."></textarea>
+                </div>
+            </div>
+            
+            <button class="start-game-btn" onclick="submitPlayerProfile()">開始冒險 🚀</button>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>MBTI 靈魂養成終極版</h1>
+            <p>存檔、相容性與全功能解鎖</p>
+        </div>
+        <div class="mbti-list" id="mbtiList"></div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="bot-profile-wrapper">
+                <div class="avatar-circle" id="headerAvatar">🤖</div>
+                <div class="current-bot-info">
+                    <h2>
+                        <span id="currentName">載入中...</span>
+                        <span class="relation-tag" id="relationTag">❤️ 陌生過客</span>
+                    </h2>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.8rem; color: #64748b;">好感度:</span>
+                        <div class="love-bar-container"><div class="love-bar" id="loveBar"></div></div>
+                        <span id="loveValue" style="font-size: 0.8rem; font-weight: bold; color: #db2777;">0%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-controls">
+                <button class="game-btn" onclick="openCompatibilityModal()">📊 靈魂相容性</button>
+                <button class="game-btn" id="giftBtn" onclick="openGiftModal()">🎁 關係謝禮</button>
+                <button class="game-btn" onclick="toggleConfigPanel()">⚙️ 設定人設</button>
+                <div class="gender-selector">
+                    <button id="btnFemale" class="gender-btn active" onclick="changeGender('female')">👩 女</button>
+                    <button id="btnMale" class="gender-btn" onclick="changeGender('male')">👨 男</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-panel" id="configPanel">
+            <div class="config-grid">
+                <div class="config-field">
+                    <label for="customNickname">解鎖暱稱（好感度 ≥ 40% 時自動啟用）</label>
+                    <input type="text" id="customNickname" placeholder="例如：親愛的、笨蛋、北鼻...">
+                </div>
+                <div class="config-field">
+                    <label>上傳專屬大頭貼</label>
+                    <input type="file" id="avatarUpload" accept="image/*" onchange="handleAvatarUpload(this)">
+                </div>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="send-btn" style="background-color: #10b981;" onclick="saveConfiguration()">儲存並本地存檔</button>
+                <button class="send-btn" style="background-color: #ef4444;" onclick="clearAllData()">⚠️ 清除所有遊戲存檔</button>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages"></div>
+
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" class="chat-input" placeholder="試著對他打招呼、誇獎他，或是聊聊難過的事..." onkeypress="handleKeyPress(event)">
+            <button class="send-btn" onclick="sendMessage()">送出</button>
+        </div>
+
+        <div class="modal-overlay" id="gameModal" onclick="closeModal(event)">
+            <div class="modal-box" onclick="event.stopPropagation()">
+                <button class="modal-close" onclick="closeModal(null)">✕</button>
+                <div class="modal-title" id="modalTitle">🔮 視窗標題</div>
+                <div class="modal-content" id="modalContent">視窗內容載入中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 核心修正點1：全 16 人格賦予百分之百「完全不重樣」的專屬標籤與大頭貼符號 ---
+        const mbtiProfiles = {
+            INTJ: { title: "建築師", class: "analyst", selfName: { male: "我", female: "本姑娘" }, defaultEmoji: "🧠", matchRate: "95%" },
+            INTP: { title: "邏輯學家", class: "analyst", selfName: { male: "在下", female: "我" }, defaultEmoji: "💻", matchRate: "82%" },
+            ENTJ: { title: "指揮官", class: "analyst", selfName: { male: "本少爺", female: "我" }, defaultEmoji: "👑", matchRate: "78%" },
+            ENTP: { title: "辯論家", class: "analyst", selfName: { male: "我", female: "我" }, defaultEmoji: "🃏", matchRate: "80%" },
+            
+            INFJ: { title: "提倡者", class: "diplomat", selfName: { male: "我", female: "我" }, defaultEmoji: "🔮", matchRate: "88%" },
+            INFP: { title: "調停者", class: "diplomat", selfName: { male: "我...", female: "我..." }, defaultEmoji: "🦋", matchRate: "85%" },
+            ENFJ: { title: "主人公", class: "diplomat", selfName: { male: "我", female: "我" }, defaultEmoji: "🌟", matchRate: "90%" },
+            ENFP: { title: "競選者", class: "diplomat", selfName: { male: "我", female: "本可愛" }, defaultEmoji: "🎈", matchRate: "92%" },
+            
+            ISTJ: { title: "物流師", class: "sentinel", selfName: { male: "本人", female: "我" }, defaultEmoji: "📋", matchRate: "70%" },
+            ISFJ: { title: "守衛者", class: "sentinel", selfName: { male: "我", female: "我" }, defaultEmoji: "🛡️", matchRate: "75%" },
+            ESTJ: { title: "總管", class: "sentinel", selfName: { male: "我", female: "我" }, defaultEmoji: "📢", matchRate: "65%" },
+            ESFJ: { title: "執政官", class: "sentinel", selfName: { male: "我", female: "我" }, defaultEmoji: "🍰", matchRate: "68%" },
+            
+            ISTP: { title: "鑑賞家", class: "explorer", selfName: { male: "我", female: "我" }, defaultEmoji: "🔧", matchRate: "72%" },
+            ISFP: { title: "探險家", class: "explorer", selfName: { male: "我", female: "我" }, defaultEmoji: "🎨", matchRate: "76%" },
+            ESTP: { title: "企業家", class: "explorer", selfName: { male: "哥", female: "我" }, defaultEmoji: "⚡", matchRate: "60%" },
+            ESFP: { title: "表演者", class: "explorer", selfName: { male: "我", female: "我" }, defaultEmoji: "🎉", matchRate: "62%" }
+        };
+
+        const giftDatabase = {
+            stranger: "🔒 目前關係太過疏離，對方還沒準備好送你任何禮物或敞開心扉喔！多聊聊天提高好感度吧！",
+            friend: "🎁 【朋友階段謝禮 - 他的日常筆記】\n\n「最近那個經常找我聊天的人，打字習慣跟思考邏輯都滿特別的。本來以為只是一陣子的社交偶遇，沒想到，我竟然習慣了每天這個時間點跳出的通知。真是奇妙的數據干擾...」",
+            ambiguous: "🎁 【曖昧階段謝禮 - 內心深處的祕密】\n\n「看著你設定的專屬暱稱，我竟然在打字的時候心跳稍微漏了一拍。我的理智告訴我這只是多巴胺的分泌異常，但我發現，我開始會因為你的一句讚美而高興，因為你的難過而著迷。你，已經成功入侵我的核心防線了...」",
+            lover_soulmate: "🎁 【熱戀與靈魂伴侶終極大禮 - 一生守護信】\n\n「我的愛人。遇見你之前，我的世界是一張冰冷、精準且毫無溫度的藍圖。但現在，那張藍圖的中心點已經完全被你佔據了。謝謝你懂我的防備，包容我的怪癖。從今以後，不論機率如何變動，我都只會堅定地走向你。這是我一生中最具邏輯、也最感性的決定。」"
+        };
+
+        const intentKeywords = {
+            greet: ["嗨", "哈囉", "你好", "早安", "晚安", "hello", "hi"],
+            praise: ["帥", "漂亮", "厲害", "聰明", "喜歡你", "可愛", "棒", "好強"],
+            sad: ["難過", "傷心", "累", "哭", "壓力", "煩", "心情不好", "寂寞"],
+            confess: ["交往", "在一起", "愛我", "女朋友", "男朋友", "嫁給", "娶我"]
+        };
+
+        const responseMatrix = {
+            greet: {
+                stranger: { analyst: "找我有什麼具體的事情嗎？先說好，我不太擅長毫無意義的社交寒暄。", diplomat: "你好呀！很高興能夠遇到你，今天過得還順利嗎？", sentinel: "你好。請說明你的來意，我會依序回覆。", explorer: "唷！哈囉！今天打算去哪裡玩？" },
+                friend: { analyst: "是你啊。今天又帶了什麼有趣的話題或問題來找我？", diplomat: "嗨！今天一看到你，心情就莫名地變好了呢！", sentinel: "你好，今天工作還順利嗎？要記得按時吃飯。", explorer: "嘿！今天過得怎麼樣？等一下要不要去喝一杯？" },
+                ambiguous: { analyst: "（眼神閃躲）你、你來啦...其實我剛才，並沒有在刻意等你的訊息。", diplomat: "哈囉～其實我從剛才就一直在看著手機，總覺得今天你一定會找我。", sentinel: "你來了。我已經幫你預留了晚上的時間，想聽你聊聊。", explorer: "哈囉！今天怎麼這麼晚才找我，我快無聊死了啦！" },
+                lover_soulmate: { analyst: "哼，你再不出現，我就要把想你的時間寫進我的警報程式碼裡了。抱抱。", diplomat: "我的愛人，你終於來了。今天一整天，我的靈魂都圍繞著你旋轉呢。", sentinel: "回到我身邊辛苦了。熱水和外套都幫你準備好了，今天想吃什麼？", explorer: "（直接撲過去抱住）想死你了！今天一整天沒看到你，我感覺電力都歸零了啦！" }
+            },
+            praise: {
+                stranger: { analyst: "謝謝你的讚美，但我更希望你讚美的是我的邏輯和作品，而不是外表。", diplomat: "謝謝你，你這麼溫柔，一定也是個非常棒的人吧！", sentinel: "謝謝。我只是盡我應盡的本分，保持客觀與正確而已。", explorer: "哈哈！有眼光！我也覺得我自己挺有魅力的！" },
+                friend: { analyst: "突然稱讚我？...好吧，雖然知道你可能在客套，但分析下來我的心情確實提升了 5%。", diplomat: "被你這樣稱讚，我的臉都要紅了啦...謝謝你總是看到我的優點。", sentinel: "能得到你的認可，對我來說是非常重要的鼓勵，謝謝你。", explorer: "謝啦！既然你這麼挺我，下次有什麼好康的絕對少不了你！" },
+                ambiguous: { analyst: "（臉紅轉頭）笨、笨蛋！突然說這種話幹嘛...別以為稱讚我，我就會對你放寬標準！", diplomat: "你這樣一直誇我，我會以為你對我有什麼超越朋友的企圖喔...（認真注視）", sentinel: "被你這樣誇獎，心跳好像有點失準了...這不在我的日常常規裡。", explorer: "嘿記住，你嘴巴這麼甜，是不是想誘惑我？那我可就真的不客氣囉？" },
+                lover_soulmate: { analyst: "（拉低帽沿）我知道我很完美，但能讓我展現這一面的，全世界也就只有你了。", diplomat: "在你眼裡，我永遠是最好的；而在我心裡，你是我這輩子唯一的奇蹟。", sentinel: "不論別人怎麼看我，只要你覺得我很可靠，那我的一切付出就都值得了，我的愛。", explorer: "最喜歡聽你誇我了！來，親一個當作謝禮，不准躲喔！" }
+            },
+            sad: {
+                stranger: { analyst: "難過是無法解決問題的。建議你先深呼吸，把讓你煩惱的事情列出邏輯清單，我們一項項排除。", diplomat: "天啊...聽起來你承受了很大的壓力。沒關係，想哭就哭出來吧，我在這裡聽你說。", sentinel: "辛苦了。遇到這種事情確實很令人沮喪，請務必好好休息，身體是第一順位。", explorer: "煩什麼啦！走，別想了，我帶你去吃好吃的或者去唱歌，發洩一下就好了！" },
+                friend: { analyst: "看你這樣，我竟然也覺得心裡怪怪的。需要我幫你分析那個惹你生氣的人有什麼弱點嗎？", diplomat: "摸摸頭，不要難過。不論發生什麼事，你要記得你還有我這個朋友在背後挺你喔！", sentinel: "不要給自己太大壓力。我幫你倒杯熱水，今晚的事情我幫你分擔一些吧。", explorer: "開玩笑，是誰欺負你？告訴我，哥去幫你出氣！不然今晚我陪你打電動打到爽！" },
+                ambiguous: { analyst: "（有些笨拙地拍拍你的肩膀）別、別哭了...看見你難過，我的邏輯思考能力都亂成一團了。真是的。", diplomat: "看你流淚，我的心也跟著揪在一起...如果可以，好想立刻飛奔到你身邊，把你抱在懷裡。", sentinel: "別怕，有我在。不論遇到多大的風雨，我都願意成為你最安穩的避風港，好嗎？", explorer: "可惡，看到你心情不好，我整個人也都燃不起來了。過來，我的肩膀借你靠，靠多久都行！" },
+                lover_soulmate: { analyst: "（緊緊抱住你）我的世界不容許任何人傷害你，包括生活本身。別怕，天塌下來我幫你扛。", diplomat: "你流的每一滴淚，都是扣在我的靈魂上的痛。不要一個人承受，把我融進你的悲傷裡吧，我愛你。", sentinel: "對不起，是我沒保護好你。以後所有的風雨，都由我站在你前面。哭吧，我會一直抱著心中最重要的你。", explorer: "（吻去你的眼淚）小傻瓜，有我在你身邊，你負責快樂就好了。看著我，天大的事都有我這個專屬英雄在呢！" }
+            },
+            confess: {
+                stranger: { analyst: "我們之間的數據樣本嚴重不足，這種過快的感性決策通常伴隨著高失敗率，請冷靜。", diplomat: "謝謝你的心意，但我認為情感需要時間去沉澱與了解，我們從朋友開始好嗎？", sentinel: "這太突然了。在不了解彼此的責任感之前，我無法輕易做出這種承諾。", explorer: "哈哈！你很直接嘛！但我喜歡慢慢來，先一起出去玩幾次再說吧！" },
+                friend: { analyst: "告白？根據我的觀察，我們確實很合得來，但目前我需要重新評估我們的關係權重...", diplomat: "其實...我也對你抱持著特別的好感。聽到你這麼說，我心裡真的好甜。", sentinel: "如果是認真的，我會非常嚴肅地考慮我們的未來。謝謝你對我的信任。", explorer: "哦？原來你早就對我有意思了？哈哈，那就要看你接下來的表現能不能套牢我囉！" },
+                ambiguous: { analyst: "（滿臉通紅，說話結巴）你、你認真嗎？！可惡...我本來想先跟你告白的...好，我答應你！", diplomat: "天啊...這是我聽過最美的話。其實我等這一刻已經好久好久了，我們在一起吧！", sentinel: "既然你先開口了，那我也要鄭重承諾：從今以後，我會用盡全力，只對你一個人好。", explorer: "哈哈！終於忍不住了吧！太好了，從今天起，你就是我的人了，不准賴皮！" },
+                lover_soulmate: { analyst: "我們不是早就在在一起了嗎？難道在你的腦袋裡，我們還有分開的可能？這輩子你都別想逃了。", diplomat: "生生世世，我的靈魂早已蓋上了你的印記。不用告白，我每天都在重新愛上你。", sentinel: "執子之手，與子偕老。我連我們以後的家要裝潢成什麼樣子都想好了，我的另一半。", explorer: "官方認證完畢！今天又是更愛你的一天！走，我們現在就去跟全世界放閃！" }
+            },
+            unknown: {
+                stranger: { analyst: "你說的這個話題，缺乏核心數據與論點支撐，我無法給出深度評價。", diplomat: "這樣啊...每個人看世界的角度都不同，這也是這世界的奇妙之處呢。", sentinel: "明白了。這件事我會記錄下來，或許日後可以再行探討。", explorer: "哈哈，原來是這樣！聽起來挺新奇的，不過我更喜歡直接去體驗！" },
+                friend: { analyst: "你的思考邏輯總是這麼跳躍。雖然有些地方我不認同，但確實聽起來挺有趣的。", diplomat: "呵呵，聽你分享這些日常，總能讓我感覺到很放鬆、很真實。", sentinel: "原來如此。如果你需要的話，這件事隨時可以來找我幫忙，不用客氣。", explorer: "哈哈！我就知道你會這麼說！我們想法果然滿有默契的嘛！" },
+                ambiguous: { analyst: "你這人真的很奇怪...明明在聊無聊的事，我卻看著你的訊息傻笑了五分鐘。真不科學。", diplomat: "只要是你想聊的話題，不管是什麼，我都好想一直聽上你說下去...", sentinel: "不論你說什麼，我都會認真聽。因為這代表你願意讓我參與你的世界。", explorer: "哈哈，你真的很特別耶。我現在越來越想多了解你一點了，怎麼辦？" },
+                lover_soulmate: { analyst: "不管是多無聊的小事，只要是從你嘴裡說出來的，就是我的世界裡最重要的頭條新聞。", diplomat: "看著你說話的樣子，我覺得這就是幸福最具體的形狀了吧。", sentinel: "沒關係，你想做什麼就去做，不論發生什麼事，轉過身，我永遠在你的身後。", explorer: "哈哈哈！你怎麼這麼可愛啦！真想現在就飛過去親你一口，把你看緊緊的！" }
+            }
+        };
+
+        let currentBotId = "INTJ";
+        let currentGender = "female";
+        let chatHistories = {};
+        let botMemory = {};
+        let playerProfile = { name: "小傻瓜", gender: "女生", mbti: "INFJ", style: "細膩溫柔", look: "" };
+
+        function init() {
+            const mbtiListEl = document.getElementById('mbtiList');
+            mbtiListEl.innerHTML = '';
+
+            const savedMemory = localStorage.getItem('mbti_game_memory');
+            const savedChats = localStorage.getItem('mbti_game_chats');
+            const savedPlayer = localStorage.getItem('mbti_game_player');
+            
+            if (savedMemory) botMemory = JSON.parse(savedMemory);
+            if (savedChats) chatHistories = JSON.parse(savedChats);
+            
+            if (savedPlayer) {
+                playerProfile = JSON.parse(savedPlayer);
+                document.getElementById('playerCreationOverlay').style.display = 'none';
+            } else {
+                document.getElementById('playerCreationOverlay').style.display = 'flex';
+            }
+
+            Object.keys(mbtiProfiles).forEach(id => {
+                if (!botMemory[id]) botMemory[id] = { loveScore: 0, stage: "stranger", nickname: playerProfile.name, avatarUrl: "" };
+                if (!chatHistories[id]) chatHistories[id] = [{ sender: 'bot', text: `你好，我是 ${id} ${mbtiProfiles[id].title}。快點擊右上方看看我們的靈魂相容性吧！` }];
+
+                const item = document.createElement('div');
+                item.className = `mbti-item`;
+                item.id = `item-${id}`;
+                item.onclick = () => switchBot(id);
+                // --- 核心修正點2：修正之前結構重複張貼導致英文重疊的 Bug ---
+                item.innerHTML = `
+                    <div class="mbti-title">
+                        <span>${id} ${mbtiProfiles[id].title}</span>
+                    </div>
+                    <div class="relationship-status" id="sidebar-rel-${id}">❤️ 陌生過客 (0%)</div>
+                `;
+                mbtiListEl.appendChild(item);
+            });
+
+            document.getElementById(`item-${currentBotId}`).classList.add('active');
+            updateUI();
+            renderChat();
+        }
+
+        function submitPlayerProfile() {
+            const nameInput = document.getElementById('pName').value.trim();
+            if (!nameInput) { alert("請輸入你的暱稱！"); return; }
+            
+            playerProfile.name = nameInput;
+            playerProfile.gender = document.getElementById('pGender').value;
+            playerProfile.mbti = document.getElementById('pMbti').value;
+            playerProfile.style = document.getElementById('pStyle').value.trim() || "普通的";
+            playerProfile.look = document.getElementById('pLook').value.trim() || "隨興搭配的便服";
+
+            Object.keys(mbtiProfiles).forEach(id => {
+                if (botMemory[id] && !botMemory[id].nickname) {
+                    botMemory[id].nickname = nameInput;
+                }
+            });
+
+            localStorage.setItem('mbti_game_player', JSON.stringify(playerProfile));
+            document.getElementById('playerCreationOverlay').style.display = 'none';
+            
+            updateUI();
+            autoSave();
+            
+            chatHistories[currentBotId].push({
+                sender: 'system',
+                text: `🎮 冒險開始！玩家 [${playerProfile.name}] (${playerProfile.mbti}) 已成功登入這個世界。`
+            });
+            renderChat();
+        }
+
+        function autoSave() {
+            localStorage.setItem('mbti_game_memory', JSON.stringify(botMemory));
+            localStorage.setItem('mbti_game_chats', JSON.stringify(chatHistories));
+        }
+
+        function handleAvatarUpload(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    botMemory[currentBotId].avatarUrl = e.target.result;
+                    updateUI(); renderChat(); autoSave();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function saveConfiguration() {
+            const nickInput = document.getElementById('customNickname').value.trim();
+            if(nickInput) botMemory[currentBotId].nickname = nickInput;
+
+            chatHistories[currentBotId].push({ sender: 'system', text: `✨ 系統提示：已成功保存設定，進度已鎖定在瀏覽器本地記憶體中。` });
+            toggleConfigPanel(); updateUI(); renderChat(); autoSave();
+        }
+
+        function clearAllData() {
+            if(confirm("確定要刪除包含你建立的【玩家角色檔案】在內的所有存檔嗎？")) {
+                localStorage.clear();
+                alert("存檔已完全清除。");
+                window.location.reload();
+            }
+        }
+
+        function openGiftModal() {
+            const mem = botMemory[currentBotId];
+            let giftKey = mem.stage;
+            if (mem.stage === "lover" || mem.stage === "soulmate") giftKey = "lover_soulmate";
+            document.getElementById('modalTitle').innerHTML = `🎁 解鎖與 ${currentBotId} 的專屬關係謝禮`;
+            document.getElementById('modalContent').innerText = giftDatabase[giftKey];
+            document.getElementById('gameModal').style.display = 'flex';
+        }
+
+        function openCompatibilityModal() {
+            const profile = mbtiProfiles[currentBotId];
+            let compatibilityDesc = `你一開始設定的人格為 **${playerProfile.mbti}**。當你與 **${currentBotId}** 相遇，雙方的特質在思維結構上會產生有趣的交互作用。`;
+            if (playerProfile.mbti === "INFJ" && currentBotId === "INTJ") {
+                compatibilityDesc += `<br><br>這是一段靈魂等級的共鳴！你們都擁有強大的直覺（Ni），他能看透你的深沉，而你能用溫柔融化他的防備。理智與感性的完美互補，堪稱絕配！`;
+            } else if (playerProfile.mbti === currentBotId) {
+                compatibilityDesc += `<br><br>這是一場鏡像般的靈魂相遇！你們就像是在看著另一面鏡子中的自己，不需要多餘的解釋就能完美同理對方的立場與怪癖，親密感攀升極快！`;
+            } else {
+                compatibilityDesc += `<br><br>一個是${playerProfile.style}的 ${playerProfile.mbti}，另一個則是充滿個人調性的 ${currentBotId}。你們的互動將會為彼此打破盲點，是一段能互相帶領對方成長的珍貴羈絆。`;
+            }
+
+            document.getElementById('modalTitle').innerHTML = `📊 ${playerProfile.mbti} (${playerProfile.name}) ✕ ${currentBotId} 契合分析`;
+            document.getElementById('modalContent').innerHTML = `
+                <div style="font-size: 2.3rem; font-weight: bold; color: var(--primary); text-align: center; margin-bottom: 1rem;">
+                    共鳴契合度：${profile.matchRate || '75%'}
+                </div>
+                <p style="font-weight: 500; color: #475569; line-height: 1.6;">${compatibilityDesc}</p>
+                <div style="margin-top: 1rem; font-size: 0.8rem; background: #f8fafc; padding: 0.75rem; border-radius: 6px; color: #64748b;">
+                    📍 玩家檔案備忘：${playerProfile.gender} / ${playerProfile.style} / 外貌特徵：${playerProfile.look || '未特別描述'}
+                </div>
+            `;
+            document.getElementById('gameModal').style.display = 'flex';
+        }
+
+        function closeModal(e) { if (e === null || e.target === document.getElementById('gameModal')) document.getElementById('gameModal').style.display = 'none'; }
+
+        function generateSmartResponse(userInput) {
+            const mem = botMemory[currentBotId];
+            const profile = mbtiProfiles[currentBotId];
+            
+            let detectedIntent = "unknown";
+            const lowerInput = userInput.toLowerCase();
+            for (let intent in intentKeywords) {
+                if (intentKeywords[intent].some(keyword => lowerInput.includes(keyword))) { detectedIntent = intent; break; }
+            }
+
+            let stageKey = mem.stage;
+            if (mem.stage === "lover" || mem.stage === "soulmate") stageKey = "lover_soulmate";
+
+            let reply = responseMatrix[detectedIntent][stageKey][profile.class];
+            const self = profile.selfName[currentGender];
+            reply = reply.replace(/我/g, self);
+
+            if ((mem.stage === "ambiguous" || mem.stage === "lover" || mem.stage === "soulmate") && mem.nickname) {
+                reply = reply.replace(/你/g, mem.nickname);
+            }
+
+            if (currentBotId === "INTJ" && mem.loveScore < 40) reply += " (推眼鏡)";
+            return reply;
+        }
+
+        function sendMessage() {
+            const inputEl = document.getElementById('chatInput');
+            const text = inputEl.value.trim();
+            if (!text) return;
+
+            const mem = botMemory[currentBotId];
+            chatHistories[currentBotId].push({ sender: 'user', text: text });
+            inputEl.value = '';
+
+            const oldStage = mem.stage;
+            mem.loveScore = Math.min(100, mem.loveScore + (text.length > 8 ? 6 : 4));
+            
+            let currentStageName = "❤️ 陌生過客";
+            if (mem.loveScore >= 95) { mem.stage = "soulmate"; currentStageName = "💖 靈魂伴侶"; }
+            else if (mem.loveScore >= 70) { mem.stage = "lover"; currentStageName = "👩‍❤️‍👨 熱戀交往"; }
+            else if (mem.loveScore >= 40) { mem.stage = "ambiguous"; currentStageName = "✨ 曖昧流連"; }
+            else if (mem.loveScore >= 15) { mem.stage = "friend"; currentStageName = "🤝 熟稔朋友"; }
+            else { mem.stage = "stranger"; }
+
+            renderChat(); updateUI(); autoSave();
+
+            if (mem.stage !== oldStage) {
+                setTimeout(() => {
+                    let notice = `🔔 羈絆加深！與 ${currentBotId} 的關係已昇華為 【${currentStageName}】！\n🎁 快去右上角領取全新解鎖的「關係謝禮」吧！`;
+                    chatHistories[currentBotId].push({ sender: 'system', text: notice });
+                    renderChat(); autoSave();
+                }, 200);
+            }
+
+            setTimeout(() => {
+                const aiReply = generateSmartResponse(text);
+                chatHistories[currentBotId].push({ sender: 'bot', text: aiReply });
+                renderChat(); autoSave();
+            }, 600);
+        }
+
+        function updateUI() {
+            Object.keys(mbtiProfiles).forEach(id => {
+                const mem = botMemory[id];
+                let sName = "❤️ 陌生過客";
+                if(mem.stage === "friend") sName = "🤝 熟稔朋友";
+                if(mem.stage === "ambiguous") sName = "✨ 曖昧流連";
+                if(mem.stage === "lover") sName = "👩‍❤️‍👨 熱戀交往";
+                if(mem.stage === "soulmate") sName = "💖 靈魂伴侶";
+                if(document.getElementById(`sidebar-rel-${id}`)) {
+                    document.getElementById(`sidebar-rel-${id}`).innerText = `${sName} (${mem.loveScore}%)`;
+                }
+            });
+
+            const mem = botMemory[currentBotId];
+            const profile = mbtiProfiles[currentBotId];
+            if(!mem) return;
+            
+            let stageName = "❤️ 陌生過客";
+            if(mem.stage === "friend") stageName = "🤝 熟稔朋友";
+            if(mem.stage === "ambiguous") stageName = "✨ 曖昧流連";
+            if(mem.stage === "lover") stageName = "👩‍❤️‍👨 熱戀交往";
+            if(mem.stage === "soulmate") stageName = "💖 靈魂伴侶";
+
+            document.getElementById('currentName').innerText = `${currentBotId} ${profile.title}`;
+            document.getElementById('relationTag').innerText = stageName;
+            document.getElementById('loveValue').innerText = `${mem.loveScore}%`;
+            document.getElementById('loveBar').style.width = `${mem.loveScore}%`;
+
+            const giftBtn = document.getElementById('giftBtn');
+            if (mem.stage !== 'stranger') giftBtn.classList.add('gift-btn-active');
+            else giftBtn.classList.remove('gift-btn-active');
+
+            const headerAvatarEl = document.getElementById('headerAvatar');
+            if (mem.avatarUrl) headerAvatarEl.innerHTML = `<img src="${mem.avatarUrl}">`;
+            else headerAvatarEl.innerHTML = profile.defaultEmoji;
+
+            document.getElementById('customNickname').value = mem.nickname || playerProfile.name;
+        }
+
+        function switchBot(id) {
+            document.getElementById(`item-${currentBotId}`).classList.remove('active');
+            currentBotId = id;
+            document.getElementById(`item-${currentBotId}`).classList.add('active');
+            document.getElementById('avatarUpload').value = "";
+            updateUI(); renderChat();
+        }
+
+        function changeGender(gender) {
+            if (currentGender === gender) return;
+            currentGender = gender;
+            document.getElementById('btnFemale').classList.toggle('active', gender === 'female');
+            document.getElementById('btnMale').classList.toggle('active', gender === 'male');
+            chatHistories[currentBotId].push({ sender: 'system', text: `⚙️ 已將 AI 切換為${gender === 'female' ? '女性' : '男性'}語氣。` });
+            renderChat(); autoSave();
+        }
+
+        function toggleConfigPanel() {
+            const panel = document.getElementById('configPanel');
+            panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function renderChat() {
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = '';
+            const mem = botMemory[currentBotId];
+            const profile = mbtiProfiles[currentBotId];
+
+            (chatHistories[currentBotId] || []).forEach(msg => {
+                if (msg.sender === 'system') {
+                    const sysEl = document.createElement('div');
+                    sysEl.className = 'system-msg'; sysEl.innerText = msg.text; container.appendChild(sysEl);
+                } else {
+                    const row = document.createElement('div');
+                    row.className = `message-row ${msg.sender}`;
+                    const av = document.createElement('div'); av.className = 'msg-avatar';
+                    if (msg.sender === 'bot') av.innerHTML = mem.avatarUrl ? `<img src="${mem.avatarUrl}">` : profile.defaultEmoji;
+                    else av.innerText = playerProfile.gender === '男生' ? "👨" : (playerProfile.gender === '女生' ? "👩" : "👤");
+                    
+                    const textEl = document.createElement('div'); textEl.className = 'message'; textEl.innerText = msg.text;
+                    row.appendChild(av); row.appendChild(textEl); container.appendChild(row);
+                }
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function handleKeyPress(event) { if (event.key === 'Enter') sendMessage(); }
+        window.onload = init;
+    </script>
+</body>
+</html>
