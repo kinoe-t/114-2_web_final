@@ -3,623 +3,429 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>時尚甜心：換裝闖關大挑戰</title>
+    <title>高一新生生存模擬器</title>
     <style>
-        :root {
-            --bg-color: #f7edfd;
-            --primary-color: #ff94b8;
-            --secondary-color: #bfa3ff;
-            --text-color: #5c4b69;
-            --panel-bg: #ffffff;
+        /* 全域樣式 */
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Microsoft JhengHei, sans-serif;
         }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft JhengHei";
-            background-color: var(--bg-color);
-            color: var(--text-color);
             margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        h1 {
-            color: #ff619b;
-            text-shadow: 2px 2px #fff;
-            margin-bottom: 10px;
-        }
-
-        .game-container {
-            display: flex;
-            width: 1000px;
-            max-width: 100%;
-            gap: 20px;
-            background: rgba(255, 255, 255, 0.6);
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        }
-
-        /* 左側：關卡資訊與角色畫布 */
-        .left-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .level-card {
-            background: var(--panel-bg);
-            width: 100%;
-            padding: 15px;
-            border-radius: 15px;
-            border: 3px dashed var(--secondary-color);
-            box-sizing: border-box;
-        }
-
-        .level-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #7b46e3;
-            margin-bottom: 5px;
-        }
-
-        .level-desc {
-            font-size: 0.95rem;
-            line-height: 1.4;
-        }
-
-        .avatar-container {
-            position: relative;
-            width: 320px;
-            height: 480px;
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
-            overflow: hidden;
-            border: 4px solid var(--primary-color);
-        }
-
-        /* 娃娃與衣物圖層疊加 */
-        .layer {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
+            padding: 0;
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            color: #333;
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
         }
 
-        /* 按鈕區 */
-        .action-buttons {
-            display: flex;
-            gap: 10px;
+        /* 遊戲主視窗 */
+        #game-container {
             width: 100%;
-        }
-
-        button {
-            flex: 1;
-            background: linear-gradient(135deg, var(--primary-color), #ff619b);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.1s, filter 0.2s;
-            box-shadow: 0 4px 10px rgba(255, 97, 155, 0.3);
-        }
-
-        button:hover {
-            filter: brightness(1.05);
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        button.reset-btn {
-            background: linear-gradient(135deg, #bbb, #999);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        /* 右側：衣櫃選擇區 */
-        .right-panel {
-            flex: 1.2;
-            background: var(--panel-bg);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.02);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            max-height: 590px;
-            overflow-y: auto;
-        }
-
-        .category-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-left: 5px solid var(--primary-color);
-            padding-left: 8px;
-            margin-top: 10px;
-            margin-bottom: 10px;
-        }
-
-        .item-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
-            gap: 8px;
-        }
-
-        .item-card {
-            background: #fdf8ff;
-            border: 2px solid #ecd9ff;
-            border-radius: 8px;
-            padding: 8px;
-            text-align: center;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-
-        .item-card:hover {
-            background: #f5e6ff;
-            border-color: var(--secondary-color);
-        }
-
-        .item-card.selected {
-            background: #ffe3ee;
-            border-color: var(--primary-color);
-            font-weight: bold;
-        }
-
-        /* 顏色選擇器 */
-        .color-selector {
-            display: flex;
-            gap: 5px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .color-dot {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            border: 1px solid #ccc;
-            cursor: pointer;
-            box-sizing: border-box;
-        }
-
-        .color-dot.active {
-            border: 2px solid #000;
-            transform: scale(1.1);
-        }
-
-        /* 彈窗 */
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-
-        .modal {
-            background: white;
+            max-width: 800px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.12);
             padding: 30px;
+            margin: 20px;
+        }
+
+        /* 狀態列 */
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .round-badge {
+            background: #3b82f6;
+            color: white;
+            padding: 6px 16px;
             border-radius: 20px;
-            text-align: center;
-            max-width: 400px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
         }
+        
+        /* 屬性面板與進度條 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .stat-bar-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .stat-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #475569;
+        }
+        .progress-bg {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 50%;
+            border-radius: 6px;
+            transition: width 0.4s ease, background-color 0.3s ease;
+        }
+        #fill-academic { background-color: #10b981; }
+        #fill-club { background-color: #8b5cf6; }
+        #fill-social { background-color: #f59e0b; }
+        #fill-energy { background-color: #ef4444; }
 
-        .modal h2 {
+        /* 故事內文區 */
+        .story-section {
+            min-height: 130px;
+            background: #fff;
+            padding: 5px;
+            margin-bottom: 25px;
+        }
+        .story-title {
+            font-size: 1.4em;
+            color: #1e293b;
             margin-top: 0;
-            color: var(--primary-color);
+            margin-bottom: 12px;
+            font-weight: bold;
+            border-left: 5px solid #3b82f6;
+            padding-left: 12px;
+        }
+        .story-text {
+            font-size: 1.15em;
+            line-height: 1.8;
+            color: #334155;
+            white-space: pre-line;
         }
 
-        .modal p {
-            font-size: 1.1rem;
-            line-height: 1.5;
+        /* 屬性異動飄字提示 */
+        .effect-text {
+            color: #059669;
+            font-size: 1em;
+            font-weight: bold;
+            margin-top: 10px;
+            min-height: 24px;
+        }
+        .effect-text.negative {
+            color: #dc2626;
+        }
+
+        /* 選項按鈕 */
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .option-btn {
+            background: #f8fafc;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            padding: 15px 20px;
+            font-size: 1.05em;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        .option-btn:hover {
+            background: #f0fdf4;
+            border-color: #22c55e;
+            color: #166534;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
+        }
+        .option-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 結局特殊樣式 */
+        .ending-title {
+            color: #ea580c !important;
+            font-size: 1.7em !important;
+            text-align: center;
+            border-left: none !important;
+            padding-left: 0 !important;
+        }
+        .restart-btn {
+            background: #3b82f6 !important;
+            color: white !important;
+            text-align: center !important;
+            font-weight: bold;
+            border: none !important;
+        }
+        .restart-btn:hover {
+            background: #2563eb !important;
         }
     </style>
 </head>
 <body>
 
-    <h1>✨ 時尚甜心：換裝闖關大挑戰 ✨</h1>
-    
-    <div class="game-container">
-        
-        <div class="left-panel">
-            <div class="level-card">
-                <div class="level-title" id="level-num">第 1 關：海灘派對</div>
-                <div class="level-desc" id="level-req">目標：請穿著「無袖」上裝，搭配「短褲」或「短裙」，並穿上適合沙灘的「涼鞋」、「拖鞋」或「洞洞鞋」吧！</div>
-            </div>
+<div id="game-container">
+    <div class="status-header">
+        <h2 style="margin:0; font-size: 1.5em; color: #0f172a;">🏫 高一新生生存模擬器</h2>
+        <div id="round-display" class="round-badge">第 1 / 8 週</div>
+    </div>
 
-            <div class="avatar-container">
-                <svg class="layer" id="layer-body" viewBox="0 0 200 300">
-                    <circle cx="100" cy="70" r="25" fill="#fde3d4" />
-                    <circle cx="92" cy="68" r="3" fill="#333" />
-                    <circle cx="108" cy="68" r="3" fill="#333" />
-                    <circle cx="85" cy="75" r="4" fill="#ffb6b6" opacity="0.6" />
-                    <circle cx="115" cy="75" r="4" fill="#ffb6b6" opacity="0.6" />
-                    <path d="M 96 78 Q 100 83 104 78" stroke="#333" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-                    <path d="M 85 95 L 115 95 L 110 180 L 90 180 Z" fill="#fde3d4" />
-                    <path d="M 85 95 L 65 140" stroke="#fde3d4" stroke-width="12" stroke-linecap="round" />
-                    <path d="M 115 95 L 135 140" stroke="#fde3d4" stroke-width="12" stroke-linecap="round" />
-                    <rect x="88" y="180" width="10" height="80" fill="#fde3d4" rx="4"/>
-                    <rect x="102" y="180" width="10" height="80" fill="#fde3d4" rx="4"/>
-                </svg>
-
-                <svg class="layer" id="layer-bottom" viewBox="0 0 200 300"></svg>
-                <svg class="layer" id="layer-top" viewBox="0 0 200 300"></svg>
-                <svg class="layer" id="layer-head" viewBox="0 0 200 300"></svg>
-                <svg class="layer" id="layer-shoes" viewBox="0 0 200 300"></svg>
-            </div>
-
-            <div class="action-buttons">
-                <button class="reset-btn" onclick="resetOutfit()">重設搭配</button>
-                <button onclick="checkOutift()">提交穿搭 ✨</button>
-            </div>
+    <div class="stats-grid">
+        <div class="stat-bar-container">
+            <div class="stat-info"><span>📚 學業智商</span><span id="text-academic">50/100</span></div>
+            <div class="progress-bg"><div id="fill-academic" class="progress-fill"></div></div>
         </div>
-
-        <div class="right-panel">
-            <div class="category-title">👑 頭飾 (Headwear)</div>
-            <div class="item-grid" id="grid-head"></div>
-
-            <div class="category-title">👚 上裝 (Tops)</div>
-            <div class="item-grid" id="grid-top"></div>
-
-            <div class="category-title">👗 下裝 (Bottoms)</div>
-            <div class="item-grid" id="grid-bottom"></div>
-
-            <div class="category-title">👠 鞋子 (Shoes)</div>
-            <div class="item-grid" id="grid-shoes"></div>
+        <div class="stat-bar-container">
+            <div class="stat-info"><span>🎸 社團狂熱</span><span id="text-club">50/100</span></div>
+            <div class="progress-bg"><div id="fill-club" class="progress-fill"></div></div>
+        </div>
+        <div class="stat-bar-container">
+            <div class="stat-info"><span>👥 人際關係</span><span id="text-social">50/100</span></div>
+            <div class="progress-bg"><div id="fill-social" class="progress-fill"></div></div>
+        </div>
+        <div class="stat-bar-container">
+            <div class="stat-info"><span>🔋 剩餘體力</span><span id="text-energy">50/100</span></div>
+            <div class="progress-bg"><div id="fill-energy" class="progress-fill"></div></div>
         </div>
     </div>
 
-    <div class="overlay" id="modal-overlay">
-        <div class="modal">
-            <h2 id="modal-title">恭喜過關！</h2>
-            <p id="modal-text">完美的搭配！準備好挑戰下一關了嗎？</p>
-            <button onclick="closeModal()" style="width:100%">確定</button>
-        </div>
+    <div class="story-section">
+        <div id="story-title" class="story-title">載入中...</div>
+        <div id="story-text" class="story-text">正在初始化高中生活劇本...</div>
+        <div id="effect-display" class="effect-text"></div>
     </div>
 
-    <script>
-        // --- 資料定義 ---
-        const colors = [
-            { name: "櫻花粉", hex: "#ffb6c1" },
-            { name: "天空藍", hex: "#87cefa" },
-            { name: "薄荷綠", hex: "#98fb98" },
-            { name: "檸檬黃", hex: "#fffacd" },
-            { name: "薰衣草紫", hex: "#e6e6fa" },
-            { name: "經典白", hex: "#ffffff" },
-            { name: "極簡黑", hex: "#333333" },
-            { name: "大地咖", hex: "#cd853f" },
-            { name: "活力橘", hex: "#ffa500" },
-            { name: "丹寧藍", hex: "#4682b4" }
-        ];
+    <div id="options-container" class="options-list"></div>
+</div>
 
-        const clothesData = {
-            head: [
-                { id: "hat", name: "帽子" },
-                { id: "hairpin", name: "髮夾" },
-                { id: "hairband", name: "髮箍" },
-                { id: "halo", name: "天使光環" }
-            ],
-            top: [
-                { id: "short_crop", name: "短袖(短版)" },
-                { id: "short_regular", name: "短袖(一般)" },
-                { id: "long_sleeve", name: "長袖" },
-                { id: "sleeveless", name: "無袖" }
-            ],
-            bottom: [
-                { id: "shorts", name: "短褲" },
-                { id: "short_skirt", name: "短裙" },
-                { id: "pants_wide", name: "長褲(寬版)" },
-                { id: "pants_narrow", name: "長褲(窄版)" },
-                { id: "long_skirt", name: "長裙" },
-                { id: "jeans_wide", name: "牛仔長褲(寬)" },
-                { id: "jeans_narrow", name: "牛仔長褲(窄)" }
-            ],
-            shoes: [
-                { id: "sneakers", name: "布鞋" },
-                { id: "flats", name: "平底鞋" },
-                { id: "heels", name: "高跟鞋" },
-                { id: "boots", name: "靴子" },
-                { id: "sandals", name: "涼鞋" },
-                { id: "slippers", name: "拖鞋" },
-                { id: "clogs", name: "洞洞鞋" }
+<script>
+    // 1. 初始化屬性
+    let player = {
+        academic: 50,
+        club: 50,
+        social: 50,
+        energy: 50,
+        currentRound: 0
+    };
+
+    // 2. 8 回合完整劇本
+    const events = [
+        {
+            title: "【第一週：高一入學與社團聯展】",
+            text: "操場上各個社團都在瘋狂拉人。吉他社學長姐在台上帥氣飆歌，資訊社正發放超精美貼紙，熱舞社在C位大排舞。放學後，你決定怎麼做？",
+            options: [
+                { text: "直接衝去填最帥氣的音樂/舞蹈性社團報名表！", effects: { club: 20, social: 10, energy: -15, academic: -5 }, msg: "社團狂熱上升！但密集的排練讓體力下降了。" },
+                { text: "冷靜拿了資訊社的傳單，回教室繼續把剛發的數學講義寫完。", effects: { academic: 20, club: -10, energy: -5, social: -5 }, msg: "學業大幅提升！但似乎跟熱鬧的氣氛格格不入。" },
+                { text: "跟新認識的鄰座同學一起去福利社買飲料打屁聊天。", effects: { social: 20, energy: 15, academic: -5, club: -5 }, msg: "成功與同學打成一片，人際與體力上升！" }
             ]
-        };
-
-        // 關卡設定
-        const levels = [
-            {
-                title: "第 1 關：夏日海灘派對",
-                desc: "目標：請穿著「無袖」上裝，搭配「短褲」或「短裙」，並穿上適合沙灘的「涼鞋」、「拖鞋」或「洞洞鞋」。",
-                check: (s) => s.top === 'sleeveless' && ['shorts', 'short_skirt'].includes(s.bottom) && ['sandals', 'slippers', 'clogs'].includes(s.shoes)
-            },
-            {
-                title: "第 2 關：冬天辦公室商務會議",
-                desc: "目標：外面天氣好冷！請穿著「長袖」上裝，搭配「長褲(寬版或窄版)」或「長裙」，並且穿上專業的「高跟鞋」或「靴子」，別忘了戴個「髮箍」顯得有精神！",
-                check: (s) => s.top === 'long_sleeve' && ['pants_wide', 'pants_narrow', 'long_skirt'].includes(s.bottom) && ['heels', 'boots'].includes(s.shoes) && s.head === 'hairband'
-            },
-            {
-                title: "第 3 關：街頭丹寧潮流風",
-                desc: "目標：展現街頭帥氣！請指定穿著「牛仔長褲(寬版或窄版)」，上裝搭配青春活力的「短袖(短版)」，鞋子限定穿「布鞋」，並戴上「帽子」點綴。",
-                check: (s) => ['jeans_wide', 'jeans_narrow'].includes(s.bottom) && s.top === 'short_crop' && s.shoes === 'sneakers' && s.head === 'hat'
-            },
-            {
-                title: "第 4 關：粉紅天使夢幻盛宴",
-                desc: "目標：今晚是主題派對！請戴上「天使光環」，且身上的「上裝」與「下裝」顏色**都必須選擇「櫻花粉」**！種類不限。",
-                check: (s) => s.head === 'halo' && s.topColor === '#ffb6c1' && s.bottomColor === '#ffb6c1'
-            }
-        ];
-
-        let currentLevel = 0;
-
-        // 當前穿搭狀態
-        let currentSelection = {
-            head: null, headColor: colors[0].hex,
-            top: null, topColor: colors[0].hex,
-            bottom: null, bottomColor: colors[0].hex,
-            shoes: null, shoesColor: colors[0].hex
-        };
-
-        // --- 初始化介面 ---
-        function initGame() {
-            renderCategory('head', clothesData.head);
-            renderCategory('top', clothesData.top);
-            renderCategory('bottom', clothesData.bottom);
-            renderCategory('shoes', clothesData.shoes);
-            updateLevelUI();
+        },
+        {
+            title: "【第二週：第一次段考的震撼教育】",
+            text: "高中的第一次段考來臨了！聽說題目難度跟國中完全不是同一個層級。這個週末你打算怎麼分配時間？",
+            options: [
+                { text: "開啟『爆肝模式』，待在圖書館從早讀到晚！", effects: { academic: 25, energy: -25, social: -5 }, msg: "這題肯定會考！學業大增，但你快累癱了。" },
+                { text: "不管了！社團迎新晚會就在考後，這週末必須去留校練團練舞！", effects: { club: 25, academic: -20, social: 10, energy: -15 }, msg: "你在舞台上發光發熱！但段考成績看來是要爆了。" },
+                { text: "去補習班跟朋友一起假裝讀書，其實一直在偷偷傳簡訊聊天、吃速食。", effects: { social: 15, energy: 10, academic: 5, club: -5 }, msg: "友情度上升，但讀書效率似乎不太高？" }
+            ]
+        },
+        {
+            title: "【第三週：自主學習計畫的難題】",
+            text: "資訊課/彈性學習時間，老師要求每個人上網繳交一份『自主學習計畫檔案』，這攸關申請大學的學習歷程。你打算做什麼？",
+            options: [
+                { text: "認真研究，用單一 HTML 寫出一款超厲害的網頁遊戲！", effects: { academic: 25, club: -5, energy: -15 }, msg: "資訊老師在背後看著你，露出了滿意的微笑！學業大漲！" },
+                { text: "隨便從網路上複製貼上別人的心得，空出來的時間拿來刷短影音。", effects: { energy: 20, academic: -20, social: 5 }, msg: "好爽，獲得短暫的快樂，體力回復了，但學業亮紅燈。" },
+                { text: "找班上最強的學霸組隊，靠學霸帶飛，順便蹭一波交情。", effects: { social: 25, academic: 10, energy: -10 }, msg: "成功黏上大腿！人際關係暴增。" }
+            ]
+        },
+        {
+            title: "【第四週：班際球賽的大對決】",
+            text: "下週是高一班際籃球/排球賽，全班鬥志高昂，但放學排練體育項目非常消耗體力，你選擇？",
+            options: [
+                { text: "身為先發主力，放學後瘋狂練球，誓言帶全班拿下冠軍！", effects: { social: 20, energy: -25, club: 10 }, msg: "你是班上的英雄！凝聚力大增，但全身酸痛到不行。" },
+                { text: "留在教室當後勤，幫忙訂飲料、畫加油看板、順便偷偷看書。", effects: { academic: 15, social: 15, energy: 5 }, msg: "既顧到了人際關係，又稍微讀到了一點書。" },
+                { text: "直接請假回家睡覺，反正運動什麼的最討厭了。", effects: { energy: 25, social: -15, academic: -5 }, msg: "體力大增！但隔天去學校，同學聊球賽你完全插不上話。" }
+            ]
+        },
+        {
+            title: "【第五週：邁入下學期！高一校外教學】",
+            text: "高一生最期待的遊樂園校外教學（一宿/一日遊）來了！分組名單出爐，這天在遊樂園裡你打算怎麼瘋？",
+            options: [
+                { text: "帶領全組衝刺最刺激的雲霄飛車，狂拍照發 IG 標記所有人！", effects: { social: 25, club: 15, energy: -20 }, msg: "人際動態牆爆棚，社團社交圈也拓寬了！" },
+                { text: "待在紀念品店 and 餐廳，跟朋友們漫步，享受悠閒時光。", effects: { social: 20, energy: 15, academic: -5 }, msg: "青春洋溢！體力消耗少，留下了美好的回憶。" },
+                { text: "在遊覽車上和園區裡都在看補習班講義，因為下週又要段考了。", effects: { academic: 25, social: -15, energy: -10 }, msg: "學霸精神！但你在團體照裡看起來像個石雕。" }
+            ]
+        },
+        {
+            title: "【第六週：高一最糾結——文理選組單】",
+            text: "輔導室發下了『高二選組意願單』。你必須決定未來要走一類（文史法商）還是二三類（理工醫農）。家長和老師意見不一，你很頭痛。",
+            options: [
+                { text: "花大量時間找輔導老師諮詢、做性向測驗，認真規劃未來。", effects: { academic: 20, energy: -15 }, msg: "對未來有了清晰的方向，學業思維提升！" },
+                { text: "不管啦，好朋友選哪一類我就選哪一類，這樣高二才能繼續同班！", effects: { social: 25, academic: -15, energy: 5 }, msg: "友情萬歲！人際關係滿分，但未來課業可能會讀得很痛苦..." },
+                { text: "把單子塞進書包最底層假裝忘記，放學繼續去社團辦公室打混。", effects: { club: 25, academic: -15, social: 5 }, msg: "社團生活太美好了，逃避雖可恥但很有用。" }
+            ]
+        },
+        {
+            title: "【第七週：社團成果發表（成發）死線】",
+            text: "高一即將結束，社團的期末成果發表會就在這週末，學長姐盯得超級兇，要求每個人都要到場幫忙排練與美宣。",
+            options: [
+                { text: "扛下美宣組長/表演主角，熬夜做道具、排練到警衛趕人。", effects: { club: 30, social: 15, energy: -30, academic: -10 }, msg: "成發大成功！你成為社團明日之星，但你累到快升天了。" },
+                { text: "當個稱職的小美工，有交代工作就做，做完準時回家看書。", effects: { club: 15, academic: 15, energy: -5 }, msg: "兼顧社團責任與學業，表現平穩。" },
+                { text: "假裝發燒請假放鳥社團，偷偷待在家裡補眠、打電動。", effects: { energy: 25, club: -25, social: -15 }, msg: "體力大補滿！但社團群組裡你被學長姐和同屆私下黑掉了。" }
+            ]
+        },
+        {
+            title: "【第八週：高一終局！期末生死考】",
+            text: "最後一週！期末考決定你高一科目會不會變當、要不要補考。同時，學習歷程上傳截止日也在這週，你只剩最後一絲體力了！",
+            options: [
+                { text: "吞下三顆 B 群，徹夜不眠把所有科目跟學習歷程全部拚完！", effects: { academic: 30, energy: -35 }, msg: "燃燒生命！學業衝到極限！" },
+                { text: "放寬心，能讀多少是多少，晚上11點準時睡覺保養肝臟。", effects: { energy: 20, academic: 5, social: 5 }, msg: "佛系期末，體力狀況良好，但成績可能會有點驚險。" },
+                { text: "組織班級聯合小抄與猜題互助會，跟大家一起分享讀書筆記。", effects: { social: 25, academic: 15, energy: -10 }, msg: "人際大團結！靠著大家的力量一起過關。" }
+            ]
         }
+    ];
 
-        function renderCategory(catKey, items) {
-            const grid = document.getElementById(`grid-${catKey}`);
-            grid.innerHTML = '';
-            
-            items.forEach(item => {
-                const card = document.createElement('div');
-                card.className = `item-card`;
-                card.id = `card-${item.id}`;
-                card.innerHTML = `<div>${item.name}</div>`;
-                
-                // 點擊選擇該服飾
-                card.onclick = (e) => {
-                    if (e.target.classList.contains('color-dot')) return; // 避免點顏色觸發兩次
-                    selectItem(catKey, item.id);
-                };
-
-                // 顏色選擇器
-                const colorContainer = document.createElement('div');
-                colorContainer.className = 'color-selector';
-                colors.forEach((col, idx) => {
-                    const dot = document.createElement('div');
-                    dot.className = `color-dot ${idx === 0 ? 'active' : ''}`;
-                    dot.style.backgroundColor = col.hex;
-                    dot.title = col.name;
-                    dot.onclick = (e) => {
-                        e.stopPropagation();
-                        selectColor(catKey, item.id, col.hex, dot);
-                    };
-                    colorContainer.appendChild(dot);
-                });
-
-                card.appendChild(colorContainer);
-                grid.appendChild(card);
-            });
-        }
-
-        // --- 遊戲邏輯 ---
-        function selectItem(category, itemId) {
-            // 移除同分類其他單品的選取狀態
-            clothesData[category].forEach(item => {
-                document.getElementById(`card-${item.id}`).classList.remove('selected');
-            });
-
-            if (currentSelection[category] === itemId) {
-                // 如果重複點擊則脫下
-                currentSelection[category] = null;
-            } else {
-                // 穿上
-                currentSelection[category] = itemId;
-                document.getElementById(`card-${itemId}`).classList.add('selected');
-            }
-            drawAvatar();
-        }
-
-        function selectColor(category, itemId, hexColor, dotElement) {
-            // 先自動選取該服飾
-            if (currentSelection[category] !== itemId) {
-                selectItem(category, itemId);
-            }
-            
-            // 更新顏色狀態
-            currentSelection[`${category}Color`] = hexColor;
-
-            // 更新該卡片內顏色點的 active 狀態
-            const dots = dotElement.parentElement.querySelectorAll('.color-dot');
-            dots.forEach(d => d.classList.remove('active'));
-            dotElement.classList.add('active');
-
-            drawAvatar();
-        }
-
-        function resetOutfit() {
-            currentSelection = {
-                head: null, headColor: colors[0].hex,
-                top: null, topColor: colors[0].hex,
-                bottom: null, bottomColor: colors[0].hex,
-                shoes: null, shoesColor: colors[0].hex
+    // 3. 結局判定
+    function getEnding() {
+        if (player.energy <= 0) {
+            return {
+                title: "💀 結局：【醫院病床上的睡美人】",
+                text: "你在高一期間瘋狂爆肝，完全忽視了身體的警訊。在最後的期末生死關頭，你直接在考場暈倒被送進醫務室。\n導師嘆了口氣幫你申請了緩考。高一最後的記憶，只剩下醫院裡冷冷的點滴和吃不完的維他命。高二請好好照顧身體啊！"
             };
-            document.querySelectorAll('.item-card').forEach(c => c.classList.remove('selected'));
-            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
-            document.querySelectorAll('.color-selector').forEach(cs => cs.firstChild.classList.add('active'));
-            drawAvatar();
+        }
+        if (player.academic >= 85 && player.club < 40) {
+            return {
+                title: "🏆 結局：【台大預備軍的孤獨神人學霸】",
+                text: "你的高一生活極度純粹——除了讀書，還是讀書。你的校排名永遠保持在全校前三，自主學習網頁拿了全校特優。\n然而，當翻開畢業紀念冊，你發現自己叫不出社團學長姐的名字。這就是成為強者的代價嗎？"
+            };
+        }
+        if (player.club >= 80 && player.academic >= 45) {
+            return {
+                title: "🎸 結局：【全校IG追蹤破千的社團傳奇】",
+                text: "你是這屆最耀眼的風雲人物！你成功接任了社團大幹部，成發當天台下尖叫聲不斷，外校公關片收不完。\n雖然段考成績總是驚險低空飛過，但你的高中青春絕對是最熱血、最完美的！"
+            };
+        }
+        if (player.social >= 80 && player.academic < 45) {
+            return {
+                title: "🥳 結局：【四海皆兄弟的校園社交天花板】",
+                text: "你的人際關係處理得爐火純青，上至教官校長、下至福利社阿姨和校貓都是你的麻吉。文理選組單大家都跟著你選。\n不過因為太常跟朋友出去聚餐，你期末收到了好幾張「學分預警通知書」...暑假準備回學校瘋狂重修吧！"
+            };
+        }
+        if (player.academic < 40 && player.club < 40) {
+            return {
+                title: "🛌 結局：【過度低調的網咖/床鋪馬鈴薯】",
+                text: "學業不行、社團沒參加、選組單隨便亂勾、校外教學也在睡覺。你高一最大的成就，就是上課睡覺從來沒被老師抓到過。\n老師在目的學期評語寫上：「該生實力深不可測，可惜全用在睡覺與打電動。」"
+            };
+        }
+        return {
+            title: "⚖️ 結局：【知足常樂的六角形平衡高中生】",
+            text: "你在學業、社團與人際之間拿捏得恰到好處。雖然沒有考第一名，但安全過關沒被當；雖然不是社團大老，但也結交到了幾位交心的摯友。\n你過著最標準、也最舒適的高中生活，穩紮穩打地朝高二邁進！"
+        };
+    }
+
+    // 4. 更新 UI 數據與進度條
+    function updateUI(effectMsg = "", isNegative = false) {
+        const keys = ['academic', 'club', 'social', 'energy'];
+        keys.forEach(key => {
+            if (player[key] > 100) player[key] = 100;
+            if (player[key] < 0) player[key] = 0;
+            
+            document.getElementById(`text-${key}`).innerText = `${player[key]}/100`;
+            document.getElementById(`fill-${key}`).style.width = `${player[key]}%`;
+        });
+
+        const effectDiv = document.getElementById("effect-display");
+        effectDiv.innerText = effectMsg;
+        if (isNegative) {
+            effectDiv.classList.add("negative");
+        } else {
+            effectDiv.classList.remove("negative");
+        }
+    }
+
+    // 5. 流程控制
+    function nextTurn() {
+        const optionsContainer = document.getElementById("options-container");
+        optionsContainer.innerHTML = "";
+
+        if (player.energy <= 0) {
+            triggerEnding();
+            return;
         }
 
-        function updateLevelUI() {
-            if (currentLevel < levels.length) {
-                document.getElementById('level-num').innerText = levels[currentLevel].title;
-                document.getElementById('level-req').innerText = levels[currentLevel].desc;
-            } else {
-                showModal("🎉 恭喜破關！", "你已經通過了所有的時尚考驗，成為真正的頂尖造型師！");
-                currentLevel = 0;
-                updateLevelUI();
-            }
+        if (player.currentRound >= events.length) {
+            triggerEnding();
+            return;
         }
 
-        function checkOutift() {
-            const level = levels[currentLevel];
-            if (level.check(currentSelection)) {
-                currentLevel++;
-                showModal("恭喜過關！", "太時尚了！完美的搭配完全符合主題。點擊確定進入下一關。");
-                resetOutfit();
-                updateLevelUI();
-            } else {
-                showModal("哎呀！評審搖頭了", "目前的搭配好像不太符合關卡目標耶，再調整看看吧！", true);
-            }
-        }
+        const currentEvent = events[player.currentRound];
+        document.getElementById("round-display").innerText = `第 ${player.currentRound + 1} / ${events.length} 週`;
+        document.getElementById("story-title").innerText = currentEvent.title;
+        document.getElementById("story-text").innerText = currentEvent.text;
 
-        // --- 彈窗控制 ---
-        function showModal(title, text, isFail = false) {
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-text').innerText = text;
-            document.getElementById('modal-title').style.color = isFail ? '#e74c3c' : '#ff94b8';
-            document.getElementById('modal-overlay').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('modal-overlay').style.display = 'none';
-        }
-
-        // --- 萬惡的 SVG 動態紙娃娃繪製邏輯 ---
-        function drawAvatar() {
-            // 1. 頭飾
-            const headSvg = document.getElementById('layer-head');
-            headSvg.innerHTML = '';
-            const hc = currentSelection.headColor;
-            if (currentSelection.head === 'hat') {
-                headSvg.innerHTML = `<path d="M 60 50 Q 100 20 140 50 Z" fill="${hc}" /><ellipse cx="100" cy="52" rx="55" ry="6" fill="${hc}" />`;
-            } else if (currentSelection.head === 'hairpin') {
-                headSvg.innerHTML = `<path d="M 115 50 L 130 55" stroke="#ccc" stroke-width="3"/><circle cx="130" cy="55" r="7" fill="${hc}" />`;
-            } else if (currentSelection.head === 'hairband') {
-                headSvg.innerHTML = `<path d="M 73 55 Q 100 35 127 55" stroke="${hc}" stroke-width="6" fill="none" />`;
-            } else if (currentSelection.head === 'halo') {
-                headSvg.innerHTML = `<ellipse cx="100" cy="30" rx="30" ry="8" stroke="${hc}" stroke-width="5" fill="none" opacity="0.9"/>`;
-            }
-
-            // 2. 上裝
-            const topSvg = document.getElementById('layer-top');
-            topSvg.innerHTML = '';
-            const tc = currentSelection.topColor;
-            if (currentSelection.top === 'short_crop') {
-                topSvg.innerHTML = `
-                    <path d="M 85 95 L 115 95 L 111 140 L 89 140 Z" fill="${tc}" />
-                    <path d="M 85 95 L 68 115 L 77 122 L 87 110 Z" fill="${tc}" />
-                    <path d="M 115 95 L 132 115 L 123 122 L 113 110 Z" fill="${tc}" />`;
-            } else if (currentSelection.top === 'short_regular') {
-                topSvg.innerHTML = `
-                    <path d="M 85 95 L 115 95 L 110 160 L 90 160 Z" fill="${tc}" />
-                    <path d="M 85 95 L 68 118 L 77 125 L 87 110 Z" fill="${tc}" />
-                    <path d="M 115 95 L 132 118 L 123 125 L 113 110 Z" fill="${tc}" />`;
-            } else if (currentSelection.top === 'long_sleeve') {
-                topSvg.innerHTML = `
-                    <path d="M 85 95 L 115 95 L 110 160 L 90 160 Z" fill="${tc}" />
-                    <path d="M 85 95 L 67 135 L 75 138 L 87 110 Z" fill="${tc}" />
-                    <path d="M 115 95 L 133 135 L 125 138 L 113 110 Z" fill="${tc}" />`;
-            } else if (currentSelection.top === 'sleeveless') {
-                topSvg.innerHTML = `<path d="M 88 95 L 112 95 L 110 160 L 90 160 Z" fill="${tc}" />`;
-            }
-
-            // 3. 下裝
-            const bottomSvg = document.getElementById('layer-bottom');
-            bottomSvg.innerHTML = '';
-            const bc = currentSelection.bottomColor;
-            if (currentSelection.bottom === 'shorts') {
-                bottomSvg.innerHTML = `<path d="M 90 160 L 110 160 L 113 200 L 101 200 L 100 175 L 99 200 L 87 200 Z" fill="${bc}" />`;
-            } else if (currentSelection.bottom === 'short_skirt') {
-                bottomSvg.innerHTML = `<path d="M 90 160 L 110 160 L 120 205 L 80 205 Z" fill="${bc}" />`;
-            } else if (currentSelection.bottom === 'pants_wide') {
-                bottomSvg.innerHTML = `<path d="M 90 160 L 110 160 L 115 250 L 102 250 L 100 175 L 98 250 L 85 250 Z" fill="${bc}" stroke="#fff" stroke-width="0.5"/>`;
-            } else if (currentSelection.bottom === 'pants_narrow') {
-                bottomSvg.innerHTML = `<path d="M 90 160 L 110 160 L 111 250 L 101 250 L 100 175 L 99 250 L 89 250 Z" fill="${bc}" stroke="#fff" stroke-width="0.5"/>`;
-            } else if (currentSelection.bottom === 'long_skirt') {
-                bottomSvg.innerHTML = `<path d="M 90 160 L 110 160 L 125 255 L 75 255 Z" fill="${bc}" />`;
-            } else if (currentSelection.bottom === 'jeans_wide') {
-                bottomSvg.innerHTML = `<path d="M 90 160 L 110 160 L 115 250 L 102 250 L 100 175 L 98 250 L 85 250 Z" fill="${bc}" stroke="#555" stroke-width="0.5"/>
-                                       <path d="M 88 245 L 112 245" stroke="#fff" stroke-width="1" opacity="0.6"/>`;
-            } else if (currentSelection.bottom === 'jeans_narrow') {
-                bottomSvg.innerHTML = `<path d="M 90 160 L 110 160 L 111 250 L 101 250 L 100 175 L 99 250 L 89 250 Z" fill="${bc}" stroke="#555" stroke-width="0.5"/>`;
-            }
-
-            // 4. 鞋子
-            const shoesSvg = document.getElementById('layer-shoes');
-            shoesSvg.innerHTML = '';
-            const sc = currentSelection.shoesColor;
-
-            // 左腳與右腳的基本位置定義
-            if (currentSelection.shoes) {
-                if (currentSelection.shoes === 'sneakers') {
-                    shoesSvg.innerHTML = `
-                        <rect x="85" y="250" width="15" height="13" fill="${sc}" rx="3"/>
-                        <rect x="100" y="250" width="15" height="13" fill="${sc}" rx="3"/>
-                        <rect x="85" y="260" width="15" height="3" fill="#fff"/>
-                        <rect x="100" y="260" width="15" height="3" fill="#fff"/>`;
-                } else if (currentSelection.shoes === 'flats') {
-                    shoesSvg.innerHTML = `
-                        <path d="M 86 254 L 99 254 L 97 262 L 86 262 Z" fill="${sc}"/>
-                        <path d="M 101 254 L 114 254 L 114 262 L 103 262 Z" fill="${sc}"/>`;
-                } else if (currentSelection.shoes === 'heels') {
-                    shoesSvg.innerHTML = `
-                        <rect x="87" y="253" width="12" height="7" fill="${sc}" rx="2"/>
-                        <rect x="101" y="253" width="12" height="7" fill="${sc}" rx="2"/>
-                        <line x1="88" y1="260" x2="88" y2="263" stroke="${sc}" stroke-width="2"/>
-                        <line x1="112" y1="260" x2="112" y2="263" stroke="${sc}" stroke-width="2"/>`;
-                } else if (currentSelection.shoes === 'boots') {
-                    shoesSvg.innerHTML = `
-                        <rect x="86" y="235" width="13" height="27" fill="${sc}" rx="2"/>
-                        <rect x="101" y="235" width="13" height="27" fill="${sc}" rx="2"/>`;
-                } else if (currentSelection.shoes === 'sandals') {
-                    shoesSvg.innerHTML = `
-                        <line x1="85" y1="256" x2="100" y2="256" stroke="${sc}" stroke-width="3"/>
-                        <line x1="100" y1="256" x2="115" y2="256" stroke="${sc}" stroke-width="3"/>
-                        <rect x="87" y="260" width="11" height="3" fill="${sc}"/>
-                        <rect x="102" y="260" width="11" height="3" fill="${sc}"/>`;
-                } else if (currentSelection.shoes === 'slippers') {
-                    shoesSvg.innerHTML = `
-                        <path d="M 85 252 Q 92 250 99 252 L 99 257 L 85 257 Z" fill="${sc}"/>
-                        <path d="M 101 252 Q 108 250 115 252 L 115 257 L 101 257 Z" fill="${sc}"/>`;
-                } else if (currentSelection.shoes === 'clogs') {
-                    shoesSvg.innerHTML = `
-                        <rect x="85" y="250" width="14" height="13" fill="${sc}" rx="5"/>
-                        <rect x="101" y="250" width="14" height="13" fill="${sc}" rx="5"/>
-                        <circle cx="89" cy="254" r="1" fill="#fff"/>
-                        <circle cx="93" cy="254" r="1" fill="#fff"/>
-                        <circle cx="105" cy="254" r="1" fill="#fff"/>
-                        <circle cx="109" cy="254" r="1" fill="#fff"/>`;
+        currentEvent.options.forEach(opt => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.innerText = opt.text;
+            
+            btn.onclick = function() {
+                for (let key in opt.effects) {
+                    player[key] += opt.effects[key];
                 }
-            }
-        }
+                let isNeg = (opt.effects.energy && opt.effects.energy <= -20);
+                
+                player.currentRound++;
+                updateUI(opt.msg, isNeg);
+                
+                const allBtns = document.querySelectorAll(".option-btn");
+                allBtns.forEach(b => b.disabled = true);
+                
+                setTimeout(nextTurn, 1000);
+            };
+            optionsContainer.appendChild(btn);
+        });
+    }
 
-        // 啟動遊戲
-        window.onload = initGame;
-    </script>
+    // 6. 結局畫面
+    function triggerEnding() {
+        const ending = getEnding();
+        document.getElementById("round-display").innerText = "✨ 青春結算 ✨";
+        document.getElementById("story-title").className = "story-title ending-title";
+        document.getElementById("story-title").innerText = ending.title;
+        document.getElementById("story-text").innerText = ending.text;
+        document.getElementById("effect-display").innerText = "";
+
+        const optionsContainer = document.getElementById("options-container");
+        optionsContainer.innerHTML = "";
+        const restartBtn = document.createElement("button");
+        restartBtn.className = "option-btn restart-btn";
+        restartBtn.innerText = "🔄 重新轉世，體驗全新高一生活";
+        restartBtn.onclick = function() {
+            player = { academic: 50, club: 50, social: 50, energy: 50, currentRound: 0 };
+            document.getElementById("story-title").className = "story-title";
+            updateUI("新學期開始了，這次你要走什麼路線？", false);
+            nextTurn();
+        };
+        optionsContainer.appendChild(restartBtn);
+    }
+
+    // 網頁讀取完成後直接強制執行
+    updateUI("請點選下方選項，開啟你的高一生活！", false);
+    nextTurn();
+</script>
+
 </body>
 </html>
