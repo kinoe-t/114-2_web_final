@@ -3,1456 +3,1868 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>高雄女子高級中學 — 官方網站</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600&family=Special+Elite&display=swap" rel="stylesheet">
+<title>打狗高級女子中學</title>
 <style>
-  :root {
-    --red: #8b0000;
-    --dark: #0a0a0a;
-    --gray: #1a1a1a;
-    --text: #c8c8c0;
-    --pale: #e8e4d8;
-    --accent: #4a3728;
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "標楷體", "BiauKai", "DFKai-SB", "標楷體-繁", serif;
+  background: #f2f4f7;
+  color: #222;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ── TOP UTILITY BAR ── */
+.utility-bar {
+  background: #1c3a6e;
+  color: #b8cadf;
+  font-size: 12px;
+  padding: 4px 0;
+}
+.utility-bar-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.utility-bar a {
+  color: #b8cadf;
+  text-decoration: none;
+  padding: 0 10px;
+  border-right: 1px solid #2e5082;
+}
+.utility-bar a:last-child { border-right: none; }
+.utility-bar a:hover { color: #fff; }
+
+/* ── HEADER ── */
+header {
+  background: #fff;
+  border-bottom: 4px solid #1c3a6e;
+}
+.header-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.school-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.school-seal {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+}
+.school-title h1 {
+  font-size: 26px;
+  font-weight: bold;
+  color: #1c3a6e;
+  letter-spacing: 3px;
+  line-height: 1.2;
+}
+.school-title p {
+  font-size: 11px;
+  color: #888;
+  letter-spacing: 2px;
+  margin-top: 3px;
+  font-family: Arial, sans-serif;
+}
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.search-bar {
+  display: flex;
+}
+.search-bar input {
+  width: 260px;
+  border: 1px solid #c0ccd8;
+  border-right: none;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-family: "標楷體", "BiauKai", "DFKai-SB", serif;
+  outline: none;
+  background: #f8fafc;
+}
+.search-bar input:focus { border-color: #1c3a6e; background: #fff; }
+.search-bar button {
+  background: #1c3a6e;
+  color: #fff;
+  border: 1px solid #1c3a6e;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-family: "標楷體", "BiauKai", "DFKai-SB", serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.search-bar button:hover { background: #162e5a; }
+
+/* ── NAVIGATION ── */
+nav {
+  background: #1c3a6e;
+  border-bottom: 2px solid #c8a84b;
+}
+.nav-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  display: flex;
+}
+nav a {
+  display: block;
+  color: #dce8f5;
+  text-decoration: none;
+  padding: 12px 24px;
+  font-size: 15px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border-right: 1px solid #2a4f8a;
+  transition: background .15s, color .15s;
+}
+nav a:first-child { border-left: 1px solid #2a4f8a; }
+nav a:hover, nav a.active {
+  background: #c8a84b;
+  color: #fff;
+}
+/* ══════════════════════════════════
+   INTRO SCREEN
+══════════════════════════════════ */
+
+#intro-screen {
+
+  position: fixed;
+
+  inset: 0;
+
+  background: #000;
+
+  z-index: 999999;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+}
+
+#intro-screen::after{
+
+  content:'';
+
+  position:absolute;
+
+  inset:0;
+
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.02),
+      rgba(255,255,255,.02) 1px,
+      transparent 2px,
+      transparent 4px
+    );
+
+  pointer-events:none;
+}
+
+.intro-content {
+
+  text-align: center;
+
+  color: #fff;
+
+  width: min(90%, 760px);
+
+  padding: 30px;
+
+  position: relative;
+
+  z-index: 2;
+}
+
+.intro-content h1 {
+
+  font-size: clamp(34px, 5vw, 60px);
+
+  letter-spacing: 10px;
+
+  margin-bottom: 42px;
+}
+
+.intro-text {
+
+  font-size: clamp(16px, 2vw, 22px);
+
+  line-height: 2.2;
+
+  color: #dddddd;
+
+  margin-bottom: 46px;
+}
+
+.start-game-btn {
+
+  background: transparent;
+
+  color: #fff;
+
+  border: 1px solid rgba(255,255,255,.45);
+
+  padding: 14px 42px;
+
+  font-size: 20px;
+
+  font-family:
+    "標楷體",
+    "BiauKai",
+    "DFKai-SB",
+    serif;
+
+  letter-spacing: 5px;
+
+  cursor: pointer;
+
+  transition: .35s;
+}
+
+.start-game-btn:hover {
+
+  background: rgba(120,0,0,.55);
+
+  border-color: #aa2222;
+
+  transform: scale(1.05);
+
+  box-shadow:
+    0 0 20px rgba(180,0,0,.45);
+}/* ── HERO BANNER ── */
+.banner {
+  background: linear-gradient(to right, #1c3a6e 0%, #24508e 55%, #1a6fa8 100%);
+  padding: 28px 20px;
+  text-align: center;
+  color: #fff;
+  border-bottom: 3px solid #c8a84b;
+  position: relative;
+  overflow: hidden;
+}
+.banner::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(to right, #c8a84b, #e8cc78, #c8a84b);
+}
+.banner h2 {
+  font-size: 22px;
+  letter-spacing: 4px;
+  margin-bottom: 4px;
+}
+.banner p {
+  font-size: 13px;
+  color: #a8c4e0;
+  letter-spacing: 2px;
+}
+
+/* ── MAIN LAYOUT ── */
+.page-wrap {
+  max-width: 1140px;
+  margin: 22px auto;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 22px;
+}
+
+/* ── CONTENT CARDS ── */
+.card {
+  background: #fff;
+  border: 1px solid #d4dce8;
+  margin-bottom: 18px;
+}
+.card-head {
+  background: #1c3a6e;
+  color: #fff;
+  padding: 9px 16px;
+  font-size: 15px;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-head-accent {
+  display: inline-block;
+  width: 4px; height: 16px;
+  background: #c8a84b;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+.card-body { padding: 14px 18px; }
+
+/* ── NEWS LIST ── */
+.news-list { list-style: none; }
+.news-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid #edf0f5;
+  font-size: 14px;
+}
+.news-list li:last-child { border-bottom: none; }
+.news-tag {
+  display: inline-block;
+  font-size: 11px;
+  padding: 1px 8px;
+  border: 1px solid;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: Arial, sans-serif;
+}
+.news-tag.blue  { border-color: #1c3a6e; color: #1c3a6e; }
+.news-tag.gold  { border-color: #c8a84b; color: #9a7a20; }
+.news-tag.red   { border-color: #a83228; color: #a83228; }
+.news-date {
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
+  font-family: Arial, sans-serif;
+  flex-shrink: 0;
+}
+.news-list a {
+  color: #1c3a6e;
+  text-decoration: none;
+  cursor: pointer;
+}
+.news-list a:hover { text-decoration: underline; color: #c8a84b; }
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+}
+.stat-item {
+  text-align: center;
+  padding: 18px 10px;
+  border-right: 1px solid #d4dce8;
+}
+.stat-item:last-child { border-right: none; }
+.stat-num {
+  font-size: 28px;
+  font-weight: bold;
+  color: #1c3a6e;
+  font-family: Arial, sans-serif;
+  letter-spacing: 1px;
+}
+.stat-label {
+  font-size: 12px;
+  color: #888;
+  margin-top: 2px;
+}
+
+/* ── SIDEBAR ── */
+.sidebar-nav { list-style: none; }
+.sidebar-nav li {
+  border-bottom: 1px solid #edf0f5;
+}
+.sidebar-nav li:last-child { border-bottom: none; }
+.sidebar-nav a {
+  display: block;
+  padding: 10px 16px;
+  color: #1c3a6e;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .12s;
+}
+.sidebar-nav a:hover {
+  background: #f0f4fb;
+  padding-left: 20px;
+}
+.sidebar-nav .arrow {
+  float: right;
+  color: #c8a84b;
+  font-size: 12px;
+}
+
+/* honor sidebar */
+.honor-item {
+  padding: 9px 0;
+  border-bottom: 1px solid #edf0f5;
+  font-size: 13.5px;
+}
+.honor-item:last-child { border-bottom: none; }
+.honor-item .h-year {
+  font-size: 11px;
+  color: #999;
+  font-family: Arial, sans-serif;
+}
+.honor-item .h-name { font-weight: bold; color: #1c3a6e; }
+.honor-item .h-award { color: #444; font-size: 13px; }
+.view-all {
+  display: block;
+  text-align: right;
+  font-size: 12px;
+  color: #888;
+  cursor: pointer;
+  margin-top: 4px;
+}
+.view-all:hover { color: #c8a84b; }
+
+/* ── FOOTER ── */
+footer {
+  background: #1c3a6e;
+  color: #7a9abf;
+  font-size: 12px;
+  text-align: center;
+  padding: 20px;
+  margin-top: 10px;
+  letter-spacing: 1px;
+  line-height: 2;
+}
+
+/* ══════════════════════════════════
+   OVERLAY / MODAL
+══════════════════════════════════ */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 18, 35, 0.65);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+.overlay.show { display: flex; }
+
+.modal {
+  background: #fff;
+  border-top: 4px solid #1c3a6e;
+  box-shadow: 0 6px 36px rgba(0,0,0,.32);
+  width: 92%;
+  max-width: 680px;
+  max-height: 88vh;
+  overflow-y: auto;
+  position: relative;
+}
+.modal-head {
+  background: #f5f7fb;
+  border-bottom: 1px solid #d4dce8;
+  padding: 12px 20px;
+  font-size: 16px;
+  color: #1c3a6e;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0;
+}
+.modal-close {
+  background: none;
+  border: 1px solid #c0ccd8;
+  color: #666;
+  width: 28px; height: 28px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-family: Arial, sans-serif;
+}
+.modal-close:hover { background: #fef0f0; border-color: #c00; color: #c00; }
+.modal-body { padding: 22px 24px; }
+
+/* ── ABOUT ── */
+.about-section h4 {
+  font-size: 15px;
+  color: #1c3a6e;
+  margin: 18px 0 8px;
+  padding-left: 10px;
+  border-left: 3px solid #c8a84b;
+}
+.about-section p {
+  font-size: 14px;
+  line-height: 1.9;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+/* ── LOGIN ── */
+.login-wrap {
+  max-width: 340px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 10px 0 20px;
+}
+.login-wrap p { font-size: 13px; color: #666; margin-bottom: 20px; }
+.form-row { margin-bottom: 12px; text-align: left; }
+.form-row label {
+  display: block;
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 4px;
+}
+.form-row input {
+  width: 100%;
+  border: 1px solid #c0ccd8;
+  padding: 9px 12px;
+  font-size: 14px;
+  font-family: "標楷體", "BiauKai", "DFKai-SB", serif;
+  outline: none;
+}
+.form-row input:focus { border-color: #1c3a6e; }
+.btn-primary {
+  width: 100%;
+  background: #1c3a6e;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  font-size: 15px;
+  font-family: "標楷體", "BiauKai", "DFKai-SB", serif;
+  cursor: pointer;
+  letter-spacing: 2px;
+  margin-top: 4px;
+}
+.btn-primary:hover { background: #162e5a; }
+.login-hint {
+  font-size: 12px;
+  color: #c00;
+  margin-top: 10px;
+  display: none;
+}
+
+/* ── PROFILE ── */
+.profile-top {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #d4dce8;
+  margin-bottom: 18px;
+}
+.profile-photo {
+
+  width: 88px;
+  height: 108px;
+
+  overflow: hidden;
+
+  border: 1px solid #bbc8d8;
+
+  background: #dde4ef;
+
+  flex-shrink: 0;
+}
+.profile-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 24px;
+  font-size: 14px;
+}
+.profile-fields .f-label { color: #888; font-size: 12px; }
+.profile-fields .f-val { color: #1c3a6e; font-weight: bold; }
+
+.tabs {
+  display: flex;
+  border-bottom: 2px solid #d4dce8;
+  margin-bottom: 16px;
+}
+.tab-btn {
+  padding: 8px 18px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-family: "標楷體", "BiauKai", "DFKai-SB", serif;
+  color: #777;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  letter-spacing: 1px;
+}
+.tab-btn.on {
+  color: #1c3a6e;
+  border-bottom-color: #1c3a6e;
+  font-weight: bold;
+}
+.tab-pane { display: none; font-size: 14px; }
+.tab-pane.on { display: block; }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.data-table th {
+  background: #f0f4fb;
+  padding: 8px 14px;
+  text-align: left;
+  border: 1px solid #d4dce8;
+  color: #1c3a6e;
+  font-weight: bold;
+}
+.data-table td {
+  padding: 8px 14px;
+  border: 1px solid #d4dce8;
+}
+.data-table tr:nth-child(even) td { background: #fafbfd; }
+.tag-absent {
+  display: inline-block;
+  background: #fff0f0;
+  color: #a83228;
+  border: 1px solid #e0a8a4;
+  font-size: 12px;
+  padding: 1px 8px;
+}
+.grade-優 { color: #1a6a38; font-weight: bold; }
+.grade-甲 { color: #1c3a6e; }
+.grade-乙 { color: #555; }
+
+.info-line {
+  display: flex;
+  padding: 9px 0;
+  border-bottom: 1px solid #edf0f5;
+  font-size: 14px;
+}
+.info-line:last-child { border-bottom: none; }
+.info-line .lbl { width: 90px; color: #888; flex-shrink: 0; }
+
+/* ── FORUM ── */
+.forum-item {
+  border: 1px solid #d4dce8;
+  margin-bottom: 14px;
+}
+.forum-item-head {
+  background: #f5f7fb;
+  border-bottom: 1px solid #d4dce8;
+  padding: 9px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.forum-item-head .f-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #1c3a6e;
+}
+.forum-item-head .f-meta {
+  font-size: 11px;
+  color: #999;
+  white-space: nowrap;
+  font-family: Arial, sans-serif;
+}
+.forum-item-body { padding: 12px 14px; font-size: 13.5px; color: #333; }
+.comments { background: #fafbfd; border-top: 1px solid #e8ecf2; padding: 10px 14px; }
+.comment {
+  display: flex;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px dotted #e0e4ec;
+  font-size: 13px;
+}
+.comment:last-child { border-bottom: none; }
+.comment .c-who { color: #999; width: 42px; flex-shrink: 0; font-family: Arial, sans-serif; font-size: 12px; }
+.horror .forum-item-head { background: #fff5f5; }
+.horror .f-title { color: #8b1a1a; }
+
+/* ── HONOR FULL ── */
+.honor-year-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.yr-btn {
+  padding: 5px 18px;
+  border: 1px solid #c0ccd8;
+  background: #fff;
+  font-size: 13px;
+  font-family: "標楷體", "BiauKai", "DFKai-SB", serif;
+  color: #555;
+  cursor: pointer;
+}
+.yr-btn.on {
+  background: #1c3a6e;
+  border-color: #1c3a6e;
+  color: #fff;
+}
+.honor-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.honor-table th {
+  background: #f0f4fb;
+  padding: 8px 14px;
+  border: 1px solid #d4dce8;
+  text-align: left;
+  color: #1c3a6e;
+}
+.honor-table td {
+  padding: 8px 14px;
+  border: 1px solid #d4dce8;
+}
+.honor-table tr:nth-child(even) td { background: #fafbfd; }
+.honor-dim td { color: #aaa; }
+
+/* ── SEARCH RESULTS ── */
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf0f5;
+  cursor: pointer;
+}
+.result-row:last-child { border-bottom: none; }
+.result-row:hover .r-name { text-decoration: underline; color: #c8a84b; }
+.r-photo {
+
+  width: 52px;
+  height: 64px;
+
+  overflow: hidden;
+
+  border: 1px solid #bbc8d8;
+
+  background: #dde4ef;
+
+  flex-shrink: 0;
+}
+.r-name { font-size: 16px; color: #1c3a6e; font-weight: bold; }
+.r-meta { font-size: 12px; color: #888; font-family: Arial, sans-serif; }
+.no-result { text-align: center; padding: 30px; color: #888; font-size: 14px; }
+
+/* ── CONTACT CHAT ── */
+.chat-area {
+  border: 1px solid #d4dce8;
+  height: 300px;
+  overflow-y: auto;
+  padding: 14px;
+  background: #f8fafc;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.msg { display: flex; gap: 10px; align-items: flex-end; }
+.msg.me { flex-direction: row-reverse; }
+.msg-bubble {
+  padding: 9px 14px;
+  font-size: 14px;
+  line-height: 1.65;
+  max-width: 76%;
+  white-space: pre-wrap;
+}
+.msg.sys .msg-bubble {
+  background: #e8eef8;
+  color: #1c3a6e;
+  border: 1px solid #c8d4e8;
+}
+.msg.me .msg-bubble {
+  background: #1c3a6e;
+  color: #fff;
+}
+.msg.ghost .msg-bubble {
+  background: #1a0a0a;
+  color: #cc2222;
+  border: 1px solid #440000;
+  font-weight: bold;
+}
+.msg-sender { font-size: 11px; color: #aaa; margin-bottom: 3px; font-family: Arial, sans-serif; }
+.chat-input-wrap { display: flex; gap: 0; }
+.chat-input-wrap input {
+  flex: 1;
+  border: 1px solid #c0ccd8;
+  border-right: none;
+  padding: 9px 12px;
+  font-size: 14px;
+  font-family: "標楷體", "BiauKai", "DFKai-SB", serif;
+  outline: none;
+}
+.chat-input-wrap input:focus { border-color: #1c3a6e; }
+.chat-input-wrap button {
+  background: #1c3a6e;
+  color: #fff;
+  border: 1px solid #1c3a6e;
+  padding: 9px 18px;
+  font-size: 14px;
+  font-family: "標楷體", "BiauKai", "DFKai-SB", serif;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+.chat-input-wrap button:hover { background: #162e5a; }
+.typing-dots { display: flex; gap: 4px; align-items: center; padding: 6px 2px; }
+.typing-dots span {
+  width: 6px; height: 6px; background: #7a96b8; border-radius: 50%;
+  animation: blink .9s infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: .18s; }
+.typing-dots span:nth-child(3) { animation-delay: .36s; }
+@keyframes blink { 0%,80%,100%{transform:translateY(0);} 40%{transform:translateY(-5px);} }
+
+/* ══════════════════════════════════
+   HORROR ENDING
+══════════════════════════════════ */
+#horror-end {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 9999;
+  overflow: hidden;
+}
+#horror-end.show { display: block; }
+
+#blood-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+}
+.horror-text-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.h-line {
+
+  position: absolute;
+
+  color: rgba(140,0,0,.9);
+
+  font-family:
+    "標楷體",
+    "BiauKai",
+    "DFKai-SB",
+    serif;
+
+  font-size: clamp(26px, 5vw, 68px);
+
+  letter-spacing: 6px;
+
+  opacity: 0;
+
+  text-shadow:
+    0 0 8px rgba(120,0,0,.55),
+    0 0 24px rgba(80,0,0,.35);
+
+  animation:
+    horrorFlicker 2.8s infinite,
+    horrorShake .12s infinite;
+}
+
+@keyframes horrorFlicker {
+
+  0%,18%,20%,52%,54%,100% {
+    opacity: .92;
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  19%,53% {
+    opacity: .18;
+  }
+}
 
-  body {
-    background: #f0ece0;
-    color: #2a2a2a;
-    font-family: 'Noto Serif TC', serif;
-    cursor: default;
-    overflow-x: hidden;
-  }
+@keyframes horrorShake {
 
-  /* ── INTRO SCREEN ── */
-  #intro-screen {
-    position: fixed; inset: 0;
-    background: #000;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    z-index: 9999;
-    color: #fff;
-  }
-  #intro-screen h1 {
-    font-size: clamp(1.2rem, 3vw, 2rem);
-    letter-spacing: .2em;
-    color: #cc0000;
-    margin-bottom: 2rem;
-    text-align: center;
-    padding: 0 1rem;
-  }
-  #intro-screen p {
-    max-width: 600px;
-    line-height: 2;
-    text-align: center;
-    color: #ccc;
-    font-size: .95rem;
-    padding: 0 2rem;
-    margin-bottom: 1.5rem;
-  }
-  #intro-screen .blink { animation: blink 1.2s infinite; color: #ff4444; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  0%   { transform: translate(0,0); }
 
-  #start-btn {
-    margin-top: 2rem;
-    padding: .8rem 3rem;
-    background: transparent;
-    border: 1px solid #cc0000;
-    color: #cc0000;
-    font-family: 'Noto Serif TC', serif;
-    font-size: 1rem;
-    letter-spacing: .3em;
-    cursor: pointer;
-    transition: all .3s;
-  }
-  #start-btn:hover { background: #cc0000; color: #000; }
+  25%  { transform: translate(-1px,1px); }
 
-  /* ── GLITCH ── */
-  @keyframes glitch {
-    0%   { clip-path: inset(10% 0 80% 0); transform: translate(-3px,0); }
-    20%  { clip-path: inset(60% 0 10% 0); transform: translate(3px,0); }
-    40%  { clip-path: inset(30% 0 50% 0); transform: translate(-2px,0); }
-    60%  { clip-path: inset(70% 0 5%  0); transform: translate(2px,0); }
-    80%  { clip-path: inset(5%  0 70% 0); transform: translate(-1px,0); }
-    100% { clip-path: inset(0% 0 0%  0);  transform: translate(0,0); }
-  }
-  .glitch-text {
-    position: relative;
-    display: inline-block;
-  }
-  .glitch-text::before,.glitch-text::after {
-    content: attr(data-text);
-    position: absolute; top:0; left:0;
-    width:100%;
-  }
-  .glitch-text::before {
-    color:#f00; animation: glitch .6s infinite;
-    text-shadow: -2px 0 #0ff;
-  }
-  .glitch-text::after {
-    color:#0ff; animation: glitch .6s infinite reverse;
-    text-shadow: 2px 0 #f00;
-  }
+  50%  { transform: translate(1px,-1px); }
 
-  /* ── NAVBAR ── */
-  nav {
-    background: #1a2a1a;
-    padding: .8rem 2rem;
-    display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top:0; z-index: 100;
-    border-bottom: 2px solid #2d4a2d;
-  }
-  nav .logo {
-    color: #b8d4b0;
-    font-size: 1.1rem;
-    letter-spacing: .15em;
-    font-weight: 600;
-  }
-  nav ul { list-style: none; display: flex; gap: 2rem; }
-  nav ul li a {
-    color: #a0b89a;
-    text-decoration: none;
-    font-size: .85rem;
-    letter-spacing: .1em;
-    transition: color .2s;
-    cursor: pointer;
-  }
-  nav ul li a:hover { color: #e8f0e0; }
-  nav .nav-date { color: #556655; font-size: .75rem; }
+  75%  { transform: translate(-1px,0); }
 
-  /* ── HERO ── */
-  #hero {
-    position: relative;
-    height: 70vh;
-    overflow: hidden;
-    background: #0a0a0a;
-  }
-  #hero-img {
-    width:100%; height:100%;
-    object-fit: cover;
-    filter: brightness(.55) saturate(.4) contrast(1.2);
-    transition: filter 3s;
-  }
-  #hero:hover #hero-img { filter: brightness(.45) saturate(.3) contrast(1.4); }
+  100% { transform: translate(0,0); }
+}
 
-  .hero-overlay {
-    position: absolute; inset:0;
-    display: flex; flex-direction:column;
-    align-items:center; justify-content:flex-end;
-    padding-bottom: 3rem;
-    background: linear-gradient(transparent 40%, rgba(0,0,0,.7));
-  }
-  .hero-title {
-    color: #e8e4d0;
-    font-size: clamp(1.4rem, 4vw, 2.8rem);
-    letter-spacing: .3em;
-    text-shadow: 0 2px 20px rgba(0,0,0,.8);
-  }
-  .hero-sub {
-    color: #aaa;
-    margin-top: .5rem;
-    font-size: .85rem;
-    letter-spacing: .3em;
-  }
+.char {
 
-  /* ── HIDDEN FIGURE ── */
-  #tree-girl {
-    position: absolute;
-    right: 12%;
-    top: 5%;
-    width: 110px;
+  opacity: 0;
+
+  display: inline-block;
+
+  animation: charFade .18s forwards;
+}
+
+@keyframes charFade {
+
+  from {
     opacity: 0;
-    transition: opacity 2s;
-    filter: brightness(0) invert(.15) sepia(1) hue-rotate(100deg);
-    pointer-events: none;
-    z-index: 5;
-  }
-  #hero:hover #tree-girl { opacity: .85; }
-
-  /* ── TICKER ── */
-  .ticker-wrap {
-    background: #1a2a1a;
-    overflow: hidden;
-    padding: .4rem 0;
-    border-top: 1px solid #2d4a2d;
-    border-bottom: 1px solid #2d4a2d;
-  }
-  .ticker {
-    display: flex;
-    animation: ticker 28s linear infinite;
-    white-space: nowrap;
-  }
-  .ticker span {
-    color: #7ab070;
-    font-size: .78rem;
-    letter-spacing: .1em;
-    padding: 0 3rem;
-  }
-  .ticker .weird { color: #cc4444; }
-  @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-
-  /* ── MAIN LAYOUT ── */
-  .container { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem; }
-  .section-title {
-    font-size: 1.3rem;
-    letter-spacing: .2em;
-    border-bottom: 2px solid #2d4a2d;
-    padding-bottom: .5rem;
-    margin-bottom: 2rem;
-    color: #1a2a1a;
+    transform: translateY(8px);
+    filter: blur(5px);
   }
 
-  /* ── ANNOUNCEMENTS ── */
-  .announce-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
-  @media(max-width:700px){.announce-grid{grid-template-columns:1fr;}}
-  .announce-list { list-style: none; }
-  .announce-list li {
-    padding: .75rem 0;
-    border-bottom: 1px solid #ccc;
-    display: flex; gap: 1rem; align-items: baseline;
-    cursor: pointer;
-    transition: background .2s;
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
   }
-  .announce-list li:hover { background: #f5f0e0; padding-left: .5rem; }
-  .announce-list .date { color: #888; font-size: .75rem; min-width: 80px; }
-  .announce-list .tag {
-    font-size: .65rem; padding: .1rem .4rem;
-    border-radius: 2px; background: #2d4a2d; color: #b8d4b0;
-    letter-spacing: .05em;
-  }
-  .announce-list .tag.red { background: #6a0000; color: #ffaaaa; }
-  .announce-list .corrupted {
-    font-family: monospace;
-    color: #990000;
-    font-size: .8rem;
-  }
+}
 
-  /* ── QUICK LINKS ── */
-  .quick-links { display: flex; flex-direction: column; gap: .8rem; }
-  .ql-btn {
-    display: block;
-    padding: .6rem 1rem;
-    background: #2d4a2d;
-    color: #b8d4b0;
-    border: none;
-    font-family: 'Noto Serif TC', serif;
-    font-size: .82rem;
-    letter-spacing: .1em;
-    cursor: pointer;
-    text-align: left;
-    transition: background .2s;
-  }
-  .ql-btn:hover { background: #1a3a1a; color: #e0f0d8; }
+.horror-footer {
 
-  /* ── ABOUT SECTION ── */
-  #about-section {
-    background: #f5f0e4;
-    border: 1px solid #ddd;
-    padding: 2rem;
-    margin: 2rem 0;
-  }
-  .about-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
-  @media(max-width:700px){.about-grid{grid-template-columns:1fr;}}
-  .about-card {
-    background: #fff;
-    border: 1px solid #ddd;
-    padding: 1.2rem;
-    cursor: pointer;
-    transition: all .2s;
-    position: relative;
-    overflow: hidden;
-  }
-  .about-card:hover { border-color: #556655; box-shadow: 0 4px 20px rgba(0,0,0,.1); }
-  .about-card h3 { font-size: .9rem; letter-spacing: .15em; margin-bottom: .5rem; color: #1a2a1a; }
-  .about-card p { font-size: .78rem; color: #666; line-height: 1.7; }
-  .about-card .hover-hint {
-    position: absolute; bottom: 0; left:0; right:0;
-    background: #1a2a1a; color: #b8d4b0;
-    text-align: center; font-size: .7rem; letter-spacing: .1em;
-    padding: .3rem; transform: translateY(100%);
-    transition: transform .2s;
-  }
-  .about-card:hover .hover-hint { transform: translateY(0); }
+  position: absolute;
 
-  /* ── MODALS ── */
-  .modal-bg {
-    display: none;
-    position: fixed; inset:0;
-    background: rgba(0,0,0,.85);
-    z-index: 1000;
-    align-items: center; justify-content: center;
-  }
-  .modal-bg.open { display: flex; }
-  .modal {
-    background: #f0ece0;
-    border: 1px solid #556;
-    max-width: 600px;
-    width: 90%;
-    padding: 2rem;
-    position: relative;
-    max-height: 80vh;
-    overflow-y: auto;
-  }
-  .modal.dark { background: #0c0c0c; color: #cc3333; border-color: #440000; }
-  .modal.dark p, .modal.dark li { color: #aa8888; }
-  .modal h2 { margin-bottom: 1rem; font-size: 1.1rem; letter-spacing: .15em; }
-  .modal p { line-height: 2; font-size: .88rem; margin-bottom: 1rem; }
-  .modal ul { padding-left: 1.5rem; }
-  .modal ul li { margin-bottom: .5rem; font-size: .88rem; line-height: 1.8; }
-  .modal .close-btn {
-    position: absolute; top: 1rem; right: 1rem;
-    background: none; border: none;
-    font-size: 1.2rem; cursor: pointer; color: #888;
-  }
-  .modal .close-btn:hover { color: #000; }
-  .modal input[type=text] {
-    border: 1px solid #999;
-    padding: .5rem 1rem;
-    font-family: 'Noto Serif TC', serif;
-    font-size: .9rem;
-    width: 100%;
-    margin-bottom: .8rem;
-    background: #fff;
-  }
-  .modal button.submit {
-    background: #2d4a2d; color: #e0f0d8;
-    border: none; padding: .5rem 1.5rem;
-    font-family: 'Noto Serif TC', serif;
-    cursor: pointer; letter-spacing: .1em;
-  }
-  .modal button.submit:hover { background: #1a3a1a; }
-  .modal .error { color: #cc0000; font-size: .8rem; margin-top: .4rem; display:none; }
+  inset: 0;
 
-  /* ── PHOTO GALLERY ── */
-  .gallery-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; }
-  @media(max-width:700px){.gallery-grid{grid-template-columns:1fr 1fr;}}
-  .gallery-item {
-    aspect-ratio: 4/3;
-    overflow: hidden;
-    position: relative;
-    cursor: pointer;
-    background: #1a1a1a;
-  }
-  .gallery-item img {
-    width:100%; height:100%; object-fit: cover;
-    filter: sepia(.4) brightness(.8);
-    transition: all .4s;
-  }
-  .gallery-item:hover img { filter: sepia(.2) brightness(.65) contrast(1.2); transform: scale(1.05); }
-  .gallery-item .caption {
-    position: absolute; bottom:0; left:0; right:0;
-    background: rgba(0,0,0,.6); color: #ccc;
-    font-size: .72rem; padding: .4rem .6rem; letter-spacing: .05em;
-  }
+  display: flex;
 
-  /* ── FOOTER ── */
-  footer {
-    background: #1a2a1a;
-    color: #556655;
-    padding: 2rem;
-    text-align: center;
-    font-size: .75rem;
-    letter-spacing: .1em;
-    line-height: 2;
-  }
-  footer .corrupted-footer {
-    color: #441111;
-    font-family: monospace;
-    font-size: .7rem;
-    margin-top: .5rem;
-    opacity: .6;
-  }
+  flex-direction: column;
 
-  /* ── HORROR OVERLAYS ── */
-  #scare-overlay {
-    display: none;
-    position: fixed; inset:0;
-    background: #000;
-    z-index: 9000;
-    align-items: center; justify-content: center;
-    flex-direction: column;
-  }
-  #scare-overlay.show { display: flex; }
-  #scare-overlay img { max-width: 90vw; max-height: 80vh; object-fit: contain; }
-  #scare-overlay .scare-text {
-    color: #cc0000;
-    font-size: clamp(1rem, 4vw, 2.5rem);
-    letter-spacing: .2em;
-    margin-top: 1rem;
-    text-align: center;
-    font-family: monospace;
-    animation: flicker 0.15s infinite;
-  }
-  @keyframes flicker { 0%,100%{opacity:1} 50%{opacity:.4} }
+  align-items: center;
 
-  /* ── PUZZLE CLUES HUD ── */
-  #clue-hud {
-    position: fixed; bottom: 1rem; right: 1rem;
-    background: rgba(0,0,0,.8);
-    border: 1px solid #330000;
-    padding: .6rem 1rem;
-    z-index: 500;
-    min-width: 180px;
-  }
-  #clue-hud h4 {
-    color: #880000;
-    font-size: .7rem;
-    letter-spacing: .15em;
-    margin-bottom: .4rem;
-    border-bottom: 1px solid #330000;
-    padding-bottom: .3rem;
-  }
-  #clue-hud ul { list-style: none; }
-  #clue-hud ul li {
-    font-size: .68rem;
-    color: #665555;
-    padding: .15rem 0;
-    font-family: monospace;
-    transition: color .5s;
-  }
-  #clue-hud ul li.found { color: #cc4444; }
-  #clue-hud ul li.found::before { content: "✓ "; }
+  justify-content: center;
 
-  /* ── ENDING ── */
-  #ending-screen {
-    display: none;
-    position: fixed; inset:0;
-    background: #000;
-    z-index: 9999;
-    flex-direction: column;
-    align-items: center; justify-content: center;
-    text-align: center;
-  }
-  #ending-screen.show { display: flex; }
-  .ending-msg {
-    color: #cc0000;
-    font-size: clamp(1.2rem, 5vw, 3rem);
-    letter-spacing: .2em;
-    animation: flicker .1s infinite;
-    margin-bottom: 1.5rem;
-  }
-  .ending-code {
-    color: #440000;
-    font-family: monospace;
-    font-size: clamp(.6rem, 2vw, 1rem);
-    line-height: 1.8;
-    max-width: 700px;
-    text-align: left;
-    padding: 0 2rem;
-  }
-  .ending-final {
-    margin-top: 2rem;
-    color: #888;
-    font-size: 1rem;
-    letter-spacing: .3em;
-    opacity: 0;
-    transition: opacity 2s;
-  }
-  .ending-final.show { opacity: 1; }
+  text-align: center;
 
-  /* ── CURSOR TRAIL ── */
-  .cursor-dot {
-    pointer-events:none;
-    position:fixed;
-    width:6px; height:6px;
-    background:#8b0000;
-    border-radius:50%;
-    z-index:9998;
-    transition:opacity 1s;
-    opacity:.8;
-  }
+  z-index: 3;
+}
+.horror-footer .end-title {
 
-  /* ── PASSWORD-LOCKED CONTENT ── */
-  #banyan-content { display:none; }
-  #banyan-content.unlocked { display:block; }
+  color: #ffffff;
 
-  /* special hidden span */
-  .invisible-text { color: #f0ece0; font-size: .01px; user-select:all; }
-  .mirror-text { unicode-bidi:bidi-override; direction:rtl; color: #2a2a1a; font-size:.75rem; font-family:monospace;}
+  font-size: clamp(38px, 5vw, 72px);
 
-  .noise-overlay {
-    position:fixed; inset:0; pointer-events:none; z-index:0;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    opacity:.35;
-  }
+  font-family:
+    "標楷體",
+    "BiauKai",
+    "DFKai-SB",
+    serif;
 
-  /* section marker */
-  .section-wrap { position:relative; z-index:1; }
+  letter-spacing: 8px;
 
-  /* code 謎題 */
-  #hidden-code-section {
-    background: #0c0c0c;
-    padding: 1.5rem 2rem;
-    font-family: monospace;
-    font-size: .78rem;
-    color: #334433;
-    white-space: pre;
-    overflow-x: auto;
-    line-height: 1.7;
-    border-top: 1px solid #1a2a1a;
-    border-bottom: 1px solid #1a2a1a;
-  }
-  #hidden-code-section .hl { color: #cc4444; }
-  #hidden-code-section .hl2 { color: #4444cc; }
+  opacity: 0;
+
+  transition: opacity 1.2s;
+
+  text-shadow:
+    0 0 12px rgba(255,255,255,.15),
+    0 0 30px rgba(255,255,255,.08);
+}
+.horror-footer .end-title.show { opacity: 1; }
+.horror-footer .disclaimer {
+  margin-top: 14px;
+  color: #FFFFFF;
+  font-size: 32px;
+  font-family: Arial, sans-serif;
+  line-height: 1.8;
+  opacity: 0;
+  transition: opacity 1s;
+}
+.horror-footer .disclaimer.show { opacity: 1; }
+
+/* responsive */
+@media (max-width: 780px) {
+  .page-wrap { grid-template-columns: 1fr; }
+  .search-bar input { width: 160px; }
+  .school-title h1 { font-size: 18px; }
+  nav a { padding: 11px 14px; font-size: 13px; }
+  .stats-row { grid-template-columns: 1fr; }
+  .stat-item { border-right: none; border-bottom: 1px solid #d4dce8; }
+  .stat-item:last-child { border-bottom: none; }
+}
+.profile-photo img,
+.r-photo img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  filter:grayscale(100%);
+}
 </style>
 </head>
 <body>
-
-<div class="noise-overlay"></div>
-
-<!-- ══════════════ INTRO ══════════════ -->
+<!-- 開場前導 -->
 <div id="intro-screen">
-  <h1>⚠ 系統警告 ⚠</h1>
-  <p>
-    兩週前，高雄女中某班——<strong style="color:#fff">34名學生</strong>——於某個清晨後憑空消失。<br>
-    校方對外宣稱「校外教學延期」，但你的好友<strong style="color:#ff8888">陳美琳</strong>也在其中。<br><br>
-    她最後一則訊息：<em style="color:#cc8888">「樹在動。不要回頭。」</em><br><br>
-    你決定從學校官方網站開始查起。<br>
-    據說……有些地方不太對勁。
-  </p>
-  <p class="blink">【此遊戲包含恐怖元素，請自行評估是否繼續】</p>
-  <button id="start-btn" onclick="startGame()">進入網站</button>
+
+  <div class="intro-content">
+
+    <h1>打狗高級女子中學</h1>
+
+    <p class="intro-text">
+      你的好朋友──蔡雅賢、郭怡妮、鄭嘉媃、何喻萱，<br>
+      於上週五放學後失去聯繫，至今下落不明。<br><br>
+
+      你需要在學校網站中尋找線索，<br>
+      試著查出事情的真相。
+    </p>
+
+    <button id="start-btn" class="start-game-btn">
+      開始遊戲
+    </button>
+
+  </div>
+
+</div>
+<!-- UTILITY BAR -->
+<div class="utility-bar">
+  <div class="utility-bar-inner">
+    <span>民國一百一十四年度　第二學期</span>
+    <div>
+      <a href="#">教師專區</a>
+      <a href="#">校務行政系統</a>
+      <a href="#">網站地圖</a>
+      <a href="#">English</a>
+    </div>
+  </div>
 </div>
 
-<!-- ══════════════ MAIN SITE ══════════════ -->
-<div id="main-site" style="display:none">
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="school-brand">
+      <svg class="school-seal" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="36" cy="36" r="34" fill="none" stroke="#1c3a6e" stroke-width="2.5"/>
+        <circle cx="36" cy="36" r="28" fill="none" stroke="#c8a84b" stroke-width="1.2"/>
+        <text x="36" y="26" text-anchor="middle" font-family="標楷體,DFKai-SB,serif" font-size="9" fill="#1c3a6e" letter-spacing="2">打狗女中</text>
+        <path d="M36 30 L38.4 37 L46 37 L40 41.5 L42.4 48.5 L36 44 L29.6 48.5 L32 41.5 L26 37 L33.6 37 Z" fill="#c8a84b"/>
+        <text x="36" y="60" text-anchor="middle" font-family="Arial,sans-serif" font-size="7" fill="#1c3a6e" letter-spacing="1">EST. 1979</text>
+      </svg>
+      <div class="school-title">
+        <h1>打狗高級女子中學</h1>
+        <p>DAGOU GIRLS' SENIOR HIGH SCHOOL&ensp;|&ensp;建校民國六十八年</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="search-bar">
+        <input type="text" id="search-input" placeholder="輸入學生姓名或學號查詢">
+        <button onclick="doSearch()">查詢</button>
+      </div>
+    </div>
+  </div>
+</header>
 
-<!-- NAVBAR -->
+<!-- NAV -->
 <nav>
-  <div class="logo">高雄榮女高級中學</div>
-  <ul>
-    <li><a onclick="scrollTo(0,0)">首頁</a></li>
-    <li><a onclick="openAbout()">關於學校</a></li>
-    <li><a onclick="openGallery()">校園相簿</a></li>
-    <li><a onclick="openAnnounce()">公告欄</a></li>
-    <li><a onclick="openContact()">聯絡我們</a></li>
-  </ul>
-  <div class="nav-date" id="nav-date"></div>
+  <div class="nav-inner">
+    <a onclick="openModal('about')">關於學校</a>
+    <a onclick="openModal('login')">學生專區</a>
+    <a onclick="openModal('forum')">校園論壇</a>
+    <a class="active">最新消息</a>
+    <a onclick="openModal('contact')">聯絡我們</a>
+    <a onclick="openModal('honor')">榮譽榜</a>
+  </div>
 </nav>
 
-<!-- TICKER -->
-<div class="ticker-wrap">
-  <div class="ticker">
-    <span>【公告】本學期運動會訂於10月18日舉行，請各班準時報到。</span>
-    <span>【招生】113學年度新生入學說明會報名已開始。</span>
-    <span class="weird">【系統】ÿ∂µ©®ψ數據同步中…請稍候…</span>
-    <span>【活動】校慶藝文展覽即日起對外開放參觀。</span>
-    <span>【通知】榕樹區域近期維修，請勿靠近。</span>
-    <span class="weird">她們還在這裡 只是你看不到</span>
-    <span>【成績】期中考成績已上傳至學生自助系統，請自行查詢。</span>
-    <span class="weird">404 — 找不到第34筆學籍資料…再試一次…再試一次…</span>
-    <span>【公告】本學期運動會訂於10月18日舉行，請各班準時報到。</span>
-    <span>【招生】113學年度新生入學說明會報名已開始。</span>
-    <span class="weird">【系統】ÿ∂µ©®ψ數據同步中…請稍候…</span>
-    <span>【活動】校慶藝文展覽即日起對外開放參觀。</span>
-    <span>【通知】榕樹區域近期維修，請勿靠近。</span>
-    <span class="weird">她們還在這裡 只是你看不到</span>
-    <span>【成績】期中考成績已上傳至學生自助系統，請自行查詢。</span>
-    <span class="weird">404 — 找不到第34筆學籍資料…再試一次…再試一次…</span>
-  </div>
+<!-- BANNER -->
+<div class="banner">
+  <h2>歡迎蒞臨　打狗高級女子中學</h2>
+  <p>自強　誠信　關懷　——　培育卓越女性，傳承百年精神</p>
 </div>
 
-<!-- HERO -->
-<div id="hero">
-  <!-- SVG tree with hanging figure (generated inline) -->
-  <svg id="hero-img" viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;position:absolute;inset:0;">
-    <!-- sky -->
-    <defs>
-      <radialGradient id="skyg" cx="50%" cy="0%" r="100%">
-        <stop offset="0%" stop-color="#2a2a35"/>
-        <stop offset="100%" stop-color="#0a0a10"/>
-      </radialGradient>
-      <filter id="blur2"><feGaussianBlur stdDeviation="2"/></filter>
-      <filter id="blur1"><feGaussianBlur stdDeviation="0.8"/></filter>
-    </defs>
-    <rect width="1200" height="600" fill="url(#skyg)"/>
-    <!-- moon -->
-    <circle cx="900" cy="100" r="55" fill="#c8c0a0" opacity=".55"/>
-    <circle cx="920" cy="88" r="52" fill="#1a1a25" opacity=".7"/>
-    <!-- stars -->
-    <g fill="#ffffff" opacity=".35">
-      <circle cx="120" cy="60" r="1.2"/><circle cx="340" cy="40" r="1"/><circle cx="560" cy="80" r="1.3"/>
-      <circle cx="740" cy="30" r="1"/><circle cx="1050" cy="55" r="1.2"/><circle cx="200" cy="120" r="0.8"/>
-      <circle cx="450" cy="110" r="1"/><circle cx="820" cy="145" r="0.9"/><circle cx="1100" cy="90" r="1.1"/>
-    </g>
-    <!-- ground -->
-    <rect x="0" y="470" width="1200" height="130" fill="#0d1408" opacity=".9"/>
-    <ellipse cx="600" cy="475" rx="600" ry="25" fill="#0a1205" opacity=".8"/>
-    <!-- building background -->
-    <rect x="50" y="220" width="300" height="255" fill="#111818" opacity=".85"/>
-    <rect x="80" y="240" width="40" height="50" fill="#1a2a1a"/>
-    <rect x="140" y="240" width="40" height="50" fill="#0c1c0c"/>
-    <rect x="200" y="240" width="40" height="50" fill="#1a2a1a"/>
-    <rect x="260" y="240" width="40" height="50" fill="#0c0c10"/>
-    <rect x="80" y="310" width="40" height="50" fill="#0c0c10"/>
-    <rect x="140" y="310" width="40" height="50" fill="#1a1a08"/>
-    <!-- one lit window -->
-    <rect x="200" y="310" width="40" height="50" fill="#8a7020" opacity=".7"/>
-    <rect x="260" y="310" width="40" height="50" fill="#0c0c10"/>
-    <rect x="100" y="380" width="150" height="95" fill="#0c1410"/>
-    <!-- right building -->
-    <rect x="800" y="280" width="350" height="195" fill="#0d1510" opacity=".8"/>
-    <rect x="820" y="300" width="35" height="40" fill="#0c1010"/>
-    <rect x="870" y="300" width="35" height="40" fill="#1a2208"/>
-    <rect x="920" y="300" width="35" height="40" fill="#0c1010"/>
-    <rect x="970" y="300" width="35" height="40" fill="#8a6010" opacity=".5"/>
-    <rect x="820" y="360" width="35" height="40" fill="#0c1010"/>
-    <rect x="870" y="360" width="35" height="40" fill="#0c1010"/>
-    <rect x="920" y="360" width="35" height="40" fill="#1a2208"/>
-    <rect x="970" y="360" width="35" height="40" fill="#0c1010"/>
-    <!-- BANYAN TREE (center) -->
-    <!-- trunk -->
-    <rect x="570" y="260" width="55" height="215" fill="#1a1208" rx="8"/>
-    <!-- aerial roots / trunk texture -->
-    <rect x="555" y="340" width="10" height="130" fill="#150e05" rx="4" transform="rotate(-5 560 340)"/>
-    <rect x="630" y="360" width="10" height="110" fill="#150e05" rx="4" transform="rotate(6 635 360)"/>
-    <rect x="545" y="390" width="8" height="90" fill="#120b04" rx="3" transform="rotate(-8 549 390)"/>
-    <rect x="645" y="400" width="8" height="80" fill="#120b04" rx="3" transform="rotate(10 649 400)"/>
-    <!-- canopy layers -->
-    <ellipse cx="598" cy="260" rx="180" ry="90" fill="#0c1a08" opacity=".95"/>
-    <ellipse cx="580" cy="230" rx="130" ry="70" fill="#0a1806" opacity=".9"/>
-    <ellipse cx="620" cy="220" rx="120" ry="65" fill="#0e1c0a" opacity=".85"/>
-    <ellipse cx="480" cy="260" rx="100" ry="60" fill="#0a1606" opacity=".88"/>
-    <ellipse cx="720" cy="255" rx="110" ry="65" fill="#0c1808" opacity=".88"/>
-    <ellipse cx="550" cy="195" rx="80" ry="50" fill="#0a1406" opacity=".82"/>
-    <ellipse cx="660" cy="200" rx="75" ry="48" fill="#0e1a0a" opacity=".82"/>
-    <!-- hanging rope -->
-    <line x1="620" y1="285" x2="622" y2="360" stroke="#2a2010" stroke-width="2.5" opacity=".9"/>
-    <!-- HANGING GIRL SILHOUETTE -->
-    <g opacity=".92" transform="translate(622,360)">
-      <!-- dress/body -->
-      <ellipse cx="0" cy="18" rx="9" ry="18" fill="#0a0a12"/>
-      <!-- skirt flare -->
-      <path d="M-12,28 Q0,45 12,28" fill="#0a0a12"/>
-      <!-- arms hanging -->
-      <line x1="-9" y1="14" x2="-18" y2="28" stroke="#0a0a0f" stroke-width="3" stroke-linecap="round"/>
-      <line x1="9" y1="14" x2="18" y2="28" stroke="#0a0a0f" stroke-width="3" stroke-linecap="round"/>
-      <!-- neck -->
-      <rect x="-3" y="-4" width="6" height="8" fill="#0a0a12"/>
-      <!-- HEAD -->
-      <circle cx="0" cy="-14" r="11" fill="#0d0a0a"/>
-      <!-- long hair -->
-      <path d="M-10,-5 Q-18,10 -14,35" stroke="#050505" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <path d="M10,-5 Q18,10 14,35" stroke="#050505" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <path d="M-6,-4 Q-10,20 -8,38" stroke="#080808" stroke-width="3" fill="none"/>
-      <!-- eyes - red glints -->
-      <circle cx="-4" cy="-15" r="2" fill="#880000" opacity=".8"/>
-      <circle cx="4" cy="-15" r="2" fill="#880000" opacity=".8"/>
-      <!-- legs -->
-      <line x1="-4" y1="36" x2="-6" y2="58" stroke="#0a0a12" stroke-width="4" stroke-linecap="round"/>
-      <line x1="4" y1="36" x2="6" y2="58" stroke="#0a0a12" stroke-width="4" stroke-linecap="round"/>
-    </g>
-    <!-- fog at base -->
-    <ellipse cx="598" cy="478" rx="250" ry="25" fill="#1a2218" opacity=".7" filter="url(#blur2)"/>
-    <ellipse cx="598" cy="485" rx="320" ry="18" fill="#141c12" opacity=".5" filter="url(#blur2)"/>
-    <!-- drips / scratches on screen effect -->
-    <line x1="200" y1="0" x2="198" y2="600" stroke="#880000" stroke-width="0.8" opacity=".1"/>
-    <line x1="760" y1="0" x2="762" y2="600" stroke="#880000" stroke-width="0.5" opacity=".08"/>
-    <!-- WARNING TEXT subtle -->
-    <text x="30" y="595" font-family="monospace" font-size="10" fill="#330800" opacity=".5">SYS://CAMERA_04 — LAST_ACTIVE: 14 DAYS AGO — MOTION_DETECTED: NULL</text>
-  </svg>
+<!-- PAGE BODY -->
+<div class="page-wrap">
 
-  <div class="hero-overlay">
-    <div class="hero-title glitch-text" data-text="高雄榮女高級中學">高雄榮女高級中學</div>
-    <div class="hero-sub">KAOHSIUNG GLORY GIRLS' HIGH SCHOOL ── EST. 1956</div>
-  </div>
-</div>
-
-<!-- MAIN CONTAINER -->
-<div class="container section-wrap">
-
-  <!-- ANNOUNCEMENTS + QUICK LINKS -->
-  <div class="announce-grid">
-    <div>
-      <h2 class="section-title">最新公告</h2>
-      <ul class="announce-list">
-        <li onclick="triggerClue1()">
-          <span class="date">2024-10-01</span>
-          <span class="tag">活動</span>
-          <span>113學年度第一學期運動會活動說明</span>
-        </li>
-        <li onclick="openNormalMsg('正常')">
-          <span class="date">2024-09-28</span>
-          <span class="tag">學務</span>
-          <span>校園安全宣導週相關活動辦法</span>
-        </li>
-        <li onclick="triggerClue2()">
-          <span class="date">2024-09-22</span>
-          <span class="tag red">緊急</span>
-          <span class="corrupted">【緊急】甲班學籍資料異常：34筆紀錄顯示 NULL ████████</span>
-        </li>
-        <li onclick="openNormalMsg('正常2')">
-          <span class="date">2024-09-15</span>
-          <span class="tag">課務</span>
-          <span>期中考試時間表公告（各科應考注意事項）</span>
-        </li>
-        <li onclick="openNormalMsg('normal3')">
-          <span class="date">2024-09-10</span>
-          <span class="tag">總務</span>
-          <span>校舍維護工程公告：南棟3樓走廊暫停使用</span>
-        </li>
-        <li onclick="triggerHiddenMsg()">
-          <span class="date">2024-08-&#x0033;&#x0031;</span>
-          <span class="tag red">系統</span>
-          <span class="corrupted">ERR_0x4F — 榕&#x6A39;&#x76E3;&#x63A7;&#x7CFB;&#x7D71;&#x96A2;&#x65B7; — &#x91CD;&#x65B0;&#x9023;&#x7DDA;&#x5931;&#x6557;</span>
-        </li>
-      </ul>
+  <!-- LEFT MAIN -->
+  <div>
+    <!-- 最新消息 -->
+    <div class="card">
+      <div class="card-head">
+        <span><span class="card-head-accent"></span>最新消息</span>
+      </div>
+      <div class="card-body">
+        <ul class="news-list">
+          <li>
+            <span class="news-tag gold">公告</span>
+            <span class="news-date">114.04.25</span>
+            <a onclick="openModal('n-honor')">恭賀本校儀隊榮獲全國比賽第一名</a>
+          </li>
+          <li>
+            <span class="news-tag blue">校務</span>
+            <span class="news-date">114.03.10</span>
+            <a onclick="openModal('n-repair')">一一四年度校園整修工程通知</a>
+          </li>
+          <li>
+            <span class="news-tag red">緊急</span>
+            <span class="news-date">114.05.05</span>
+            <a onclick="openModal('n-missing')">一一四班學生失聯事件說明</a>
+          </li>
+          <li>
+            <span class="news-tag blue">學務</span>
+            <span class="news-date">114.04.20</span>
+            <a>一一三學年度第二學期期末考試時程公告</a>
+          </li>
+          <li>
+            <span class="news-tag blue">活動</span>
+            <span class="news-date">114.04.15</span>
+            <a>暑期輔導課程報名公告</a>
+          </li>
+          <li>
+            <span class="news-tag blue">課務</span>
+            <span class="news-date">114.04.10</span>
+            <a>選修課程第二次加退選時程公告</a>
+          </li>
+        </ul>
+      </div>
     </div>
-    <div>
-      <h2 class="section-title">快速連結</h2>
-      <div class="quick-links">
-        <button class="ql-btn" onclick="openStudentSystem()">學生自助系統</button>
-        <button class="ql-btn" onclick="openAbout()">關於學校</button>
-        <button class="ql-btn" onclick="openNormalMsg('課程')">課程查詢</button>
-        <button class="ql-btn" onclick="openGallery()">校園相簿</button>
-        <button class="ql-btn" onclick="openNormalMsg('地圖')">校園地圖</button>
-        <button class="ql-btn" onclick="openNormalMsg('家長')">家長專區</button>
+
+    <!-- 學校簡介 -->
+    <div class="card">
+      <div class="card-head"><span><span class="card-head-accent"></span>學校概況</span></div>
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-num">1,842</div>
+          <div class="stat-label">在籍學生人數</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">126</div>
+          <div class="stat-label">專任教師人數</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">46</div>
+          <div class="stat-label">建校年數</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- HIDDEN CODE SECTION (謎題線索 #3 embedded in source comment styled as code) -->
-  <div id="hidden-code-section">
-<span style="color:#336633">/* ── 頁面維護日誌 ── */</span>
-<span style="color:#334433">// last_modified: 2024-10-01 07:14:22</span>
-<span style="color:#334433">// webmaster: ████████@kgghs.edu.tw</span>
-<span style="color:#334433">// build: v3.8.1-stable</span>
-
-<span style="color:#334433">// TODO: 修復走廊攝影機 API 回傳值異常問題</span>
-<span style="color:#334433">// TODO: 刪除 <span class="hl">banyan_log_2024.db</span> (已確認無關資料)</span>
-<span style="color:#334433">// WARN: 某些頁面存在 legacy redirect，</span>
-<span style="color:#334433">//       輸入路徑 <span class="hl2" id="code-path" style="cursor:pointer;text-decoration:underline" onclick="triggerClue3()">/campus/zone-B/restricted</span> 將觸發舊系統跳轉</span>
-<span style="color:#334433">// NOTE: 榕樹區 CCTV 最後回傳時間戳: <span class="hl">14天前</span></span>
-  </div>
-
-  <!-- ABOUT SECTION -->
-  <div id="about-section">
-    <h2 class="section-title">關於學校</h2>
-    <div class="about-grid">
-      <div class="about-card" onclick="openSchoolHistory()">
-        <h3>學校歷史</h3>
-        <p>創校於民國45年，是南臺灣歷史最悠久的女子高中之一，培育無數社會英才。</p>
-        <div class="hover-hint">點擊閱讀更多</div>
+  <!-- SIDEBAR -->
+  <div>
+    <!-- 快速連結 -->
+    <div class="card">
+      <div class="card-head"><span><span class="card-head-accent"></span>相關連結</span></div>
+      <div class="card-body" style="padding:0;">
+        <ul class="sidebar-nav">
+          <li><a onclick="openModal('login')">學生個人資料查詢 <span class="arrow">▶</span></a></li>
+          <li><a onclick="openModal('forum')">校園討論論壇 <span class="arrow">▶</span></a></li>
+          <li><a onclick="openModal('honor')">歷屆榮譽榜 <span class="arrow">▶</span></a></li>
+          <li><a onclick="openModal('contact')">聯絡學校 <span class="arrow">▶</span></a></li>
+          <li><a onclick="openModal('about')">學校簡介 <span class="arrow">▶</span></a></li>
+        </ul>
       </div>
-      <div class="about-card" onclick="openBanyanModal()">
-        <h3>校園介紹</h3>
-        <p>本校佔地廣闊，校內植被豐富，其中以中庭百年榕樹最為著名，為校園精神象徵。</p>
-        <div class="hover-hint">點擊閱讀更多</div>
+    </div>
+
+    <!-- 榮譽榜預覽 -->
+    <div class="card">
+      <div class="card-head">
+        <span><span class="card-head-accent"></span>近期榮譽</span>
       </div>
-      <div class="about-card" onclick="openNormalMsg('師資')">
-        <h3>師資陣容</h3>
-        <p>本校師資優良，各科教師均具備完整師資培育背景，致力提升學生學習成效。</p>
-        <div class="hover-hint">點擊閱讀更多</div>
+      <div class="card-body">
+        <div class="honor-item">
+          <div class="h-year">114學年度</div>
+          <div class="h-name">鄭嘉媃</div>
+          <div class="h-award">全國手語比賽　第一名</div>
+        </div>
+        <div class="honor-item">
+          <div class="h-year">114學年度</div>
+          <div class="h-name">何喻萱</div>
+          <div class="h-award">全縣國文演說競賽　第二名</div>
+        </div>
+        <div class="honor-item">
+          <div class="h-year">114學年度</div>
+          <div class="h-name">本校儀隊</div>
+          <div class="h-award">全國儀隊競賽　第一名</div>
+        </div>
+        <span class="view-all" onclick="openModal('honor')">查看完整榮譽榜 ›</span>
       </div>
     </div>
   </div>
-
-  <!-- GALLERY -->
-  <div id="gallery-section">
-    <h2 class="section-title">校園剪影</h2>
-    <div class="gallery-grid">
-      <!-- Using inline SVG illustrations as "photos" -->
-      <div class="gallery-item" onclick="openPhoto(1)">
-        <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
-          <rect width="400" height="300" fill="#0d1408"/>
-          <rect x="60" y="80" width="280" height="180" fill="#121c10"/>
-          <rect x="80" y="100" width="50" height="60" fill="#1a2818"/>
-          <rect x="150" y="100" width="50" height="60" fill="#0a1206"/>
-          <rect x="220" y="100" width="50" height="60" fill="#1a2818"/>
-          <rect x="290" y="100" width="40" height="60" fill="#8a6010" opacity=".6"/>
-          <rect x="100" y="190" width="80" height="70" fill="#0c1408"/>
-          <ellipse cx="200" cy="82" rx="60" ry="30" fill="#0a1a08"/>
-          <text x="200" y="280" text-anchor="middle" font-family="serif" font-size="14" fill="#334433">教學大樓（南棟）</text>
-        </svg>
-        <div class="caption">教學大樓 — 南棟</div>
-      </div>
-      <div class="gallery-item" onclick="openPhoto(2)">
-        <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
-          <defs><radialGradient id="g2" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#1a2a10"/><stop offset="100%" stop-color="#080c05"/></radialGradient></defs>
-          <rect width="400" height="300" fill="url(#g2)"/>
-          <!-- banyan -->
-          <rect x="185" y="120" width="30" height="160" fill="#120e08"/>
-          <ellipse cx="200" cy="120" rx="120" ry="65" fill="#0a1606"/>
-          <ellipse cx="180" cy="100" rx="80" ry="50" fill="#0e1c0a"/>
-          <ellipse cx="220" cy="95" rx="70" ry="45" fill="#0c1808"/>
-          <!-- rope + figure hint -->
-          <line x1="225" y1="130" x2="226" y2="185" stroke="#1a1410" stroke-width="2"/>
-          <circle cx="226" cy="197" r="8" fill="#0a0a0a"/>
-          <text x="200" y="285" text-anchor="middle" font-family="serif" font-size="14" fill="#334433">中庭百年榕樹</text>
-        </svg>
-        <div class="caption">中庭榕樹區</div>
-      </div>
-      <div class="gallery-item" onclick="openPhoto(3)">
-        <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
-          <rect width="400" height="300" fill="#0c1210"/>
-          <rect x="0" y="200" width="400" height="100" fill="#080e08"/>
-          <rect x="30" y="100" width="340" height="140" fill="#101810"/>
-          <rect x="50" y="120" width="60" height="80" fill="#0a1208"/>
-          <rect x="130" y="120" width="60" height="80" fill="#1a280a"/>
-          <rect x="210" y="120" width="60" height="80" fill="#0a1208"/>
-          <rect x="290" y="120" width="60" height="80" fill="#0a1208"/>
-          <!-- eerie light from one window -->
-          <rect x="130" y="120" width="60" height="80" fill="#ccaa20" opacity=".12"/>
-          <text x="200" y="285" text-anchor="middle" font-family="serif" font-size="14" fill="#334433">圖書館</text>
-        </svg>
-        <div class="caption">圖書館 — B1F</div>
-      </div>
-      <div class="gallery-item" onclick="openPhoto(4)">
-        <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
-          <rect width="400" height="300" fill="#0a0a10"/>
-          <!-- corridor perspective -->
-          <polygon points="0,0 400,0 300,300 100,300" fill="#121218"/>
-          <polygon points="130,0 270,0 220,300 180,300" fill="#0a0a10"/>
-          <rect x="0" y="0" width="40" height="300" fill="#0e0e14"/>
-          <rect x="360" y="0" width="40" height="300" fill="#0e0e14"/>
-          <!-- lockers -->
-          <rect x="5" y="20" width="30" height="50" fill="#141420" stroke="#1a1a25" stroke-width="1"/>
-          <rect x="5" y="80" width="30" height="50" fill="#141420" stroke="#1a1a25" stroke-width="1"/>
-          <rect x="5" y="140" width="30" height="50" fill="#141420" stroke="#1a1a25" stroke-width="1"/>
-          <rect x="5" y="200" width="30" height="50" fill="#141420" stroke="#1a1a25" stroke-width="1"/>
-          <!-- end of corridor glow -->
-          <ellipse cx="200" cy="150" rx="30" ry="40" fill="#880000" opacity=".08"/>
-          <!-- shadow figure at end -->
-          <ellipse cx="200" cy="290" rx="12" ry="5" fill="#000" opacity=".8"/>
-          <rect x="195" y="220" width="10" height="65" fill="#050505"/>
-          <circle cx="200" cy="210" r="9" fill="#050505"/>
-          <text x="200" y="15" text-anchor="middle" font-family="serif" font-size="13" fill="#334433">東側走廊 — 3F</text>
-        </svg>
-        <div class="caption">東側走廊（3樓）</div>
-      </div>
-      <div class="gallery-item" onclick="openPhoto(5)">
-        <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
-          <rect width="400" height="300" fill="#080c08"/>
-          <rect x="0" y="220" width="400" height="80" fill="#060a06"/>
-          <!-- track/field -->
-          <ellipse cx="200" cy="240" rx="180" ry="50" fill="none" stroke="#1a2a18" stroke-width="6"/>
-          <ellipse cx="200" cy="240" rx="140" ry="38" fill="none" stroke="#121e10" stroke-width="3"/>
-          <rect x="50" y="30" width="300" height="40" fill="#0a1408"/>
-          <text x="200" y="55" text-anchor="middle" font-family="serif" font-size="16" fill="#1a2818">KGGHS SPORTS FIELD</text>
-          <!-- class photo ghost -->
-          <g opacity=".15">
-            <rect x="80" y="150" width="240" height="60" fill="#ffffff"/>
-          </g>
-          <text x="200" y="285" text-anchor="middle" font-family="serif" font-size="14" fill="#334433">操場 — 全校運動場</text>
-        </svg>
-        <div class="caption">操場（近期暫時封閉）</div>
-      </div>
-      <div class="gallery-item" onclick="openPhoto(6)" id="last-photo">
-        <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
-          <rect width="400" height="300" fill="#050508"/>
-          <text x="200" y="135" text-anchor="middle" font-family="monospace" font-size="22" fill="#220000">檔案損毀</text>
-          <text x="200" y="165" text-anchor="middle" font-family="monospace" font-size="12" fill="#330000">CORRUPTED — IMG_0034.JPG</text>
-          <text x="200" y="190" text-anchor="middle" font-family="monospace" font-size="10" fill="#220000">0x4E554C4C — NULL</text>
-          <text x="200" y="285" text-anchor="middle" font-family="serif" font-size="14" fill="#221410">甲班 — 班級合照</text>
-        </svg>
-        <div class="caption">甲班 113學年班級合照 ⚠ 損毀</div>
-      </div>
-    </div>
-  </div>
-
 </div>
 
 <!-- FOOTER -->
 <footer>
-  <div>高雄榮女高級中學 ── 高雄市苓雅區榮女路1號</div>
-  <div>電話：(07) 225-████ ── 傳真：(07) 225-████</div>
-  <div>© 2024 高雄榮女高級中學 版權所有</div>
-  <div class="corrupted-footer" id="footer-corrupt" onclick="triggerClue4()" style="cursor:pointer">
-    sys_log: [2024-09-20 03:14:88] zone-B abnormality detected :: CCTV offline :: witness count = 0 :: 她們在唱歌
-  </div>
-  <div class="mirror-text" style="margin-top:.3rem; opacity:.3;" title="鏡像文字">。路回沒已你，了晚太</div>
+  <p>© 中華民國一百一十四年　打狗高級女子中學　版權所有</p>
+  <p>地址：高雄市某區某路一號　總機：(07) XXXX-XXXX　傳真：(07) XXXX-XXXX　信箱：service@dagougirls.edu.tw</p>
 </footer>
 
-</div><!-- end #main-site -->
 
+<!-- ═════════════════════════════════════
+     MODALS
+═════════════════════════════════════ -->
 
-<!-- ══════════════ MODALS ══════════════ -->
-
-<!-- ABOUT MODAL -->
-<div class="modal-bg" id="modal-about">
-  <div class="modal">
-    <button class="close-btn" onclick="closeModal('modal-about')">✕</button>
-    <h2>關於學校</h2>
-    <p>請選擇您想了解的項目：</p>
-    <div style="display:grid;gap:.5rem;margin-top:1rem">
-      <button class="ql-btn" onclick="openSchoolHistory(); closeModal('modal-about')">學校歷史</button>
-      <button class="ql-btn" onclick="openBanyanModal(); closeModal('modal-about')">校園介紹（需授權）</button>
-      <button class="ql-btn" onclick="openNormalMsg('校規'); closeModal('modal-about')">校規與生活公約</button>
-    </div>
-  </div>
-</div>
-
-<!-- SCHOOL HISTORY -->
-<div class="modal-bg" id="modal-history">
-  <div class="modal">
-    <button class="close-btn" onclick="closeModal('modal-history')">✕</button>
-    <h2>學校歷史</h2>
-    <p>高雄榮女高級中學創立於民國45年（1956年），是南台灣第一所專為女性設立的公立高級中學。</p>
-    <p>本校以「榮、端、誠、慧」為校訓，歷屆畢業生遍及政界、學術界及各行各業，深受社會肯定。</p>
-    <p>校園佔地約12公頃，擁有完善的教學設備與豐富的自然景觀。</p>
-    <p style="color:#888; font-size:.78rem; font-family:monospace; margin-top:1.5rem">
-      ──── 系統備註 ────<br>
-      本頁最後修改：████-██-██<br>
-      <span style="color:#770000">警告：第34筆歷史學籍資料無法讀取。</span>
-    </p>
-  </div>
-</div>
-
-<!-- BANYAN PASSWORD MODAL -->
-<div class="modal-bg" id="modal-banyan-pw">
-  <div class="modal">
-    <button class="close-btn" onclick="closeModal('modal-banyan-pw')">✕</button>
-    <h2>⚠ 限制區域 ── 請輸入授權碼</h2>
-    <p style="font-size:.8rem; color:#888; margin-bottom:1rem">此區域內容屬內部管理文件，請輸入授權密碼後繼續。</p>
-    <input type="text" id="banyan-pw-input" placeholder="輸入密碼…" onkeydown="if(event.key==='Enter')checkBanyanPw()"/>
-    <button class="submit" onclick="checkBanyanPw()">確認</button>
-    <div class="error" id="banyan-pw-error">密碼錯誤。請再試一次。</div>
-    <div style="margin-top:1.5rem; font-size:.7rem; color:#aaa">提示：校園中最古老的植物是？</div>
-  </div>
-</div>
-
-<!-- BANYAN CONTENT -->
-<div class="modal-bg" id="modal-banyan">
-  <div class="modal dark">
-    <button class="close-btn" onclick="closeModal('modal-banyan')" style="color:#666">✕</button>
-    <h2 style="color:#cc3333">榕樹區域 — 內部管理文件</h2>
-    <div id="banyan-content" class="unlocked">
-      <p>本校中庭之百年榕樹，樹齡逾百年，為本校精神象徵。然而，此區域有若干<span style="color:#880000">未公開紀錄</span>，茲彙整如下：</p>
-      <p style="color:#aa6666">【事件紀錄 — 僅限相關人員閱覽】</p>
-      <ul style="color:#996666">
-        <li>民國62年 — 一名三年級學生於榕樹下被發現，原因不明。事後校方以「意外」結案。</li>
-        <li>民國74年 — 同位置，再度發現異常事件。官方不予公開。</li>
-        <li>民國89年 — 深夜監視器拍攝到榕樹下有<span style="color:#cc0000">不明人影</span>，影像隨後遭刪除。</li>
-        <li>民國102年 — 數名學生反映夜間聽見<span style="color:#cc0000">吟唱聲</span>，調查後以「風聲」存檔。</li>
-        <li>民國113年9月 — <span style="color:#ff0000">甲班34名學生失蹤。CCTV記錄：最後出現於榕樹下。時間戳：03:14。</span></li>
-      </ul>
-      <p style="margin-top:1.5rem; font-family:monospace; font-size:.78rem; color:#550000">
-        附記：榕樹氣根數量本學期起出現異常增長。<br>
-        附記二：夜間巡邏員工自第3週起拒絕前往B區。<br>
-        <span style="color:#880000" id="banyan-secret" style="cursor:pointer">附記三：樹根下方似乎有東西在回應。敲三下試試。</span>
-      </p>
-      <div style="margin-top:2rem; text-align:center">
-        <button class="submit" style="background:#440000; color:#ffaaaa; letter-spacing:.2em" onclick="knockOnTree()">
-          叩叩叩
-        </button>
+<!-- 關於學校 -->
+<div class="overlay" id="m-about">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-head">關於學校<button class="modal-close" onclick="closeModal('about')">✕</button></div>
+    <div class="modal-body">
+      <div class="about-section">
+        <h4>學校簡介</h4>
+        <p>打狗高級女子中學創立於民國六十八年，坐落於高雄市，為南部地區歷史最悠久之女子高中之一。本校秉持「自強、誠信、關懷」之校訓，致力培育具備獨立思考能力、人文素養與科學精神之現代女性。</p>
+        <h4>辦學理念</h4>
+        <p>本校相信每位學生均擁有無限潛能。學校提供多元課程、豐富社團活動與完善輔導機制，陪伴學生在安全、溫暖之環境中探索自我、追求卓越。</p>
+        <h4>校園環境</h4>
+        <p>校園佔地約四公頃，設有圖書館、實驗大樓、體育館及多功能活動中心。校內綠樹成蔭，其中百年榕樹區為校園著名地標，深受師生喜愛。</p>
+        <h4>聯絡資訊</h4>
+        <p>地址：高雄市某區某路一號<br>總機：(07) XXXX-XXXX<br>教務處分機：201　學務處分機：202　總務處分機：203</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- RESTRICTED ZONE (Clue 3) -->
-<div class="modal-bg" id="modal-restricted">
-  <div class="modal dark">
-    <button class="close-btn" onclick="closeModal('modal-restricted')" style="color:#666">✕</button>
-    <h2 style="color:#cc3333; font-family:monospace">⚠ ZONE-B RESTRICTED ACCESS</h2>
-    <p style="font-family:monospace; color:#886666">
-      正在載入 /campus/zone-B/restricted …<br><br>
-      <span id="type-out-text"></span>
-    </p>
+<!-- 學生專區登入 -->
+<div class="overlay" id="m-login">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-head">學生專區<button class="modal-close" onclick="closeModal('login')">✕</button></div>
+    <div class="modal-body">
+      <div class="login-wrap">
+        <p>請輸入學號以進入個人資料查詢系統</p>
+        <div class="form-row">
+          <label>學號</label>
+          <input type="text" id="login-id" placeholder="請輸入六位數學號" maxlength="10"
+            onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="btn-primary" onclick="doLogin()">登　入</button>
+        <div class="login-hint" id="login-hint">查無此學號，請確認後重新輸入。</div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- STUDENT SYSTEM -->
-<div class="modal-bg" id="modal-student">
-  <div class="modal">
-    <button class="close-btn" onclick="closeModal('modal-student')">✕</button>
-    <h2>學生自助系統</h2>
-    <p>請輸入學號及密碼登入。</p>
-    <input type="text" placeholder="學號" style="margin-top:1rem"/>
-    <input type="text" placeholder="密碼" style="margin-top:.5rem; margin-bottom:.5rem"/>
-    <button class="submit" onclick="triggerStudentScare()">登入</button>
-    <p id="student-result" style="margin-top:1rem; font-family:monospace; font-size:.8rem; color:#cc0000; display:none"></p>
+<!-- 學生資料 -->
+<div class="overlay" id="m-profile">
+  <div class="modal" style="max-width:660px;">
+    <div class="modal-head" id="profile-head">學生個人資料<button class="modal-close" onclick="closeModal('profile')">✕</button></div>
+    <div class="modal-body" id="profile-body"></div>
   </div>
 </div>
 
-<!-- NORMAL MSG -->
-<div class="modal-bg" id="modal-normal">
-  <div class="modal">
-    <button class="close-btn" onclick="closeModal('modal-normal')">✕</button>
-    <h2 id="normal-title">公告</h2>
-    <p id="normal-content"></p>
+<!-- 校園論壇 -->
+<div class="overlay" id="m-forum">
+  <div class="modal" style="max-width:700px;">
+    <div class="modal-head">校園論壇<button class="modal-close" onclick="closeModal('forum')">✕</button></div>
+    <div class="modal-body">
+
+      <div class="forum-item horror">
+        <div class="forum-item-head">
+          <span class="f-title">【一一四班學生失蹤】好恐怖……聽說好像跟十年前的事件有關</span>
+          <span class="f-meta">05/06　42則留言</span>
+        </div>
+        <div class="forum-item-body">聽說一一四班有好幾個同學突然消失了，警察都來調查了。學校說要處理，但完全沒說原因。有人知道發生什麼事嗎？？好擔心……</div>
+        <div class="comments">
+          <div class="comment"><span class="c-who">匿名</span><span>聽說當年好像是有學姐自殺欸，跟那年發生的日期也剛好在同一天……</span></div>
+          <div class="comment"><span class="c-who">匿名</span><span>真的嗎？！也太恐怖了吧……</span></div>
+          <div class="comment"><span class="c-who">匿名</span><span>我聽說是在榕樹那裡……晚上不敢一個人走過去了</span></div>
+          <div class="comment"><span class="c-who">匿名</span><span>不要亂說！學校有公告了</span></div>
+          <div class="comment"><span class="c-who">匿名</span><span>十年前的日期……跟現在失蹤的時間好像真的一樣？？？</span></div>
+        </div>
+      </div>
+
+      <div class="forum-item">
+        <div class="forum-item-head">
+          <span class="f-title">老師作業派好多，這週要崩潰了</span>
+          <span class="f-meta">05/05　8則留言</span>
+        </div>
+        <div class="forum-item-body">國文、英文、數學通通都有大作業，還有自然實驗報告……有人一起哭嗎</div>
+        <div class="comments">
+          <div class="comment"><span class="c-who">匿名</span><span>+1 我也要死了</span></div>
+          <div class="comment"><span class="c-who">匿名</span><span>同甘共苦！一起加油</span></div>
+        </div>
+      </div>
+
+      <div class="forum-item">
+        <div class="forum-item-head">
+          <span class="f-title">補考題目會很難嗎？請教有經驗的學姐</span>
+          <span class="f-meta">05/03　15則留言</span>
+        </div>
+        <div class="forum-item-body">這次數學考太爛了可能要補考，學姐們補考題目會比原本的難嗎？</div>
+        <div class="comments">
+          <div class="comment"><span class="c-who">匿名</span><span>看老師，有的老師出差不多難度喔</span></div>
+          <div class="comment"><span class="c-who">匿名</span><span>加油！多練歷屆應該有幫助</span></div>
+        </div>
+      </div>
+
+    </div>
   </div>
 </div>
 
-<!-- GALLERY PHOTO -->
-<div class="modal-bg" id="modal-photo">
-  <div class="modal dark">
-    <button class="close-btn" onclick="closeModal('modal-photo')" style="color:#666">✕</button>
-    <div id="photo-content"></div>
+<!-- 聯絡我們 -->
+<div class="overlay" id="m-contact">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-head" id="contact-head">聯絡我們<button class="modal-close" id="contact-close" onclick="closeModal('contact')">✕</button></div>
+    <div class="modal-body">
+      <div class="chat-area" id="chat-box"></div>
+      <div class="chat-input-wrap" id="chat-controls">
+        <input type="text" id="chat-in" placeholder="請輸入訊息…" onkeydown="if(event.key==='Enter')sendMsg()">
+        <button onclick="sendMsg()">送出</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- SCARE OVERLAY -->
-<div id="scare-overlay">
-  <svg id="scare-svg" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg" style="max-width:90vw;max-height:75vh">
-    <!-- ghost figure with students -->
-    <defs>
-      <radialGradient id="ghostg" cx="50%" cy="30%" r="60%">
-        <stop offset="0%" stop-color="#440000" stop-opacity=".9"/>
-        <stop offset="100%" stop-color="#000000"/>
-      </radialGradient>
-    </defs>
-    <rect width="600" height="500" fill="url(#ghostg)"/>
-    <!-- main ghost -->
-    <ellipse cx="300" cy="160" rx="70" ry="80" fill="#1a0808" opacity=".9"/>
-    <circle cx="300" cy="100" r="55" fill="#120808"/>
-    <!-- ghost face -->
-    <ellipse cx="283" cy="95" rx="10" ry="14" fill="#000" opacity=".95"/>
-    <ellipse cx="317" cy="95" rx="10" ry="14" fill="#000" opacity=".95"/>
-    <ellipse cx="283" cy="97" rx="5" ry="7" fill="#cc0000"/>
-    <ellipse cx="317" cy="97" rx="5" ry="7" fill="#cc0000"/>
-    <path d="M280,118 Q300,110 320,118 Q300,132 280,118" fill="#000" opacity=".8"/>
-    <!-- long hair -->
-    <path d="M250,65 Q230,150 240,260" stroke="#050505" stroke-width="12" fill="none"/>
-    <path d="M350,65 Q370,150 360,260" stroke="#050505" stroke-width="12" fill="none"/>
-    <path d="M260,70 Q245,200 250,300" stroke="#080808" stroke-width="8" fill="none"/>
-    <path d="M340,70 Q355,200 350,300" stroke="#080808" stroke-width="8" fill="none"/>
-    <!-- ghost body/robe -->
-    <path d="M240,155 Q200,250 210,400 Q300,420 390,400 Q400,250 360,155 Z" fill="#0a0505" opacity=".9"/>
-    <!-- arms reaching -->
-    <path d="M240,200 Q180,220 150,260" stroke="#0a0505" stroke-width="18" fill="none" stroke-linecap="round"/>
-    <path d="M360,200 Q420,220 450,260" stroke="#0a0505" stroke-width="18" fill="none" stroke-linecap="round"/>
-    <!-- hands -->
-    <circle cx="148" cy="262" r="12" fill="#0a0505"/>
-    <circle cx="452" cy="262" r="12" fill="#0a0505"/>
-    <!-- student silhouettes (small, behind/around ghost) -->
-    <g opacity=".55" fill="#050505">
-      <!-- row 1 -->
-      <ellipse cx="60" cy="450" rx="14" ry="5"/><rect x="53" y="390" width="14" height="55" rx="5"/><circle cx="60" cy="380" r="10"/>
-      <ellipse cx="110" cy="450" rx="14" ry="5"/><rect x="103" y="388" width="14" height="57" rx="5"/><circle cx="110" cy="378" r="10"/>
-      <ellipse cx="160" cy="450" rx="14" ry="5"/><rect x="153" y="392" width="14" height="53" rx="5"/><circle cx="160" cy="382" r="10"/>
-      <ellipse cx="210" cy="450" rx="14" ry="5"/><rect x="203" y="390" width="14" height="55" rx="5"/><circle cx="210" cy="380" r="10"/>
-      <ellipse cx="390" cy="450" rx="14" ry="5"/><rect x="383" y="390" width="14" height="55" rx="5"/><circle cx="390" cy="380" r="10"/>
-      <ellipse cx="440" cy="450" rx="14" ry="5"/><rect x="433" y="388" width="14" height="57" rx="5"/><circle cx="440" cy="378" r="10"/>
-      <ellipse cx="490" cy="450" rx="14" ry="5"/><rect x="483" y="392" width="14" height="53" rx="5"/><circle cx="490" cy="382" r="10"/>
-      <ellipse cx="540" cy="450" rx="14" ry="5"/><rect x="533" y="390" width="14" height="55" rx="5"/><circle cx="540" cy="380" r="10"/>
-      <!-- row 2 (smaller, further back) -->
-      <ellipse cx="85" cy="430" rx="11" ry="4" opacity=".4"/><rect x="79" y="385" width="11" height="42" rx="4" opacity=".4"/><circle cx="84" cy="377" r="8" opacity=".4"/>
-      <ellipse cx="135" cy="430" rx="11" ry="4" opacity=".4"/><rect x="129" y="385" width="11" height="42" rx="4" opacity=".4"/><circle cx="134" cy="377" r="8" opacity=".4"/>
-      <ellipse cx="460" cy="430" rx="11" ry="4" opacity=".4"/><rect x="454" y="385" width="11" height="42" rx="4" opacity=".4"/><circle cx="459" cy="377" r="8" opacity=".4"/>
-      <ellipse cx="510" cy="430" rx="11" ry="4" opacity=".4"/><rect x="504" y="385" width="11" height="42" rx="4" opacity=".4"/><circle cx="509" cy="377" r="8" opacity=".4"/>
-    </g>
-    <!-- text overlay -->
-    <text x="300" y="340" text-anchor="middle" font-family="monospace" font-size="18" fill="#cc0000" opacity=".8">不要找了...</text>
-    <text x="300" y="370" text-anchor="middle" font-family="monospace" font-size="14" fill="#880000" opacity=".7">她們都在這裡</text>
-  </svg>
-  <div class="scare-text" id="scare-text">你不應該來這裡</div>
+<!-- 榮譽榜 -->
+<div class="overlay" id="m-honor">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-head">榮譽榜<button class="modal-close" onclick="closeModal('honor')">✕</button></div>
+    <div class="modal-body">
+      <div class="honor-year-tabs">
+        <button class="yr-btn on" onclick="switchHonor('cur',this)">一一四學年度</button>
+        <button class="yr-btn" onclick="switchHonor('old',this)">歷屆榮譽榜</button>
+      </div>
+      <div id="honor-cur">
+        <table class="honor-table">
+          <tr><th>學年度</th><th>姓名</th><th>獎項</th><th>名次</th></tr>
+          <tr><td>114</td><td>鄭嘉媃</td><td>全國手語比賽</td><td>第一名</td></tr>
+          <tr><td>114</td><td>何喻萱</td><td>全縣國文演說競賽</td><td>第二名</td></tr>
+          <tr><td>114</td><td>本校儀隊</td><td>全國儀隊競賽</td><td>第一名</td></tr>
+          <tr><td>114</td><td>林思涵</td><td>全縣英語演講比賽</td><td>第三名</td></tr>
+          <tr><td>114</td><td>陳佳慧</td><td>全國科學展覽</td><td>佳作</td></tr>
+        </table>
+      </div>
+      <div id="honor-old" style="display:none;">
+        <p style="font-size:12px;color:#999;margin-bottom:12px;font-family:Arial,sans-serif;">顯示近十年部分得獎紀錄</p>
+        <table class="honor-table">
+          <tr><th>學年度</th><th>姓名</th><th>獎項</th><th>名次</th></tr>
+          <tr><td>113</td><td>蘇品妍</td><td>全縣作文競賽</td><td>第一名</td></tr>
+          <tr><td>113</td><td>楊芷瑜</td><td>全縣數學競賽</td><td>第二名</td></tr>
+          <tr><td>112</td><td>廖雅婷</td><td>全國跆拳道競賽</td><td>第一名</td></tr>
+          <tr><td>112</td><td>黃馨儀</td><td>全縣美術競賽</td><td>第二名</td></tr>
+          <tr><td>111</td><td>吳欣潔</td><td>全國辯論賽</td><td>優勝</td></tr>
+          <tr><td>110</td><td>張靜怡</td><td>全縣書法競賽</td><td>第一名</td></tr>
+          <tr class="honor-dim"><td>104</td><td>謝怡琳</td><td>全縣實驗競賽</td><td>第一名</td></tr>
+          <tr><td>104</td><td>許雅雯</td><td>全縣演講比賽</td><td>第三名</td></tr>
+          <tr><td>104</td><td>林子晴</td><td>全縣英語朗讀</td><td>第二名</td></tr>
+          <tr><td>104</td><td>王宥萱</td><td>全縣數學競賽</td><td>佳作</td></tr>
+          <tr><td>104</td><td>陳欣羽</td><td>全縣作文競賽</td><td>佳作</td></tr>
+          <tr><td>104</td><td>劉品汝</td><td>全縣科學展覽</td><td>第三名</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- ENDING SCREEN -->
-<div id="ending-screen">
-  <div class="ending-msg" id="ending-main">不要找了...</div>
-  <div class="ending-code" id="ending-code"></div>
-  <div class="ending-final" id="ending-final">【 遊戲結束　感謝遊玩 】</div>
+<!-- 新聞詳細 -->
+<div class="overlay" id="m-n-honor">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-head">最新消息<button class="modal-close" onclick="closeModal('n-honor')">✕</button></div>
+    <div class="modal-body">
+      <h3 style="color:#1c3a6e;font-size:17px;margin-bottom:10px;">恭賀本校儀隊榮獲全國比賽第一名</h3>
+      <p style="font-size:12px;color:#999;font-family:Arial,sans-serif;margin-bottom:16px;">發布日期：114年04月25日　發布單位：教務處</p>
+      <p style="font-size:14px;line-height:2;">本校儀隊同學於一一四年四月二十日參加全國高中儀隊競賽，憑藉精湛的技術與整齊劃一的隊形，榮獲全國第一名之佳績。感謝指導老師與全體隊員的辛勤付出，為校爭光，全校師生引以為榮。</p>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="m-n-repair">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-head">最新消息<button class="modal-close" onclick="closeModal('n-repair')">✕</button></div>
+    <div class="modal-body">
+      <h3 style="color:#1c3a6e;font-size:17px;margin-bottom:10px;">一一四年度校園整修工程通知</h3>
+      <p style="font-size:12px;color:#999;font-family:Arial,sans-serif;margin-bottom:16px;">發布日期：114年03月10日　發布單位：總務處</p>
+      <p style="font-size:14px;line-height:2;">為維護校園環境品質，本校預計自一一四年五月起進行東側走廊及榕樹廣場周邊地面整修工程。施工期間請同學繞道行走，並注意自身安全，敬請配合。預計完工日期：一一四年七月底。</p>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="m-n-missing">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-head">最新消息<button class="modal-close" onclick="closeModal('n-missing')">✕</button></div>
+    <div class="modal-body">
+      <h3 style="color:#a83228;font-size:17px;margin-bottom:10px;">一一四班學生失聯事件說明</h3>
+      <p style="font-size:12px;color:#999;font-family:Arial,sans-serif;margin-bottom:16px;">發布日期：114年05月05日　發布單位：學務處</p>
+      <p style="font-size:14px;line-height:2;">近日本校一一四班發生數名學生失聯情形，學校已第一時間通報警察機關，並積極配合調查中。相關家長均已個別聯繫通知。本校呼籲在校同學保持冷靜，如有相關線索，請立即向學務處或警方反映，切勿私自調查。</p>
+    </div>
+  </div>
 </div>
 
-<!-- CLUE HUD -->
-<div id="clue-hud">
-  <h4>調查紀錄</h4>
-  <ul>
-    <li id="hud-1">─ 公告欄異常</li>
-    <li id="hud-2">─ 學籍資料缺失</li>
-    <li id="hud-3">─ 限制區域</li>
-    <li id="hud-4">─ 系統日誌</li>
-  </ul>
+<!-- 搜尋結果 -->
+<div class="overlay" id="m-search">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-head" id="search-head">查詢結果<button class="modal-close" onclick="closeModal('search')">✕</button></div>
+    <div class="modal-body" id="search-body"></div>
+  </div>
 </div>
+
+<!-- ── 恐怖結局 ── -->
+<div id="horror-end">
+  <canvas id="blood-canvas"></canvas>
+  <div class="horror-text-wrap" id="horror-lines"></div>
+  <div class="horror-footer">
+    <div class="end-title" id="end-title">遊戲結束，感謝遊玩</div>
+    <div class="disclaimer" id="end-disclaimer">
+      遊戲劇情純屬虛構，如有雷同實屬巧合。<br>
+      本遊戲僅供娛樂，無意鼓勵任何危險行為，請愛惜生命，健康生活。
+    </div>
+  </div>
+</div>
+
 
 <script>
-// ═══════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════
-const state = {
-  clues: [false, false, false, false],
-  knockCount: 0,
-  scareShown: false
+// ─────────────────────────────────────
+//  DATA
+// ─────────────────────────────────────
+const DB = {
+  '140712': {
+    name:'蔡雅賢', cls:'114', seat:'12', id:'140712',
+    birth:'98/12/14', club:'排球社', family:'富裕',
+    grades:['優','乙','甲','優','甲'],
+    punish:'無',
+    photo:'cai.jpg',
+  },
+  '140613': {
+    name:'郭怡妮', cls:'114', seat:'23', id:'140613',
+    birth:'99/04/19', club:'熱舞社', family:'普通',
+    grades:['優','優','甲','甲','優'],
+    punish:'無',
+    photo:'guo.jpg',
+  },
+  '140531': {
+    name:'何喻萱', cls:'114', seat:'24', id:'140531',
+    birth:'99/05/13', club:'醫研社', family:'小康',
+    grades:['優','甲','優','甲','甲'],
+    punish:'無',
+    photo:'he.jpg',
+  },
+  '140607': {
+    name:'鄭嘉媃', cls:'114', seat:'06', id:'140607',
+    birth:'99/06/07', club:'熱舞社', family:'小康',
+    grades:['優','優','優','優','優'],
+    punish:'無',
+    photo:'zheng.jpg',
+  },
+  '104314': {
+    name:'謝怡琳', cls:'已畢業', seat:'—', id:'104314',
+    birth:'89/03/14', club:'生物研究社', family:'貧窮',
+    grades:['優','優','優','優','優'],
+    punish:'無', special:true,
+  },
 };
+const SUBJECTS = ['國文','英文','數學','自然','社會'];
+const ABSENCES = [
+  {date:'114/04/05（五）',period:'第8節'},
+  {date:'114/04/12（五）',period:'第8節'},
+  {date:'114/04/19（五）',period:'第8節'},
+  {date:'114/04/26（五）',period:'第8節'},
+  {date:'114/05/03（五）',period:'第8節'},
+];
 
-function startGame() {
-  document.getElementById('intro-screen').style.display = 'none';
-  document.getElementById('main-site').style.display = 'block';
-  updateDate();
-  startCursorTrail();
+// build name→id map
+const NAME_MAP = {};
+Object.values(DB).forEach(s => NAME_MAP[s.name] = s.id);
+
+// ─────────────────────────────────────
+//  MODAL
+// ─────────────────────────────────────
+function openModal(key) {
+  if (key === 'contact') initChat();
+  document.getElementById('m-' + key)?.classList.add('show');
 }
-
-function updateDate() {
-  const d = new Date();
-  document.getElementById('nav-date').textContent = d.toLocaleDateString('zh-TW');
+function closeModal(key) {
+  document.getElementById('m-' + key)?.classList.remove('show');
 }
+document.querySelectorAll('.overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show'); });
+});
 
-// ═══════════════════════════════════════════
-// CURSOR TRAIL
-// ═══════════════════════════════════════════
-function startCursorTrail() {
-  document.addEventListener('mousemove', e => {
-    if (Math.random() > 0.85) {
-      const dot = document.createElement('div');
-      dot.className = 'cursor-dot';
-      dot.style.left = e.clientX - 3 + 'px';
-      dot.style.top = e.clientY - 3 + 'px';
-      document.body.appendChild(dot);
-      setTimeout(() => { dot.style.opacity = '0'; setTimeout(() => dot.remove(), 1000); }, 200);
-    }
-  });
-}
-
-// ═══════════════════════════════════════════
-// MODAL HELPERS
-// ═══════════════════════════════════════════
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function openAbout() { openModal('modal-about'); }
-function openSchoolHistory() { openModal('modal-history'); }
-function openGallery() { document.getElementById('gallery-section').scrollIntoView({behavior:'smooth'}); }
-function openAnnounce() { document.querySelector('.announce-grid').scrollIntoView({behavior:'smooth'}); }
-function openContact() { openNormalMsg('聯絡'); }
-function openStudentSystem() { openModal('modal-student'); }
-
-function openNormalMsg(type) {
-  const msgs = {
-    '正常': { t:'運動會說明', c:'113學年度第一學期運動會訂於10月18日（五）舉行。各班請依排定時間入場，服裝以運動服為主。如有疑問請洽學務處。' },
-    '正常2': { t:'校園安全宣導', c:'本週為校園安全宣導週。各班導師將利用班週會時間進行宣導，請同學配合。相關資料請至各班布告欄取閱。' },
-    'normal3': { t:'南棟維護公告', c:'因南棟三樓走廊地板進行防滑處理工程，施工期間（預計3～5個工作天）請勿使用該走廊。如需前往相關教室，請改由北側樓梯通行。' },
-    '課程': { t:'課程查詢', c:'課程查詢功能目前維護中，請稍後再試。如急需查詢，請洽教務處。\n\n系統狀態：離線\n預計恢復：────' },
-    '地圖': { t:'校園地圖', c:'校園地圖PDF下載功能暫時無法使用。\n\n備註：B區（榕樹廣場周邊）目前因維護作業，地圖標示可能與實際情況不符。' },
-    '家長': { t:'家長專區', c:'家長登入功能需另行申請帳號，請攜帶身分證至教務處辦理。' },
-    '師資': { t:'師資陣容', c:'本校現有教師共112名，各科師資完備。詳細師資名冊請至教務處索取。\n\n備註：甲班導師李○○老師自9月21日起請假中，代課教師尚未確認。' },
-    '校規': { t:'生活公約', c:'本校生活公約共計28條，詳細內容請見學生手冊第12至18頁。\n\n第27條：夜間禁止進入B區（中庭榕樹區）。違者記警告一次。\n第28條：嚴禁在榕樹附近進行任何儀式性行為。' },
-    '聯絡': { t:'聯絡我們', c:'學校電話：(07) 225-████\n教務處：分機 101\n學務處：分機 102\n總務處：分機 103\n\n來訪時間：週一至週五 08:00–17:00\n\n注意：近期因特殊事件，學校公關業務暫停受理媒體採訪。' },
-  };
-  const m = msgs[type] || { t:'系統訊息', c:'此功能暫時無法使用。' };
-  document.getElementById('normal-title').textContent = m.t;
-  document.getElementById('normal-content').textContent = m.c;
-  openModal('modal-normal');
-}
-
-// ═══════════════════════════════════════════
-// CLUE 1 — Announcement anomaly
-// ═══════════════════════════════════════════
-function triggerClue1() {
-  if (!state.clues[0]) {
-    state.clues[0] = true;
-    document.getElementById('hud-1').classList.add('found');
-    checkAllClues();
-  }
-  openNormalMsg('正常');
-  // after a delay, scramble text briefly
-  setTimeout(() => {
-    const modal = document.getElementById('normal-content');
-    const orig = modal.textContent;
-    let i = 0;
-    const chars = '她們都在唱歌樹根在動你看不見她們不要來這裡';
-    const iv = setInterval(() => {
-      modal.textContent = orig.split('').map((c, idx) =>
-        Math.random() < (i/30) ? c : chars[Math.floor(Math.random()*chars.length)]
-      ).join('');
-      i++;
-      if (i > 30) { clearInterval(iv); modal.textContent = orig; }
-    }, 60);
-  }, 2500);
-}
-
-// ═══════════════════════════════════════════
-// CLUE 2 — Missing student records
-// ═══════════════════════════════════════════
-function triggerClue2() {
-  if (!state.clues[1]) {
-    state.clues[1] = true;
-    document.getElementById('hud-2').classList.add('found');
-    checkAllClues();
-  }
-  document.getElementById('normal-title').textContent = '【緊急】學籍資料異常';
-  document.getElementById('normal-content').innerHTML = `
-    <span style="font-family:monospace; color:#cc0000">
-    正在讀取 class_A_records.db …<br><br>
-    學號 11301 ─ 王○○ ─ 狀態：<span style="color:#ff0000">NULL</span><br>
-    學號 11302 ─ 林○○ ─ 狀態：<span style="color:#ff0000">NULL</span><br>
-    學號 11303 ─ 陳美琳 ─ 狀態：<span style="color:#ff0000">NULL</span><br>
-    學號 11304 ─ 張○○ ─ 狀態：<span style="color:#ff0000">NULL</span><br>
-    <span style="opacity:.5">…（共34筆）…</span><br><br>
-    最後位置記錄：<span style="color:#ff6666">榕樹廣場 B區</span><br>
-    最後時間戳：<span style="color:#ff6666">2024-09-20 03:14:08</span><br><br>
-    <span style="color:#660000">此後記錄中斷。系統無法取得後續資料。</span><br>
-    <span style="animation: blink 1s infinite; display:inline-block; color:#880000">重新連線中…</span>
-    </span>
-  `;
-  openModal('modal-normal');
-}
-
-// ═══════════════════════════════════════════
-// CLUE 3 — Restricted zone (code section)
-// ═══════════════════════════════════════════
-function triggerClue3() {
-  if (!state.clues[2]) {
-    state.clues[2] = true;
-    document.getElementById('hud-3').classList.add('found');
-    checkAllClues();
-  }
-  openModal('modal-restricted');
-  const target = document.getElementById('type-out-text');
-  const lines = [
-    '連接中…',
-    '驗證身分…',
-    '存取 /campus/zone-B/restricted …',
-    '————————————',
-    '最後記錄時間：2024-09-20 03:14',
-    '區域狀態：異常',
-    '攝影機狀態：全數離線',
-    '感測器讀數：──',
-    '最後感測紀錄：',
-    '  動作偵測：34個目標',
-    '  方向：往榕樹移動',
-    '  速度：0.0（靜止）',
-    '  後續：無記錄',
-    '————————————',
-    '⚠ 警告：此區域現有未知聲音來源',
-    '⚠ 頻率分析：低頻吟唱',
-    '⚠ 建議：請勿獨自前往',
-    '',
-    '// 你找到了什麼嗎？',
-    '// 有沒有想過……她們為什麼不跑？',
-  ];
-  let li = 0;
-  let text = '';
-  function typeLine() {
-    if (li >= lines.length) return;
-    text += lines[li] + '\n';
-    target.innerHTML = text.replace(/\n/g, '<br>');
-    li++;
-    setTimeout(typeLine, 180);
-  }
-  typeLine();
-}
-
-// ═══════════════════════════════════════════
-// CLUE 4 — Footer log / final trigger
-// ═══════════════════════════════════════════
-function triggerClue4() {
-  if (!state.clues[3]) {
-    state.clues[3] = true;
-    document.getElementById('hud-4').classList.add('found');
-    checkAllClues();
-  }
-  // brief screen flash
-  flashScreen(() => {
-    document.getElementById('normal-title').textContent = 'SYS_LOG — 2024-09-20';
-    document.getElementById('normal-content').innerHTML = `
-      <span style="font-family:monospace; font-size:.82rem; color:#884444; line-height:2">
-      03:12:44 — 值班人員報告：B區方向有唱歌聲<br>
-      03:13:01 — 校長室燈光亮起<br>
-      03:13:20 — CCTV zone-B 訊號中斷<br>
-      03:14:08 — 所有榕樹區感測器回傳異常值<br>
-      03:14:09 — 學籍系統甲班資料全數變為 NULL<br>
-      03:14:10 — <span style="color:#ff0000">值班人員失聯</span><br>
-      03:14:11 — 系統自動封鎖 B 區門禁<br>
-      03:14:12 — <span style="color:#ff0000">門禁系統遭覆寫。B 區門全部開啟。</span><br>
-      03:14:88 — <span style="color:#cc0000">時間戳異常。此時間點不存在。</span><br>
-      ……<br>
-      <span style="color:#880000">此後無記錄</span><br><br>
-      <span style="color:#550000; font-size:.75rem">她們在唱歌<br>她們在等你</span>
-      </span>
-    `;
-    openModal('modal-normal');
-  });
-}
-
-// ═══════════════════════════════════════════
-// HIDDEN MSG (corrupted announcement)
-// ═══════════════════════════════════════════
-function triggerHiddenMsg() {
-  flashScreen(() => {
-    showScare('榕樹記得每一個人', 1800);
-  });
-}
-
-// ═══════════════════════════════════════════
-// BANYAN MODAL
-// ═══════════════════════════════════════════
-function openBanyanModal() {
-  openModal('modal-banyan-pw');
-}
-function checkBanyanPw() {
-  const val = document.getElementById('banyan-pw-input').value.trim();
-  const err = document.getElementById('banyan-pw-error');
-  // Accept "榕樹" or "rongshu"
-  if (val === '榕樹' || val.toLowerCase() === 'rongshu') {
-    err.style.display = 'none';
-    closeModal('modal-banyan-pw');
-    setTimeout(() => {
-      openModal('modal-banyan');
-      if (!state.clues[0]) { state.clues[0] = true; document.getElementById('hud-1').classList.add('found'); checkAllClues(); }
-    }, 300);
+// ─────────────────────────────────────
+//  SEARCH
+// ─────────────────────────────────────
+document.getElementById('search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+function doSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return;
+  const hits = Object.values(DB).filter(s =>
+    s.name.includes(q) || s.id.includes(q)
+  );
+  document.getElementById('search-head').innerHTML =
+    `「${q}」查詢結果　共 ${hits.length} 筆` +
+    `<button class="modal-close" onclick="closeModal('search')">✕</button>`;
+  const body = document.getElementById('search-body');
+  if (!hits.length) {
+    body.innerHTML = '<div class="no-result">查無相關學生資料，請確認姓名或學號後再試。</div>';
   } else {
-    err.style.display = 'block';
-    document.getElementById('banyan-pw-input').style.borderColor = '#cc0000';
-    setTimeout(() => document.getElementById('banyan-pw-input').style.borderColor = '', 1000);
+    body.innerHTML = hits.map(s => `
+      <div class="result-row" onclick="showProfile('${s.id}')">
+        <div class="r-photo">
+          <img src="${s.photo}" alt="${s.name}">
+        </div>
+
+        <div>
+          <div class="r-name">${s.name}</div>
+          <div class="r-meta">班級：${s.cls}班　座號：${s.seat}　學號：${s.id}</div>
+        </div>
+      </div>`).join('');
+  }
+  openModal('search');
+}
+
+// ─────────────────────────────────────
+//  LOGIN
+// ─────────────────────────────────────
+function doLogin() {
+  const id = document.getElementById('login-id').value.trim();
+  const hint = document.getElementById('login-hint');
+  if (DB[id]) {
+    hint.style.display = 'none';
+    closeModal('login');
+    showProfile(id);
+  } else {
+    hint.style.display = 'block';
   }
 }
 
-function knockOnTree() {
-  state.knockCount++;
-  if (state.knockCount === 1) {
-    // brief rumble hint
-    document.getElementById('modal-banyan').querySelector('.modal').style.animation = 'shake .3s';
-    setTimeout(() => { document.getElementById('modal-banyan').querySelector('.modal').style.animation = ''; }, 400);
-  } else if (state.knockCount === 2) {
-    document.getElementById('banyan-secret').textContent = '附記三：它在回應。再敲一次。';
-    document.getElementById('banyan-secret').style.color = '#ff6666';
-  } else if (state.knockCount >= 3) {
-    closeModal('modal-banyan');
-    showScare('她聽到你了', 2200, triggerFinalEnding);
-  }
+// ─────────────────────────────────────
+//  PROFILE
+// ─────────────────────────────────────
+function showProfile(id) {
+  const s = DB[id];
+  if (!s) return;
+  document.getElementById('profile-head').innerHTML =
+    `學生個人資料　<small style="font-weight:normal;font-size:13px;color:#888;">${s.name}　${s.cls}班</small>` +
+    `<button class="modal-close" onclick="closeModal('profile')">✕</button>`;
+
+  const absRows = s.special
+    ? '<tr><td colspan="3" style="text-align:center;color:#888;padding:14px;">無缺曠課紀錄</td></tr>'
+    : ABSENCES.map(a =>
+        `<tr><td>${a.date}</td><td>${a.period}</td><td><span class="tag-absent">缺席</span></td></tr>`
+      ).join('');
+
+  const gradeRows = SUBJECTS.map((sub, i) =>
+    `<td class="grade-${s.grades[i]}">${s.grades[i]}</td>`
+  ).join('');
+
+  document.getElementById('profile-body').innerHTML = `
+    <div class="profile-top">
+      <div class="profile-photo">
+  <img src="${s.photo}" alt="${s.name}">
+</div>
+      <div class="profile-fields">
+        <div><div class="f-label">姓名</div><div class="f-val">${s.name}</div></div>
+        <div><div class="f-label">班級</div><div class="f-val">${s.cls}班</div></div>
+        <div><div class="f-label">座號</div><div class="f-val">${s.seat}</div></div>
+        <div><div class="f-label">學號</div><div class="f-val">${s.id}</div></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn on" onclick="switchTab(this,'tp-absence')">缺曠課</button>
+      <button class="tab-btn" onclick="switchTab(this,'tp-grade')">成績單</button>
+      <button class="tab-btn" onclick="switchTab(this,'tp-punish')">獎懲紀錄</button>
+      <button class="tab-btn" onclick="switchTab(this,'tp-family')">家庭概況</button>
+      <button class="tab-btn" onclick="switchTab(this,'tp-misc')">基本資料</button>
+    </div>
+    <div class="tab-pane on" id="tp-absence">
+      <table class="data-table">
+        <tr><th>日期</th><th>節次</th><th>狀態</th></tr>
+        ${absRows}
+      </table>
+    </div>
+    <div class="tab-pane" id="tp-grade">
+      <table class="data-table">
+        <tr>${SUBJECTS.map(s=>`<th>${s}</th>`).join('')}</tr>
+        <tr>${gradeRows}</tr>
+      </table>
+    </div>
+    <div class="tab-pane" id="tp-punish">
+      <div class="info-line"><span class="lbl">獎懲紀錄</span><span>${s.punish}</span></div>
+    </div>
+    <div class="tab-pane" id="tp-family">
+      <div class="info-line"><span class="lbl">家庭狀況</span><span>${s.family}</span></div>
+    </div>
+    <div class="tab-pane" id="tp-misc">
+      <div class="info-line"><span class="lbl">生日</span><span>${s.birth}</span></div>
+      <div class="info-line"><span class="lbl">參加社團</span><span>${s.club}</span></div>
+    </div>`;
+  openModal('profile');
 }
 
-// ═══════════════════════════════════════════
-// STUDENT SYSTEM
-// ═══════════════════════════════════════════
-function triggerStudentScare() {
-  const r = document.getElementById('student-result');
-  r.style.display = 'block';
-  r.textContent = '正在驗證…';
+function switchTab(btn, paneId) {
+  const wrap = btn.closest('.modal-body');
+  wrap.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  wrap.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('on'));
+  document.getElementById(paneId).classList.add('on');
+}
+
+// ─────────────────────────────────────
+//  HONOR SWITCH
+// ─────────────────────────────────────
+function switchHonor(key, btn) {
+  document.getElementById('honor-cur').style.display = key==='cur' ? '' : 'none';
+  document.getElementById('honor-old').style.display = key==='old' ? '' : 'none';
+  btn.closest('.honor-year-tabs').querySelectorAll('.yr-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+// ─────────────────────────────────────
+//  CHAT
+// ─────────────────────────────────────
+let chatReady = false;
+let chatStage = 'idle'; // idle → ghost → trigger → confess → dead
+
+function initChat() {
+  if (chatReady) return;
+  chatReady = true;
+  chatStage = 'ghost';
+  const box = document.getElementById('chat-box');
+  box.innerHTML = '';
+  typing(box, () => {
+    addBubble(box, 'sys',
+      '！？有人嗎！不管你是誰，請你幫幫我，我是失蹤同學中的 *＆$#……\n' +
+      '我不知道發生了什麼事，不過我現在能控制這台機器跟你講話。\n' +
+      '請一定要跟我保持聯絡，你現在先去找找看有沒有線索！\n' +
+      '如果你知道是誰讓我變成這樣，請趕快來通知我！');
+  }, 2000);
+}
+
+function addBubble(box, type, text) {
+  const d = document.createElement('div');
+  d.className = 'msg ' + type;
+  const sender = document.createElement('div');
+  sender.className = 'msg-sender';
+  sender.textContent = type==='me' ? '（你）' : type==='ghost' ? '？？？' : '系統訊息';
+  const b = document.createElement('div');
+  b.className = 'msg-bubble';
+  b.textContent = text;
+  const wrap = document.createElement('div');
+  wrap.style.display = 'flex'; wrap.style.flexDirection = 'column';
+  if (type==='me') wrap.style.alignItems='flex-end';
+  wrap.appendChild(sender); wrap.appendChild(b);
+  d.appendChild(wrap);
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+
+function typing(box, cb, delay) {
+  const d = document.createElement('div');
+  d.className = 'msg sys'; d.id = 'typing-row';
+  const w = document.createElement('div');
+  const dotEl = document.createElement('div');
+  dotEl.className = 'typing-dots';
+  dotEl.innerHTML = '<span></span><span></span><span></span>';
+  w.appendChild(dotEl); d.appendChild(w);
+  box.appendChild(d); box.scrollTop = box.scrollHeight;
   setTimeout(() => {
-    r.innerHTML = '找不到帳號。<br><span style="color:#ff4444">警告：此帳號已於 2024-09-20 03:14 被系統標記為 [缺席/失蹤]。<br>如您看到此訊息，請立即離開學校網站。</span>';
-    flashScreen(null, 80);
-  }, 1200);
+    document.getElementById('typing-row')?.remove();
+    cb();
+  }, delay);
 }
 
-// ═══════════════════════════════════════════
-// GALLERY PHOTOS
-// ═══════════════════════════════════════════
-function openPhoto(n) {
-  const content = document.getElementById('photo-content');
-  const msgs = {
-    1: '<p style="color:#886666">教學大樓南棟 — 拍攝日期：2024年9月12日</p><p style="color:#664444; font-family:monospace; font-size:.8rem; margin-top:1rem">EXIF資料：GPS座標正常 / 時間戳：09:42<br>異常：影像左下角有不明<span style="color:#ff6666">數位雜訊</span>，與硬體無關。</p>',
-    2: '<p style="color:#cc4444">中庭榕樹 — 此照片已被系統標記</p><p style="color:#884444; font-family:monospace; font-size:.8rem; margin-top:1rem">影像分析報告：<br>樹冠下方偵測到<span style="color:#ff6666">不明熱源</span>（拍攝時間：白天）<br>氣根數量：本學期增加17條<br><span style="color:#cc0000">建議：此區域停止對外開放</span></p>',
-    3: '<p style="color:#886666">圖書館 — 地下一樓</p><p style="color:#664444; font-family:monospace; font-size:.8rem; margin-top:1rem">備註：此樓層自9月21日起停止使用，原因未公開。<br>館員回報：書架上的書本有時在夜間自行移動。<br><span style="color:#cc4444">相關書籍已列為禁閱：《台灣鬼俗誌》《榕之書》</span></p>',
-    4: '<p style="color:#cc4444">東側走廊 3F — 感測器觸發截圖</p><p style="color:#884444; font-family:monospace; font-size:.8rem; margin-top:1rem">動作感測時間：2024-09-21 02:51<br>偵測到1個移動目標<br>移動方向：由3F末端往樓梯<br>速度：正常人類步速<br><span style="color:#ff4444">問題：當時全樓應為空校。</span></p>',
-    5: '<p style="color:#886666">操場 — 全校運動場</p><p style="color:#664444; font-family:monospace; font-size:.8rem; margin-top:1rem">此區域近期因不明原因封閉。<br>地面有不明標記，校方說明為「粉筆遊戲痕跡」。<br><span style="color:#884444">放大後可見：標記為34個名字排成圓圈。</span><br><span style="color:#aa3333; cursor:pointer" onclick="flashScreen(null,60)">►點此查看放大圖</span></p>',
-    6: `<p style="color:#cc0000; font-family:monospace">IMG_0034.JPG — 甲班班級合照</p>
-        <p style="color:#880000; font-family:monospace; font-size:.8rem; margin-top:1rem">
-        檔案損毀無法讀取。<br><br>
-        嘗試修復殘留資料…<br><br>
-        部分修復：<br>
-        影像中偵測到35個人形輪廓。<br>
-        班級登記人數：34名。<br><br>
-        <span style="color:#ff4444">第35個輪廓無法識別。<br>
-        站在最後一排最右側。<br>
-        沒有臉。</span>
-        </p>`,
-  };
-  content.innerHTML = msgs[n] || '<p>檔案損毀</p>';
-  openModal('modal-photo');
-  if (n === 6 && !state.clues[1]) {
-    state.clues[1] = true;
-    document.getElementById('hud-2').classList.add('found');
-    checkAllClues();
-    setTimeout(() => showScare('你不應該看這張照片', 1500), 1200);
-  }
-}
+function sendMsg() {
+  if (chatStage === 'dead') return;
+  const inp = document.getElementById('chat-in');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+  const box = document.getElementById('chat-box');
+  addBubble(box, 'me', txt);
 
-// ═══════════════════════════════════════════
-// SCARE / FLASH
-// ═══════════════════════════════════════════
-function showScare(msg, duration, callback) {
-  const overlay = document.getElementById('scare-overlay');
-  document.getElementById('scare-text').textContent = msg;
-  overlay.classList.add('show');
-  setTimeout(() => {
-    overlay.classList.remove('show');
-    if (callback) setTimeout(callback, 400);
-  }, duration || 1500);
-}
-
-function flashScreen(callback, ms) {
-  const fl = document.createElement('div');
-  fl.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:8000;pointer-events:none;opacity:0.9';
-  document.body.appendChild(fl);
-  setTimeout(() => { fl.style.opacity = '0'; fl.style.transition = 'opacity .3s'; setTimeout(() => { fl.remove(); if(callback) callback(); }, 300); }, ms || 80);
-}
-
-// ═══════════════════════════════════════════
-// CHECK ALL CLUES → TRIGGER ENDING
-// ═══════════════════════════════════════════
-function checkAllClues() {
-  if (state.clues.filter(Boolean).length >= 4 && !state.scareShown) {
-    state.scareShown = true;
-    setTimeout(triggerFinalEnding, 1500);
-  }
-}
-
-function triggerFinalEnding() {
-  // Multiple flashes
-  let flashCount = 0;
-  const flashInterval = setInterval(() => {
-    flashScreen(null, 100);
-    flashCount++;
-    if (flashCount >= 5) {
-      clearInterval(flashInterval);
-      setTimeout(showEndingScreen, 600);
+  if (chatStage === 'ghost') {
+    if (txt.includes('謝怡琳')) {
+      chatStage = 'trigger';
+      typing(box, () => {
+        addBubble(box, 'ghost', '謝…怡琳…… ◇□●¤＆$*×〔\'"÷×"\'');
+        setTimeout(() => {
+          typing(box, () => {
+            addBubble(box, 'ghost',
+              '哈哈哈哈哈哈哈啊哈哈，還是被發現了……\n' +
+              '你知道……你剛剛的舉動害死了剛剛跟你說話的人嗎……\n' +
+              '你……小心點，別被我抓到了喔！');
+            setTimeout(() => {
+              typing(box, () => {
+                addBubble(box, 'ghost', '想知道為什麼我要抓她們嗎？');
+                chatStage = 'confess';
+              }, 1500);
+            }, 1200);
+          }, 1800);
+        }, 1800);
+      }, 3400);
+    } else {
+      typing(box, () => {
+        addBubble(box, 'sys', '我還在……請繼續找線索，你有沒有發現什麼奇怪的地方？');
+      }, 900);
     }
-  }, 250);
+  } else if (chatStage === 'confess') {
+    chatStage = 'final';
+    typing(box, () => {
+      addBubble(box, 'ghost',
+        '不管你想不想，我都要講，哈哈哈。\n' +
+        '因為我不想看到有人比我快樂……\n' +
+        '我……其實……小時候家裡很窮……爸媽要求又很高……\n' +
+        '我壓力實在是太大了，堅持不住才會自殺……我……很抱歉。');
+      setTimeout(() => {
+        typing(box, () => {
+          addBubble(box, 'ghost',
+            '哈哈哈哈騙你的，我才沒有感到抱歉。\n' +
+            '你小心一點……你過得太快樂了……\n' +
+            '我要去找你了喔！');
+          document.getElementById('chat-controls').innerHTML =
+            '<p style="width:100%;text-align:center;color:#a83228;font-size:13px;padding:6px 0;">連線已中斷</p>';
+          chatStage = 'dead';
+          setTimeout(startHorror, 1600);
+        }, 2200);
+      }, 2200);
+    }, 1400);
+  }
 }
 
-function showEndingScreen() {
-  const ending = document.getElementById('ending-screen');
-  ending.classList.add('show');
+// ─────────────────────────────────────
+//  HORROR
+// ─────────────────────────────────────
+async function startHorror() {
 
-  // Animate code text
-  const codeEl = document.getElementById('ending-code');
+  const sc = document.getElementById('horror-end');
+
+  sc.classList.add('show');
+
+  paintBlood();
+
+  const wrap = document.getElementById('horror-lines');
+
+  wrap.innerHTML = '';
+
   const lines = [
-    'SYS: 所有調查記錄已被讀取',
-    'SYS: 你看見了她們不想讓人看見的東西',
-    '',
+
     '死了..',
-    '死了..',
-    '她們都死了..',
-    '',
-    'ERR: 0x4E554C4C 0x4E554C4C 0x4E554C4C',
-    '▓▓▒░ 不要找了... ░▒▓▓',
-    '她們在榕樹下',
-    '她們在榕樹下',
-    '她們在榕樹下等你',
-    '',
-    '你的朋友叫你的名字',
-    '你聽到了嗎',
-    '',
-    '不要回頭',
-    '不要回頭',
-    '不要',
+
+    '別回頭',
+
+    '你也要來嗎？',
+
+    '你真棒...',
+
+    '來找你了喔',
+
+    '都死了',
+
+    '小心點',
+
+    '就在你背後',
+
+    '不要...',
+
+    '別回頭'
+
   ];
 
-  let i = 0;
-  function addLine() {
-    if (i >= lines.length) {
-      setTimeout(() => {
-        document.getElementById('ending-main').textContent = '死了..';
-        setTimeout(() => {
-          document.getElementById('ending-final').classList.add('show');
-        }, 2000);
-      }, 1000);
-      return;
-    }
-    codeEl.innerHTML += lines[i] + '<br>';
-    i++;
-    setTimeout(addLine, i < 10 ? 300 : 180);
+  function wait(ms) {
+
+    return new Promise(r => setTimeout(r, ms));
+
   }
-  addLine();
 
-  // Flicker main message
-  let msgs = ['不要找了...','死了..','她們都在','不要來','你也會','死了..','不要找了...'];
-  let mi = 0;
-  setInterval(() => {
-    document.getElementById('ending-main').textContent = msgs[mi % msgs.length];
-    mi++;
-  }, 600);
+  async function spawnText(text) {
+
+    const el = document.createElement('div');
+
+    el.className = 'h-line';
+
+    const positions = [
+
+  {x:8,y:10},
+  {x:55,y:8},
+  {x:18,y:22},
+  {x:68,y:30},
+  {x:5,y:42},
+  {x:45,y:52},
+  {x:22,y:60},
+  {x:70,y:68},
+  {x:40,y:74},
+  {x:75,y:16}
+
+];
+
+const pos = positions[wrap.children.length % positions.length];
+
+el.style.left = pos.x + '%';
+
+el.style.top = pos.y + '%';
+
+    wrap.appendChild(el);
+
+    for (const ch of text) {
+
+      const span = document.createElement('span');
+
+      span.className = 'char';
+
+      span.textContent = ch;
+
+      el.appendChild(span);
+
+      el.style.opacity = 1;
+
+      await wait(80);
+    }
+
+    await wait(500);
+  }
+
+  for (const line of lines) {
+
+    await spawnText(line);
+
+  }
+
+document.getElementById('end-title')
+    .classList.add('show');
+
+  await wait(1000);
+
+  document.getElementById('end-disclaimer')
+    .classList.add('show');
+
 }
+function paintBlood() {
+  const cv = document.getElementById('blood-canvas');
+  cv.width = window.innerWidth;
+  cv.height = window.innerHeight;
+  const c = cv.getContext('2d');
 
-// ═══════════════════════════════════════════
-// SHAKE KEYFRAME (added dynamically)
-// ═══════════════════════════════════════════
-const style = document.createElement('style');
-style.textContent = `@keyframes shake { 0%{transform:translateX(0)} 25%{transform:translateX(-6px)} 50%{transform:translateX(6px)} 75%{transform:translateX(-4px)} 100%{transform:translateX(0)} }`;
-document.head.appendChild(style);
+  for (let i = 0; i < 20; i++) {
+    const x = Math.random() * cv.width;
+    const y = Math.random() * cv.height;
+    const r = 18 + Math.random() * 90;
+    const g = c.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0,   'rgba(130,0,0,.9)');
+    g.addColorStop(.55, 'rgba(90,0,0,.5)');
+    g.addColorStop(1,   'rgba(50,0,0,0)');
+    c.fillStyle = g;
+    c.beginPath();
+    let first = true;
+    for (let a = 0; a < Math.PI*2; a += 0.35) {
+      const rr = r * (.55 + Math.random() * .8);
+      const px = x + Math.cos(a)*rr, py = y + Math.sin(a)*rr;
+      first ? c.moveTo(px,py) : c.lineTo(px,py);
+      first = false;
+    }
+    c.closePath(); c.fill();
+  }
+
+  for (let i = 0; i < 16; i++) {
+    const x = Math.random() * cv.width;
+    const h = 50 + Math.random() * 220;
+    const w = 2 + Math.random() * 9;
+    const g = c.createLinearGradient(x, 0, x, h);
+    g.addColorStop(0,  'rgba(110,0,0,.95)');
+    g.addColorStop(1,  'rgba(70,0,0,.25)');
+    c.fillStyle = g;
+    c.beginPath();
+    c.moveTo(x - w/2, 0);
+    c.lineTo(x + w/2, 0);
+    c.quadraticCurveTo(x + w/2 + w*.4, h*.7, x + w*.3, h);
+    c.arc(x + w*.3 - w/2, h, w/2, 0, Math.PI);
+    c.quadraticCurveTo(x - w/2 - w*.3, h*.7, x - w/2, 0);
+    c.closePath(); c.fill();
+  }
+}
+document.addEventListener('DOMContentLoaded', () => {
+
+  const btn = document.getElementById('start-btn');
+
+  btn.addEventListener('click', () => {
+
+    const intro = document.getElementById('intro-screen');
+
+    intro.style.transition = 'opacity 1.2s';
+
+    intro.style.opacity = '0';
+
+    setTimeout(() => {
+
+      intro.style.display = 'none';
+
+    }, 1200);
+
+  });
+
+});
 </script>
 </body>
 </html>
