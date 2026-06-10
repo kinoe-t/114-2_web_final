@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>飛鏢競技場 - 崴崴孟孟華麗謝幕版</title>
+    <style>
+        body { font-family: sans-serif; background: #ecf0f1; padding: 20px; display: flex; flex-direction: column; align-items: center; position: relative; }
+        .game-container { display: flex; gap: 20px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .control-panel { width: 300px; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        /* 📜 玩法說明區塊樣式 */
+        .game-instructions { background: #f8f9fa; border-left: 4px solid #2980b9; padding: 12px; border-radius: 4px; margin-bottom: 15px; font-size: 0.85rem; color: #2c3e50; line-height: 1.4; }
+        .game-instructions h3 { margin: 0 0 6px 0; color: #2980b9; font-size: 0.95rem; display: flex; align-items: center; gap: 4px; }
+        .game-instructions ul { margin: 0; padding-left: 18px; }
+        .game-instructions li { margin-bottom: 3px; }
+
+        .scoreboard { background: #2c3e50; color: white; padding: 15px; border-radius: 8px; }
+        .score-row { display: flex; justify-content: space-between; margin: 5px 0; font-size: 1.1rem; }
+        .score-row.active { color: #f1c40f; font-weight: bold; }
+        .game-status { font-size: 1.1rem; font-weight: bold; text-align: center; margin: 10px 0; color: #2980b9; }
+        .hit-announcement { background: #fcf8e3; border: 1px solid #fbeed5; text-align: center; padding: 10px; border-radius: 5px; font-weight: bold; min-height: 1.5rem; }
+        .hit-announcement.player-hit { background: #dff0d8; color: #468847; }
+        .hit-announcement.computer-hit { background: #f2dede; color: #b94a48; }
+        .gauge-container { margin: 10px 0; background: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #ddd; }
+        .progress-bar { width: 100%; height: 20px; background-color: #ddd; position: relative; overflow: hidden; }
+        .pointer { width: 6px; height: 100%; background-color: #e74c3c; position: absolute; left: 0%; }
+        .pointer.comp-aiming { background-color: #ff00ff; }
+        .btn { background: #e74c3c; color: white; border: none; padding: 12px; font-size: 1.1rem; font-weight: bold; border-radius: 5px; cursor: pointer; width: 100%; }
+        .btn:disabled { background: #bdc3c7; }
+        
+        .board-wrapper { position: relative; width: 400px; height: 400px; }
+        #dartboard { width: 400px; height: 400px; background: #111; border-radius: 50%; border: 10px solid #555; box-sizing: border-box; }
+        
+        .dart-hit { position: absolute; width: 10px; height: 10px; border-radius: 50%; transform: translate(-50%, -50%); }
+        .dart-hit.player { background: #00ffcc; box-shadow: 0 0 5px #00ffcc; }
+        .dart-hit.computer { background: #ff00ff; box-shadow: 0 0 5px #ff00ff; }
+        .log-container { margin-top: 10px; background: #f5f5f5; padding: 8px; border-radius: 5px; max-height: 80px; overflow-y: auto; font-size: 0.8rem; }
+
+        .floating-score {
+            position: absolute;
+            transform: translate(-50%, -150%);
+            font-size: 26px;
+            font-weight: bold;
+            text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, -2px 2px 0 #000;
+            pointer-events: none;
+            animation: floatUpFade 1.2s ease-out forwards;
+            z-index: 20;
+        }
+        .floating-score.player-style { color: #00ffcc; }
+        .floating-score.computer-style { color: #ff00ff; }
+
+        @keyframes floatUpFade {
+            0% { opacity: 1; transform: translate(-50%, -100%) scale(0.8); }
+            20% { opacity: 1; transform: translate(-50%, -130%) scale(1.2); }
+            80% { opacity: 1; }
+            100% { opacity: 0; transform: translate(-50%, -180%) scale(1); }
+        }
+
+        /* 📸 新增：崴崴孟孟大圖全螢幕覆蓋層樣式 */
+        .result-overlay {
+            display: none; /* 預設隱藏 */
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
+        .result-title { font-size: 3rem; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .result-title.win { color: #f1c40f; }
+        .result-title.lose { color: #e74c3c; }
+        .result-image { max-width: 80%; max-height: 60vh; border: 5px solid white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain; }
+        .result-text { font-size: 1.5rem; margin: 20px 0; }
+        .restart-btn { background: #2ecc71; color: white; border: none; padding: 15px 40px; font-size: 1.3rem; font-weight: bold; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(46,204,113,0.4); transition: transform 0.2s; }
+        .restart-btn:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+
+    <h1>飛鏢競技場</h1>
+    
+    <div class="game-container">
+        <div class="control-panel">
+            <div>
+                <div class="game-instructions">
+                    <h3>📖 遊戲玩法與規則</h3>
+                    <ul>
+                        <li><strong>玩法：</strong>瞄準條會快速移動。按第一下按鈕鎖定<strong>左右 (X軸)</strong>，按第二下鎖定<strong>上下 (Y軸)</strong> 並發射飛鏢。</li>
+                        <li><strong>賽制：</strong>雙方各投擲 3 回合，每回合可投擲 3 支鏢。</li>
+                        <li><strong>🏆 勝利條件：</strong>3 回合結束後，累積<strong>總得分最高者</strong>獲得最終勝利！</li>
+                    </ul>
+                </div>
+
+                <div class="scoreboard">
+                    <div class="score-row" id="player-row"><span>玩家總分 (綠點):</span><span id="player-score">0</span></div>
+                    <div class="score-row" id="computer-row"><span>電腦總分 (粉點):</span><span id="computer-score">0</span></div>
+                    <div style="text-align: center; margin-top: 5px; font-size: 0.9rem;">回合: <span id="round-count">1</span> / 3</div>
+                </div>
+                <div class="game-status" id="game-status">點擊開始遊戲！</div>
+                <div class="hit-announcement" id="hit-announce">準備就緒</div>
+                <div class="gauge-container">
+                    <div>左右瞄準 (X軸) <span id="x-status">等待</span></div>
+                    <div class="progress-bar"><div class="pointer" id="pointer-x"></div></div>
+                </div>
+                <div class="gauge-container">
+                    <div>上下瞄準 (Y軸) <span id="y-status">等待</span></div>
+                    <div class="progress-bar"><div class="pointer" id="pointer-y"></div></div>
+                </div>
+            </div>
+            <div>
+                <button class="btn" id="action-btn">開始遊戲</button>
+                <div class="log-container" id="log-box"></div>
+            </div>
+        </div>
+        
+        <div class="board-wrapper" id="board-wrapper">
+            <svg id="dartboard" viewBox="0 0 400 400">
+                <g id="board-sectors"></g>
+                <line id="line-x" x1="0" y1="0" x2="0" y2="400" stroke="rgba(0,255,204,0.5)" stroke-width="2" style="display:none;"/>
+                <line id="line-y" x1="0" y1="0" x2="400" y2="0" stroke="rgba(0,255,204,0.5)" stroke-width="2" style="display:none;"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- 📸 新增：結算覆蓋層容器 -->
+    <div class="result-overlay" id="result-overlay">
+        <div class="result-title" id="overlay-title">勝利！</div>
+        <img class="result-image" id="overlay-img" src="" alt="崴崴孟孟成果照">
+        <div class="result-text" id="overlay-text">恭喜你獲得勝利！</div>
+        <button class="restart-btn" id="overlay-restart-btn">再玩一局</button>
+    </div>
+
+    <script>
+        // 🔗 這裡可以替換成你擁有的「崴崴孟孟」實際圖片網址（目前先用 placeholder 代替）
+        const WIN_IMAGE_URL = 'https://picsum.photos/800/600?random=1'; // 玩家勝利時的大圖
+        const LOSE_IMAGE_URL = 'https://picsum.photos/800/600?random=2'; // 玩家失敗或平手時的大圖
+
+        const sectorScores = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
+        let gameState = 'IDLE', currentPlayer = 'PLAYER', currentRound = 1, dartyCount = 0;
+        let scores = { PLAYER: 0, COMPUTER: 0 };
+        let animX = 0, animY = 0, dirX = 1, dirY = 1;
+        let speedX = 1.0, speedY = 1.2;
+        let animationFrameId;
+        let lockedX = 50, lockedY = 50, compTargetX = 50, compTargetY = 50;
+
+        const actionBtn = document.getElementById('action-btn');
+        const gameStatus = document.getElementById('game-status');
+        const hitAnnounce = document.getElementById('hit-announce');
+        const pointerX = document.getElementById('pointer-x');
+        const pointerY = document.getElementById('pointer-y');
+        const xStatus = document.getElementById('x-status');
+        const yStatus = document.getElementById('y-status');
+        const lineX = document.getElementById('line-x');
+        const lineY = document.getElementById('line-y');
+        const dartboardSvg = document.getElementById('dartboard');
+        const boardWrapper = document.getElementById('board-wrapper');
+        const logBox = document.getElementById('log-box');
+        
+        // 取得新增的 結算 DOM 元件
+        const resultOverlay = document.getElementById('result-overlay');
+        const overlayTitle = document.getElementById('overlay-title');
+        const overlayImg = document.getElementById('overlay-img');
+        const overlayText = document.getElementById('overlay-text');
+        const overlayRestartBtn = document.getElementById('overlay-restart-btn');
+
+        function initDartboard() {
+            const sectorsGroup = document.getElementById('board-sectors');
+            let html = '<circle cx="200" cy="200" r="190" fill="#111" stroke="#fff" stroke-width="1"/>';
+            for (let i = 0; i < 20; i++) {
+                const angS = (i * 18 - 9 - 90) * Math.PI / 180;
+                const angE = ((i + 1) * 18 - 9 - 90) * Math.PI / 180;
+                const x1 = 200 + 170 * Math.cos(angS), y1 = 200 + 170 * Math.sin(angS);
+                const x2 = 200 + 170 * Math.cos(angE), y2 = 200 + 170 * Math.sin(angE);
+                html += `<path d="M 200 200 L ${x1} ${y1} A 170 170 0 0 1 ${x2} ${y2} Z" fill="${(i%2===0)?'#000':'#f5ebd5'}" stroke="#555" stroke-width="0.5"/>`;
+                const dx1 = 200 + 160 * Math.cos(angS), dy1 = 200 + 160 * Math.sin(angS);
+                const dx2 = 200 + 160 * Math.cos(angE), dy2 = 200 + 160 * Math.sin(angE);
+                html += `<path d="M ${dx1} ${dy1} L ${x1} ${y1} A 170 170 0 0 1 ${x2} ${y2} L ${dx2} ${dy2} A 160 160 0 0 0 ${dx1} ${dy1} Z" fill="${(i%2===0)?'#27ae60':'#e74c3c'}" stroke="#555" stroke-width="0.5"/>`;
+                const tx1 = 200 + 100 * Math.cos(angS), ty1 = 200 + 100 * Math.sin(angS);
+                const tx2 = 200 + 110 * Math.cos(angS), ty2 = 200 + 110 * Math.sin(angS);
+                const tx3 = 200 + 110 * Math.cos(angE), ty3 = 200 + 110 * Math.sin(angE);
+                const tx4 = 200 + 100 * Math.cos(angE), ty4 = 200 + 100 * Math.sin(angE);
+                html += `<path d="M ${tx1} ${ty1} L ${tx2} ${ty2} A 110 110 0 0 1 ${tx3} ${ty3} L ${tx4} ${ty4} A 100 100 0 0 0 ${tx1} ${ty1} Z" fill="${(i%2===0)?'#27ae60':'#e74c3c'}" stroke="#555" stroke-width="0.5"/>`;
+            }
+            html += '<circle cx="200" cy="200" r="20" fill="#27ae60" stroke="#555" stroke-width="0.5"/>';
+            html += '<circle cx="200" cy="200" r="8" fill="#e74c3c" stroke="#555" stroke-width="0.5"/>';
+            for (let i = 0; i < 20; i++) {
+                const rad = (i * 18 - 90) * Math.PI / 180;
+                html += `<text x="${200 + 183 * Math.cos(rad)}" y="${200 + 183 * Math.sin(rad) + 4}" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">${sectorScores[i]}</text>`;
+            }
+            sectorsGroup.innerHTML = html;
+        }
+
+        function tick() {
+            if (gameState === 'AIM_X' || gameState === 'COMP_AIM_X') {
+                animX += speedX * dirX;
+                if (animX >= 100 || animX <= 0) dirX *= -1;
+                pointerX.style.left = animX + '%';
+                lineX.setAttribute('x1', animX * 4); lineX.setAttribute('x2', animX * 4);
+                if (gameState === 'COMP_AIM_X' && Math.abs(animX - compTargetX) < 1.5) {
+                    lockedX = animX;
+                    pointerX.classList.remove('comp-aiming');
+                    lineX.setAttribute('stroke', 'purple');
+                    xStatus.innerText = '鎖定';
+                    gameState = 'COMP_AIM_Y';
+                    lineY.style.display = 'block';
+                    pointerY.classList.add('comp-aiming');
+                    yStatus.innerText = '瞄準中';
+                }
+            } else if (gameState === 'AIM_Y' || gameState === 'COMP_AIM_Y') {
+                animY += speedY * dirY;
+                if (animY >= 100 || animY <= 0) dirY *= -1;
+                pointerY.style.top = animY + '%';
+                lineY.setAttribute('y1', animY * 4); lineY.setAttribute('y2', animY * 4);
+                if (gameState === 'COMP_AIM_Y' && Math.abs(animY - compTargetY) < 1.5) {
+                    lockedY = animY;
+                    pointerY.classList.remove('comp-aiming');
+                    lineY.setAttribute('stroke', 'purple');
+                    yStatus.innerText = '鎖定';
+                    cancelAnimationFrame(animationFrameId);
+                    fireDart(lockedX * 4, lockedY * 4);
+                    return;
+                }
+            }
+            if (gameState.includes('AIM')) animationFrameId = requestAnimationFrame(tick);
+        }
+
+        function resetAndResetGame() {
+            scores = { PLAYER: 0, COMPUTER: 0 }; currentRound = 1; dartyCount = 0;
+            document.getElementById('player-score').innerText = '0';
+            document.getElementById('computer-score').innerText = '0';
+            document.querySelectorAll('.dart-hit').forEach(el => el.remove());
+            document.querySelectorAll('.floating-score').forEach(el => el.remove());
+            logBox.innerHTML = '';
+            resultOverlay.style.display = 'none'; // 隱藏覆盖圖層
+            startPlayerTurn();
+        }
+
+        actionBtn.addEventListener('click', () => {
+            if (gameState === 'IDLE') {
+                resetAndResetGame();
+            } else if (gameState === 'AIM_X') {
+                lockedX = animX; lineX.setAttribute('stroke', 'red');
+                xStatus.innerText = '鎖定'; gameState = 'AIM_Y';
+                lineY.style.display = 'block'; yStatus.innerText = '瞄準中';
+                actionBtn.innerText = '發射！';
+            } else if (gameState === 'AIM_Y') {
+                lockedY = animY; lineY.setAttribute('stroke', 'red');
+                yStatus.innerText = '鎖定'; cancelAnimationFrame(animationFrameId);
+                fireDart(lockedX * 4, lockedY * 4);
+            }
+        });
+
+        // 大圖覆蓋層上的再玩一局按鈕
+        overlayRestartBtn.addEventListener('click', resetAndResetGame);
+
+        function startPlayerTurn() {
+            currentPlayer = 'PLAYER'; gameState = 'AIM_X';
+            document.getElementById('player-row').className = 'score-row active';
+            document.getElementById('computer-row').className = 'score-row';
+            document.getElementById('round-count').innerText = currentRound;
+            lineX.style.display = 'block'; lineX.setAttribute('stroke', 'blue');
+            lineY.style.display = 'none';
+            xStatus.innerText = '瞄準中'; yStatus.innerText = '等待';
+            gameStatus.innerText = `玩家投擲：第 ${dartyCount + 1} 標`;
+            actionBtn.innerText = '鎖定X軸'; actionBtn.disabled = false;
+            animX = Math.random() * 100; animY = Math.random() * 100;
+            tick();
+        }
+
+        function startComputerAimingProcess() {
+            currentPlayer = 'COMPUTER'; gameState = 'COMP_AIM_X';
+            document.getElementById('player-row').className = 'score-row';
+            document.getElementById('computer-row').className = 'score-row active';
+            actionBtn.disabled = true; actionBtn.innerText = '電腦瞄準中';
+            gameStatus.innerText = `電腦投擲：第 ${dartyCount + 1} 標`;
+            compTargetX = (200 + (Math.random() - 0.5) * 60) / 4;
+            compTargetY = (200 + (Math.random() - 0.5) * 60) / 4;
+            lineX.style.display = 'block'; lineX.setAttribute('stroke', 'purple');
+            lineY.style.display = 'none';
+            pointerX.classList.add('comp-aiming');
+            xStatus.innerText = '瞄準中'; yStatus.innerText = '等待';
+            animX = Math.random() * 100; animY = Math.random() * 100;
+            tick();
+        }
+
+        function fireDart(x, y) {
+            const dart = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            dart.setAttribute('cx', x); dart.setAttribute('cy', y); dart.setAttribute('r', '5');
+            dart.className.baseVal = `dart-hit ${currentPlayer.toLowerCase()}`;
+            dartboardSvg.appendChild(dart);
+
+            const result = calculateScore(x, y);
+            scores[currentPlayer] += result.score;
+            document.getElementById('player-score').innerText = scores.PLAYER;
+            document.getElementById('computer-score').innerText = scores.COMPUTER;
+
+            const scorePopup = document.createElement('div');
+            scorePopup.className = `floating-score ${currentPlayer === 'PLAYER' ? 'player-style' : 'computer-style'}`;
+            scorePopup.style.left = x + 'px';
+            scorePopup.style.top = y + 'px';
+            scorePopup.innerText = `+${result.score}`;
+            boardWrapper.appendChild(scorePopup);
+            
+            setTimeout(() => { scorePopup.remove(); }, 1200);
+
+            if(currentPlayer === 'PLAYER') {
+                hitAnnounce.className = "hit-announcement player-hit";
+                hitAnnounce.innerText = `玩家：${result.name} (+${result.score})`;
+            } else {
+                hitAnnounce.className = "hit-announcement computer-hit";
+                hitAnnounce.innerText = `電腦：${result.name} (+${result.score})`;
+            }
+
+            const logItem = document.createElement('div');
+            logItem.innerHTML = `${currentPlayer === 'PLAYER'?'玩家':'電腦'}第${dartyCount+1}標: ${result.name} (+${result.score})`;
+            logBox.insertBefore(logItem, logBox.firstChild);
+
+            dartyCount++;
+            setTimeout(() => {
+                lineX.style.display = 'none'; lineY.style.display = 'none';
+                if (dartyCount < 3) {
+                    if (currentPlayer === 'PLAYER') startPlayerTurn();
+                    else startComputerAimingProcess();
+                } else {
+                    dartyCount = 0;
+                    if (currentPlayer === 'PLAYER') startComputerAimingProcess();
+                    else {
+                        if (currentRound < 3) { currentRound++; startPlayerTurn(); }
+                        else endGame();
+                    }
+                }
+            }, 1200);
+        }
+
+        function calculateScore(x, y) {
+            const dx = x - 200, dy = y - 200;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 170) return { score: 0, name: '脫靶' };
+            if (dist <= 8) return { score: 50, name: '雙重牛眼' };
+            if (dist <= 20) return { score: 25, name: '綠心牛眼' };
+            let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            angle = (angle + 90 + 360 + 9) % 360;
+            const base = sectorScores[Math.floor(angle / 18) % 20];
+            if (dist >= 100 && dist <= 110) return { score: base * 3, name: `3倍區` };
+            if (dist >= 160 && dist <= 170) return { score: base * 2, name: `2倍區` };
+            return { score: base, name: `單倍區` };
+        }
+
+        function endGame() {
+            gameState = 'IDLE'; actionBtn.disabled = false; actionBtn.innerText = '再玩一局';
+            
+            // 秀出全螢幕覆蓋畫面
+            resultOverlay.style.display = 'flex';
+
+            if (scores.PLAYER > scores.COMPUTER) {
+                // 玩家獲勝
+                gameStatus.innerText = '玩家獲勝！';
+                hitAnnounce.className = "hit-announcement player-hit";
+                hitAnnounce.innerText = `勝利: 玩家(${scores.PLAYER}) 擊敗 電腦(${scores.COMPUTER})`;
+                
+                overlayTitle.innerText = '🏆 玩家大獲全勝！';
+                overlayTitle.className = 'result-title win';
+                overlayText.innerText = `崴崴孟孟為你點讚！你以 ${scores.PLAYER} vs ${scores.COMPUTER} 贏得比賽！`;
+                overlayImg.src = WIN_IMAGE_URL;
+            } else if (scores.PLAYER < scores.COMPUTER) {
+                // 玩家輸了
+                gameStatus.innerText = '電腦獲勝！';
+                hitAnnounce.className = "hit-announcement computer-hit";
+                hitAnnounce.innerText = `敗北: 電腦(${scores.COMPUTER}) 贏了 玩家(${scores.PLAYER})`;
+                
+                overlayTitle.innerText = '💀 挑戰失敗！';
+                overlayTitle.className = 'result-title lose';
+                overlayText.innerText = `別氣餒！電腦以 ${scores.COMPUTER} vs ${scores.PLAYER} 略勝一籌，再接再厲！`;
+                overlayImg.src = LOSE_IMAGE_URL;
+            } else {
+                // 平手
+                gameStatus.innerText = '雙方平手！';
+                hitAnnounce.className = "hit-announcement";
+                hitAnnounce.innerText = `平手: ${scores.PLAYER}分`;
+                
+                overlayTitle.innerText = '🤝 難分軒輊！平手！';
+                overlayTitle.className = 'result-title';
+                overlayText.innerText = `雙方均拿下了 ${scores.PLAYER} 分！精彩的對決！`;
+                overlayImg.src = LOSE_IMAGE_URL;
+            }
+        }
+        initDartboard();
+    </script>
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>極速殭屍拳遊戲</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #34495e;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+        .status-panel {
+            background-color: #1a252f;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        .game-zone {
+            margin: 30px 0;
+            min-height: 200px;
+        }
+        .battle-display {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .side {
+            flex: 1;
+            padding: 10px;
+        }
+        .side img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 3px solid #bdc3c7;
+            background-color: #fff;
+        }
+        .side-label {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .vs {
+            font-size: 2rem;
+            color: #e67e22;
+            font-weight: bold;
+        }
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .game-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .game-btn img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 5px;
+            background-color: white;
+        }
+        .game-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        .game-btn:active {
+            transform: translateY(0);
+        }
+        /* 倒數計時條 */
+        .timer-container {
+            width: 100%;
+            background-color: #7f8c8d;
+            height: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+            display: none;
+        }
+        .timer-bar {
+            width: 100%;
+            height: 100%;
+            background-color: #e74c3c;
+            transition: width linear;
+        }
+        /* 隱藏元素 */
+        .hidden {
+            display: none !important;
+        }
+        /* 彈出視窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal {
+            background-color: #fff;
+            color: #333;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .modal h2 {
+            color: #e74c3c;
+            font-size: 2.5rem;
+            margin-top: 0;
+        }
+        .restart-btn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .restart-btn:hover {
+            background-color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>速戰速決！殭屍拳</h1>
+    
+    <div class="status-panel">
+        <div>目前得分：<span id="score-text">0</span></div>
+        <div style="font-size: 0.9rem; margin-top: 5px; color: #f1c40f;">
+            當前速度：每回合 <span id="speed-text">3.00</span> 秒
+        </div>
+    </div>
+
+    <div class="game-zone">
+        <div class="battle-display">
+            <div class="side">
+                <img id="player-img" src="石頭.png" alt="玩家選擇">
+                <div class="side-label">你</div>
+            </div>
+            <div class="vs">VS</div>
+            <div class="side">
+                <img id="computer-img" src="石頭.png" alt="電腦選擇">
+                <div class="side-label">電腦</div>
+            </div>
+        </div>
+        
+        <h3 id="hint-text">請選擇出拳！</h3>
+        
+        <div id="rsp-stage" class="btn-group">
+            <button class="game-btn" onclick="playRSP('scissors')">
+                <img src="剪刀.png" alt="剪刀">
+                <span>剪刀</span>
+            </button>
+            <button class="game-btn" onclick="playRSP('rock')">
+                <img src="石頭.png" alt="石頭">
+                <span>石頭</span>
+            </button>
+            <button class="game-btn" onclick="playRSP('paper')">
+                <img src="布.png" alt="布">
+                <span>布</span>
+            </button>
+        </div>
+
+        <div id="zombie-stage" class="btn-group hidden">
+            <button class="game-btn" onclick="playZombie('咚咚')">
+                <img src="咚.png" alt="咚咚">
+                <span>咚咚</span>
+            </button>
+            <button class="game-btn" onclick="playZombie('耶耶')">
+                <img src="耶.png" alt="耶耶">
+                <span>耶耶</span>
+            </button>
+            <button class="game-btn" onclick="playZombie('嗯嗯')">
+                <img src="嗯.png" alt="嗯嗯">
+                <span>嗯嗯</span>
+            </button>
+        </div>
+
+        <div class="timer-container" id="timer-box">
+            <div class="timer-bar" id="timer-bar"></div>
+        </div>
+    </div>
+</div>
+
+<div id="lose-modal" class="modal-overlay hidden">
+    <div class="modal">
+        <h2>你輸了！</h2>
+        <p style="font-size: 1.2rem;">最終得分：<span id="final-score">0</span> 分</p>
+        <button class="restart-btn" onclick="resetGame()">再玩一次</button>
+    </div>
+</div>
+
+<script>
+    // 遊戲狀態變數
+    let score = 0;
+    let baseTime = 3000; // 初始時間 3 秒 (3000毫秒)
+    let currentTimeLimit = baseTime;
+    const speedFactor = 0.85; // 每次成功後時間縮短為原來的 85%
+    const minTimeLimit = 600; // 最快不低於 0.6 秒
+    
+    let timerId = null;
+    let currentRspResult = ''; // 'win', 'lose', 'draw'
+    
+    // 對應圖片檔名對照表
+    const imgMap = {
+        'scissors': '剪刀.png',
+        'rock': '石頭.png',
+        'paper': '布.png',
+        '咚咚': '咚.png',
+        '耶耶': '耶.png',
+        '嗯嗯': '嗯.png'
+    };
+
+    // 1. 玩家猜拳
+    function playRSP(playerChoice) {
+        const choices = ['scissors', 'rock', 'paper'];
+        const computerChoice = choices[Math.floor(Math.random() * 3)];
+        
+        // 顯示出拳圖片
+        document.getElementById('player-img').src = imgMap[playerChoice];
+        document.getElementById('computer-img').src = imgMap[computerChoice];
+        
+        // 判定猜拳結果
+        if (playerChoice === computerChoice) {
+            currentRspResult = 'draw';
+        } else if (
+            (playerChoice === 'scissors' && computerChoice === 'paper') ||
+            (playerChoice === 'rock' && computerChoice === 'scissors') ||
+            (playerChoice === 'paper' && computerChoice === 'rock')
+        ) {
+            currentRspResult = 'win';
+        } else {
+            currentRspResult = 'lose';
+        }
+        
+        // 切換到殭屍拳階段
+        document.getElementById('rsp-stage').classList.add('hidden');
+        document.getElementById('zombie-stage').classList.remove('hidden');
+        document.getElementById('hint-text').innerText = '快！對應剛才的勝負喊出殭屍拳！';
+        
+        // 啟動倒數計時（節奏點）
+        startTimer();
+    }
+
+    // 2. 啟動計時器 (節奏不斷加快)
+    function startTimer() {
+        const timerBar = document.getElementById('timer-bar');
+        const timerBox = document.getElementById('timer-box');
+        
+        timerBox.style.display = 'block';
+        timerBar.style.width = '100%';
+        // 透過 CSS transition 達成平滑倒數效果
+        timerBar.style.transition = `width ${currentTimeLimit}ms linear`;
+        
+        // 強制瀏覽器重繪，好讓 transition 生效
+        void timerBar.offsetWidth;
+        timerBar.style.width = '0%';
+
+        // 時間到未作答視同失誤輸掉
+        timerId = setTimeout(() => {
+            gameOver();
+        }, currentTimeLimit);
+    }
+
+    // 3. 玩家選擇殭屍拳
+    function playZombie(playerZombieChoice) {
+        // 先清除定時器
+        clearTimeout(timerId);
+        document.getElementById('timer-box').style.display = 'none';
+
+        let correctPlayerChoice = '';
+        let correctComputerChoice = '';
+
+        // 根據剛才猜拳結果，定義正確的組合
+        // [贏：玩家咚咚/電腦嗯嗯] [平手：玩家耶耶/電腦耶耶] [輸：玩家嗯嗯/電腦咚咚]
+        if (currentRspResult === 'win') {
+            correctPlayerChoice = '咚咚';
+            correctComputerChoice = '嗯嗯';
+        } else if (currentRspResult === 'draw') {
+            correctPlayerChoice = '耶耶';
+            correctComputerChoice = '耶耶';
+        } else if (currentRspResult === 'lose') {
+            correctPlayerChoice = '嗯enum'; // 註：對應文字
+            correctPlayerChoice = '嗯嗯';
+            correctComputerChoice = '咚咚';
+        }
+
+        // 顯示雙方殭屍拳圖片
+        document.getElementById('player-img').src = imgMap[playerZombieChoice];
+        document.getElementById('computer-img').src = imgMap[correctComputerChoice];
+
+        // 檢查玩家是否選對
+        if (playerZombieChoice === correctPlayerChoice) {
+            // 答對了，繼續下一輪
+            score++;
+            document.getElementById('score-text').innerText = score;
+            
+            // 加快節奏（縮短時間限制，但不低於極限值）
+            currentTimeLimit = Math.max(currentTimeLimit * speedFactor, minTimeLimit);
+            document.getElementById('speed-text').innerText = (currentTimeLimit / 1000).toFixed(2);
+            
+            // 延遲一小段時間自動回到猜拳階段，讓玩家看清結果
+            setTimeout(() => {
+                nextRound();
+            }, 800);
+        } else {
+            // 答錯了，失誤輸掉
+            setTimeout(() => {
+                gameOver();
+            }, 300);
+        }
+    }
+
+    // 準備下一輪
+    function nextRound() {
+        document.getElementById('zombie-stage').classList.add('hidden');
+        document.getElementById('rsp-stage').classList.remove('hidden');
+        document.getElementById('hint-text').innerText = '請選擇出拳！';
+    }
+
+    // 遊戲結束
+    function gameOver() {
+        clearTimeout(timerId);
+        document.getElementById('final-score').innerText = score;
+        document.getElementById('lose-modal').classList.remove('hidden');
+    }
+
+    // 再玩一次（重置遊戲）
+    function resetGame() {
+        score = 0;
+        currentTimeLimit = baseTime;
+        document.getElementById('score-text').innerText = score;
+        document.getElementById('speed-text').innerText = (currentTimeLimit / 1000).toFixed(2);
+        
+        // 還原初始圖片與介面
+        document.getElementById('player-img').src = '石頭.png';
+        document.getElementById('computer-img').src = '石頭.png';
+        document.getElementById('lose-modal').classList.add('hidden');
+        document.getElementById('timer-box').style.display = 'none';
+        
+        nextRound();
+    }
+</script>
+
+</body>
+</html>

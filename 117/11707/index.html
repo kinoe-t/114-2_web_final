@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金幣輝煌・幸運大摸彩</title>
+    <style>
+        :root {
+            --gold-light: #fff3b0;
+            --gold-main: #ffd700;
+            --gold-dark: #b8860b;
+            --bg-dark: #111122;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #25123e 0%, var(--bg-dark) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: #fff;
+            padding: 20px;
+        }
+
+        /* 背景錢錢雨 */
+        .money-rain {
+            position: fixed;
+            top: -50px;
+            pointer-events: none;
+            font-size: 24px;
+            animation: fall linear infinite;
+            z-index: 0;
+        }
+        @keyframes fall {
+            to { transform: translateY(110vh) rotate(360deg); }
+        }
+
+        .container {
+            text-align: center;
+            z-index: 10;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: var(--gold-main);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            margin-bottom: 5px;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            color: #ccc;
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+
+        /* 摸彩箱本體外框 */
+        .box-wrapper {
+            position: relative;
+            width: 340px;
+            height: 340px;
+            margin: 0 auto 30px;
+        }
+
+        /* 摸彩箱伸手洞口（最上層） */
+        .box-hole {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 30px;
+            background: #0a0a14;
+            border: 4px solid var(--gold-main);
+            border-radius: 50%;
+            z-index: 25;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.9);
+        }
+
+        /* 透明摸彩箱（壓克力質感） */
+        .lucky-box {
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 5px solid rgba(255, 215, 0, 0.6);
+            box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.15), 
+                        0 10px 30px rgba(0, 0, 0, 0.7),
+                        0 0 20px rgba(255, 215, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            z-index: 20;
+        }
+
+        /* 摸彩箱裝飾邊角 */
+        .lucky-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border: 2px dashed rgba(255, 215, 0, 0.3);
+            border-radius: 14px;
+            pointer-events: none;
+        }
+
+        /* 箱內隨機排列的彩球 */
+        .ball {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #333;
+            box-shadow: inset -3px -3px 6px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.4);
+            transition: opacity 0.3s, transform 0.2s;
+        }
+
+        /* 飛出洞口的動態球球 */
+        .flying-ball {
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            color: #333;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            animation: flyOut 0.8s ease-out forwards;
+        }
+
+        @keyframes flyOut {
+            0% {
+                top: 0px;
+                left: 155px;
+                transform: scale(1) rotate(0deg);
+            }
+            50% {
+                top: -80px;
+                left: 155px;
+                transform: scale(1.8) rotate(180deg);
+                opacity: 1;
+            }
+            100% {
+                top: 250px; /* 往開獎區掉落 */
+                left: 155px;
+                transform: scale(2.3) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* 開獎展示區 */
+        .result-container {
+            margin-bottom: 30px;
+            min-height: 110px;
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            color: var(--gold-light);
+            margin-bottom: 15px;
+            visibility: hidden;
+        }
+
+        .result-title.show { visibility: visible; }
+
+        .display-balls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .display-ball {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, var(--gold-light), var(--gold-main) 60%, var(--gold-dark));
+            color: #111;
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset -4px -4px 8px rgba(0,0,0,0.3), 0 5px 10px rgba(0,0,0,0.4);
+            transform: scale(0);
+            animation: popIn 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .display-ball.special {
+            background: radial-gradient(circle at 30% 30%, #fff, #ff9900 60%, #cc4400);
+            border: 2px solid #fff;
+            color: #fff;
+        }
+
+        @keyframes popIn { to { transform: scale(1); } }
+
+        /* 按鈕 */
+        .btn-draw {
+            background: linear-gradient(135deg, var(--gold-main) 0%, var(--gold-dark) 100%);
+            border: none;
+            padding: 14px 45px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #111;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
+            transition: all 0.2s;
+        }
+
+        .btn-draw:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.5);
+        }
+
+        .btn-draw:disabled {
+            background: #444;
+            color: #777;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="moneyContainer"></div>
+
+    <div class="container">
+        <h1>金幣輝煌・幸運摸彩箱</h1>
+        <p class="subtitle">彩球隨機碰撞！點擊按鈕，看著中獎球從洞口躍出 💰</p>
+
+        <div class="box-wrapper" id="boxWrapper">
+            <div class="box-hole"></div> <div class="lucky-box" id="luckyBox">
+                </div>
+        </div>
+
+        <div class="result-container">
+            <div class="result-title" id="resultTitle">🎉 本期開獎號碼 🎉</div>
+            <div class="display-balls" id="displayBalls"></div>
+        </div>
+
+        <button class="btn-draw" id="drawBtn" onclick="startDraw()">抽出幸運號碼！</button>
+    </div>
+
+    <script>
+        const totalBalls = 49;
+        const luckyBox = document.getElementById('luckyBox');
+        const boxWrapper = document.getElementById('boxWrapper');
+        const displayBalls = document.getElementById('displayBalls');
+        const resultTitle = document.getElementById('resultTitle');
+        const drawBtn = document.getElementById('drawBtn');
+
+        const yellowShades = [
+            'radial-gradient(circle at 30% 30%, #fff9d0, #ffeb3b)',
+            'radial-gradient(circle at 30% 30%, #fffde7, #fdd835)',
+            'radial-gradient(circle at 30% 30%, #fff59d, #ffb300)',
+            'radial-gradient(circle at 30% 30%, #fff59d, #ffa000)'
+        ];
+
+        // 儲存每顆球在箱子裡的物理位置與速度資訊
+        let ballData = [];
+        let animationFrameId;
+        let isMixing = false;
+
+        // 1. 初始化：將 49 顆球隨機散落在摸彩箱內各個角落 (不整齊排列)
+        function initBox() {
+            luckyBox.innerHTML = '';
+            ballData = [];
+            
+            // 箱體邊界限制 (扣除球自身大小)
+            const maxX = 340 - 32;
+            const maxY = 340 - 32;
+
+            for (let i = 1; i <= totalBalls; i++) {
+                const ball = document.createElement('div');
+                ball.className = 'ball';
+                ball.innerText = i;
+                ball.style.background = yellowShades[Math.floor(Math.random() * yellowShades.length)];
+                
+                // 完全隨機的初始坐標 (避開最頂部洞口正下方，讓畫面更好看)
+                const posX = Math.random() * maxX;
+                const posY = 50 + (Math.random() * (maxY - 50)); 
+                
+                ball.style.left = posX + 'px';
+                ball.style.top = posY + 'px';
+                luckyBox.appendChild(ball);
+
+                // 紀錄資料以便後續做碰撞與攪拌動畫
+                ballData.push({
+                    element: ball,
+                    id: i,
+                    x: posX,
+                    y: posY,
+                    vx: (Math.random() - 0.5) * 2, // 初始微幅飄移速度
+                    vy: (Math.random() - 0.5) * 2
+                });
+            }
+        }
+
+        // 2. 箱內彩球物理移動與碰撞運算（讓球球動起來不生硬）
+        function updatePhysics() {
+            const maxX = 340 - 30;
+            const maxY = 340 - 30;
+            const speedMultiplier = isMixing ? 15 : 0.8; // 攪拌時速度飆升
+
+            ballData.forEach(ball => {
+                ball.x += ball.vx * speedMultiplier;
+                ball.y += ball.vy * speedMultiplier;
+
+                // 撞擊左右牆壁反彈
+                if (ball.x <= 2 || ball.x >= maxX) {
+                    ball.vx *= -1;
+                    ball.x = ball.x <= 2 ? 2 : maxX;
+                }
+                // 撞擊上下牆壁反彈
+                if (ball.y <= 35 || ball.y >= maxY) {
+                    ball.vy *= -1;
+                    ball.y = ball.y <= 35 ? 35 : maxY;
+                }
+
+                // 更新 DOM 位置
+                ball.element.style.left = ball.x + 'px';
+                ball.element.style.top = ball.y + 'px';
+            });
+
+            animationFrameId = requestAnimationFrame(updatePhysics);
+        }
+
+        // 3. 隨機生成本期大樂透號碼
+        function getRandomNumbers() {
+            const pool = Array.from({length: totalBalls}, (_, i) => i + 1);
+            const chosen = [];
+            for (let i = 0; i < 7; i++) {
+                const idx = Math.floor(Math.random() * pool.length);
+                chosen.push(pool.splice(idx, 1)[0]);
+            }
+            const regular = chosen.slice(0, 6).sort((a, b) => a - b);
+            const special = chosen[6];
+            return { regular, special };
+        }
+
+        // 4. 按下按鈕：開始抽獎流程
+        function startDraw() {
+            drawBtn.disabled = true;
+            displayBalls.innerHTML = '';
+            resultTitle.classList.remove('show');
+            
+            // 重新填滿箱子並打亂
+            initBox();
+            isMixing = true; // 激活高速狂轟亂炸攪拌模式
+
+            const { regular, special } = getRandomNumbers();
+            
+            // 攪拌 1.5 秒後，開始「一顆一顆球」跑出來
+            setTimeout(() => {
+                isMixing = false; // 箱內減速，回歸平穩
+
+                // 依序抽出 6 個常規號 + 1 個特別號
+                let drawQueue = [...regular.map(num => ({num, isSpecial: false})), {num: special, isSpecial: true}];
+                
+                drawQueue.forEach((ballInfo, index) => {
+                    setTimeout(() => {
+                        animateBallFlyingOut(ballInfo.num, ballInfo.isSpecial);
+                    }, index * 1200); // 每隔 1.2 秒蹦出一顆球
+                });
+
+                // 全部抽完後解鎖按鈕
+                setTimeout(() => {
+                    drawBtn.disabled = false;
+                }, drawQueue.length * 1200 + 400);
+
+            }, 1500);
+        }
+
+        // 5. 核心修改：模擬球「從箱子洞口一顆顆飛出來」的動畫
+        function animateBallFlyingOut(num, isSpecial) {
+            // A. 箱子內對應的球變透明消失
+            const internalBall = ballData.find(b => b.id === num);
+            if (internalBall) {
+                internalBall.element.style.opacity = '0.15';
+                internalBall.element.style.transform = 'scale(0.6)';
+            }
+
+            // B. 建立一個臨時的「飛出特效球」
+            const flyingBall = document.createElement('div');
+            flyingBall.className = 'flying-ball';
+            flyingBall.innerText = num;
+            flyingBall.style.background = yellowShades[Math.floor(Math.random() * yellowShades.length)];
+            
+            // 將飛出球塞入容器
+            boxWrapper.appendChild(flyingBall);
+
+            // C. 當飛出動畫進行到一半時，開獎區慢慢顯示該號碼
+            setTimeout(() => {
+                resultTitle.classList.add('show');
+                
+                const finalBall = document.createElement('div');
+                finalBall.className = isSpecial ? 'display-ball special' : 'display-ball';
+                finalBall.innerText = num < 10 ? '0' + num : num;
+                if(isSpecial) finalBall.title = "特別號";
+                
+                displayBalls.appendChild(finalBall);
+            }, 500);
+
+            // D. 動態結束後移除該臨時動畫球
+            setTimeout(() => {
+                flyingBall.remove();
+            }, 800);
+        }
+
+        // 營造滿天發財錢錢氛圍
+        function createMoneyRain() {
+            const moneyContainer = document.getElementById('moneyContainer');
+            const currency = ['💰', '💵', '🪙', '✨'];
+            for (let i = 0; i < 35; i++) {
+                const money = document.createElement('div');
+                money.className = 'money-rain';
+                money.innerText = currency[Math.floor(Math.random() * currency.length)];
+                money.style.left = Math.random() * 100 + 'vw';
+                money.style.animationDuration = (Math.random() * 3 + 2.5) + 's';
+                money.style.animationDelay = (Math.random() * 4) + 's';
+                money.style.opacity = Math.random() * 0.6 + 0.3;
+                moneyContainer.appendChild(money);
+            }
+        }
+
+        window.onload = () => {
+            initBox();
+            updatePhysics(); // 啟動全時箱內物理怠速/攪拌運算
+            createMoneyRain();
+        };
+    </script>
+</body>
+</html>

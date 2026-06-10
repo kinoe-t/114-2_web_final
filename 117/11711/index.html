@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍛 食物宗教戰爭</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:"Microsoft JhengHei",sans-serif;
+    min-height:100vh;
+    background:linear-gradient(135deg,#ff7a18,#ff4b6e);
+    color:white;
+}
+
+.page{
+    display:none;
+    min-height:100vh;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+.page.active{
+    display:flex;
+}
+
+.card{
+    width:100%;
+    max-width:900px;
+    background:rgba(255,255,255,.12);
+    backdrop-filter:blur(12px);
+    border-radius:24px;
+    padding:32px;
+    box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+
+.center{
+    text-align:center;
+}
+
+h1{
+    font-size:3rem;
+    margin-bottom:15px;
+}
+
+.subtitle{
+    opacity:.9;
+    margin-bottom:25px;
+}
+
+.btn{
+    border:none;
+    cursor:pointer;
+    border-radius:999px;
+    padding:16px 32px;
+    font-size:1.1rem;
+    font-weight:bold;
+    transition:.2s;
+}
+
+.btn:hover{
+    transform:scale(1.05);
+}
+
+.start-btn{
+    background:white;
+    color:#ff4b6e;
+}
+
+.reset-btn{
+    margin-top:15px;
+    background:#222;
+    color:white;
+}
+
+.question{
+    font-size:2rem;
+    text-align:center;
+    margin-bottom:35px;
+}
+
+.answer-group{
+    display:flex;
+    gap:15px;
+}
+
+.answer-btn{
+    flex:1;
+    border:none;
+    border-radius:18px;
+    padding:22px;
+    color:white;
+    font-size:1.3rem;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.yes{
+    background:#2ecc71;
+}
+
+.no{
+    background:#e74c3c;
+}
+
+.progress{
+    text-align:center;
+    margin-top:25px;
+    opacity:.8;
+}
+
+.result-item{
+    background:rgba(255,255,255,.08);
+    border-radius:18px;
+    padding:20px;
+    margin-bottom:18px;
+}
+
+.rank{
+    font-weight:bold;
+    color:#ffd166;
+    margin-bottom:10px;
+}
+
+.compare{
+    margin-top:8px;
+    font-weight:bold;
+}
+
+hr{
+    border:none;
+    height:1px;
+    background:rgba(255,255,255,.15);
+    margin:20px 0;
+}
+
+@media(max-width:700px){
+
+    h1{
+        font-size:2.2rem;
+    }
+
+    .question{
+        font-size:1.5rem;
+    }
+
+    .answer-group{
+        flex-direction:column;
+    }
+}
+</style>
+</head>
+<body>
+
+<!-- 首頁 -->
+<div class="page active" id="homePage">
+
+<div class="card center">
+
+<h1>🍛 食物宗教戰爭</h1>
+
+<div class="subtitle">
+投下神聖的一票，看看誰才是真正的異端。
+</div>
+
+<h2>
+⚔️ 參戰人數：
+<span id="participantCount">0</span>
+</h2>
+
+<br>
+
+<button class="btn start-btn" onclick="startGame()">
+開始參戰
+</button>
+
+<br>
+
+
+</div>
+</div>
+
+<!-- 題目頁 -->
+<div class="page" id="gamePage">
+
+<div class="card">
+
+<div id="questionText" class="question"></div>
+
+<div class="answer-group">
+
+<button class="answer-btn yes"
+onclick="vote(true)">
+👍 是
+</button>
+
+<button class="answer-btn no"
+onclick="vote(false)">
+👎 不是
+</button>
+
+</div>
+
+<div class="progress">
+第 <span id="currentQuestion"></span> 題 /
+<span id="totalQuestions"></span> 題
+</div>
+
+</div>
+</div>
+
+<!-- 結果頁 -->
+<div class="page" id="resultPage">
+
+<div class="card">
+
+<div class="center">
+
+<h2>📊 全站戰況</h2>
+
+<p style="margin-top:10px">
+目前共有
+<strong id="resultParticipants">0</strong>
+人參戰
+</p>
+
+</div>
+
+<hr>
+
+<div id="results"></div>
+
+<div class="center">
+
+<button class="btn start-btn"
+onclick="location.reload()">
+再戰一次
+</button>
+
+</div>
+
+</div>
+</div>
+
+<script>
+
+const questions = [
+
+"咖哩飯要全部拌勻再吃嗎？",
+"鳳梨可以放披薩嗎？",
+"香菜很好吃嗎？",
+"水餃一定要沾醬嗎？",
+"泡麵一定要加蛋嗎？",
+"豆花應該加花生嗎？",
+"布丁要攪爛嗎？",
+"豆花甜的比鹹的好吃？",
+"火鍋加不加芋頭？",
+"酥皮濃湯皮跟湯要分開吃？",
+"半熟蛋要先戳破？",
+"南部粽比較好吃嗎？",
+"珍珠奶茶該喝全糖嗎？",
+"白飯可以拌湯嗎？",
+"爆米花甜的比鹹的好吃？",
+"車輪餅奶油口味比紅豆好吃？",
+"蛋餅該加醬油膏嗎？",
+"薯條加不加鹽？"
+
+];
+
+let currentQuestion = 0;
+let currentAnswers = [];
+
+function getPlayers(){
+
+    const data =
+    localStorage.getItem("foodWarPlayers");
+
+    return data
+        ? JSON.parse(data)
+        : [];
+}
+
+function savePlayers(players){
+
+    localStorage.setItem(
+        "foodWarPlayers",
+        JSON.stringify(players)
+    );
+}
+
+function updateParticipantCount(){
+
+    document.getElementById(
+        "participantCount"
+    ).textContent =
+    getPlayers().length;
+}
+
+function showPage(id){
+
+    document
+    .querySelectorAll(".page")
+    .forEach(p=>p.classList.remove("active"));
+
+    document
+    .getElementById(id)
+    .classList.add("active");
+}
+
+function startGame(){
+
+    currentQuestion = 0;
+    currentAnswers = [];
+
+    document.getElementById(
+        "totalQuestions"
+    ).textContent = questions.length;
+
+    renderQuestion();
+
+    showPage("gamePage");
+}
+
+function renderQuestion(){
+
+    document.getElementById(
+        "questionText"
+    ).textContent =
+    questions[currentQuestion];
+
+    document.getElementById(
+        "currentQuestion"
+    ).textContent =
+    currentQuestion + 1;
+}
+
+function vote(answer){
+
+    currentAnswers.push(answer);
+
+    currentQuestion++;
+
+    if(currentQuestion >= questions.length){
+
+        finishSurvey();
+        return;
+    }
+
+    renderQuestion();
+}
+
+function finishSurvey(){
+
+    const players =
+    getPlayers();
+
+    players.push(currentAnswers);
+
+    savePlayers(players);
+
+    showResults();
+}
+
+function showResults(){
+
+    const players =
+    getPlayers();
+
+    document.getElementById(
+        "resultParticipants"
+    ).textContent =
+    players.length;
+
+    const resultData = [];
+
+    questions.forEach((question,index)=>{
+
+        let yesVotes = 0;
+        let noVotes = 0;
+
+        players.forEach(player=>{
+
+            if(player[index] === true){
+
+                yesVotes++;
+
+            }else if(
+                player[index] === false
+            ){
+
+                noVotes++;
+            }
+
+        });
+
+        const totalVotes =
+        yesVotes + noVotes;
+
+        const yesPercent =
+        totalVotes
+        ? Math.round(
+            yesVotes / totalVotes * 100
+          )
+        : 0;
+
+        const noPercent =
+        totalVotes
+        ? Math.round(
+            noVotes / totalVotes * 100
+          )
+        : 0;
+
+        const controversy =
+        Math.abs(
+            yesPercent - noPercent
+        );
+
+        resultData.push({
+
+            question,
+            index,
+            yesVotes,
+            noVotes,
+            totalVotes,
+            yesPercent,
+            noPercent,
+            controversy
+
+        });
+
+    });
+
+    resultData.sort(
+        (a,b)=>
+        a.controversy - b.controversy
+    );
+
+    let html = "";
+
+    resultData.forEach((item,rank)=>{
+
+        const majority =
+        item.yesVotes >= item.noVotes;
+
+        const same =
+        majority ===
+        currentAnswers[item.index];
+
+        let warLevel = "";
+
+        if(item.controversy <= 10){
+
+            warLevel =
+            "🔥 超級宗教戰爭";
+
+        }else if(item.controversy <= 30){
+
+            warLevel =
+            "⚔️ 高度爭議";
+
+        }else{
+
+            warLevel =
+            "😌 幾乎有共識";
+        }
+
+        html += `
+        <div class="result-item">
+
+            <div class="rank">
+                #${rank+1}
+                ${warLevel}
+            </div>
+
+            <h3>${item.question}</h3>
+
+            <div>
+                你的答案：
+                <strong>
+                ${
+                    currentAnswers[item.index]
+                    ? "👍 是"
+                    : "👎 不是"
+                }
+                </strong>
+            </div>
+
+            <div class="compare">
+            ${
+                same
+                ? "🎯 與大眾一致"
+                : "🔥 異端份子"
+            }
+            </div>
+
+            <br>
+
+            👍 是：
+            ${item.yesVotes} 人
+            (${item.yesPercent}%)
+
+            <br>
+
+            👎 不是：
+            ${item.noVotes} 人
+            (${item.noPercent}%)
+
+            <br>
+
+            📊 總票數：
+            ${item.totalVotes} 人
+
+        </div>
+        `;
+    });
+
+    document.getElementById(
+        "results"
+    ).innerHTML = html;
+
+    showPage("resultPage");
+}
+
+function resetData(){
+
+    if(
+        confirm("確定要清除所有統計嗎？")
+    ){
+
+        localStorage.removeItem(
+            "foodWarPlayers"
+        );
+
+        location.reload();
+    }
+}
+
+updateParticipantCount();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>無意義宇宙的終極中心 — 量子級虛無觀測器</title>
+    <style>
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-purple: #da00ff;
+            --bg-dark: #050508;
+            --panel-bg: #0d0d16;
+            --text-gray: #8f9cae;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #ffffff;
+            font-family: 'SF Pro Display', -apple-system, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* 背景微弱科技感線條 */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 200%, height: 200%;
+            background-image: 
+                radial-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 0),
+                radial-gradient(rgba(218, 0, 255, 0.02) 1px, transparent 0);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            animation: bgMove 120s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes bgMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-50%, -50%); }
+        }
+
+        .container {
+            z-index: 1;
+            text-align: center;
+            background: var(--panel-bg);
+            padding: 40px 60px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 
+                        0 0 40px rgba(0, 243, 255, 0.02);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--text-gray);
+            margin-bottom: 30px;
+        }
+
+        /* 核心按鈕區域 */
+        .core-area {
+            position: relative;
+            margin: 40px 0;
+        }
+
+        .main-btn {
+            background: linear-gradient(135deg, #141423, #1f1f38);
+            color: #ffffff;
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            padding: 24px 40px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+        }
+
+        .main-btn:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.3), inset 0 0 15px rgba(0, 243, 255, 0.2);
+            transform: scale(1.03);
+        }
+
+        .main-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 指數儀表 */
+        .dashboard {
+            margin-top: 40px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            padding-top: 30px;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 12px 0;
+            font-size: 0.9rem;
+        }
+
+        .data-label {
+            color: var(--text-gray);
+        }
+
+        .data-value {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            color: var(--neon-cyan);
+        }
+
+        .system-log {
+            font-size: 0.8rem;
+            color: #ef4444;
+            margin-top: 25px;
+            font-family: monospace;
+            min-height: 18px;
+        }
+
+        /* 水波紋動畫效果 */
+        .ripple {
+            position: absolute;
+            border: 2px solid var(--neon-purple);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: rip 1s ease-out;
+            opacity: 0;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes rip {
+            0% { width: 0; height: 0; opacity: 1; }
+            100% { width: 300px; height: 300px; opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🌌 矩陣級毫無意義觀測終端</h1>
+        
+        <div class="core-area" id="ripple-zone">
+            <button class="main-btn" id="the-button" onclick="triggerNothingness()">啟動純粹虛無程序</button>
+        </div>
+
+        <div class="dashboard">
+            <div class="data-row">
+                <span class="data-label">生命浪費總時數：</span>
+                <span class="data-value" id="time-wasted">0.00 秒</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">地球自轉補償位移：</span>
+                <span class="data-value" id="earth-move">0.00000 公里</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">本頁面對全人類產生的貢獻值：</span>
+                <span class="data-value" style="color: #ef4444;">0.00000000000%</span>
+            </div>
+        </div>
+
+        <div class="system-log" id="log-box">系統就緒。等待無效操作...</div>
+    </div>
+
+    <script>
+        let clickCount = 0;
+        let totalSeconds = 0;
+        
+        // 1. 每 0.01 秒計算一次你浪費的生命，和這段期間地球帶著你跑了多遠
+        setInterval(() => {
+            totalSeconds += 0.01;
+            document.getElementById('time-wasted').innerText = totalSeconds.toFixed(2) + ' 秒';
+            
+            // 地球自轉時速約 1670 公里/小時 = 0.4638 公里/秒
+            let earthDisplacement = totalSeconds * 0.46383;
+            document.getElementById('earth-move').innerText = earthDisplacement.toFixed(5) + ' 公里';
+        }, 10);
+
+        // 2. 核心按鈕邏輯
+        function triggerNothingness() {
+            clickCount++;
+            const logBox = document.getElementById('log-box');
+            const mainBtn = document.getElementById('the-button');
+            
+            // 隨機產生極度敷衍、極度沒意義的系統日誌
+            const logs = [
+                "成功將按鈕高度往下壓了 2 毫米。",
+                "電能已成功轉化為微量的廢熱，使你的房溫上升了 0.00000001°C。",
+                "經過精密量子計算，確認你剛剛點了一次按鈕。",
+                "成功消耗了你右手食指大約 0.002 卡路里的能量。",
+                "通知：你的瀏覽器剛剛為了渲染按鈕陰影，浪費了 3 毫秒的 CPU 壽命。",
+                "系統成功紀錄了這一次毫無意義的點擊，並決定不做任何處理。",
+                "剛才的點擊使宇宙的混亂度（熵）增加了一點點，恭喜加速宇宙熱寂。",
+                "網頁確認收到指令，並完美維持了現狀。"
+            ];
+            
+            // 隨機換日誌
+            logBox.innerText = "❌ 系統反饋：" + logs[Math.floor(Math.random() * logs.length)];
+            
+            // 隨機微幅改變按鈕文字，讓使用者以為有進度，但其實完全沒有
+            if (clickCount === 5) mainBtn.innerText = "繼續維持毫無意義狀態";
+            if (clickCount === 12) mainBtn.innerText = "全力拒絕產生任何價值";
+            if (clickCount === 25) mainBtn.innerText = "恭喜你，你依然什麼都沒做到";
+            if (clickCount === 50) {
+                mainBtn.innerText = "點擊突破 50 次！解鎖成就【毫無建樹】";
+                logBox.style.color = "#00f3ff";
+                logBox.innerText = "✨ 特殊警告：系統仍舊沒有發生任何變化！";
+            }
+            if (clickCount === 51) {
+                logBox.style.color = "#ef4444";
+            }
+        }
+
+        // 3. 視覺特效：點擊按鈕時產生酷炫的科技水波紋（包裝得很厲害但本質還是沒用）
+        const zone = document.getElementById('ripple-zone');
+        zone.addEventListener('click', (e) => {
+            const rect = zone.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const rip = document.createElement('div');
+            rip.className = 'ripple';
+            rip.style.left = x + 'px';
+            rip.style.top = y + 'px';
+            
+            zone.appendChild(rip);
+            
+            setTimeout(() => {
+                rip.remove();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

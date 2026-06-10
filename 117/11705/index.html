@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>時尚甜心：換裝闖關大挑戰</title>
+    <style>
+        :root {
+            --bg-color: #f7edfd;
+            --primary-color: #ff94b8;
+            --secondary-color: #bfa3ff;
+            --text-color: #5c4b69;
+            --panel-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft JhengHei";
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #ff619b;
+            text-shadow: 2px 2px #fff;
+            margin-bottom: 10px;
+        }
+
+        .game-container {
+            display: flex;
+            width: 1000px;
+            max-width: 100%;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        /* 左側：關卡資訊與角色畫布 */
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .level-card {
+            background: var(--panel-bg);
+            width: 100%;
+            padding: 15px;
+            border-radius: 15px;
+            border: 3px dashed var(--secondary-color);
+            box-sizing: border-box;
+        }
+
+        .level-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #7b46e3;
+            margin-bottom: 5px;
+        }
+
+        .level-desc {
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .avatar-container {
+            position: relative;
+            width: 320px;
+            height: 480px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 4px solid var(--primary-color);
+        }
+
+        /* 娃娃與衣物圖層疊加 */
+        .layer {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 按鈕區 */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        button {
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary-color), #ff619b);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, filter 0.2s;
+            box-shadow: 0 4px 10px rgba(255, 97, 155, 0.3);
+        }
+
+        button:hover {
+            filter: brightness(1.05);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button.reset-btn {
+            background: linear-gradient(135deg, #bbb, #999);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* 右側：衣櫃選擇區 */
+        .right-panel {
+            flex: 1.2;
+            background: var(--panel-bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 590px;
+            overflow-y: auto;
+        }
+
+        .category-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-left: 5px solid var(--primary-color);
+            padding-left: 8px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+            gap: 8px;
+        }
+
+        .item-card {
+            background: #fdf8ff;
+            border: 2px solid #ecd9ff;
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .item-card:hover {
+            background: #f5e6ff;
+            border-color: var(--secondary-color);
+        }
+
+        .item-card.selected {
+            background: #ffe3ee;
+            border-color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        /* 顏色選擇器 */
+        .color-selector {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .color-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        .color-dot.active {
+            border: 2px solid #000;
+            transform: scale(1.1);
+        }
+
+        /* 彈窗 */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .modal h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .modal p {
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>✨ 時尚甜心：換裝闖關大挑戰 ✨</h1>
+    
+    <div class="game-container">
+        
+        <div class="left-panel">
+            <div class="level-card">
+                <div class="level-title" id="level-num">第 1 關：海灘派對</div>
+                <div class="level-desc" id="level-req">目標：請穿著「無袖」上裝，搭配「短褲」或「短裙」，並穿上適合沙灘的「涼鞋」、「拖鞋」或「洞洞鞋」吧！</div>
+            </div>
+
+            <div class="avatar-container">
+                <svg class="layer" id="layer-body" viewBox="0 0 200 300">
+                    <circle cx="100" cy="70" r="25" fill="#fde3d4" />
+                    <circle cx="92" cy="68" r="3" fill="#333" />
+                    <circle cx="108" cy="68" r="3" fill="#333" />
+                    <circle cx="85" cy="75" r="4" fill="#ffb6b6" opacity="0.6" />
+                    <circle cx="115" cy="75" r="4" fill="#ffb6b6" opacity="0.6" />
+                    <path d="M 96 78 Q 100 83 104 78" stroke="#333" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                    <path d="M 85 95 L 115 95 L 110 180 L 90 180 Z" fill="#fde3d4" />
+                    <path d="M 85 95 L 65 140" stroke="#fde3d4" stroke-width="12" stroke-linecap="round" />
+                    <path d="M 115 95 L 135 140" stroke="#fde3d4" stroke-width="12" stroke-linecap="round" />
+                    <rect x="88" y="180" width="10" height="80" fill="#fde3d4" rx="4"/>
+                    <rect x="102" y="180" width="10" height="80" fill="#fde3d4" rx="4"/>
+                </svg>
+
+                <svg class="layer" id="layer-bottom" viewBox="0 0 200 300"></svg>
+                <svg class="layer" id="layer-top" viewBox="0 0 200 300"></svg>
+                <svg class="layer" id="layer-head" viewBox="0 0 200 300"></svg>
+                <svg class="layer" id="layer-shoes" viewBox="0 0 200 300"></svg>
+            </div>
+
+            <div class="action-buttons">
+                <button class="reset-btn" onclick="resetOutfit()">重設搭配</button>
+                <button onclick="checkOutift()">提交穿搭 ✨</button>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="category-title">👑 頭飾 (Headwear)</div>
+            <div class="item-grid" id="grid-head"></div>
+
+            <div class="category-title">👚 上裝 (Tops)</div>
+            <div class="item-grid" id="grid-top"></div>
+
+            <div class="category-title">👗 下裝 (Bottoms)</div>
+            <div class="item-grid" id="grid-bottom"></div>
+
+            <div class="category-title">👠 鞋子 (Shoes)</div>
+            <div class="item-grid" id="grid-shoes"></div>
+        </div>
+    </div>
+
+    <div class="overlay" id="modal-overlay">
+        <div class="modal">
+            <h2 id="modal-title">恭喜過關！</h2>
+            <p id="modal-text">完美的搭配！準備好挑戰下一關了嗎？</p>
+            <button onclick="closeModal()" style="width:100%">確定</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 資料定義 ---
+        const colors = [
+            { name: "櫻花粉", hex: "#ffb6c1" },
+            { name: "天空藍", hex: "#87cefa" },
+            { name: "薄荷綠", hex: "#98fb98" },
+            { name: "檸檬黃", hex: "#fffacd" },
+            { name: "薰衣草紫", hex: "#e6e6fa" },
+            { name: "經典白", hex: "#ffffff" },
+            { name: "極簡黑", hex: "#333333" },
+            { name: "大地咖", hex: "#cd853f" },
+            { name: "活力橘", hex: "#ffa500" },
+            { name: "丹寧藍", hex: "#4682b4" }
+        ];
+
+        const clothesData = {
+            head: [
+                { id: "hat", name: "帽子" },
+                { id: "hairpin", name: "髮夾" },
+                { id: "hairband", name: "髮箍" },
+                { id: "halo", name: "天使光環" }
+            ],
+            top: [
+                { id: "short_crop", name: "短袖(短版)" },
+                { id: "short_regular", name: "短袖(一般)" },
+                { id: "long_sleeve", name: "長袖" },
+                { id: "sleeveless", name: "無袖" }
+            ],
+            bottom: [
+                { id: "shorts", name: "短褲" },
+                { id: "short_skirt", name: "短裙" },
+                { id: "pants_wide", name: "長褲(寬版)" },
+                { id: "pants_narrow", name: "長褲(窄版)" },
+                { id: "long_skirt", name: "長裙" },
+                { id: "jeans_wide", name: "牛仔長褲(寬)" },
+                { id: "jeans_narrow", name: "牛仔長褲(窄)" }
+            ],
+            shoes: [
+                { id: "sneakers", name: "布鞋" },
+                { id: "flats", name: "平底鞋" },
+                { id: "heels", name: "高跟鞋" },
+                { id: "boots", name: "靴子" },
+                { id: "sandals", name: "涼鞋" },
+                { id: "slippers", name: "拖鞋" },
+                { id: "clogs", name: "洞洞鞋" }
+            ]
+        };
+
+        // 關卡設定
+        const levels = [
+            {
+                title: "第 1 關：夏日海灘派對",
+                desc: "目標：請穿著「無袖」上裝，搭配「短褲」或「短裙」，並穿上適合沙灘的「涼鞋」、「拖鞋」或「洞洞鞋」。",
+                check: (s) => s.top === 'sleeveless' && ['shorts', 'short_skirt'].includes(s.bottom) && ['sandals', 'slippers', 'clogs'].includes(s.shoes)
+            },
+            {
+                title: "第 2 關：冬天辦公室商務會議",
+                desc: "目標：外面天氣好冷！請穿著「長袖」上裝，搭配「長褲(寬版或窄版)」或「長裙」，並且穿上專業的「高跟鞋」或「靴子」，別忘了戴個「髮箍」顯得有精神！",
+                check: (s) => s.top === 'long_sleeve' && ['pants_wide', 'pants_narrow', 'long_skirt'].includes(s.bottom) && ['heels', 'boots'].includes(s.shoes) && s.head === 'hairband'
+            },
+            {
+                title: "第 3 關：街頭丹寧潮流風",
+                desc: "目標：展現街頭帥氣！請指定穿著「牛仔長褲(寬版或窄版)」，上裝搭配青春活力的「短袖(短版)」，鞋子限定穿「布鞋」，並戴上「帽子」點綴。",
+                check: (s) => ['jeans_wide', 'jeans_narrow'].includes(s.bottom) && s.top === 'short_crop' && s.shoes === 'sneakers' && s.head === 'hat'
+            },
+            {
+                title: "第 4 關：粉紅天使夢幻盛宴",
+                desc: "目標：今晚是主題派對！請戴上「天使光環」，且身上的「上裝」與「下裝」顏色**都必須選擇「櫻花粉」**！種類不限。",
+                check: (s) => s.head === 'halo' && s.topColor === '#ffb6c1' && s.bottomColor === '#ffb6c1'
+            }
+        ];
+
+        let currentLevel = 0;
+
+        // 當前穿搭狀態
+        let currentSelection = {
+            head: null, headColor: colors[0].hex,
+            top: null, topColor: colors[0].hex,
+            bottom: null, bottomColor: colors[0].hex,
+            shoes: null, shoesColor: colors[0].hex
+        };
+
+        // --- 初始化介面 ---
+        function initGame() {
+            renderCategory('head', clothesData.head);
+            renderCategory('top', clothesData.top);
+            renderCategory('bottom', clothesData.bottom);
+            renderCategory('shoes', clothesData.shoes);
+            updateLevelUI();
+        }
+
+        function renderCategory(catKey, items) {
+            const grid = document.getElementById(`grid-${catKey}`);
+            grid.innerHTML = '';
+            
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = `item-card`;
+                card.id = `card-${item.id}`;
+                card.innerHTML = `<div>${item.name}</div>`;
+                
+                // 點擊選擇該服飾
+                card.onclick = (e) => {
+                    if (e.target.classList.contains('color-dot')) return; // 避免點顏色觸發兩次
+                    selectItem(catKey, item.id);
+                };
+
+                // 顏色選擇器
+                const colorContainer = document.createElement('div');
+                colorContainer.className = 'color-selector';
+                colors.forEach((col, idx) => {
+                    const dot = document.createElement('div');
+                    dot.className = `color-dot ${idx === 0 ? 'active' : ''}`;
+                    dot.style.backgroundColor = col.hex;
+                    dot.title = col.name;
+                    dot.onclick = (e) => {
+                        e.stopPropagation();
+                        selectColor(catKey, item.id, col.hex, dot);
+                    };
+                    colorContainer.appendChild(dot);
+                });
+
+                card.appendChild(colorContainer);
+                grid.appendChild(card);
+            });
+        }
+
+        // --- 遊戲邏輯 ---
+        function selectItem(category, itemId) {
+            // 移除同分類其他單品的選取狀態
+            clothesData[category].forEach(item => {
+                document.getElementById(`card-${item.id}`).classList.remove('selected');
+            });
+
+            if (currentSelection[category] === itemId) {
+                // 如果重複點擊則脫下
+                currentSelection[category] = null;
+            } else {
+                // 穿上
+                currentSelection[category] = itemId;
+                document.getElementById(`card-${itemId}`).classList.add('selected');
+            }
+            drawAvatar();
+        }
+
+        function selectColor(category, itemId, hexColor, dotElement) {
+            // 先自動選取該服飾
+            if (currentSelection[category] !== itemId) {
+                selectItem(category, itemId);
+            }
+            
+            // 更新顏色狀態
+            currentSelection[`${category}Color`] = hexColor;
+
+            // 更新該卡片內顏色點的 active 狀態
+            const dots = dotElement.parentElement.querySelectorAll('.color-dot');
+            dots.forEach(d => d.classList.remove('active'));
+            dotElement.classList.add('active');
+
+            drawAvatar();
+        }
+
+        function resetOutfit() {
+            currentSelection = {
+                head: null, headColor: colors[0].hex,
+                top: null, topColor: colors[0].hex,
+                bottom: null, bottomColor: colors[0].hex,
+                shoes: null, shoesColor: colors[0].hex
+            };
+            document.querySelectorAll('.item-card').forEach(c => c.classList.remove('selected'));
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+            document.querySelectorAll('.color-selector').forEach(cs => cs.firstChild.classList.add('active'));
+            drawAvatar();
+        }
+
+        function updateLevelUI() {
+            if (currentLevel < levels.length) {
+                document.getElementById('level-num').innerText = levels[currentLevel].title;
+                document.getElementById('level-req').innerText = levels[currentLevel].desc;
+            } else {
+                showModal("🎉 恭喜破關！", "你已經通過了所有的時尚考驗，成為真正的頂尖造型師！");
+                currentLevel = 0;
+                updateLevelUI();
+            }
+        }
+
+        function checkOutift() {
+            const level = levels[currentLevel];
+            if (level.check(currentSelection)) {
+                currentLevel++;
+                showModal("恭喜過關！", "太時尚了！完美的搭配完全符合主題。點擊確定進入下一關。");
+                resetOutfit();
+                updateLevelUI();
+            } else {
+                showModal("哎呀！評審搖頭了", "目前的搭配好像不太符合關卡目標耶，再調整看看吧！", true);
+            }
+        }
+
+        // --- 彈窗控制 ---
+        function showModal(title, text, isFail = false) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-text').innerText = text;
+            document.getElementById('modal-title').style.color = isFail ? '#e74c3c' : '#ff94b8';
+            document.getElementById('modal-overlay').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
+
+        // --- 萬惡的 SVG 動態紙娃娃繪製邏輯 ---
+        function drawAvatar() {
+            // 1. 頭飾
+            const headSvg = document.getElementById('layer-head');
+            headSvg.innerHTML = '';
+            const hc = currentSelection.headColor;
+            if (currentSelection.head === 'hat') {
+                headSvg.innerHTML = `<path d="M 60 50 Q 100 20 140 50 Z" fill="${hc}" /><ellipse cx="100" cy="52" rx="55" ry="6" fill="${hc}" />`;
+            } else if (currentSelection.head === 'hairpin') {
+                headSvg.innerHTML = `<path d="M 115 50 L 130 55" stroke="#ccc" stroke-width="3"/><circle cx="130" cy="55" r="7" fill="${hc}" />`;
+            } else if (currentSelection.head === 'hairband') {
+                headSvg.innerHTML = `<path d="M 73 55 Q 100 35 127 55" stroke="${hc}" stroke-width="6" fill="none" />`;
+            } else if (currentSelection.head === 'halo') {
+                headSvg.innerHTML = `<ellipse cx="100" cy="30" rx="30" ry="8" stroke="${hc}" stroke-width="5" fill="none" opacity="0.9"/>`;
+            }
+
+            // 2. 上裝
+            const topSvg = document.getElementById('layer-top');
+            topSvg.innerHTML = '';
+            const tc = currentSelection.topColor;
+            if (currentSelection.top === 'short_crop') {
+                topSvg.innerHTML = `
+                    <path d="M 85 95 L 115 95 L 111 140 L 89 140 Z" fill="${tc}" />
+                    <path d="M 85 95 L 68 115 L 77 122 L 87 110 Z" fill="${tc}" />
+                    <path d="M 115 95 L 132 115 L 123 122 L 113 110 Z" fill="${tc}" />`;
+            } else if (currentSelection.top === 'short_regular') {
+                topSvg.innerHTML = `
+                    <path d="M 85 95 L 115 95 L 110 160 L 90 160 Z" fill="${tc}" />
+                    <path d="M 85 95 L 68 118 L 77 125 L 87 110 Z" fill="${tc}" />
+                    <path d="M 115 95 L 132 118 L 123 125 L 113 110 Z" fill="${tc}" />`;
+            } else if (currentSelection.top === 'long_sleeve') {
+                topSvg.innerHTML = `
+                    <path d="M 85 95 L 115 95 L 110 160 L 90 160 Z" fill="${tc}" />
+                    <path d="M 85 95 L 67 135 L 75 138 L 87 110 Z" fill="${tc}" />
+                    <path d="M 115 95 L 133 135 L 125 138 L 113 110 Z" fill="${tc}" />`;
+            } else if (currentSelection.top === 'sleeveless') {
+                topSvg.innerHTML = `<path d="M 88 95 L 112 95 L 110 160 L 90 160 Z" fill="${tc}" />`;
+            }
+
+            // 3. 下裝
+            const bottomSvg = document.getElementById('layer-bottom');
+            bottomSvg.innerHTML = '';
+            const bc = currentSelection.bottomColor;
+            if (currentSelection.bottom === 'shorts') {
+                bottomSvg.innerHTML = `<path d="M 90 160 L 110 160 L 113 200 L 101 200 L 100 175 L 99 200 L 87 200 Z" fill="${bc}" />`;
+            } else if (currentSelection.bottom === 'short_skirt') {
+                bottomSvg.innerHTML = `<path d="M 90 160 L 110 160 L 120 205 L 80 205 Z" fill="${bc}" />`;
+            } else if (currentSelection.bottom === 'pants_wide') {
+                bottomSvg.innerHTML = `<path d="M 90 160 L 110 160 L 115 250 L 102 250 L 100 175 L 98 250 L 85 250 Z" fill="${bc}" stroke="#fff" stroke-width="0.5"/>`;
+            } else if (currentSelection.bottom === 'pants_narrow') {
+                bottomSvg.innerHTML = `<path d="M 90 160 L 110 160 L 111 250 L 101 250 L 100 175 L 99 250 L 89 250 Z" fill="${bc}" stroke="#fff" stroke-width="0.5"/>`;
+            } else if (currentSelection.bottom === 'long_skirt') {
+                bottomSvg.innerHTML = `<path d="M 90 160 L 110 160 L 125 255 L 75 255 Z" fill="${bc}" />`;
+            } else if (currentSelection.bottom === 'jeans_wide') {
+                bottomSvg.innerHTML = `<path d="M 90 160 L 110 160 L 115 250 L 102 250 L 100 175 L 98 250 L 85 250 Z" fill="${bc}" stroke="#555" stroke-width="0.5"/>
+                                       <path d="M 88 245 L 112 245" stroke="#fff" stroke-width="1" opacity="0.6"/>`;
+            } else if (currentSelection.bottom === 'jeans_narrow') {
+                bottomSvg.innerHTML = `<path d="M 90 160 L 110 160 L 111 250 L 101 250 L 100 175 L 99 250 L 89 250 Z" fill="${bc}" stroke="#555" stroke-width="0.5"/>`;
+            }
+
+            // 4. 鞋子
+            const shoesSvg = document.getElementById('layer-shoes');
+            shoesSvg.innerHTML = '';
+            const sc = currentSelection.shoesColor;
+
+            // 左腳與右腳的基本位置定義
+            if (currentSelection.shoes) {
+                if (currentSelection.shoes === 'sneakers') {
+                    shoesSvg.innerHTML = `
+                        <rect x="85" y="250" width="15" height="13" fill="${sc}" rx="3"/>
+                        <rect x="100" y="250" width="15" height="13" fill="${sc}" rx="3"/>
+                        <rect x="85" y="260" width="15" height="3" fill="#fff"/>
+                        <rect x="100" y="260" width="15" height="3" fill="#fff"/>`;
+                } else if (currentSelection.shoes === 'flats') {
+                    shoesSvg.innerHTML = `
+                        <path d="M 86 254 L 99 254 L 97 262 L 86 262 Z" fill="${sc}"/>
+                        <path d="M 101 254 L 114 254 L 114 262 L 103 262 Z" fill="${sc}"/>`;
+                } else if (currentSelection.shoes === 'heels') {
+                    shoesSvg.innerHTML = `
+                        <rect x="87" y="253" width="12" height="7" fill="${sc}" rx="2"/>
+                        <rect x="101" y="253" width="12" height="7" fill="${sc}" rx="2"/>
+                        <line x1="88" y1="260" x2="88" y2="263" stroke="${sc}" stroke-width="2"/>
+                        <line x1="112" y1="260" x2="112" y2="263" stroke="${sc}" stroke-width="2"/>`;
+                } else if (currentSelection.shoes === 'boots') {
+                    shoesSvg.innerHTML = `
+                        <rect x="86" y="235" width="13" height="27" fill="${sc}" rx="2"/>
+                        <rect x="101" y="235" width="13" height="27" fill="${sc}" rx="2"/>`;
+                } else if (currentSelection.shoes === 'sandals') {
+                    shoesSvg.innerHTML = `
+                        <line x1="85" y1="256" x2="100" y2="256" stroke="${sc}" stroke-width="3"/>
+                        <line x1="100" y1="256" x2="115" y2="256" stroke="${sc}" stroke-width="3"/>
+                        <rect x="87" y="260" width="11" height="3" fill="${sc}"/>
+                        <rect x="102" y="260" width="11" height="3" fill="${sc}"/>`;
+                } else if (currentSelection.shoes === 'slippers') {
+                    shoesSvg.innerHTML = `
+                        <path d="M 85 252 Q 92 250 99 252 L 99 257 L 85 257 Z" fill="${sc}"/>
+                        <path d="M 101 252 Q 108 250 115 252 L 115 257 L 101 257 Z" fill="${sc}"/>`;
+                } else if (currentSelection.shoes === 'clogs') {
+                    shoesSvg.innerHTML = `
+                        <rect x="85" y="250" width="14" height="13" fill="${sc}" rx="5"/>
+                        <rect x="101" y="250" width="14" height="13" fill="${sc}" rx="5"/>
+                        <circle cx="89" cy="254" r="1" fill="#fff"/>
+                        <circle cx="93" cy="254" r="1" fill="#fff"/>
+                        <circle cx="105" cy="254" r="1" fill="#fff"/>
+                        <circle cx="109" cy="254" r="1" fill="#fff"/>`;
+                }
+            }
+        }
+
+        // 啟動遊戲
+        window.onload = initGame;
+    </script>
+</body>
+</html>

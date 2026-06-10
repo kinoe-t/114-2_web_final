@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>迷因腦震撼彈 💀 互動測驗</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Black+Han+Sans&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a28;
+    --accent: #ff2d55;
+    --yellow: #ffd60a;
+    --cyan: #00d9ff;
+    --green: #39ff14;
+    --purple: #bf5af2;
+    --text: #f0f0f5;
+    --muted: #888899;
+    --border: #2a2a3f;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans TC', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* Noise texture */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 998;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    text-align: center;
+    padding: 3rem 1rem 1.5rem;
+    position: relative;
+  }
+
+  .header-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 900;
+    letter-spacing: 0.25em;
+    padding: 0.3rem 0.9rem;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+  }
+
+  h1 {
+    font-family: 'Black Han Sans', 'Noto Sans TC', sans-serif;
+    font-size: clamp(2.2rem, 8vw, 4.5rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--yellow);
+    text-shadow:
+      4px 4px 0 var(--accent),
+      8px 8px 0 rgba(255,45,85,0.3);
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+
+  /* ─── SCOREBOARD ─── */
+  .scoreboard {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+  }
+
+  .score-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.4rem 1.2rem;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: border-color 0.3s;
+  }
+
+  .score-chip .label { color: var(--muted); }
+  .score-chip .val {
+    font-weight: 900;
+    font-size: 1rem;
+    color: var(--yellow);
+    min-width: 1.5ch;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  .score-chip.bump .val { animation: bump 0.4s ease; }
+
+  @keyframes bump {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.6); }
+    100% { transform: scale(1); }
+  }
+
+  /* ─── PROGRESS ─── */
+  .progress-bar-wrap {
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    padding: 0 1.5rem;
+  }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .progress-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--yellow));
+    border-radius: 99px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    width: 0%;
+  }
+
+  /* ─── QUIZ CONTAINER ─── */
+  #quiz-container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 1.2rem 4rem;
+  }
+
+  /* ─── QUESTION CARD ─── */
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(24px);
+    animation: cardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes cardIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 900;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    padding: 0.2rem 0.7rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+  }
+
+  .question-text {
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    font-weight: 700;
+    line-height: 1.6;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+
+  /* ─── OPTIONS ─── */
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  @media (max-width: 520px) {
+    .options-grid { grid-template-columns: 1fr; }
+  }
+
+  .option-btn {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    color: var(--text);
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    line-height: 1.5;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .option-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.18s;
+  }
+
+  .option-btn:hover:not(:disabled)::before { opacity: 0.07; }
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--cyan);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0,217,255,0.12);
+  }
+
+  .option-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    background: var(--border);
+    font-size: 0.7rem;
+    font-weight: 900;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    transition: background 0.18s;
+  }
+
+  .option-text { position: relative; z-index: 1; }
+
+  /* CORRECT */
+  .option-btn.correct {
+    border-color: var(--green);
+    background: rgba(57,255,20,0.1);
+    animation: correctPop 0.4s ease;
+  }
+  .option-btn.correct .option-letter {
+    background: var(--green);
+    color: #000;
+  }
+
+  /* WRONG */
+  .option-btn.wrong {
+    border-color: var(--accent);
+    background: rgba(255,45,85,0.08);
+    animation: shake 0.35s ease;
+  }
+  .option-btn.wrong .option-letter {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* DIMMED (other options after answer) */
+  .option-btn.dimmed {
+    opacity: 0.35;
+  }
+
+  .option-btn:disabled { cursor: not-allowed; }
+
+  @keyframes correctPop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  /* ─── EXPLANATION PANEL ─── */
+  .explanation {
+    margin-top: 1.2rem;
+    padding: 1rem 1.2rem;
+    background: var(--surface);
+    border-left: 3px solid var(--yellow);
+    border-radius: 0 8px 8px 0;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: #ccc;
+    display: none;
+    animation: fadeUp 0.4s ease forwards;
+  }
+
+  .explanation.show { display: block; }
+
+  .explanation strong {
+    color: var(--yellow);
+    font-weight: 900;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── NEXT BUTTON ─── */
+  .next-btn {
+    display: none;
+    margin-top: 1.2rem;
+    width: 100%;
+    padding: 0.9rem;
+    background: var(--yellow);
+    color: #000;
+    font-family: 'Black Han Sans', 'Noto Sans TC', sans-serif;
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.18s;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+
+  .next-btn:hover {
+    background: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255,214,10,0.25);
+  }
+
+  .next-btn.show { display: block; animation: fadeUp 0.3s ease; }
+
+  /* ─── RESULT SCREEN ─── */
+  #result-screen {
+    display: none;
+    text-align: center;
+    padding: 0 1.2rem 4rem;
+    max-width: 720px;
+    margin: 0 auto;
+    animation: cardIn 0.6s ease forwards;
+  }
+
+  .result-emoji {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .result-title {
+    font-family: 'Black Han Sans', 'Noto Sans TC', sans-serif;
+    font-size: clamp(2rem, 7vw, 3.5rem);
+    color: var(--yellow);
+    text-shadow: 3px 3px 0 var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .result-score {
+    font-size: 1.5rem;
+    color: var(--cyan);
+    font-weight: 900;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-rank {
+    display: inline-block;
+    margin: 1rem 0;
+    padding: 0.6rem 2rem;
+    border: 2px solid var(--accent);
+    border-radius: 999px;
+    font-weight: 900;
+    font-size: 1rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+  }
+
+  .result-desc {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+    line-height: 1.7;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .restart-btn {
+    display: inline-block;
+    padding: 0.9rem 2.5rem;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Black Han Sans', 'Noto Sans TC', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  }
+
+  .restart-btn:hover {
+    background: var(--yellow);
+    color: #000;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(255,45,85,0.3);
+  }
+
+  /* ─── DECORATIVE ─── */
+  .deco-line {
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--yellow));
+    margin: 0 auto 1.5rem;
+    border-radius: 99px;
+  }
+
+  .floating-tag {
+    position: fixed;
+    bottom: 1.2rem;
+    right: 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    z-index: 100;
+  }
+
+  /* ─── START SCREEN ─── */
+  #start-screen {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 1.2rem 4rem;
+    animation: cardIn 0.5s ease forwards;
+  }
+
+  .start-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    margin-top: 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .start-card::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(255,45,85,0.15), transparent 70%);
+    border-radius: 50%;
+  }
+
+  .start-desc {
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.8;
+    margin-bottom: 2rem;
+  }
+
+  .start-desc span {
+    color: var(--cyan);
+    font-weight: 700;
+  }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+
+  .tag {
+    background: rgba(255,214,10,0.1);
+    border: 1px solid rgba(255,214,10,0.3);
+    color: var(--yellow);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+  }
+
+  .start-btn {
+    display: inline-block;
+    padding: 1rem 3rem;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Black Han Sans', 'Noto Sans TC', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,45,85,0.5); }
+    50% { box-shadow: 0 0 0 14px rgba(255,45,85,0); }
+  }
+
+  .start-btn:hover {
+    background: var(--yellow);
+    color: #000;
+    animation: none;
+    transform: scale(1.05);
+    box-shadow: 0 12px 36px rgba(255,214,10,0.3);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-tag">💀 迷因腦震撼彈</div>
+  <h1>迷因互動測驗</h1>
+  <p class="subtitle">五道題目 · 邊笑邊自嘲 · 功德值加滿</p>
+</header>
+
+<div class="scoreboard">
+  <div class="score-chip" id="chip-correct">
+    <span class="label">✅ 答對</span>
+    <span class="val" id="score-correct">0</span>
+  </div>
+  <div class="score-chip" id="chip-wrong">
+    <span class="label">💀 答錯</span>
+    <span class="val" id="score-wrong">0</span>
+  </div>
+  <div class="score-chip">
+    <span class="label">🙏 功德值</span>
+    <span class="val" id="score-merit">0</span>
+  </div>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-labels">
+    <span id="prog-label">0 / 5 題</span>
+    <span id="prog-pct">0%</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+</div>
+
+<!-- Start Screen -->
+<div id="start-screen">
+  <div class="start-card">
+    <div class="deco-line"></div>
+    <p class="start-desc">
+      這份問卷報告超認真研究了<span>高中生的迷因使用行為</span>，<br>
+      結果出現了史詩級雙標現場、霸總語錄、還有邊緣人平台考察。<br><br>
+      五道題目讓你邊笑邊自嘲，答完看看你到底是<span>「地獄單程機票」</span>還是<span>「道德小尖兵」</span>。
+    </p>
+    <div class="tag-list">
+      <span class="tag">5 道超直白題目</span>
+      <span class="tag">真實高中生垃圾話</span>
+      <span class="tag">大型雙標現場</span>
+      <span class="tag">功德值計分</span>
+      <span class="tag">霸總語錄認證</span>
+    </div>
+    <button class="start-btn" onclick="startQuiz()">🔥 開始被整</button>
+  </div>
+</div>
+
+<!-- Quiz Container -->
+<div id="quiz-container" style="display:none;"></div>
+
+<!-- Result Screen -->
+<div id="result-screen"></div>
+
+<div class="floating-tag">迷因研究所 · 2025</div>
+
+<script>
+const questions = [
+  {
+    q: "Q1. 簡報一開場那個神祕的 QR Code，興沖沖拿出手機去掃的人，到底得到了什麼？",
+    emoji: "📱",
+    options: [
+      { letter: "A", text: "明天期末考的無情洩題", correct: false },
+      { letter: "B", text: "沒品地獄梗的入會邀請函", correct: false },
+      { letter: "C", text: "被整的靈魂，以及對迷因惡搞本質的「初步認識」💡", correct: true },
+      { letter: "D", text: "一隻被剃平頭、滿臉寫著無奈的極度發胖貓咪 🐱", correct: false },
+    ],
+    explain: "✅ 正解是 <strong>C！</strong>簡報第 6 頁直接無情嘲諷：「剛剛覺得自己被整的，恭喜你們！」你以為你在掃什麼好料，結果被迷因學術研究整進去了，歡迎加入迷因惡搞本質認識班 💀",
+    meritCorrect: 100,
+    meritWrong: -100,
+  },
+  {
+    q: "Q2. 如果你今天做了一個超好笑、但絕對「不想讓任何人看到」的學測崩潰迷因，你應該發在哪個平台？",
+    emoji: "📊",
+    options: [
+      { letter: "A", text: "Threads（脆）—— 千萬不要，67 人重度使用，發了會爆 🔥", correct: false },
+      { letter: "B", text: "Instagram —— 63 個人在用，轉發限動秒傳全校", correct: false },
+      { letter: "C", text: "TikTok（抖音）—— 只有 3 個人在用，完美幽靈地帶 👻", correct: true },
+      { letter: "D", text: "Facebook —— 老人限定，但還是有 34 個高中生在看", correct: false },
+    ],
+    explain: "✅ 正解是 <strong>C！</strong>這份問卷調查裡竟然只有 <strong>3 個人</strong>在用 TikTok，這簡直是宇宙級幽靈邊緣地帶！比 Facebook 老人平台還邊緣，你的學測崩潰迷因在那裡絕對是安全的 💀",
+    meritCorrect: 100,
+    meritWrong: -100,
+  },
+  {
+    q: "Q3. 簡報第 25 頁那張「大火災圖」，高達 67%（83人）的高中生看一眼，腦海裡浮現的校園大事件竟然是？",
+    emoji: "🔥",
+    options: [
+      { letter: "A", text: "「死線邊緣還在看手機的我」📱", correct: false },
+      { letter: "B", text: "「天啊！走廊上出現了別班的帥哥／美女！」😍", correct: true },
+      { letter: "C", text: "「老師在台上講課，我的靈魂在想午餐吃什麼」🍱", correct: false },
+      { letter: "D", text: "「那裡火災幹我屁事」的冷酷社畜心態 😐", correct: false },
+    ],
+    explain: "✅ 正解是 <strong>B！</strong>青春的荷爾蒙就是這麼簡單暴力——看到一張火災圖，83 個人的腦子直接跳去想帥哥美女。學術研究真的照妖鏡，你們的高中心理活動全被記錄下來了 🫡",
+    meritCorrect: 100,
+    meritWrong: -100,
+  },
+  {
+    q: "Q4. 關於「地獄梗」，這屆高中生在問卷裡集體展現了什麼樣的「頂級雙標現場」？",
+    emoji: "😈",
+    options: [
+      { letter: "A", text: "口嫌體正直：嘴上說不看，私底下偷偷瘋狂轉發", correct: false },
+      { letter: "B", text: "道德小尖兵：只要看到地獄梗，一律檢舉到帳號不見", correct: false },
+      { letter: "C", text: "「我知道地獄梗在加劇歧視，但我看完還是忍不住笑出來！」😂", correct: true },
+      { letter: "D", text: "只要我看不懂，這個梗對我來說就不是地獄梗", correct: false },
+    ],
+    explain: "✅ 正解是 <strong>C！</strong>高達 <strong>73%</strong> 的人認同迷因加劇歧視，但跟他們愛看地獄梗完全不衝突。知道有害、理論上反對，但看到還是笑了出來——這就是本世紀最強雙標現場，也是最誠實的學術研究發現 🫠",
+    meritCorrect: 100,
+    meritWrong: -100,
+  },
+  {
+    q: "Q5. 簡報第 25 頁精選的數理科學類組「神回覆」，哪一位同學展現了最極致的「霸氣總裁」中二魂？",
+    emoji: "😎",
+    options: [
+      { letter: "A", text: "「跟大家炫耀一下，那邊那棟是我的學校喔，很羨慕吧。」", correct: false },
+      { letter: "B", text: "「女人，你在玩火。」🔥", correct: true },
+      { letter: "C", text: "「媽媽我上電視了！」", correct: false },
+      { letter: "D", text: "「死線邊緣還在看手機的我」", correct: false },
+    ],
+    explain: "✅ 正解是 <strong>B！</strong>「女人，你在玩火。」——來自數理科學類組，直擊靈魂的霸總發言。不知道是真的在看火災圖有感而發，還是純粹的中二本能反應，但這五個字已經足以讓這份研究永垂不朽 👑",
+    meritCorrect: 100,
+    meritWrong: -100,
+  },
+];
+
+let current = 0;
+let scoreCorrect = 0;
+let scoreWrong = 0;
+let merit = 0;
+let answered = false;
+
+function startQuiz() {
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('quiz-container').style.display = 'block';
+  renderQuestion();
+}
+
+function updateProgress() {
+  const done = current;
+  const total = questions.length;
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('prog-label').textContent = `${done} / ${total} 題`;
+  document.getElementById('prog-pct').textContent = `${pct}%`;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+}
+
+function updateScoreboard() {
+  document.getElementById('score-correct').textContent = scoreCorrect;
+  document.getElementById('score-wrong').textContent = scoreWrong;
+  document.getElementById('score-merit').textContent = (merit >= 0 ? '+' : '') + merit;
+}
+
+function renderQuestion() {
+  answered = false;
+  const container = document.getElementById('quiz-container');
+  const q = questions[current];
+  updateProgress();
+
+  container.innerHTML = `
+    <div class="question-card" style="animation-delay:0.05s">
+      <div class="q-badge">${q.emoji} 第 ${current + 1} 題 / 共 5 題</div>
+      <div class="question-text">${q.q}</div>
+      <div class="options-grid" id="options-grid">
+        ${q.options.map((opt, i) => `
+          <button class="option-btn" id="opt-${i}" onclick="selectOption(${i})">
+            <span class="option-letter">${opt.letter}</span>
+            <span class="option-text">${opt.text}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="explanation" id="explanation"></div>
+      <button class="next-btn" id="next-btn" onclick="nextQuestion()">
+        ${current < questions.length - 1 ? '下一題 →' : '查看結果 🏆'}
+      </button>
+    </div>
+  `;
+}
+
+function selectOption(idx) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  const chosen = q.options[idx];
+
+  q.options.forEach((opt, i) => {
+    const btn = document.getElementById(`opt-${i}`);
+    btn.disabled = true;
+    if (opt.correct) {
+      btn.classList.add('correct');
+    } else if (i === idx && !opt.correct) {
+      btn.classList.add('wrong');
+    } else {
+      btn.classList.add('dimmed');
+    }
+  });
+
+  if (chosen.correct) {
+    scoreCorrect++;
+    merit += q.meritCorrect;
+    const chip = document.getElementById('chip-correct');
+    chip.classList.add('bump');
+    setTimeout(() => chip.classList.remove('bump'), 500);
+  } else {
+    scoreWrong++;
+    merit += q.meritWrong;
+    const chip = document.getElementById('chip-wrong');
+    chip.classList.add('bump');
+    setTimeout(() => chip.classList.remove('bump'), 500);
+  }
+
+  updateScoreboard();
+
+  const expl = document.getElementById('explanation');
+  expl.innerHTML = q.explain;
+  expl.classList.add('show');
+
+  document.getElementById('next-btn').classList.add('show');
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) {
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResult() {
+  document.getElementById('quiz-container').style.display = 'none';
+  const resultEl = document.getElementById('result-screen');
+  resultEl.style.display = 'block';
+
+  updateProgress();
+  document.getElementById('prog-label').textContent = `5 / 5 題`;
+  document.getElementById('prog-pct').textContent = `100%`;
+  document.getElementById('progress-fill').style.width = `100%`;
+
+  let emoji, title, rank, desc;
+
+  if (scoreCorrect === 5) {
+    emoji = "👑";
+    title = "迷因皇帝";
+    rank = "地獄單程機票VIP";
+    desc = "全對！你對高中生迷因文化的掌握已到達神明等級。你的功德值爆表，但地獄也為你留了一間行政套房。「女人，你在玩火。」這句話你一定馬上認出來了。";
+  } else if (scoreCorrect >= 3) {
+    emoji = "😎";
+    title = "迷因資深玩家";
+    rank = "Threads 重度成癮者";
+    desc = `答對 ${scoreCorrect} 題，你對這份研究有一定程度的共鳴。雙標現場你懂，地獄梗你也笑過，但偶爾還是會假裝自己是道德小尖兵。平衡，這就叫平衡。`;
+  } else if (scoreCorrect >= 1) {
+    emoji = "🤡";
+    title = "迷因路過觀眾";
+    rank = "TikTok 僅存的邊緣人";
+    desc = `答對 ${scoreCorrect} 題，你跟那 3 個 TikTok 用戶一樣，默默存在但沒人注意你。不過這也很好——你的學測崩潰迷因在幽靈地帶安全無虞。`;
+  } else {
+    emoji = "💀";
+    title = "功德歸零選手";
+    rank = "道德小尖兵（失敗版）";
+    desc = "全錯！功德值跌入負數深淵，但至少你還有誠意坐到最後。這份研究的結論是：就算你不懂迷因，迷因也懂你。歡迎你重來一次。";
+  }
+
+  resultEl.innerHTML = `
+    <div class="start-card" style="margin-top:0">
+      <div class="deco-line"></div>
+      <span class="result-emoji">${emoji}</span>
+      <h2 class="result-title">${title}</h2>
+      <div class="result-score">答對 ${scoreCorrect} / 5 題</div>
+      <span class="result-rank">🏷️ ${rank}</span>
+      <p class="result-desc">${desc}</p>
+      <div class="scoreboard" style="justify-content:center; margin-bottom:1.5rem">
+        <div class="score-chip"><span class="label">✅ 答對</span><span class="val">${scoreCorrect}</span></div>
+        <div class="score-chip"><span class="label">💀 答錯</span><span class="val">${scoreWrong}</span></div>
+        <div class="score-chip"><span class="label">🙏 功德值</span><span class="val">${(merit >= 0 ? '+' : '') + merit}</span></div>
+      </div>
+      <button class="restart-btn" onclick="restartQuiz()">🔄 再被整一次</button>
+    </div>
+  `;
+}
+
+function restartQuiz() {
+  current = 0;
+  scoreCorrect = 0;
+  scoreWrong = 0;
+  merit = 0;
+  updateScoreboard();
+  updateProgress();
+
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('quiz-container').style.display = 'block';
+  renderQuestion();
+}
+
+updateProgress();
+</script>
+</body>
+</html>

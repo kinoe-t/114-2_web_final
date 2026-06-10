@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>24點遊戲</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --felt: #1a2f1a;
+    --felt-light: #1e361e;
+    --gold: #c9a84c;
+    --gold-light: #e8c96d;
+    --cream: #f5eed8;
+    --red: #c0392b;
+    --black: #1a1a1a;
+    --card-bg: #fdf8ef;
+    --shadow: rgba(0,0,0,0.7);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Crimson Pro', Georgia, serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 40%, #22401f 0%, #0f1f0f 60%, #080e08 100%);
+    z-index: -2;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,.05) 2px, rgba(0,0,0,.05) 4px);
+    z-index: -1;
+  }
+
+  header {
+    width: 100%;
+    text-align: center;
+    padding: 32px 20px 16px;
+    position: relative;
+  }
+
+  header::after {
+    content: '';
+    display: block;
+    width: 300px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 12px auto 0;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: 0.08em;
+    text-shadow: 0 2px 20px rgba(201,168,76,0.4);
+  }
+
+  .subtitle {
+    font-size: 1rem;
+    color: rgba(245,238,216,0.55);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .game-wrap {
+    width: 100%;
+    max-width: 800px;
+    padding: 12px 20px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .cards-area {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 16px 0;
+  }
+
+  .card {
+    width: 90px;
+    height: 130px;
+    background: var(--card-bg);
+    border-radius: 10px;
+    box-shadow:
+      0 8px 24px var(--shadow),
+      0 2px 4px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    position: relative;
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+
+  .card:hover {
+    transform: translateY(-6px) rotate(-1deg);
+    box-shadow: 0 18px 36px var(--shadow), 0 4px 8px rgba(0,0,0,0.4);
+  }
+
+  .card.selected {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px var(--shadow), 0 0 0 3px var(--gold);
+    background: #fffef5;
+  }
+
+  .card-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .card-suit {
+    font-size: 1.4rem;
+    line-height: 1;
+    margin-top: 2px;
+  }
+
+  .card.red .card-value,
+  .card.red .card-suit { color: var(--red); }
+  .card.black .card-value,
+  .card.black .card-suit { color: #1a1a1a; }
+
+  .card-corner {
+    position: absolute;
+    font-family: 'Playfair Display', serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .card-corner.tl { top: 7px; left: 9px; }
+  .card-corner.br { bottom: 7px; right: 9px; transform: rotate(180deg); }
+  .card.red .card-corner { color: var(--red); }
+  .card.black .card-corner { color: #1a1a1a; }
+
+  .info-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .info-badge {
+    background: rgba(201,168,76,0.12);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 6px;
+    padding: 8px 18px;
+    color: var(--gold-light);
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+  }
+
+  .info-badge span {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-left: 6px;
+  }
+
+  .input-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .expr-label {
+    color: rgba(245,238,216,0.6);
+    font-size: 0.9rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .expr-input-wrap {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 520px;
+  }
+
+  input[type=text] {
+    flex: 1;
+    background: rgba(245,238,216,0.06);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 8px;
+    color: var(--cream);
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.3rem;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type=text]:focus {
+    border-color: var(--gold);
+    background: rgba(245,238,216,0.1);
+  }
+
+  input[type=text]::placeholder { color: rgba(245,238,216,0.3); }
+
+  .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    letter-spacing: 0.04em;
+  }
+
+  .btn-check {
+    background: linear-gradient(135deg, #c9a84c, #e8c96d);
+    color: #1a1a1a;
+  }
+  .btn-check:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(201,168,76,0.4); }
+
+  .keypad {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .key {
+    width: 48px;
+    height: 48px;
+    background: rgba(245,238,216,0.08);
+    border: 1px solid rgba(245,238,216,0.2);
+    border-radius: 8px;
+    color: var(--cream);
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .key:hover {
+    background: rgba(201,168,76,0.25);
+    border-color: var(--gold);
+    color: var(--gold-light);
+    transform: translateY(-2px);
+  }
+
+  .key.wide { width: 72px; font-size: 1rem; }
+  .key.del { width: 60px; color: rgba(245,238,216,0.6); font-size: 0.95rem; }
+
+  .feedback {
+    min-height: 44px;
+    text-align: center;
+    font-size: 1.1rem;
+    font-style: italic;
+    transition: all 0.3s;
+    padding: 8px;
+  }
+
+  .feedback.correct {
+    color: #6fcf97;
+    text-shadow: 0 0 20px rgba(111,207,151,0.5);
+    font-size: 1.3rem;
+  }
+
+  .feedback.wrong { color: #eb5757; }
+  .feedback.info { color: var(--gold-light); }
+
+  .solution-section {
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: none;
+  }
+
+  .solution-section.visible { display: block; }
+
+  .sol-title {
+    color: var(--gold);
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
+  }
+
+  .sol-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .sol-list::-webkit-scrollbar { width: 4px; }
+  .sol-list::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.4); border-radius: 2px; }
+
+  .sol-item {
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.05rem;
+    color: var(--cream);
+    padding: 4px 10px;
+    background: rgba(245,238,216,0.04);
+    border-radius: 4px;
+    border-left: 2px solid rgba(201,168,76,0.35);
+  }
+
+  .no-sol {
+    color: rgba(245,238,216,0.5);
+    font-style: italic;
+    font-size: 1rem;
+  }
+
+  .action-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-deal {
+    background: linear-gradient(135deg, #2d5a27, #4a8f42);
+    color: var(--cream);
+    padding: 13px 32px;
+    font-size: 1.05rem;
+  }
+  .btn-deal:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(45,90,39,0.5); }
+
+  .btn-hint {
+    background: rgba(201,168,76,0.15);
+    border: 1px solid rgba(201,168,76,0.4);
+    color: var(--gold-light);
+  }
+  .btn-hint:hover { background: rgba(201,168,76,0.25); }
+
+  .btn-clear {
+    background: rgba(245,238,216,0.07);
+    border: 1px solid rgba(245,238,216,0.2);
+    color: rgba(245,238,216,0.7);
+  }
+  .btn-clear:hover { background: rgba(245,238,216,0.12); }
+
+  .stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 6px 0 0;
+  }
+
+  .stat {
+    text-align: center;
+    color: rgba(245,238,216,0.45);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .stat-num {
+    display: block;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1.1;
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
+  }
+
+  @keyframes dealCard {
+    from { transform: translateY(-40px) rotate(-5deg); opacity: 0; }
+    to { transform: translateY(0) rotate(0); opacity: 1; }
+  }
+  .card { animation: dealCard 0.35s ease backwards; }
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.12s; }
+  .card:nth-child(3) { animation-delay: 0.19s; }
+  .card:nth-child(4) { animation-delay: 0.26s; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.3); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>24 點</h1>
+  <p class="subtitle">Make 24 · Classic Card Puzzle</p>
+</header>
+
+<div class="game-wrap">
+
+  <div class="stats-row">
+    <div class="stat"><span class="stat-num" id="statWin">0</span>答對</div>
+    <div class="stat"><span class="stat-num" id="statRound">0</span>局數</div>
+    <div class="stat"><span class="stat-num" id="statNoSol">0</span>無解</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="cards-area" id="cardsArea"></div>
+
+  <div class="info-row">
+    <div class="info-badge">目標：<span>24</span></div>
+    <div class="info-badge">J=<span>11</span> Q=<span>12</span> K=<span>13</span></div>
+  </div>
+
+  <div class="input-section">
+    <div class="expr-label">輸入算式（使用 + − × ÷ 與括號）</div>
+    <div class="expr-input-wrap">
+      <input type="text" id="exprInput" placeholder="例：(1+2+3)×4" autocomplete="off" spellcheck="false">
+      <button class="btn btn-check" onclick="checkAnswer()">驗證</button>
+    </div>
+
+    <div class="keypad">
+      <button class="key" onclick="appendKey('(')">(</button>
+      <button class="key" onclick="appendKey(')')">)</button>
+      <button class="key" onclick="appendKey('+')">+</button>
+      <button class="key" onclick="appendKey('-')">−</button>
+      <button class="key" onclick="appendKey('*')">×</button>
+      <button class="key" onclick="appendKey('/')">÷</button>
+      <button class="key del" onclick="delKey()">⌫</button>
+      <button class="key wide" onclick="clearInput()">清除</button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <div class="action-row">
+    <button class="btn btn-deal" onclick="dealCards()">🃏 發牌</button>
+    <button class="btn btn-hint" onclick="showHint()">💡 提示解答</button>
+    <button class="btn btn-clear" onclick="clearInput()">清空輸入</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="solution-section" id="solSection">
+    <div class="sol-title">✦ 解答列表</div>
+    <ul class="sol-list" id="solList"></ul>
+  </div>
+
+</div>
+
+<script>
+const SUITS = ['♠','♥','♦','♣'];
+const SUIT_COLOR = { '♠':'black','♣':'black','♥':'red','♦':'red' };
+const FACE = { 1:'A',11:'J',12:'Q',13:'K' };
+
+let deck = [];
+let currentCards = [];
+let stats = { win:0, round:0, noSol:0 };
+
+function buildDeck() {
+  let d = [];
+  for (let s of SUITS)
+    for (let v = 1; v <= 13; v++)
+      d.push({ value: v, display: FACE[v] || String(v), suit: s, color: SUIT_COLOR[s] });
+  return d;
+}
+
+function shuffle(arr) {
+  for (let i = arr.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function dealCards() {
+  if (deck.length < 4) deck = shuffle(buildDeck());
+  currentCards = deck.splice(0,4);
+  stats.round++;
+  updateStats();
+  renderCards();
+  clearInput();
+  document.getElementById('solSection').classList.remove('visible');
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+}
+
+function renderCards() {
+  const area = document.getElementById('cardsArea');
+  area.innerHTML = '';
+  currentCards.forEach(c => {
+    const div = document.createElement('div');
+    div.className = `card ${c.color}`;
+    div.innerHTML = `
+      <div class="card-corner tl">${c.display}<br>${c.suit}</div>
+      <div class="card-value">${c.display}</div>
+      <div class="card-suit">${c.suit}</div>
+      <div class="card-corner br">${c.display}<br>${c.suit}</div>`;
+    div.onclick = () => insertCardValue(c.value, div);
+    area.appendChild(div);
+  });
+}
+
+function insertCardValue(val, div) {
+  appendKey(String(val));
+  div.classList.add('selected');
+  setTimeout(() => div.classList.remove('selected'), 400);
+}
+
+function appendKey(k) {
+  const inp = document.getElementById('exprInput');
+  const pos = inp.selectionStart;
+  const v = inp.value;
+  inp.value = v.slice(0,pos) + k + v.slice(pos);
+  inp.setSelectionRange(pos+k.length, pos+k.length);
+  inp.focus();
+}
+
+function delKey() {
+  const inp = document.getElementById('exprInput');
+  const pos = inp.selectionStart;
+  if (pos > 0) {
+    inp.value = inp.value.slice(0,pos-1) + inp.value.slice(pos);
+    inp.setSelectionRange(pos-1, pos-1);
+  }
+  inp.focus();
+}
+
+function clearInput() {
+  document.getElementById('exprInput').value = '';
+  document.getElementById('exprInput').focus();
+}
+
+function checkAnswer() {
+  if (!currentCards.length) { showFeedback('請先發牌！','info'); return; }
+  let expr = document.getElementById('exprInput').value.trim();
+  if (!expr) { showFeedback('請輸入算式','info'); return; }
+
+  expr = expr.replace(/[×x]/g,'*').replace(/[÷]/g,'/').replace(/[−–]/g,'-');
+
+  const nums = expr.match(/\d+/g);
+  if (!nums) { showFeedback('算式格式有誤','wrong'); return; }
+
+  const usedVals = nums.map(Number).sort((a,b)=>a-b);
+  const cardVals = currentCards.map(c=>c.value).sort((a,b)=>a-b);
+
+  if (JSON.stringify(usedVals) !== JSON.stringify(cardVals)) {
+    showFeedback(`必須使用恰好這四張牌：${cardVals.join('、')}`, 'wrong');
+    return;
+  }
+
+  if (/[^0-9+\-*/(). ]/.test(expr)) {
+    showFeedback('含有不允許的字元', 'wrong'); return;
+  }
+
+  let result;
+  try {
+    result = Function('"use strict"; return (' + expr + ')')();
+  } catch(e) {
+    showFeedback('算式有語法錯誤', 'wrong'); return;
+  }
+
+  if (Math.abs(result - 24) < 1e-9) {
+    stats.win++;
+    updateStats();
+    showFeedback('🎉 正確！恭喜你算出 24！', 'correct');
+  } else {
+    showFeedback(`結果為 ${+result.toFixed(6)}，不是 24，再試試！`, 'wrong');
+  }
+}
+
+function showFeedback(msg, cls) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + cls;
+  fb.textContent = msg;
+}
+
+function solve24(vals) {
+  const solutions = new Set();
+  const perms = permutations(vals);
+
+  for (const p of perms) {
+    const [a,b,c,d] = p;
+    for (const ops of opCombos()) {
+      const [o1,o2,o3] = ops;
+      const exprs = buildExprs(a,b,c,d,o1,o2,o3);
+      for (const e of exprs) {
+        try {
+          const r = evalFrac(e);
+          if (r !== null && Math.abs(r - 24) < 1e-9) {
+            const pretty = fracExprToStr(e);
+            solutions.add(pretty);
+          }
+        } catch(_) {}
+      }
+    }
+  }
+  return [...solutions];
+}
+
+function evalFrac(node) {
+  if (typeof node === 'number') return node;
+  const [op, l, r] = node;
+  const lv = evalFrac(l), rv = evalFrac(r);
+  if (lv === null || rv === null) return null;
+  if (op === '+') return lv + rv;
+  if (op === '-') return lv - rv;
+  if (op === '*') return lv * rv;
+  if (op === '/') return rv === 0 ? null : lv / rv;
+  return null;
+}
+
+function fracExprToStr(node, prec = 0) {
+  if (typeof node === 'number') return String(node);
+  const [op, l, r] = node;
+  const LP = opPrec(op);
+  let ls = fracExprToStr(l, LP);
+  let rs = fracExprToStr(r, LP + (op === '-' || op === '/' ? 1 : 0));
+
+  if (typeof l !== 'number' && opPrec(l[0]) < LP) ls = '('+ls+')';
+  if (typeof r !== 'number' && opPrec(r[0]) < LP) rs = '('+rs+')';
+  if (typeof r !== 'number' && op === '/' && opPrec(r[0]) === LP) rs = '('+rs+')';
+  if (typeof r !== 'number' && op === '-' && opPrec(r[0]) === LP) rs = '('+rs+')';
+
+  const opSym = {'+':'+','-':'−','*':'×','/':'÷'}[op];
+  return `${ls} ${opSym} ${rs}`;
+}
+
+function opPrec(op) {
+  return (op === '+' || op === '-') ? 1 : 2;
+}
+
+function buildExprs(a,b,c,d,o1,o2,o3) {
+  return [
+    [o3, [o2, [o1, a, b], c], d],
+    [o3, [o2, a, [o1, b, c]], d],
+    [o2, [o1, a, b], [o3, c, d]],
+    [o3, a, [o2, [o1, b, c], d]],
+    [o3, a, [o2, b, [o1, c, d]]],
+  ];
+}
+
+function* opCombos() {
+  const ops = ['+','-','*','/'];
+  for (const a of ops) for (const b of ops) for (const c of ops) yield [a,b,c];
+}
+
+function permutations(arr) {
+  if (arr.length <= 1) return [arr];
+  const res = [];
+  arr.forEach((v,i) => {
+    const rest = arr.filter((_,j)=>j!==i);
+    permutations(rest).forEach(p => res.push([v,...p]));
+  });
+  return res;
+}
+
+function showHint() {
+  if (!currentCards.length) { showFeedback('請先發牌！','info'); return; }
+  const vals = currentCards.map(c=>c.value);
+  const sols = solve24(vals);
+  const sec = document.getElementById('solSection');
+  const list = document.getElementById('solList');
+  list.innerHTML = '';
+
+  if (sols.length === 0) {
+    stats.noSol++;
+    updateStats();
+    list.innerHTML = '<li class="no-sol">此組合無解，請重新發牌</li>';
+    showFeedback('此手牌無法組成 24', 'info');
+  } else {
+    sols.forEach(s => {
+      const li = document.createElement('li');
+      li.className = 'sol-item';
+      li.textContent = s + ' = 24';
+      list.appendChild(li);
+    });
+  }
+  sec.classList.add('visible');
+}
+
+function updateStats() {
+  document.getElementById('statWin').textContent = stats.win;
+  document.getElementById('statRound').textContent = stats.round;
+  document.getElementById('statNoSol').textContent = stats.noSol;
+}
+
+document.getElementById('exprInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkAnswer();
+});
+
+dealCards();
+</script>
+</body>
+</html>

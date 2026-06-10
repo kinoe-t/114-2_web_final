@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>志明冒險記 - 通關挑戰版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+        #game-container {
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        canvas {
+            display: block;
+            background-color: #70c5ce;
+        }
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+        .game-text {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 3px 3px 0 #000;
+            margin-bottom: 20px;
+            text-align: center;
+            user-select: none;
+        }
+        #start-screen, #game-over-screen, #win-screen {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: rgba(0, 0, 0, 0.4);
+        }
+        #start-screen { background: rgba(0, 0, 0, 0.2); }
+        #win-screen { background: rgba(0, 0, 0, 0.6); display: none; }
+        #game-over-screen { display: none; background: rgba(100, 0, 0, 0.5); }
+        
+        .big-head {
+            width: 150px;
+            height: 150px;
+            border: 5px solid gold;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            object-fit: cover;
+            background: white;
+        }
+
+        .hide { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+        
+        <div id="ui-layer">
+            <div id="start-screen">
+                <div class="game-text">志明冒險記</div>
+                <div class="game-text" style="font-size: 18px;">目標：100 分通關！</div>
+                <div class="game-text" style="font-size: 18px;">按下【空白鍵】開始遊戲</div>
+            </div>
+            
+            <div id="game-over-screen">
+                <div class="game-text" style="color: #ff4d4d; font-size: 40px;">再接再厲</div>
+                <div id="final-score" class="game-text">得分: 0</div>
+                <div class="game-text" style="font-size: 18px;">按下【空白鍵】重新挑戰</div>
+            </div>
+
+            <div id="win-screen">
+                <div class="game-text" style="color: gold; font-size: 45px;">恭喜通關！</div>
+                <img src="jimmy_big.png" alt="志明大頭" class="big-head" onerror="this.style.display='none'">
+                <div class="game-text" style="font-size: 20px;">志明：謝謝你帶我來到終點！</div>
+                <div class="game-text" style="font-size: 18px;">按下【空白鍵】重新開始</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // UI 元素
+    const startScreen = document.getElementById('start-screen');
+    const gameOverScreen = document.getElementById('game-over-screen');
+    const winScreen = document.getElementById('win-screen');
+    const finalScoreTxt = document.getElementById('final-score');
+
+    // ==========================================
+    // 圖片素材設定
+    // ==========================================
+    const bgImg = new Image();
+    bgImg.src = '背景.png';
+
+    const jimmyImg = new Image();
+    jimmyImg.src = '志明.png';
+
+    const pipeUpImg = new Image();
+    pipeUpImg.src = '水管.png';
+
+    const pipeDownImg = new Image();
+    pipeDownImg.src = '水管.png';
+
+    // 彩蛋圖片 (67分出現)
+    const img67 = new Image();
+    img67.src = '677.png';
+
+    // 大頭貼圖片 (100分出現已在HTML中載入)
+    // ==========================================
+
+    let gameState = 'START'; // START, PLAYING, GAMEOVER, WON
+    let score = 0;
+    let frames = 0;
+
+    const jimmy = {
+        x: 60,
+        y: 250,
+        width: 45,
+        height: 45,
+        gravity: 0.25,
+        velocity: 0,
+        jump: 5.5,
+        reset() { this.y = 250; this.velocity = 0; },
+        draw() {
+            if (jimmyImg.complete && jimmyImg.naturalWidth !== 0) {
+                ctx.drawImage(jimmyImg, this.x, this.y, this.width, this.height);
+            } else {
+                ctx.fillStyle = '#ffca28';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        },
+        update() {
+            this.velocity += this.gravity;
+            this.y += this.velocity;
+            if (this.y + this.height >= canvas.height) { this.y = canvas.height - this.height; endGame(); }
+            if (this.y <= 0) { this.y = 0; this.velocity = 0; }
+        }
+    };
+
+    const pipes = {
+        position: [],
+        width: 65,
+        gap: 140,
+        minHeight: 50,
+        speed: 2,
+        reset() { this.position = []; },
+        draw() {
+            for(let i = 0; i < this.position.length; i++) {
+                let p = this.position[i];
+                if (pipeUpImg.complete && pipeUpImg.naturalWidth !== 0) {
+                    ctx.drawImage(pipeUpImg, p.x, p.top - pipeUpImg.height, this.width, pipeUpImg.height);
+                } else {
+                    ctx.fillStyle = '#2e7d32'; ctx.fillRect(p.x, 0, this.width, p.top);
+                }
+                if (pipeDownImg.complete && pipeDownImg.naturalWidth !== 0) {
+                    ctx.drawImage(pipeDownImg, p.x, p.bottom, this.width, canvas.height - p.bottom);
+                } else {
+                    ctx.fillStyle = '#2e7d32'; ctx.fillRect(p.x, p.bottom, this.width, canvas.height - p.bottom);
+                }
+            }
+        },
+        update() {
+            if (gameState !== 'PLAYING') return;
+            if (frames % 120 === 0) {
+                let topHeight = Math.floor(Math.random() * (canvas.height - this.gap - (this.minHeight * 2))) + this.minHeight;
+                this.position.push({ x: canvas.width, top: topHeight, bottom: topHeight + this.gap, passed: false });
+            }
+            for(let i = 0; i < this.position.length; i++) {
+                let p = this.position[i];
+                p.x -= this.speed;
+
+                // 碰撞優化
+                const jPad = 7; const pPad = 5;
+                if (jimmy.x + jimmy.width - jPad > p.x + pPad && jimmy.x + jPad < p.x + this.width - pPad) {
+                    if (jimmy.y + jPad < p.top - pPad || jimmy.y + jimmy.height - jPad > p.bottom + pPad) {
+                        endGame();
+                    }
+                }
+                
+                if (!p.passed && jimmy.x > p.x + this.width) {
+                    score++;
+                    p.passed = true;
+                    // 檢查是否通關
+                    if (score >= 100) { winGame(); }
+                }
+                if (p.x + this.width < 0) { this.position.shift(); i--; }
+            }
+        }
+    };
+
+    // 繪製彩蛋 (67分)
+    function drawEasterEgg() {
+        if (score >= 67 && score < 100) {
+            ctx.save();
+            ctx.globalAlpha = 0.8; // 稍微透明，更有感覺
+            if (img67.complete && img67.naturalWidth !== 0) {
+                // 畫在右下角不影響操作的地方
+                ctx.drawImage(img67, canvas.width - 120, canvas.height - 120, 100, 100);
+            } else {
+                ctx.fillStyle = "white";
+                ctx.font = "bold 20px Arial";
+                ctx.fillText("⭐ 67 特寫 ⭐", canvas.width - 130, canvas.height - 50);
+            }
+            ctx.restore();
+        }
+    }
+
+    function drawBackground() {
+        if (bgImg.complete && bgImg.naturalWidth !== 0) {
+            ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+        } else {
+            ctx.fillStyle = '#70c5ce'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+    }
+
+    function drawScore() {
+        if (gameState === 'PLAYING') {
+            ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+            ctx.font = 'bold 35px Arial';
+            ctx.fillText(score, 20, 50); ctx.strokeText(score, 20, 50);
+        }
+    }
+
+    function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawBackground();
+        pipes.update();
+        pipes.draw();
+        if (gameState === 'PLAYING') { jimmy.update(); }
+        jimmy.draw();
+        drawScore();
+        drawEasterEgg(); // 彩蛋渲染
+        frames++;
+        requestAnimationFrame(loop);
+    }
+
+    function endGame() {
+        if (gameState === 'WON') return; // 如果已經贏了，就不顯示輸
+        gameState = 'GAMEOVER';
+        finalScoreTxt.innerText = `得分: ${score}`;
+        gameOverScreen.style.display = 'flex';
+    }
+
+    function winGame() {
+        gameState = 'WON';
+        winScreen.style.display = 'flex';
+    }
+
+    function startGame() {
+        gameState = 'PLAYING';
+        score = 0; frames = 0;
+        jimmy.reset(); pipes.reset();
+        startScreen.classList.add('hide');
+        gameOverScreen.style.display = 'none';
+        winScreen.style.display = 'none';
+    }
+
+    window.addEventListener('keydown', function(e) {
+        if (e.code === 'Space') {
+            e.preventDefault();
+            if (gameState === 'START' || gameState === 'GAMEOVER' || gameState === 'WON') {
+                startGame();
+            } else if (gameState === 'PLAYING') {
+                jimmy.velocity = -jimmy.jump;
+            }
+        }
+    });
+
+    loop();
+</script>
+</body>
+</html>

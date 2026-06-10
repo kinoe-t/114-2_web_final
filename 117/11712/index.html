@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6分鐘殭屍防衛戰 - 射手特攻</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: #fff;
+            font-family: 'Microsoft JhengHei', sans-serif;
+            overflow: hidden;
+        }
+        /* 遊戲介面 */
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, #0f171e, #1a252f);
+            cursor: crosshair;
+            overflow: hidden;
+        }
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 8px;
+            z-index: 50;
+            pointer-events: none;
+            border: 1px solid #34495e;
+        }
+        .hud-item span {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        /* 底部玩家射手 (射手2.png) */
+        #player {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            width: 90px;
+            height: 90px;
+            transform: translateX(-50%);
+            background-image: url('射手2.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        /* 底部防線無視覺干擾，僅作邏輯判斷 */
+        #defense-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            border-top: 2px dashed rgba(231, 76, 60, 0.4);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* 射擊目標圖片化 */
+        .target {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: transform 0.1s;
+            z-index: 10;
+        }
+        .target:active {
+            transform: scale(0.85);
+        }
+
+        /* 彈出視窗 */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            flex-direction: column;
+        }
+        .modal {
+            background: #2c3e50;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            max-width: 90%;
+        }
+        .hidden {
+            display: none !important;
+        }
+        button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #c0392b;
+        }
+
+        /* 拼圖小遊戲樣式 */
+        #puzzle-board {
+            display: grid;
+            gap: 2px;
+            margin: 20px auto;
+            background: #34495e;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .puzzle-piece {
+            background-color: #3498db;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .puzzle-piece.empty {
+            background: #2c3e50;
+            cursor: default;
+        }
+
+        /* 抽籤小遊戲樣式 */
+        .fortune-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .fortune-card {
+            width: 100px;
+            height: 150px;
+            background: #d35400;
+            border: 2px solid #fff;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+        .fortune-card:hover {
+            transform: translateY(-10px);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="hud">
+            <div class="hud-item">時間剩餘: <span id="ui-time">06:00</span></div>
+            <div class="hud-item">目前分數: <span id="ui-score">0</span> 分</div>
+            <div class="hud-item">總射擊數: <span id="ui-shots">0</span></div>
+            <div class="hud-item">小遊戲成功: <span id="ui-minigames">0</span> 次</div>
+        </div>
+
+        <div id="player"></div>
+        <div id="defense-line"></div>
+
+        <div id="start-overlay" class="overlay">
+            <div class="modal">
+                <h2>🧟 6分鐘殭屍防衛戰 (圖片特攻版) 🔫</h2>
+                <p>【防守規則】滑鼠左右移動可以控制下方的<b>射手2</b>。瞄準由上落下的目標！</p>
+                <p>🧟 <b>一般殭屍 (zombie2.png)</b>：擊中 <span style="color:#2ecc71;">+3 分</span> / 漏掉 <span style="color:#e74c3c;">-3 分</span></p>
+                <p>🧟‍♂️ <b>強壯殭屍 (zombie3.png)</b>：擊中 <span style="color:#2ecc71;">+5 分</span> / 漏掉 <span style="color:#e74c3c;">-3 分</span></p>
+                <p>👧 <b>倖存女孩 (女孩.png)</b>：擊中 <span style="color:#e74c3c;">-3 分</span> / 安全抵達底部不扣分</p>
+                <br>
+                <p>💡 每當分數達到 <b>45 的倍數</b>，將觸發「數字推盤拼圖」小遊戲，過關可得 6 分。</p>
+                <p>💡 若分數<b>歸零</b>，將觸發「抽籤復活」，抽中 +3 分可繼續，抽中 +0 分則遊戲直接結束！</p>
+                <button id="start-btn">開始防衛戰</button>
+            </div>
+        </div>
+
+        <div id="puzzle-overlay" class="overlay hidden">
+            <div class="modal">
+                <h3>🧩 觸發拼圖小遊戲！(45的倍數)</h3>
+                <p>請點擊鄰近空格的方塊，將數字依序排列（由左至右、上至下）</p>
+                <div id="puzzle-board"></div>
+                <p id="puzzle-timer">剩餘時間: 30 秒</p>
+            </div>
+        </div>
+
+        <div id="fortune-overlay" class="overlay hidden">
+            <div class="modal">
+                <h3>🔮 分數歸零！觸發命運抽籤</h3>
+                <p>生死有命！請翻開一張符咒，命運將決定你的去留...</p>
+                <div class="fortune-container" id="fortune-box">
+                    <div class="fortune-card" onclick="drawFortune(0)">符</div>
+                    <div class="fortune-card" onclick="drawFortune(1)">符</div>
+                </div>
+                <p id="fortune-result" style="margin-top:15px; font-size:20px; font-weight:bold;"></p>
+            </div>
+        </div>
+
+        <div id="gameover-overlay" class="overlay hidden">
+            <div class="modal">
+                <h2 id="gameover-title">🚫 遊戲結束 🚫</h2>
+                <hr>
+                <h3 style="color:#f1c40f;">【最終戰績結算】</h3>
+                <p>最終總分數：<span id="final-score" style="font-size:24px; color:#e74c3c; font-weight:bold;">0</span> 分</p>
+                <p>總計射擊次數：<span id="final-shots" style="font-weight:bold;">0</span> 次</p>
+                <p>小遊戲成功次數：<span id="final-minigames" style="font-weight:bold;">0</span> 次</p>
+                <button onclick="location.reload()">重新挑戰</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲狀態變數
+        let score = 0;
+        let totalShots = 0;
+        let minigameWins = 0;
+        let timeLeft = 360; 
+        let gameInterval = null;
+        let spawnInterval = null;
+        let moveInterval = null; 
+        let isGameRunning = false;
+        let lastTriggeredMilestone = 0; 
+
+        // 拼圖變數
+        let puzzleSize = 3; 
+        let puzzleTiles = [];
+        let puzzleTimer = null;
+        let puzzleTimeLeft = 0;
+
+        const container = document.getElementById('game-container');
+        const startBtn = document.getElementById('start-btn');
+        const player = document.getElementById('player');
+
+        // 玩家狙擊手隨滑鼠左右移動
+        container.addEventListener('mousemove', (e) => {
+            if (!isGameRunning) return;
+            player.style.left = `${e.clientX}px`;
+        });
+
+        // 開始按鈕點擊
+        startBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            startGame();
+        });
+
+        function startGame() {
+            document.getElementById('start-overlay').classList.add('hidden');
+            
+            score = 0;
+            totalShots = 0;
+            minigameWins = 0;
+            timeLeft = 360;
+            lastTriggeredMilestone = 0;
+            isGameRunning = true;
+            
+            updateUI();
+
+            clearInterval(gameInterval);
+            clearInterval(spawnInterval);
+            clearInterval(moveInterval);
+
+            // 主時間倒數計時器
+            gameInterval = setInterval(() => {
+                if (isGameRunning) {
+                    timeLeft--;
+                    updateUI();
+                    if (timeLeft <= 0) {
+                        endGame("時間到！你成功存活了 6 分鐘！");
+                    }
+                }
+            }, 1000);
+
+            // 目標生成速度（每 0.7 秒降落一個）
+            spawnInterval = setInterval(() => {
+                if (isGameRunning) {
+                    if (document.querySelectorAll('.target').length < 12) {
+                        spawnTarget();
+                    }
+                }
+            }, 700);
+
+            // 物理移動計時器 (60fps)
+            moveInterval = setInterval(() => {
+                if (isGameRunning) {
+                    moveTargets();
+                }
+            }, 16);
+        }
+
+        // 全域點擊發射計數
+        container.addEventListener('mousedown', (e) => {
+            if (!isGameRunning) return;
+            if (e.target.closest('#hud') || e.target.closest('.overlay')) return;
+            
+            totalShots++;
+            updateUI();
+        });
+
+        function updateUI() {
+            const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const secs = (timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('ui-time').innerText = `${mins}:${secs}`;
+            document.getElementById('ui-score').innerText = score;
+            document.getElementById('ui-shots').innerText = totalShots;
+            document.getElementById('ui-minigames').innerText = minigameWins;
+        }
+
+        // 生成圖片目標
+        function spawnTarget() {
+            const target = document.createElement('div');
+            target.classList.add('target');
+
+            const rand = Math.random();
+            let imgUrl = '';
+            let isZombie = true;
+            let speed = 0;
+
+            if (rand < 0.5) {
+                // 一般殭屍
+                imgUrl = 'zombie2.png';
+                target.dataset.score = 3;
+                speed = 2.5 + Math.random() * 2; 
+                isZombie = true;
+            } else if (rand < 0.8) {
+                // 強壯殭屍
+                imgUrl = 'zombie3.png';
+                target.dataset.score = 5;
+                speed = 4.5 + Math.random() * 2.5; 
+                isZombie = true;
+            } else {
+                // 倖存者女孩
+                imgUrl = '女孩.png';
+                target.dataset.score = -3;
+                speed = 2.0 + Math.random() * 1.5; 
+                isZombie = false;
+            }
+
+            target.style.backgroundImage = `url('${imgUrl}')`;
+            target.dataset.speed = speed;
+            target.dataset.isZombie = isZombie; // 用於判斷掉到底部是否扣分
+
+            const x = Math.random() * (window.innerWidth - 80);
+            target.style.left = `${x}px`;
+            target.style.top = `-80px`; 
+
+            // 擊中目標
+            target.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                if (!isGameRunning) return;
+
+                totalShots++; 
+                const points = parseInt(target.dataset.score);
+                score += points;
+                
+                target.remove();
+                checkScoreZeroStatus();
+            });
+
+            container.appendChild(target);
+        }
+
+        // 移動目標與防線穿透判定
+        function moveTargets() {
+            const targets = document.querySelectorAll('.target');
+            const screenHeight = window.innerHeight;
+
+            targets.forEach(target => {
+                let currentTop = parseFloat(target.style.top);
+                let speed = parseFloat(target.dataset.speed);
+                
+                currentTop += speed;
+                target.style.top = `${currentTop}px`;
+
+                // 當目標觸底時
+                if (currentTop > screenHeight - 40) {
+                    const isZombie = target.dataset.isZombie === 'true';
+                    target.remove();
+
+                    // 如果是殭屍漏掉，扣 3 分；女孩生還則不扣分
+                    if (isZombie) {
+                        score -= 3;
+                        checkScoreZeroStatus();
+                    }
+                }
+            });
+        }
+
+        // 檢查分數是否歸零或小於零（歸零觸發復活）
+        function checkScoreZeroStatus() {
+            if (score <= 0) {
+                score = 0;
+                updateUI();
+                triggerFortuneGame();
+            } else {
+                updateUI();
+                checkMilestone();
+            }
+        }
+
+        // 檢查是否為 45 的倍數
+        function checkMilestone() {
+            if (score > 0 && score % 45 === 0 && score !== lastTriggeredMilestone) {
+                lastTriggeredMilestone = score;
+                triggerPuzzleGame();
+            }
+        }
+
+        /* ================= 🧩 拼圖小遊戲邏輯 (以45的倍數觸發) ================= */
+        function triggerPuzzleGame() {
+            isGameRunning = false;
+            clearAllTargets();
+            document.getElementById('puzzle-overlay').classList.remove('hidden');
+
+            // 45分（第一次）為 3x3 拼圖；90分以上升級為 4x4 拼圖
+            puzzleSize = score >= 90 ? 4 : 3;
+            puzzleTimeLeft = score >= 90 ? 45 : 30;
+            
+            initPuzzle();
+        }
+
+        function initPuzzle() {
+            const board = document.getElementById('puzzle-board');
+            board.style.gridTemplateColumns = `repeat(${puzzleSize}, 70px)`;
+            board.style.gridTemplateRows = `repeat(${puzzleSize}, 70px)`;
+            board.innerHTML = '';
+
+            const totalPieces = puzzleSize * puzzleSize;
+            puzzleTiles = [];
+
+            for (let i = 1; i < totalPieces; i++) puzzleTiles.push(i);
+            puzzleTiles.push(0);
+
+            do {
+                for (let i = puzzleTiles.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [puzzleTiles[i], puzzleTiles[j]] = [puzzleTiles[j], puzzleTiles[i]];
+                }
+            } while (!isSolvable() || isPuzzleComplete());
+
+            renderPuzzle();
+
+            document.getElementById('puzzle-timer').innerText = `剩餘時間: ${puzzleTimeLeft} 秒`;
+            clearInterval(puzzleTimer);
+            puzzleTimer = setInterval(() => {
+                puzzleTimeLeft--;
+                document.getElementById('puzzle-timer').innerText = `剩餘時間: ${puzzleTimeLeft} 秒`;
+                if (puzzleTimeLeft <= 0) {
+                    clearInterval(puzzleTimer);
+                    closePuzzle(false);
+                }
+            }, 1000);
+        }
+
+        function isSolvable() {
+            let inversions = 0;
+            const arr = puzzleTiles.filter(x => x !== 0);
+            for (let i = 0; i < arr.length; i++) {
+                for (let j = i + 1; j < arr.length; j++) {
+                    if (arr[i] > arr[j]) inversions++;
+                }
+            }
+            return inversions % 2 === 0;
+        }
+
+        function renderPuzzle() {
+            const board = document.getElementById('puzzle-board');
+            board.innerHTML = '';
+            puzzleTiles.forEach((tile, index) => {
+                const cell = document.createElement('div');
+                cell.classList.add('puzzle-piece');
+                if (tile === 0) {
+                    cell.classList.add('empty');
+                } else {
+                    cell.innerText = tile;
+                    cell.addEventListener('click', () => movePuzzlePiece(index));
+                }
+                board.appendChild(cell);
+            });
+        }
+
+        function movePuzzlePiece(index) {
+            const emptyIndex = puzzleTiles.indexOf(0);
+            const row = Math.floor(index / puzzleSize);
+            const col = index % puzzleSize;
+            const emptyRow = Math.floor(emptyIndex / puzzleSize);
+            const emptyCol = emptyIndex % puzzleSize;
+
+            const isAdjacent = (Math.abs(row - emptyRow) + Math.abs(col - emptyCol)) === 1;
+            if (isAdjacent) {
+                [puzzleTiles[index], puzzleTiles[emptyIndex]] = [puzzleTiles[emptyIndex], puzzleTiles[index]];
+                renderPuzzle();
+
+                if (isPuzzleComplete()) {
+                    clearInterval(puzzleTimer);
+                    setTimeout(() => closePuzzle(true), 300);
+                }
+            }
+        }
+
+        function isPuzzleComplete() {
+            for (let i = 0; i < puzzleTiles.length - 1; i++) {
+                if (puzzleTiles[i] !== i + 1) return false;
+            }
+            return puzzleTiles[puzzleTiles.length - 1] === 0;
+        }
+
+        function closePuzzle(isWin) {
+            document.getElementById('puzzle-overlay').classList.add('hidden');
+            if (isWin) {
+                score += 6;
+                minigameWins++;
+                alert("🎉 拼圖成功！獲得額外 6 分！");
+            } else {
+                alert("⏱ 時間到！拼圖失敗，繼續防守！");
+            }
+            isGameRunning = true;
+            updateUI();
+        }
+
+        /* ================= 🔮 抽籤復活小遊戲 ================= */
+        function triggerFortuneGame() {
+            isGameRunning = false;
+            clearAllTargets();
+            document.getElementById('fortune-overlay').classList.remove('hidden');
+            document.getElementById('fortune-result').innerText = "";
+            
+            const cards = document.querySelectorAll('.fortune-card');
+            cards.forEach(card => {
+                card.style.background = "#d35400";
+                card.innerText = "符";
+                card.style.pointerEvents = "auto";
+            });
+        }
+
+        function drawFortune(chosenIndex) {
+            const prizes = Math.random() < 0.5 ? [3, 0] : [0, 3];
+            const resultPoints = prizes[chosenIndex];
+
+            const cards = document.querySelectorAll('.fortune-card');
+            cards.forEach((card, idx) => {
+                card.innerText = `+${prizes[idx]}分`;
+                card.style.background = prizes[idx] === 3 ? "#2ecc71" : "#7f8c8d";
+                card.style.pointerEvents = "none";
+            });
+
+            const resultText = document.getElementById('fortune-result');
+            
+            if (resultPoints === 3) {
+                resultText.innerHTML = "🟢 奇蹟復活！獲得 +3 分，戰線重啟！";
+                resultText.style.color = "#2ecc71";
+                minigameWins++; 
+                setTimeout(() => {
+                    document.getElementById('fortune-overlay').classList.add('hidden');
+                    score = 3;
+                    isGameRunning = true;
+                    updateUI();
+                }, 2000);
+            } else {
+                resultText.innerHTML = "🔴 命運終結... 抽中 +0 分！";
+                resultText.style.color = "#e74c3c";
+                setTimeout(() => {
+                    document.getElementById('fortune-overlay').classList.add('hidden');
+                    endGame("分數歸零且抽籤失敗，遊戲結束！");
+                }, 2000);
+            }
+        }
+
+        /* ================= 結束與清理 ================= */
+        function clearAllTargets() {
+            const targets = document.querySelectorAll('.target');
+            targets.forEach(t => t.remove());
+        }
+
+        function endGame(reasonMessage) {
+            isGameRunning = false;
+            clearInterval(gameInterval);
+            clearInterval(spawnInterval);
+            clearInterval(moveInterval);
+            clearAllTargets();
+
+            document.getElementById('gameover-title').innerText = reasonMessage;
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-shots').innerText = totalShots;
+            document.getElementById('final-minigames').innerText = minigameWins;
+
+            document.getElementById('gameover-overlay').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎶看emoji猜歌名🎶</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:"Microsoft JhengHei",sans-serif;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    min-height:100vh;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+.container{
+    width:100%;
+    max-width:900px;
+    text-align:center;
+}
+
+h1{
+    margin-bottom:30px;
+    font-size:2.5rem;
+}
+
+.menu{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    flex-wrap:wrap;
+}
+
+button{
+    border:none;
+    cursor:pointer;
+    border-radius:12px;
+    transition:.3s;
+}
+
+.category-btn{
+    padding:16px 32px;
+    font-size:1.1rem;
+    font-weight:bold;
+    background:white;
+    color:#5a3d9a;
+}
+
+.category-btn:hover{
+    transform:translateY(-4px);
+}
+
+.game-card{
+    background:rgba(255,255,255,.15);
+    backdrop-filter:blur(10px);
+    border-radius:20px;
+    padding:30px;
+}
+
+.hidden{
+    display:none;
+}
+
+.score{
+    font-size:1.2rem;
+    margin-bottom:20px;
+}
+
+.question{
+    font-size:1.2rem;
+    margin-bottom:15px;
+}
+
+.emoji{
+    font-size:5rem;
+    margin:25px 0;
+}
+
+input{
+    width:100%;
+    max-width:450px;
+    padding:15px;
+    font-size:1.1rem;
+    border:none;
+    border-radius:10px;
+    text-align:center;
+}
+
+.message{
+    margin-top:20px;
+    font-size:1.3rem;
+    min-height:35px;
+}
+
+.next-btn{
+    margin-top:20px;
+    padding:12px 30px;
+    background:#00c853;
+    color:white;
+    font-size:1rem;
+}
+
+.result{
+    font-size:2rem;
+    margin:20px 0;
+}
+
+.home-btn{
+    padding:12px 25px;
+    background:#2196f3;
+    color:white;
+}
+
+@media(max-width:600px){
+    h1{
+        font-size:2rem;
+    }
+
+    .emoji{
+        font-size:4rem;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- 首頁 -->
+    <div id="homePage">
+        <h1>🎶看emoji猜歌名🎶</h1>
+
+        <div class="menu">
+            <button class="category-btn" onclick="startGame('chinese')">華語歌曲</button>
+            <button class="category-btn" onclick="startGame('kpop')">K-POP</button>
+            <button class="category-btn" onclick="startGame('jpop')">J-POP</button>
+        </div>
+    </div>
+
+    <!-- 遊戲頁 -->
+    <div id="gamePage" class="hidden">
+        <div class="game-card">
+
+            <div class="score">
+                分數：<span id="score">0</span>
+            </div>
+
+            <div class="question">
+                第 <span id="questionNumber">1</span> / 10 題
+            </div>
+
+            <div class="emoji" id="emoji"></div>
+
+            <input
+                id="answerInput"
+                type="text"
+                placeholder="輸入歌名後按 Enter"
+                autocomplete="off"
+            >
+
+            <div class="message" id="message"></div>
+
+            <button
+                id="nextBtn"
+                class="next-btn hidden"
+                onclick="nextQuestion()">
+                下一題
+            </button>
+
+        </div>
+    </div>
+
+    <!-- 結果頁 -->
+    <div id="resultPage" class="hidden">
+        <div class="game-card">
+
+            <h2>🎉 遊戲結束 🎉</h2>
+
+            <div class="result">
+                總分：<span id="finalScore"></span> / 100
+            </div>
+
+            <button class="home-btn" onclick="goHome()">
+                返回首頁
+            </button>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+const questionBank = {
+
+    chinese: [
+
+        {emoji:"🌛♥️", answers:["月亮代表我的心"]},
+        {emoji:"😭💔🍺", answers:["傷心酒店"]},
+        {emoji:"🇳🇴🌲🌲", answers:["挪威的森林"]},
+        {emoji:"♥️📝", answers:["心願便利貼"]},
+        {emoji:"🌾", answers:["稻香"]},
+        {emoji:"👧🏻", answers:["女孩"]},
+        {emoji:"👨‍❤️‍💋‍👨3️⃣0️⃣0️⃣", answers:["崴孟三百天禮物"]},
+        {emoji:"🟢✨", answers:["綠光"]},
+        {emoji:"💤❌", answers:["無眠"]},
+        {emoji:"9️⃣⤵️1️⃣8️⃣↪️", answers:["九彎十八拐"]}
+
+    ],
+
+    kpop: [
+
+        {emoji:"📢", answers:["Klaxon","클락셩"]},
+        {emoji:"🦸‍♀️", answers:["Super Lady"]},
+        {emoji:"🔵💌👩‍❤️‍👨", answers:["Blue Valentine"]},
+        {emoji:"⭐⭐⭐", answers:["See that?","별별별"]},
+        {emoji:"🎭🤪", answers:["Psycho","레드벨벳"]},
+        {emoji:"👤❌", answers:["Nobody","nobody"]},
+        {emoji:"🔪♥️", answers:["Kill This Love","Kill this love","kill this love"]},
+        {emoji:"🧬", answers:["DNA","Dna","dna"]},
+        {emoji:"🦁", answers:["LION","Lion","lion"]},
+        {emoji:"👩💍", answers:["wife","Wife","WIFE"]}
+
+    ],
+
+    jpop: [
+
+        {emoji:"💐", answers:["花束"]},
+        {emoji:"🍋", answers:["Lemon"]},
+        {emoji:"🌻", answers:["向日葵"]},
+        {emoji:"🌹", answers:["Rose"]},
+        {emoji:"⚪️📅", answers:["白日"]},
+        {emoji:"💘🌬️", answers:["恋風"]},
+        {emoji:"🔵☀️⛱️", answers:["青と夏","青和夏"]},
+        {emoji:"🍽️🎶🎤", answers:["晚餐歌"]},
+        {emoji:"😈👶👩‍🍼", answers:["悪魔の子","惡魔之子"]},
+        {emoji:"1️⃣0️⃣0️⃣0️⃣🌸", answers:["千本桜","千本櫻"]}
+
+    ]
+};
+
+let currentCategory = "";
+let currentQuestion = 0;
+let score = 0;
+
+function startGame(category){
+
+    currentCategory = category;
+    currentQuestion = 0;
+    score = 0;
+
+    document.getElementById("homePage").classList.add("hidden");
+    document.getElementById("resultPage").classList.add("hidden");
+    document.getElementById("gamePage").classList.remove("hidden");
+
+    loadQuestion();
+}
+
+function loadQuestion(){
+
+    const q = questionBank[currentCategory][currentQuestion];
+
+    document.getElementById("emoji").textContent = q.emoji;
+    document.getElementById("questionNumber").textContent = currentQuestion + 1;
+    document.getElementById("score").textContent = score;
+
+    document.getElementById("answerInput").value = "";
+    document.getElementById("message").textContent = "";
+
+    document.getElementById("nextBtn").classList.add("hidden");
+
+    document.getElementById("answerInput").disabled = false;
+    document.getElementById("answerInput").focus();
+}
+
+function checkAnswer(){
+
+    const userAnswer =
+        document.getElementById("answerInput").value.trim();
+
+    const answers =
+        questionBank[currentCategory][currentQuestion].answers;
+
+    const correct =
+        answers.some(ans =>
+            ans.toLowerCase() === userAnswer.toLowerCase()
+        );
+
+    if(correct){
+
+        score += 10;
+
+        document.getElementById("score").textContent = score;
+
+        document.getElementById("message").textContent =
+            "✅ 答對了！ +10分";
+
+        document.getElementById("answerInput").disabled = true;
+
+        document.getElementById("nextBtn").classList.remove("hidden");
+
+    }else{
+
+        document.getElementById("message").textContent =
+            "❌ 答錯了，請再試試看！";
+    }
+}
+
+function nextQuestion(){
+
+    currentQuestion++;
+
+    if(currentQuestion >= 10){
+
+        showResult();
+        return;
+    }
+
+    loadQuestion();
+}
+
+function showResult(){
+
+    document.getElementById("gamePage").classList.add("hidden");
+    document.getElementById("resultPage").classList.remove("hidden");
+
+    document.getElementById("finalScore").textContent = score;
+}
+
+function goHome(){
+
+    document.getElementById("resultPage").classList.add("hidden");
+    document.getElementById("homePage").classList.remove("hidden");
+}
+
+document.getElementById("answerInput").addEventListener("keydown", function(e){
+
+    if(e.key === "Enter"){
+        checkAnswer();
+    }
+
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>殘骸之詩：輪迴與記憶的編織</title>
+    <style>
+        :root {
+            --bg-color: #020204;
+            --panel-color: #0a080d;
+            --text-color: #cbd5e1;
+            --accent-blood: #ff0033; 
+            --gothic-gold: #c5a059;  
+            --shadow-purple: #3b0764; 
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', "Microsoft JhengHei", serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 50%, #0f051c 0%, #020204 100%);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--panel-color);
+            padding: 30px;
+            border-radius: 4px;
+            border: 2px solid var(--gothic-gold);
+            box-shadow: 0 0 30px rgba(197, 160, 89, 0.15), inset 0 0 20px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--gothic-gold);
+            font-size: 2.2rem;
+            letter-spacing: 5px;
+            text-shadow: 0 0 10px rgba(197, 160, 89, 0.4);
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #57534e;
+            font-style: italic;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
+
+        .status-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border: 1px solid rgba(197, 160, 89, 0.25);
+        }
+
+        .status-item { font-size: 0.95rem; line-height: 1.5; }
+
+        .bar {
+            width: 100%;
+            background-color: #1c1917;
+            height: 10px;
+            overflow: hidden;
+            margin-top: 6px;
+            border: 1px solid #44403c;
+        }
+
+        .hp-bar-fill { height: 100%; background: linear-gradient(90deg, #7c2d12, var(--accent-blood)); width: 100%; transition: width 0.2s; }
+        .san-bar-fill { height: 100%; background: linear-gradient(90deg, #581c87, #c084fc); width: 0%; transition: width 0.2s; }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        @media (min-width: 700px) {
+            .main-content { grid-template-columns: 1.3fr 1fr; }
+        }
+
+        .log-box {
+            background-color: rgba(3, 3, 3, 0.95);
+            border: 1px solid rgba(197, 160, 89, 0.15);
+            padding: 20px;
+            height: 360px;
+            overflow-y: auto;
+            font-size: 1.15rem;
+            line-height: 1.8;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.9);
+        }
+
+        .log-box p { margin: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.01); }
+
+        .action-panel { display: flex; flex-direction: column; gap: 12px; }
+
+        button {
+            background: #1c1917;
+            color: #a8a29e;
+            border: 1px solid #44403c;
+            padding: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-family: inherit;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            background: #2e2a24;
+            color: #fff;
+            border-color: var(--gothic-gold);
+        }
+
+        button:disabled { opacity: 0.15; cursor: not-allowed; }
+
+        .btn-danger { color: #f87171; border-color: #991b1b; }
+        .btn-danger:hover:not(:disabled) { background: #991b1b; }
+
+        .btn-hidden-clue {
+            background: linear-gradient(135deg, #4c0519 0%, #2e1065 100%) !important;
+            color: #f43f5e !important;
+            border: 2px dashed #f43f5e !important;
+            animation: pulse 1.5s infinite;
+        }
+
+        .btn-grave {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+            color: #38bdf8 !important;
+            border: 2px solid #38bdf8 !important;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        /* 記憶覺醒面板樣式 */
+        .memory-panel {
+            background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+            border: 1px solid #6366f1;
+            padding: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.35);
+        }
+
+        .enemy-box { background: #140303; border: 1px solid var(--accent-blood); padding: 15px; display: none; }
+        .timer-badge { background-color: var(--accent-blood); color: white; padding: 1px 6px; }
+
+        .clue-highlight { color: #f43f5e; font-weight: bold; text-shadow: 0 0 6px rgba(244, 63, 94, 0.6); }
+        .text-important { color: var(--gothic-gold); }
+        .text-damage { color: #ef4444; }
+        .text-heal { color: #22c55e; }
+        .text-shadow { color: #a855f7; }
+        
+        .hallucination-overlay {
+            position: fixed; color: rgba(244, 63, 94, 0.18); font-size: 1.5rem;
+            pointer-events: none; z-index: 999; font-weight: bold; letter-spacing: 4px;
+            animation: fadeOut 2.5s forwards;
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 0; transform: translateY(0px) scale(0.9); }
+            15% { opacity: 1; }
+            85% { opacity: 0.8; }
+            100% { opacity: 0; transform: translateY(-30px) scale(1.05); }
+        }
+
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+
+        #ending-screen {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 999; justify-content: center; align-items: center;
+            flex-direction: column; padding: 40px; text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-ui" class="game-container">
+    <h1>『 殘 骸 之 詩 』</h1>
+    <div class="subtitle">「肉體在轉生中退化，記憶在血之祭儀中覺醒。」</div>
+
+    <!-- 狀態欄 -->
+    <div class="status-panel">
+        <div class="status-item">
+            <strong>軀殼容貌:</strong> <span id="player-title" class="text-important">無名腐屍</span><br>
+            <strong>魂魄序位:</strong> 階級 <span id="player-level">1</span> <span id="rebirth-count" style="color:#a855f7; font-size:0.8rem;"></span>
+        </div>
+        <div class="status-item">
+            <strong>生命殘值 (HP):</strong> <span id="player-hp-text">100/100</span>
+            <div class="bar"><div id="player-hp-bar" class="hp-bar-fill"></div></div>
+        </div>
+        <div class="status-item">
+            <strong>神智裂痕 (SAN):</strong> <span id="player-san-text">0/100</span>
+            <div class="bar"><div id="player-san-bar" class="san-bar-fill"></div></div>
+        </div>
+        <div class="status-item">
+            <strong>枯萎骨幣:</strong> 🪙<span id="player-gold" class="text-important">0</span><br>
+            <strong>基礎刻印 (ATK):</strong> <span id="player-atk" class="text-damage">9</span>
+        </div>
+    </div>
+
+    <!-- 🔮 記憶覺醒區（完美回歸） -->
+    <div id="memory-zone" class="memory-panel" style="display:none;">
+        <h3 style="color:#a5b4fc; text-align:center; border:none; margin-bottom:5px;">🔮 靈魂深處的罪孽正在共鳴...</h3>
+        <p id="memory-hint" style="font-size:0.95rem; text-align:center; margin:8px 0; color:#e0e7ff; font-style:italic;"></p>
+        <button style="width:100%; background:#4f46e5; color:#fff; border:none; padding:10px;" onclick="awakenMemory()">【 聆 聽 並 承 接 禁 忌 記 憶 】</button>
+    </div>
+
+    <!-- 敵方區 -->
+    <div id="enemy-box" class="enemy-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 id="enemy-type" style="margin:0; color:var(--accent-blood); border:none; font-size:1rem;">⚠️ 遭遇孽物</h3>
+            <div style="font-size:0.85rem;">⏱️ 殘脈倒數: <span id="combat-timer" class="timer-badge">6</span> 秒</div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <strong id="enemy-name" style="color:#f87171;">殘存者</strong>
+            <span id="enemy-hp-text">25/25</span>
+        </div>
+        <div class="bar"><div id="enemy-hp-bar" class="hp-bar-fill" style="background: #dc2626;"></div></div>
+    </div>
+
+    <!-- 主要區域 -->
+    <div class="main-content">
+        <div>
+            <h3>📜 意識殘卷</h3>
+            <div id="log-box" class="log-box"></div>
+        </div>
+
+        <div class="action-panel">
+            <h3>🥀 宿命抉擇</h3>
+            
+            <button id="btn-explore" onclick="explore()">👁️ 深入永夜荒野（尋找血肉）</button>
+            <button id="btn-rest" onclick="rest()">🖤 焚燒骨幣（消耗 6 幣回復 40 HP）</button>
+            <button id="btn-attack" class="btn-danger" onclick="attackEnemy()" disabled>⚙️ 揮刀平砍撕裂（攻擊）</button>
+
+            <!-- 動態隱藏按鈕（線索弱點） -->
+            <button id="btn-clue-action" class="btn-hidden-clue" style="display:none;" onclick="triggerClueAction()"></button>
+
+            <!-- 動態隱藏按鈕（前世掃墓彩蛋） -->
+            <button id="btn-grave-action" class="btn-grave" style="display:none;" onclick="visitGrave()"></button>
+
+            <!-- 轉生與終局按鈕 -->
+            <button id="btn-rebirth" style="display:none; border:2px solid #a855f7; color:#c084fc; background:#2e1065;" onclick="processRebirth()">🌀 靈魂殘裂：撕裂意志「轉生」</button>
+            <button id="btn-final-event" class="btn-danger" style="display:none; border:2px solid var(--gothic-gold); color:var(--gothic-gold);" onclick="triggerFinalChoice()">🕯️ 開啟最終祭壇（迎向終局）</button>
+
+            <!-- 成就祭儀進度（記憶覺醒的燃料） -->
+            <div style="background:rgba(0,0,0,0.5); padding:12px; border:1px solid #44403c; font-size:0.85rem;">
+                <span style="color:#78716c; font-weight:bold;">【血之祭儀進度】</span><br>
+                • 撕碎怨靈數: <span id="ach-kills">0</span> / 3<br>
+                • 劫掠骨幣數: <span id="ach-gold">0</span> / 25<br>
+                • 受創痛苦數: <span id="ach-hit">0</span> / 8
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 結局 -->
+<div id="ending-screen">
+    <h1 id="end-title" style="font-size: 2.5rem; margin-bottom: 20px;">結局</h1>
+    <p id="end-desc" style="max-width: 600px; font-size: 1.1rem; line-height: 1.8; color: #d6d3d1; margin-bottom: 40px;"></p>
+    <button id="end-action-btn" onclick="location.reload()" style="padding: 12px 30px; border-color:var(--gothic-gold); color:var(--gothic-gold);">「重新步入無盡輪迴」</button>
+</div>
+
+<script>
+    let metaData = {
+        rebirthTimes: 0,
+        maxSanPenalty: 0,
+        lastGrave: null 
+    };
+
+    const player = {
+        title: "無名腐屍", level: 1, hp: 100, maxHp: 100, atk: 9, gold: 0,
+        insanity: 0, maxInsanity: 100, steps: 0, memoryStage: 0,
+        highInsight: false // 記憶獲得的抗性或機制
+    };
+
+    // 成就追蹤系統（用來觸發記憶）
+    const achievements = {
+        kills: 0, targetKills: 3,
+        goldEarned: 0, targetGold: 25,
+        hitCount: 0, targetHit: 8,
+        unlocked: [false, false, false]
+    };
+
+    let currentEnemy = null;
+    let isFighting = false;
+    let combatTimerInterval = null;
+    let timeLeft = 6;
+    let currentActiveClue = null;
+
+    const monsters = [
+        { name: "蠕動的怨毒斷肢", hp: 18, maxHp: 18, atk: 2, gold: 6 },
+        { name: "枯萎的黑夜敲門者", hp: 26, maxHp: 26, atk: 4, gold: 9 },
+        { name: "無眼墓園哀悼者", hp: 35, maxHp: 35, atk: 5, gold: 12 }
+    ];
+
+    const combatClues = [
+        { word: "裸露的心臟", btnText: "⚡ 精準突刺（雙倍傷害）", type: "heart" },
+        { word: "重心不穩", btnText: "🦿 惡意絆摔（使其癱瘓）", type: "trip" }
+    ];
+
+    const memories = [
+        "【第一層記憶】：你跪地痛苦抱頭。你想起來了...你曾是高貴的聖騎士隊長。但你奉命屠殺了整座染疫的村莊，身上斑駁的腐肉是死者靈魂的刻印。(解鎖：弱點洞察眼界提升)",
+        "【第二層記憶】：血幣的冰冷讓你反胃。你想起來了，國王沒有瘋，瘋的是你們。為了不朽，你們在井中注入古神之血。你是微笑着自願喝下的。(解鎖：最大生命值克制提升20，並將軀體補滿)",
+        "【第三層記憶】：焦黑的鎖鏈開始瘋狂鳴響。你記起來了，將你永埋地底的封印並非仇敵所施，而是你在理智完全蒸發前親手為自己鎖上的。現在，終焉的祭壇大門已徹底為你敞開..."
+    ];
+
+    const hallucinations = [
+        "你確信這具肉體屬於你自己嗎？",
+        "上一世的你正在棺材裡抓撓。",
+        "數值只是謊言，你在步向虛無。",
+        "👁️ 祂在看著你 👁️"
+    ];
+
+    function corruptText(text) {
+        if (metaData.rebirthTimes === 0) return text;
+        const corruptChars = ["縗", "纕", "☠️", "囈", "蟪", " ̶"];
+        let arr = text.split("");
+        let rate = Math.min(0.25, metaData.rebirthTimes * 0.07); 
+        for(let i=0; i<arr.length; i++) {
+            if(Math.random() < rate && arr[i] !== " " && arr[i] !== ">") {
+                arr[i] = corruptChars[Math.floor(Math.random() * corruptChars.length)];
+            }
+        }
+        return arr.join("");
+    }
+
+    function triggerVisualHallucination() {
+        if (metaData.rebirthTimes === 0 || Math.random() > 0.4) return;
+        const text = hallucinations[Math.floor(Math.random() * hallucinations.length)];
+        const div = document.createElement('div');
+        div.className = 'hallucination-overlay';
+        div.innerText = text;
+        div.style.top = Math.random() * 70 + 10 + "%";
+        div.style.left = Math.random() * 60 + 10 + "%";
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 2500);
+    }
+
+    window.onload = function() {
+        player.maxInsanity = 100 - metaData.maxSanPenalty;
+        if(metaData.rebirthTimes > 0) {
+            document.getElementById('rebirth-count').innerText = `[轉生第 ${metaData.rebirthTimes} 世]`;
+            logMessage(`🌀 靈魂帶著殘裂紋路再度甦醒。最大神智上限被禁錮至 ${player.maxInsanity}。`, "text-shadow");
+        } else {
+            logMessage("你在枯萎的焦土中甦醒。失去過往，沒有痛覺。只有殘卷在指引你。", "text-important");
+        }
+        updateUI();
+    };
+
+    function updateUI() {
+        document.getElementById('player-title').innerText = player.title;
+        document.getElementById('player-level').innerText = player.level;
+        document.getElementById('player-hp-text').innerText = `${player.hp}/${player.maxHp}`;
+        document.getElementById('player-hp-bar').style.width = `${(player.hp / player.maxHp) * 100}%`;
+        
+        document.getElementById('player-san-text').innerText = `${player.insanity}/${player.maxInsanity}`;
+        document.getElementById('player-san-bar').style.width = `${(player.insanity / player.maxInsanity) * 100}%`;
+        
+        document.getElementById('player-atk').innerText = player.atk;
+        document.getElementById('player-gold').innerText = player.gold;
+
+        document.getElementById('ach-kills').innerText = achievements.kills;
+        document.getElementById('ach-gold').innerText = achievements.goldEarned;
+        document.getElementById('ach-hit').innerText = achievements.hitCount;
+
+        // 探索限制：戰鬥中或記憶共鳴中不可探索
+        let isMemoryActive = (document.getElementById('memory-zone').style.display === 'block');
+        document.getElementById('btn-explore').disabled = isFighting || isMemoryActive;
+        document.getElementById('btn-rest').disabled = isFighting || isMemoryActive || player.gold < 6;
+        document.getElementById('btn-attack').disabled = !isFighting;
+
+        if (player.level === "🚫 終焉" || player.hp <= 0) {
+            document.getElementById('btn-rebirth').style.display = 'block';
+        } else {
+            document.getElementById('btn-rebirth').style.display = 'none';
+        }
+
+        if (player.level === "🚫 終焉") {
+            document.getElementById('btn-final-event').style.display = 'block';
+        } else {
+            document.getElementById('btn-final-event').style.display = 'none';
+        }
+
+        const enemyBox = document.getElementById('enemy-box');
+        if (isFighting && currentEnemy) {
+            enemyBox.style.display = 'block';
+            document.getElementById('enemy-name').innerText = currentEnemy.name;
+            document.getElementById('enemy-hp-text').innerText = `${currentEnemy.hp}/${currentEnemy.maxHp}`;
+            document.getElementById('enemy-hp-bar').style.width = `${(currentEnemy.hp / currentEnemy.maxHp) * 100}%`;
+            document.getElementById('combat-timer').innerText = timeLeft;
+        } else {
+            enemyBox.style.display = 'none';
+            document.getElementById('btn-clue-action').style.display = 'none';
+        }
+
+        checkAchievements();
+    }
+
+    function logMessage(text, className = "") {
+        const logBox = document.getElementById('log-box');
+        const p = document.createElement('p');
+        if (className) p.className = className;
+        let processedText = corruptText(text);
+        p.innerHTML = `» ${processedText}`;
+        logBox.appendChild(p);
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function startCombatTimer() {
+        timeLeft = 6; 
+        document.getElementById('combat-timer').innerText = timeLeft;
+        clearInterval(combatTimerInterval);
+        combatTimerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('combat-timer').innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(combatTimerInterval);
+                let penaltyDmg = currentEnemy.atk + 1;
+                player.hp = Math.max(0, player.hp - penaltyDmg);
+                achievements.hitCount += 1;
+                logMessage(`⏳ 【遲疑】你神智恍惚！【${currentEnemy.name}】突襲造成 ${penaltyDmg} 點傷害。`, "text-damage");
+                if (player.hp <= 0) handleDeath();
+                else startCombatTimer();
+                updateUI();
+            }
+        }, 1000);
+    }
+
+    function explore() {
+        if (player.hp <= 0) return;
+        player.steps += 1;
+        triggerVisualHallucination();
+
+        if (metaData.lastGrave && !metaData.lastGrave.visited && player.steps === metaData.lastGrave.deathStep) {
+            triggerGraveEvent();
+            return;
+        }
+
+        let rand = Math.random();
+        if (rand < 0.12) {
+            let dmg = 3 + Math.floor(Math.random() * 3);
+            player.hp = Math.max(1, player.hp - dmg);
+            achievements.hitCount += 1;
+            logMessage(`地磚上的生鏽刑具割傷了你的肢體，流失 ${dmg} 點生命。`, "text-damage");
+            updateUI();
+        } else if (rand < 0.25) {
+            player.insanity = Math.min(player.maxInsanity, player.insanity + 10);
+            logMessage("周圍的黑暗迴盪起嬰孩的啼哭，你的神智裂痕在擴大。", "text-shadow");
+            if(player.insanity >= player.maxInsanity) {
+                logMessage("⚠️ 理智決堤！你陷入短暫癲狂，胡亂自殘流失 12 點生命！", "text-damage");
+                player.hp = Math.max(1, player.hp - 12);
+                player.insanity = 0;
+            }
+            updateUI();
+        } else {
+            let idx = Math.floor(Math.random() * monsters.length);
+            currentEnemy = { ...monsters[idx] };
+            isFighting = true;
+            logMessage(`⚔️ 陰影扭曲，【${currentEnemy.name}】於虛無中現身。`, "text-important");
+            rollClueEvent();
+            startCombatTimer();
+            updateUI();
+        }
+    }
+
+    function rollClueEvent() {
+        document.getElementById('btn-clue-action').style.display = 'none';
+        currentActiveClue = null;
+        // 記憶1解鎖後，弱點暴露機率大幅攀升
+        let baseChance = player.highInsight ? 0.75 : 0.45;
+        if (Math.random() < baseChance) {
+            let clue = combatClues[Math.floor(Math.random() * combatClues.length)];
+            currentActiveClue = clue.type;
+            logMessage(`🔍 破綻！你注意到它此刻正處於 <span class="clue-highlight">${clue.word}</span> 的狀態！`);
+            const clueBtn = document.getElementById('btn-clue-action');
+            clueBtn.innerText = clue.btnText;
+            clueBtn.style.display = 'block';
+        }
+    }
+
+    function attackEnemy() {
+        if (!isFighting || !currentEnemy) return;
+        timeLeft = 6;
+        let dmg = player.atk + Math.floor(Math.random() * 3) - 1;
+        currentEnemy.hp -= dmg;
+        logMessage(`你揮刀砍擊，對【${currentEnemy.name}】造成 ${dmg} 點微末創傷。`);
+
+        if (checkEnemyDeath()) return;
+
+        let edmg = currentEnemy.atk;
+        player.hp -= edmg;
+        achievements.hitCount += 1;
+        logMessage(`💥 【${currentEnemy.name}】反擊，你承受了 ${edmg} 點反噬。`, "text-damage");
+
+        if (player.hp <= 0) handleDeath();
+        else rollClueEvent();
+        updateUI();
+    }
+
+    function triggerClueAction() {
+        if (!isFighting || !currentEnemy || !currentActiveClue) return;
+        timeLeft = 6;
+        logMessage(`⚡ 精確截擊！你抓住了轉瞬即逝的動態破綻！`, "text-important");
+
+        if (currentActiveClue === "heart") {
+            let critDmg = (player.atk * 2);
+            currentEnemy.hp -= critDmg;
+            logMessage(`⚔️ 刺穿心臟！爆發 ${critDmg} 點崩解重創！`);
+        } else if (currentActiveClue === "trip") {
+            currentEnemy.hp -= 4;
+            logMessage(`🦿 絆摔成功！孽物跌入塵土，此回合因癱瘓無法反擊。`);
+            rollClueEvent();
+            updateUI();
+            return;
+        }
+
+        if (checkEnemyDeath()) return;
+        
+        let edmg = currentEnemy.atk;
+        player.hp -= edmg;
+        achievements.hitCount += 1;
+        logMessage(`💥 孽物盲目反撲，你受到 ${edmg} 點反噬。`, "text-damage");
+        if (player.hp <= 0) handleDeath();
+        else rollClueEvent();
+        updateUI();
+    }
+
+    function checkEnemyDeath() {
+        if (currentEnemy.hp <= 0) {
+            clearInterval(combatTimerInterval);
+            player.gold += currentEnemy.gold;
+            achievements.goldEarned += currentEnemy.gold;
+            achievements.kills += 1;
+            logMessage(`🎉 孽物消散。劫掠得到骨幣 🪙${currentEnemy.gold}。`, "text-heal");
+            isFighting = false;
+            currentEnemy = null;
+            updateUI();
+            return true;
+        }
+        return false;
+    }
+
+    function handleDeath() {
+        clearInterval(combatTimerInterval);
+        player.hp = 0;
+        isFighting = false;
+        logMessage("💀 軀殼碎裂。你可以點擊【靈魂殘裂】強行進入下一世輪迴。", "text-important");
+        updateUI();
+    }
+
+    function rest() {
+        if (player.gold < 6) return;
+        player.gold -= 6;
+        player.hp = Math.min(player.maxHp, player.hp + 40);
+        logMessage("🖤 拋入骨幣。微弱的營火餘燼重新黏合了你的軀殼，回復 40 點生命值。", "text-heal");
+        updateUI();
+    }
+
+    // ================= 🔮 記憶覺醒控制系統 =================
+
+    function checkAchievements() {
+        // 階級 1 記憶
+        if (achievements.kills >= achievements.targetKills && !achievements.unlocked[0] && player.memoryStage === 0) {
+            triggerMemoryStage("殺戮的血雨滲透進乾涸的顱骨，某些被鎖住的記憶殘片在蠢蠢欲動...", 0);
+        }
+        // 階級 2 記憶
+        else if (achievements.goldEarned >= achievements.targetGold && !achievements.unlocked[1] && player.memoryStage === 1) {
+            triggerMemoryStage("冰冷的骨幣在掌心堆疊，熟悉的金屬腥味喚醒了第二重罪孽...", 1);
+        }
+        // 階級 3 記憶
+        else if (achievements.hitCount >= achievements.targetHit && !achievements.unlocked[2] && player.memoryStage === 2) {
+            triggerMemoryStage("肉體反覆碎裂的極致痛苦，終於化作黑色的鐵釘，鑿開了靈魂的最後枷鎖...", 2);
+        }
+    }
+
+    function triggerMemoryStage(hintText, stage) {
+        document.getElementById('memory-zone').style.display = 'block';
+        document.getElementById('memory-hint').innerText = hintText;
+    }
+
+    function awakenMemory() {
+        let currentStage = player.memoryStage;
+        logMessage(memories[currentStage], "text-shadow");
+        
+        achievements.unlocked[currentStage] = true;
+        player.memoryStage += 1;
+
+        // 防通膨機制繼承與解鎖，絕不給予爆炸性數值
+        if (currentStage === 0) {
+            player.title = "血落聖騎士";
+            player.highInsight = true; // 機制：戰鬥弱點感知機率永久提高
+            player.level = 2;
+        } else if (currentStage === 1) {
+            player.title = "古神共犯";
+            player.maxHp = 120; // 緊湊的血量模型增幅
+            player.hp = player.maxHp;
+            player.level = 3;
+        } else if (currentStage === 2) {
+            player.title = "深淵夢魘";
+            player.level = "🚫 終焉"; // 滿級，可直接觸發結局
+        }
+
+        document.getElementById('memory-zone').style.display = 'none';
+        updateUI();
+    }
+
+    // ================= 🪦 前世掃墓彩蛋與轉生系統 =================
+
+    function triggerGraveEvent() {
+        const grave = metaData.lastGrave;
+        logMessage(`🕯️ 【英靈遺蹟】你在荒野枯樹下看見了一座散發著冰冷螢光的【古老墓碑】。`, "text-important");
+        logMessage(`墓誌銘刻著前世的名號：『${grave.name}』。`);
+        logMessage(`死因：『${grave.cause}』。地上靜靜躺著生前未被帶走的遺物。`);
+        
+        const graveBtn = document.getElementById('btn-grave-action');
+        graveBtn.innerText = `🪦 幫前世「掃墓」（回收 🪙${grave.goldSaved} 骨幣）`;
+        graveBtn.style.display = 'block';
+        updateUI();
+    }
+
+    function visitGrave() {
+        if (!metaData.lastGrave) return;
+        let savedGold = metaData.lastGrave.goldSaved;
+        player.gold += savedGold;
+        metaData.lastGrave.visited = true; 
+        
+        logMessage(`🙏 你拂去墓碑上的黑雪。前世的殘魂化作飛灰，你承襲了 🪙${savedGold} 枚枯萎骨幣。`, "text-heal");
+        document.getElementById('btn-grave-action').style.display = 'none';
+        updateUI();
+    }
+
+    function processRebirth() {
+        let confirmRebirth = confirm("⚠️ 確定要強行切斷現有因果，撕裂靈魂轉生嗎？\n\n[轉生代價]：\n1. 當前進度、記憶階段與骨幣重置。\n2. 最大理智值(Max SAN) 永久扣除 20 點！\n3. 系統文字將會更嚴重地受到古神亂碼、幻覺污染！\n\n(但你這一世倒下的地方，將會化為下一世的地圖遺蹟供你掃墓)");
+        if (!confirmRebirth) return;
+
+        let currentCause = player.hp <= 0 ? "不敵宿命撕咬破碎而死" : "在清醒的絕望中主動重組靈魂";
+        metaData.lastGrave = {
+            name: player.title + ` (第 ${metaData.rebirthTimes + 1} 世)`,
+            cause: currentCause,
+            goldSaved: Math.min(15, Math.floor(player.gold * 0.5)), // 防通膨，繼承上限
+            deathStep: Math.max(2, player.steps), 
+            visited: false
+        };
+
+        metaData.rebirthTimes += 1;
+        metaData.maxSanPenalty = Math.min(80, metaData.maxSanPenalty + 20);
+
+        // 重置所有角色狀態與祭儀成就
+        player.title = "無名腐屍";
+        player.level = 1;
+        player.hp = 100;
+        player.maxHp = 100;
+        player.atk = 9;
+        player.gold = 0;
+        player.insanity = 0;
+        player.steps = 0;
+        player.memoryStage = 0;
+        player.highInsight = false;
+        player.maxInsanity = 100 - metaData.maxSanPenalty;
+
+        achievements.kills = 0;
+        achievements.goldEarned = 0;
+        achievements.hitCount = 0;
+        achievements.unlocked = [false, false, false];
+
+        isFighting = false;
+        currentEnemy = null;
+        clearInterval(combatTimerInterval);
+
+        const logBox = document.getElementById('log-box');
+        logBox.innerHTML = "";
+        document.getElementById('btn-grave-action').style.display = 'none';
+        document.getElementById('memory-zone').style.display = 'none';
+        
+        logMessage(`🌀 靈魂在無盡囈語中完成了第 ${metaData.rebirthTimes} 次痛苦的重組。`, "text-shadow");
+        updateUI();
+    }
+
+    function triggerFinalChoice() {
+        let choice = prompt("暮色祭壇已在眼前綻放。請輸入數字決定世界終局：\n\n1. 【寂滅】：捏碎核心，帶走所有的詛咒之血。\n2. 【僭越】：吞噬祭壇，登基為極度克制的黑金統治者。");
+        if (choice === "1") {
+            showEnding("結局 A：【微光碎屑】", "你拒絕了王座。在寂靜中，你捏碎了跳動的核心。你的軀殼化作微小的黑砂碎屑，詛咒自此終結。");
+        } else if (choice === "2") {
+            showEnding("結局 B：【黑金永夜秩序】", "你坐在王座上，制定了殘酷、精準且極其克制的鐵血秩序。永夜在你的統治下，優雅地運轉。");
+        }
+    }
+
+    function showEnding(title, description) {
+        document.getElementById('game-ui').style.display = 'none';
+        const endScreen = document.getElementById('ending-screen');
+        endScreen.style.display = 'flex';
+        document.getElementById('end-title').innerText = title;
+        document.getElementById('end-desc').innerText = description;
+        
+        const endBtn = document.getElementById('end-action-btn');
+        endBtn.innerText = "「不接受結局，強行撕裂這重因果（轉生）」";
+        endBtn.onclick = function() {
+            endScreen.style.display = 'none';
+            document.getElementById('game-ui').style.display = 'block';
+            processRebirth();
+        };
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,199 @@
+HTML
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>未來日期計算器</title>
+    <style>
+        /* 極簡白底黑字風格 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            letter-spacing: 0.05em;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            padding: 20px;
+        }
+
+        /* 放大標題 */
+        h1 {
+            font-weight: 300;
+            font-size: 2.5rem;
+            margin-bottom: 3.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 3.5rem;
+        }
+
+        /* 放大輸入框字體 */
+        input {
+            border: none;
+            border-bottom: 2px solid #000000;
+            background: transparent;
+            color: #000000;
+            font-size: 2rem;
+            text-align: center;
+            padding: 5px 0;
+            outline: none;
+            font-family: inherit;
+            font-weight: 200;
+        }
+
+        /* 調整年月日輸入框寬度 */
+        #year { width: 130px; }
+        #month { width: 80px; }
+        #day { width: 80px; }
+
+        /* 移除輸入框的上下箭頭 */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* 放大單位標籤 */
+        span.label {
+            font-size: 1.3rem;
+            font-weight: 300;
+            color: #000000;
+            margin-right: 5px;
+        }
+
+        /* 放大按鈕 */
+        button {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 12px 48px;
+            font-size: 1.1rem;
+            font-family: inherit;
+            letter-spacing: 0.15em;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            font-weight: 300;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .result {
+            margin-top: 4rem;
+            min-height: 80px;
+        }
+
+        /* 放大計算結果數字 */
+        .days-count {
+            font-size: 4rem;
+            font-weight: 100;
+            margin-bottom: 0.8rem;
+        }
+
+        /* 放大日期提示文字 */
+        .date-text {
+            font-size: 1.1rem;
+            font-weight: 300;
+            color: #666666;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>未來日期計算</h1>
+        
+        <div class="input-group">
+            <input type="number" id="year" min="2026" placeholder="2026">
+            <span class="label">年</span>
+            <input type="number" id="month" min="1" max="12" placeholder="MM">
+            <span class="label">月</span>
+            <input type="number" id="day" min="1" max="31" placeholder="DD">
+            <span class="label">日</span>
+        </div>
+
+        <button onclick="calculateDays()">計算天數</button>
+
+        <div class="result" id="result-box">
+            </div>
+    </div>
+
+    <script>
+        // 自動將年份欄位的預設提示或最小值設為今年
+        const currentYear = new Date().getFullYear();
+        document.getElementById('year').min = currentYear;
+        document.getElementById('year').placeholder = currentYear;
+
+        function calculateDays() {
+            const yearInput = document.getElementById('year').value;
+            const monthInput = document.getElementById('month').value;
+            const dayInput = document.getElementById('day').value;
+            const resultBox = document.getElementById('result-box');
+
+            const year = parseInt(yearInput);
+            const month = parseInt(monthInput);
+            const day = parseInt(dayInput);
+
+            if (isNaN(year) || isNaN(month) || isNaN(day)) {
+                resultBox.innerHTML = '<div class="date-text">請輸入完整的年、月、日</div>';
+                return;
+            }
+
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            const targetDate = new Date(year, month - 1, day);
+
+            if (targetDate.getFullYear() !== year || targetDate.getMonth() !== month - 1 || targetDate.getDate() !== day) {
+                resultBox.innerHTML = '<div class="date-text">該月份沒有這一天，請確認日期是否正確。</div>';
+                return;
+            }
+
+            if (targetDate < today) {
+                resultBox.innerHTML = '<div class="date-text">請輸入「未來」的日期（今天或之後）。</div>';
+                return;
+            }
+
+            const timeDiff = targetDate.getTime() - today.getTime();
+            const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+            if (daysDiff === 0) {
+                resultBox.innerHTML = `
+                    <div class="days-count">今天</div>
+                    <div class="date-text">就是 ${year} 年 ${month} 月 ${day} 日</div>
+                `;
+            } else {
+                resultBox.innerHTML = `
+                    <div class="days-count">${daysDiff} 天後</div>
+                    <div class="date-text">距離 ${year} 年 ${month} 月 ${day} 日</div>
+                `;
+            }
+        }
+
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculateDays();
+            }
+        });
+    </script>
+
+</body>
+</html>

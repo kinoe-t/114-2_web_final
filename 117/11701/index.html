@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GO HIT THAT!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            /* 網頁基礎字體維持現代、乾淨的無襯線字體 */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #121212; /* 純黑/深黑色背景 */
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* 噴發特效畫布 */
+        #effect-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        /* 左上角記數器 */
+        #counter-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(255, 255, 255, 0.95);
+            color: #121212;
+            padding: 10px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            font-size: 1.5rem;
+            font-weight: 900;
+            border: 2px solid #ff5c9d;
+            z-index: 10;
+        }
+
+        /* 中央互動區域 (放按鈕與影片) */
+        #main-container {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        /* 按鈕設計（活力粉色） */
+        #click-btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            background-color: #ff5c9d; 
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 92, 157, 0.4);
+            transition: transform 0.1s, background-color 0.2s;
+        }
+
+        #click-btn:active {
+            transform: scale(0.95);
+            background-color: #e04485; 
+        }
+
+        #click-btn:disabled {
+            background-color: #555555;
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* 文字顯示區域（絕對定位隨機出現 + 正經書法標楷體） */
+        #display-text {
+            position: absolute;
+            font-family: "BiauKai", "標楷體", "DFKai-SB", "KaiTi", serif;
+            font-size: 5.5rem; 
+            font-weight: bold;
+            min-height: 8rem;
+            display: none; /* 預設隱藏，由 JS 控制 */
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 5px;
+            color: #ffffff !important; 
+            text-shadow: 
+                0 0 15px rgba(0, 0, 0, 1),
+                0 0 30px rgba(0, 0, 0, 1),
+                0 4px 10px rgba(0, 0, 0, 1);
+            z-index: 20;
+            pointer-events: none; /* 防止干擾點擊 */
+        }
+
+        /* 改良：浮誇飄出來並「維持現身」的動畫 */
+        .float-animation {
+            animation: floatIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* 改良：放開滑鼠後「逗留久一點再消失」的動畫 */
+        .fade-out-delayed {
+            animation: stayThenFade 1.8s ease-out forwards; /* 總長 1.8 秒，前段時間留住，後段淡出 */
+        }
+
+        @keyframes floatIn {
+            0% {
+                opacity: 0;
+                transform: translateY(60px) scale(0.5) rotate(-10deg);
+            }
+            70% {
+                transform: translateY(-10px) scale(1.1) rotate(3deg);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1) rotate(0deg);
+            }
+        }
+
+        @keyframes stayThenFade {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            80% { opacity: 1; transform: translateY(0) scale(1); } /* 前 80% 時間都定格在畫面上不消失 */
+            100% { opacity: 0; transform: translateY(-20px) scale(0.9); } /* 最後 20% 時間才優雅淡出飄走 */
+        }
+
+        /* 「啊爺爺」專用明亮粉色 */
+        #display-text.gayeoye-pink {
+            color: #ff6ea7 !important; 
+            text-shadow: 
+                0 0 15px rgba(0, 0, 0, 1),
+                0 4px 8px rgba(0, 0, 0, 1);
+        }
+
+        /* 影片播放區域 */
+        #video-container {
+            display: none;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+            background-color: #000;
+            border: 2px solid #333;
+        }
+
+        video {
+            width: 100%;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="effect-canvas"></canvas>
+
+    <div id="counter-container">
+        <span id="counter">0</span>
+    </div>
+
+    <div id="main-container">
+        <button id="click-btn">GO HIT THAT</button>
+        
+        <div id="video-container">
+            <video id="my-video" preload="auto" opacity="0" muted playsinline>
+                <source src="ggum.mp4" type="video/mp4">
+                您的瀏覽器不支援影片播放。
+            </video>
+        </div>
+    </div>
+
+    <div id="display-text"></div>
+
+    <script>
+        const clickBtn = document.getElementById('click-btn');
+        const counterSpan = document.getElementById('counter');
+        const displayText = document.getElementById('display-text');
+        const videoContainer = document.getElementById('video-container');
+        const myVideo = document.getElementById('my-video');
+        const canvas = document.getElementById('effect-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let count = 0;
+        let videoInterval = null;
+        let isVideoPlaying = false; 
+        let particles = [];
+        let fadeTimeout = null; // 用來處理淡出隱藏的計時器
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // 350 顆超級浮誇 67 煙火特效粒子
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 22 + 8; 
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.gravity = 0.35; 
+                this.fontSize = Math.floor(Math.random() * 36) + 24; 
+                this.opacity = 1;
+                this.fadeSpeed = Math.random() * 0.015 + 0.005;
+                this.color = '#ffffff';
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotateSpeed = (Math.random() - 0.5) * 0.15;
+                this.waveWeight = Math.random() * 2;
+            }
+            update() {
+                this.x += this.vx + Math.sin(this.y * 0.05) * this.waveWeight;
+                this.vy += this.gravity;
+                this.y += this.vy;
+                this.opacity -= this.fadeSpeed;
+                this.rotation += this.rotateSpeed;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation); 
+                ctx.fillStyle = this.color;
+                ctx.font = `bold ${this.fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+                ctx.shadowColor = '#000000';
+                ctx.shadowBlur = 8;
+                ctx.fillText('67', 0, 0);
+                ctx.restore();
+            }
+        }
+
+        function animateParticles() {
+            if (particles.length === 0) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                return;
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].opacity <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        // 當按下時，決定隨機坐標並讓字體「飄出來」維持著
+        function spawnRandomText(text, isGayeoye) {
+            // 清除之前的淡出計時器與舊動畫狀態
+            clearTimeout(fadeTimeout);
+            displayText.classList.remove('float-animation', 'fade-out-delayed', 'gayeoye-pink');
+            
+            displayText.textContent = text;
+            if (isGayeoye) {
+                displayText.classList.add('gayeoye-pink');
+            }
+
+            displayText.style.display = 'flex';
+
+            // 隨機生成坐標算式（保留安全邊距不讓字體出界）
+            const textWidth = displayText.offsetWidth || 300;
+            const textHeight = displayText.offsetHeight || 120;
+            const maxX = window.innerWidth - textWidth - 60;
+            const maxY = window.innerHeight - textHeight - 60;
+
+            const randomX = Math.max(40, Math.random() * maxX);
+            const randomY = Math.max(40, Math.random() * maxY);
+
+            displayText.style.left = `${randomX}px`;
+            displayText.style.top = `${randomY}px`;
+
+            // 重新啟動飄入動畫 (Reflow)
+            void displayText.offsetWidth;
+            displayText.classList.add('float-animation');
+        }
+
+        // 滑鼠「按下」邏輯
+        function handlePress() {
+            if (isVideoPlaying) return; 
+
+            count++;
+            counterSpan.textContent = count;
+
+            // 第 67 次：超級浮誇大煙火爆發
+            if (count === 67) {
+                const rect = clickBtn.getBoundingClientRect();
+                const btnCenterX = rect.left + rect.width / 2;
+                const btnCenterY = rect.top + rect.height / 2;
+                for (let i = 0; i < 350; i++) { 
+                    particles.push(new Particle(btnCenterX, btnCenterY));
+                }
+                animateParticles();
+            }
+
+            // 條件判斷分流
+            if (count % 100 === 0) {
+                isVideoPlaying = true;
+                clickBtn.disabled = true; 
+                clearTimeout(fadeTimeout);
+                displayText.style.display = 'none'; 
+                videoContainer.style.display = 'block';
+
+                myVideo.currentTime = 14;
+                const playPromise = myVideo.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Chrome 限制自動播放...", error);
+                        myVideo.load();
+                        myVideo.currentTime = 14;
+                        myVideo.play().catch(e => console.log("影片播放失敗"));
+                    });
+                }
+
+                clearInterval(videoInterval);
+                videoInterval = setInterval(() => {
+                    if (myVideo.currentTime >= 28) {
+                        myVideo.pause();
+                        clearInterval(videoInterval);
+                        
+                        videoContainer.style.display = 'none';
+                        isVideoPlaying = false;
+                        clickBtn.disabled = false; 
+                        
+                        displayText.textContent = '';
+                        displayText.classList.remove('float-animation', 'fade-out-delayed', 'gayeoye-pink');
+                    }
+                }, 50);
+
+            } else if (count % 10 === 0) {
+                spawnRandomText('啊爺爺', true); // 產生粉色書法字
+            } else {
+                spawnRandomText('鋼球剛', false); // 產生白色書法字
+            }
+        }
+
+        // 滑鼠「放開」邏輯
+        function handleRelease() {
+            if (isVideoPlaying) return; 
+
+            // 如果不是 10 的倍數，切換成「逗留淡出動畫」，並在動畫播完後隱藏
+            if (count % 10 !== 0) {
+                displayText.classList.remove('float-animation');
+                void displayText.offsetWidth; // Reflow
+                displayText.classList.add('fade-out-delayed');
+
+                // 1.8秒後完全隱藏 display
+                fadeTimeout = setTimeout(() => {
+                    displayText.style.display = 'none';
+                    displayText.classList.remove('fade-out-delayed');
+                }, 1800);
+            }
+            // 如果是 10 的倍數（啊爺爺），則不掛上淡出動畫，字體就會一直穩穩停留在畫面上！
+        }
+
+        // 電腦版 Chrome 事件綁定
+        clickBtn.addEventListener('mousedown', handlePress);
+        window.addEventListener('mouseup', handleRelease);
+    </script>
+</body>
+</html>

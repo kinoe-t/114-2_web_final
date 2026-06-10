@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>巨蟹幫之二的運勢小屋</title>
+    <style>
+        /* 日式神社風格配色與字體 */
+        body {
+            background-color: #fcf8f2;
+            color: #333;
+            font-family: 'Helvetica Neue', Arial, 'Noto Sans TC', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 櫻花飄落背景層 */
+        .cherry-blossom-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .petal {
+            position: absolute;
+            background-color: #ffb7c5;
+            border-radius: 150% 0 150% 150%;
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translate(0, -10px) rotate(0deg); opacity: 0.8; }
+            100% { transform: translate(100px, 100vh) rotate(360deg); opacity: 0.2; }
+        }
+
+        /* 神社鳥居裝飾 */
+        .torii {
+            width: 200px;
+            height: 20px;
+            background-color: #bc2424;
+            position: relative;
+            margin-bottom: 10px;
+            border-radius: 3px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .torii::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 15px;
+            height: 60px;
+            background-color: #bc2424;
+        }
+        .torii::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 15px;
+            height: 60px;
+            background-color: #bc2424;
+        }
+
+        /* 主畫面容器 */
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: #ffffff;
+            border: 8px double #bc2424;
+            border-radius: 10px;
+            padding: 30px;
+            box-sizing: border-box;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        h1 {
+            color: #bc2424;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        /* 籤筒動畫樣式 */
+        .omikuji-box {
+            width: 100px;
+            height: 150px;
+            background: #e0a96d;
+            border: 4px solid #8a5a36;
+            border-radius: 10px 10px 0 0;
+            margin: 20px auto;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.1s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #5c3a21;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+        .omikuji-box::after {
+            content: '御神籤';
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            letter-spacing: 5px;
+            font-size: 18px;
+        }
+
+        /* 搖晃動畫 */
+        .shake {
+            animation: shakeAnim 0.5s ease-in-out 3;
+        }
+
+        @keyframes shakeAnim {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-10px, -10px) rotate(-10deg); }
+            40% { transform: translate(10px, -5px) rotate(10deg); }
+            60% { transform: translate(-10px, 5px) rotate(-5deg); }
+            80% { transform: translate(10px, -10px) rotate(5deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        /* 抽籤按鈕 */
+        .draw-btn {
+            background-color: #bc2424;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(188, 36, 36, 0.3);
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+
+        .draw-btn:hover {
+            background-color: #9e1e1e;
+            transform: translateY(-2px);
+        }
+
+        .draw-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* 籤詩結果區塊 */
+        .result-card {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            border: 2px dashed #e0a96d;
+            background: #fffdf9;
+            border-radius: 5px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 運勢大字 */
+        .fortune-title {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: inline-block;
+            padding: 5px 20px;
+            border-radius: 5px;
+        }
+
+        /* 根據運勢改變顏色 */
+        .大吉 { color: #d9383a; border: 2px solid #d9383a; background: #ffebeb; }
+        .中吉 { color: #e67e22; border: 2px solid #e67e22; background: #fff5eb; }
+        .凶 { color: #2c3e50; border: 2px solid #2c3e50; background: #f0f3f4; }
+        .大凶 { color: #7f8c8d; border: 2px solid #7f8c8d; background: #eaeded; }
+        .神秘籤 { color: #9b59b6; border: 2px solid #9b59b6; background: #f5eef8; }
+
+        .fortune-text {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            white-space: pre-line; /* 保留換行 */
+        }
+
+        .achievement {
+            font-weight: bold;
+            color: #b8860b;
+            margin: 10px 0;
+            background-color: #fef9e7;
+            padding: 8px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        /* 外部連結按鈕 */
+        .link-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 15px;
+            background-color: #34495e;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .link-btn:hover {
+            background-color: #2c3e50;
+        }
+
+        /* 影片嵌入容器 */
+        .video-container {
+            margin-top: 15px;
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 比例 */
+            height: 0;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cherry-blossom-container" id="blossomArea"></div>
+    <div class="torii"></div>
+
+    <div class="container">
+        <h1>這裡是巨蟹幫之二的運勢小屋( • ̀ω•́ )✧</h1>
+        <div class="subtitle">請點擊畫面上的按鈕來進行抽籤吧！<br>你可以抽到的籤有（大吉 中吉 大凶 凶）喔(*˘︶˘*).。.:*♡</div>
+
+        <div class="omikuji-box" id="omikujiBox" onclick="drawFortune()"></div>
+
+        <button class="draw-btn" id="drawBtn" onclick="drawFortune()">主人按我吧(灬°ω°灬)！</button>
+
+        <div class="result-card" id="resultCard">
+            <div class="fortune-title" id="fortuneTitle"></div>
+            <div class="fortune-text" id="fortuneContent"></div>
+            <div id="videoArea"></div>
+        </div>
+    </div>
+
+    <script>
+        // 櫻花飄落特效產生器
+        const blossomArea = document.getElementById('blossomArea');
+        for (let i = 0; i < 20; i++) {
+            let petal = document.createElement('div');
+            petal.classList.add('petal');
+            petal.style.left = Math.random() * 100 + 'vw';
+            petal.style.width = Math.random() * 10 + 5 + 'px';
+            petal.style.height = Math.random() * 10 + 5 + 'px';
+            petal.style.animationDuration = Math.random() * 3 + 4 + 's';
+            petal.style.animationDelay = Math.random() * 5 + 's';
+            blossomArea.appendChild(petal);
+        }
+
+        // 籤詩資料庫
+        const fortunePool = {
+            "中吉": [
+                {
+                    text: "今日運勢普普🙂，沒什麼好說的，6767哈哈笑死",
+                    achievement: "恭喜獲得成就＜six seven（＾ω＾）＞",
+                    video: null,
+                    link: null
+                },
+                {
+                    text: "今日運勢很中間，沒什麼存在感啊哈哈哈哈🫪🫪🫪",
+                    achievement: "恭喜獲得成就＜沒有存在感╭(╯ε╰)╮＞",
+                    video: null,
+                    link: null
+                },
+                {
+                    text: "今日運勢普通，如果想轉運請按下以下連結",
+                    achievement: "恭喜獲得成就＜日本？＞",
+                    video: null,
+                    link: { text: '"崴孟三百天禮物" Official Music Video', url: "https://www.youtube.com/watch?v=1kenPhH52Jw" } // 註：原本內容未給崴孟MV連結，此處保留外連格式
+                }
+            ],
+            "大吉": [
+                {
+                    text: "今日運勢很夯麻，怎樣很了不起嗎 我詛咒你大便都沒紙哼(｀⌒´メ)",
+                    achievement: "恭喜獲得成就＜烙賽沒紙＞(´▽｀)ノ♪",
+                    video: null,
+                    link: null
+                },
+                {
+                    text: "哈哈，大吉吧",
+                    achievement: null,
+                    video: null,
+                    link: null
+                },
+                {
+                    text: "啊～你今天運勢很好呢，要不要讓姐姐幫你按摩呢💓",
+                    achievement: null,
+                    video: "1kenPhH52Jw", // YouTube Video ID
+                    link: null
+                }
+            ],
+            "凶": [
+                {
+                    text: "恭喜你🎉，今日運勢為兇，注意身邊的危險🆘🆘🆘，風在呼喚你，永德一路",
+                    achievement: null,
+                    video: "t75qlQPXJGw",
+                    link: null
+                },
+                {
+                    text: "難過嗎？ …… 問你話是不會回答喔，現在人都那麼沒禮貌的，活該抽到兇啦😔",
+                    achievement: null,
+                    video: "rbEZAbzJnMA", // Short 也可以用同樣的嵌入方式
+                    link: null
+                },
+                {
+                    text: "ㄟ沒事吧，不要難過喔，畢竟這世界上可憐的人那麼多，多你一個也沒差啦(*¯︶¯*)\n啊那我和你說一件事，瑞瑞忻忻的戀愛vlog要出了喔！記得去看\n聯絡電話0967676767",
+                    achievement: null,
+                    video: null,
+                    link: { text: '點此觀看影片', url: "https://share.google/YwRLD0xxaTKhQNGgW" } // Google Share 連結使用外連
+                }
+            ],
+            "大凶": [
+                {
+                    text: "今日運勢很爛😅，超爛😇，最爛的🥲，想必你心裡有底最近做過了什麼壞事，建議請同學旭集以轉運",
+                    achievement: null,
+                    video: null,
+                    link: null
+                },
+                {
+                    text: "好好笑喔真的有人抽到這個，笑死是你喔，沒事啦可能是因為沒有請我吃旭集的關係，想轉運就快點喔啾咪😘",
+                    achievement: null,
+                    video: null,
+                    link: null
+                }
+            ],
+            "神秘籤": [
+                {
+                    text: "恭喜你抽到神秘籤！",
+                    achievement: null,
+                    video: "Q-Y-C_S5HFY",
+                    link: null
+                }
+            ]
+        };
+
+        let isDrawing = false;
+
+        function drawFortune() {
+            if (isDrawing) return;
+            isDrawing = true;
+
+            const box = document.getElementById('omikujiBox');
+            const resultCard = document.getElementById('resultCard');
+            const drawBtn = document.getElementById('drawBtn');
+
+            // 隱藏前一次的結果並加上搖晃動畫
+            resultCard.style.display = 'none';
+            box.classList.add('shake');
+            drawBtn.disabled = true;
+            drawBtn.innerText = '正在誠心求籤中...';
+
+            setTimeout(() => {
+                box.classList.remove('shake');
+                
+                // 1. 根據機率決定抽到哪種類別
+                // 中吉30%, 大吉20%, 凶30%, 大凶19%, 神秘籤1%
+                const rand = Math.random() * 100;
+                let category = "中吉";
+
+                if (rand < 30) {
+                    category = "中吉";
+                } else if (rand < 50) { // 30 + 20
+                    category = "大吉";
+                } else if (rand < 80) { // 50 + 30
+                    category = "凶";
+                } else if (rand < 99) { // 80 + 19
+                    category = "大凶";
+                } else {                // 剩餘 1%
+                    category = "神秘籤";
+                }
+
+                // 2. 從該類別中隨機挑選一首籤詩
+                const fortunes = fortunePool[category];
+                const finalFortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+
+                // 3. 渲染畫面
+                const titleEl = document.getElementById('fortuneTitle');
+                titleEl.className = `fortune-title ${category}`;
+                titleEl.innerText = category;
+
+                let contentHtml = `<p>${finalFortune.text}</p>`;
+                if (finalFortune.achievement) {
+                    contentHtml += `<div class="achievement">${finalFortune.achievement}</div>`;
+                }
+                if (finalFortune.link) {
+                    contentHtml += `<br><a class="link-btn" href="${finalFortune.link.url}" target="_blank">${finalFortune.link.text}</a>`;
+                }
+                document.getElementById('fortuneContent').innerHTML = contentHtml;
+
+                // 4. 處理影片播放
+                const videoArea = document.getElementById('videoArea');
+                videoArea.innerHTML = ''; // 清空舊影片
+                if (finalFortune.video) {
+                    videoArea.innerHTML = `
+                        <div class="video-container">
+                            <iframe src="https://www.youtube.com/embed/${finalFortune.video}?autoplay=1" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                    `;
+                }
+
+                // 顯示結果
+                resultCard.style.display = 'block';
+                drawBtn.disabled = false;
+                drawBtn.innerText = '主人按我吧(灬°ω°灬)！';
+                isDrawing = false;
+            }, 1500); // 搖晃動畫持續 1.5 秒
+        }
+    </script>
+</body>
+</html>

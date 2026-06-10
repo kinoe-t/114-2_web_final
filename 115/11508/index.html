@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三國性格心理測驗 - 40群雄終極版</title>
+    <style>
+        :root {
+            --primary-color: #581818;
+            --secondary-color: #c9a054;
+            --bg-color: #f6f3eb;
+            --text-color: #2c2c2c;
+        }
+
+        body {
+            font-family: 'Noto Serif TC', 'Microsoft JhengHei', serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 750px;
+            width: 100%;
+            background: #ffffff;
+            padding: 45px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border: 4px double var(--secondary-color);
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.6rem;
+            margin-bottom: 5px;
+            letter-spacing: 4px;
+            font-weight: 900;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #444;
+            margin-bottom: 35px;
+            font-style: italic;
+            letter-spacing: 2px;
+        }
+
+        .quiz-section, .result-section {
+            display: none;
+        }
+
+        .active {
+            display: block;
+        }
+
+        .question {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #111;
+            text-align: left;
+            line-height: 1.6;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 15px;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .option-btn {
+            display: block;
+            width: 100%;
+            padding: 18px 22px;
+            margin-bottom: 16px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.25s ease;
+            line-height: 1.5;
+        }
+
+        .option-btn:hover {
+            background-color: #faf5eb;
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .start-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 16px 55px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            margin-top: 20px;
+            letter-spacing: 3px;
+            font-weight: bold;
+        }
+
+        .start-btn:hover {
+            background-color: #381010;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .progress {
+            font-size: 1.1rem;
+            color: #555;
+            margin-top: 25px;
+            font-weight: bold;
+        }
+
+        .result-title {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            font-weight: 900;
+            letter-spacing: 4px;
+        }
+        
+        .result-camp {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+
+        .result-desc {
+            font-size: 1.15rem;
+            line-height: 1.9;
+            text-align: left;
+            background: #fdfcf9;
+            padding: 30px;
+            border-left: 6px solid var(--primary-color);
+            margin-top: 20px;
+            border-radius: 0 12px 12px 0;
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.02);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 大標題 -->
+    <h1>東漢末年分三國，而你是誰？</h1>
+    <div class="subtitle">—— 尋找你在亂世中的英雄宿命 ——</div>
+
+    <!-- 歡迎介面 -->
+    <div id="start-card" class="quiz-section active">
+        <p style="font-size: 1.2rem; line-height: 1.9; color: #444; margin-bottom: 30px;">
+            大浪淘沙，時空長河徹底沸騰。<br>
+            這一次，後台命運矩陣已全面擴充至<b>四十位傳奇人物</b>！<br>
+            從割據一方的諸侯，到神鬼莫測的方士；從萬人莫敵的戰神，到驚才絕豔的紅顏。<br>
+            十道關於權力、利益、情感與生死的終極情境題，<br>
+            將精確剝離你的現實偽裝，直擊你靈魂最深處的三國本體！
+        </p>
+        <button class="start-btn" onclick="startQuiz()">靈魂覺醒</button>
+    </div>
+
+    <!-- 測驗問題介面 -->
+    <div id="quiz-card" class="quiz-section">
+        <div class="question" id="question-text">問題載入中...</div>
+        <div class="options-list" id="options-container">
+            <!-- 選項由 JS 動態產生 -->
+        </div>
+        <div class="progress" id="progress-text">第 1 題 / 共 10 題</div>
+    </div>
+
+    <!-- 答案輸出介面 -->
+    <div id="result-card" class="result-section">
+        <p style="font-size: 1.15rem; color: #555; margin-bottom: 5px;">命運羅盤停止，你在三國的轉世身分是：</p>
+        <div class="result-title" id="character-name">角色名稱</div>
+        <div class="result-camp" id="character-camp">所屬勢力</div>
+        <div class="result-desc" id="character-desc">角色介紹...</div>
+        <button class="start-btn" onclick="restartQuiz()" style="margin-top: 35px;">重新轉世</button>
+    </div>
+</div>
+
+<script>
+    // 10 題多維度特質傾向題
+    const questions = [
+        {
+            q: "1. 當你身處一個新團隊，你最希望自己展現出哪種價值？",
+            options: [
+                { text: "一錘定音的決策力，帶領大家開疆拓土。", type: "leader" },
+                { text: "神機妙算的規劃力，為團隊提供最完美的防禦或進攻藍圖。", type: "wisdom" },
+                { text: "無可替代的凝聚力，讓每個人都願意為了情義與信任拼盡全力。", type: "loyalty" },
+                { text: "無人能及的破壞力或執行力，任何最難搞的硬仗交給我就對了。", type: "action" }
+            ]
+        },
+        {
+            q: "2. 遇到一個「實力比你強十倍」的競爭對手，你第一時間的本能反應是？",
+            options: [
+                { text: "尋求與其他弱小勢力結盟，軟硬兼施，利用外交手段與之抗衡。", type: "leader" },
+                { text: "絕對不正面衝突。低頭隱忍，甚至故意向對方示弱，暗中等待他犯錯。", type: "wisdom" },
+                { text: "死守自己的底線與根據地，就算戰到最後一人，也絕不屈服投降。", type: "loyalty" },
+                { text: "燃起強烈的鬥志！越強的對手越有趣，直接尋找空隙發動奇襲。", type: "action" }
+            ]
+        },
+        {
+            q: "3. 在工作中，你最無法忍受身邊的夥伴出現哪種行為？",
+            options: [
+                { text: "沒有大局觀，為了一些蠅頭小利而破壞了整體的戰略布局。", type: "leader" },
+                { text: "自作聰明、不聽指揮，破壞了原本嚴密設計的執行流程。", type: "wisdom" },
+                { text: "背叛、自私自利，在團隊遇到危機時拋棄夥伴、各自逃命。", type: "loyalty" },
+                { text: "唯唯諾諾、拖泥帶水，遇到機會不敢果斷出手，貽誤戰機。", type: "action" }
+            ]
+        },
+        {
+            q: "4. 如果你在一場關鍵競賽中大獲全勝，你打算怎麼慶祝？",
+            options: [
+                { text: "論功行賞，並藉此機會招攬更多強大的人才加入我的麾下。", type: "leader" },
+                { text: "不沉迷勝利。立刻召集核心成員分析下一階段的風險與長遠防禦。", type: "wisdom" },
+                { text: "把所有的光鮮和獎金分給一路上不離不棄的底層兄弟與夥伴。", type: "loyalty" },
+                { text: "舉辦一場極盡奢華或充滿個人品味的宴會，盡情享受當下的榮耀。", type: "art" }
+            ]
+        },
+        {
+            q: "5. 面對規則與道德底線，你的真實看法是？",
+            options: [
+                { text: "成大事者不拘小節。只要結果是贏的，手段與常規都可以被打破。", type: "leader" },
+                { text: "規則是可以用來操作的工具，只要深諳規則，就能在暗中掌控一切。", type: "wisdom" },
+                { text: "人無信不立。有些原則（如承諾、大義）就算賭上性命也必須捍衛。", type: "loyalty" },
+                { text: "規則是死的人是活的，別跟我談墨跡的條款，用實力講話最快。", type: "action" }
+            ]
+        },
+        {
+            q: "6. 當你遭遇重大挫折、面臨人生低谷時，你通常會怎麼度過？",
+            options: [
+                { text: "迅速重整旗鼓，尋找下一個可以借力使力的跳板或根據地。", type: "leader" },
+                { text: "關上門獨自冷靜，理性剖析失敗，在孤獨中磨練自己的心智。", type: "wisdom" },
+                { text: "找最信任的老朋友痛哭一場或借酒消愁，靠著情感的羈絆重新站起來。", type: "loyalty" },
+                { text: "將重心轉移到藝術、文學、琴棋書畫或大自然中，逃離殘酷的現實。", type: "art" }
+            ]
+        },
+        {
+            q: "7. 在一個團隊中，如果出現了一位「才華極高但脾氣古怪、不服管教」的人，你會？",
+            options: [
+                { text: "只要他能幫我打勝仗，我會給他最大的特權和包容，不計較他的缺點。", type: "leader" },
+                { text: "暗中觀察他，摸透他的心理弱點，用制度或計謀將他牢牢制衡。", type: "wisdom" },
+                { text: "用真誠的態度去感化他，相信真心一定能換到對方的忠誠。", type: "loyalty" },
+                { text: "不能容忍！團隊紀律高於一切，不服管教就直接讓他捲鋪蓋走人。", type: "action" }
+            ]
+        },
+        {
+            q: "8. 關於「競爭與生存」，你更認同以下哪一種處世哲學？",
+            options: [
+                { text: "寧教我負天下人，休教天下人負我。主動掌控命運，絕不當被動者。", type: "leader" },
+                { text: "善戰者無赫赫之功。忍常人所不能忍，活到最後的才是真正的贏家。", type: "wisdom" },
+                { text: "千里走單騎，只為報一恩。這世上總有比利益更值得守護的東西。", type: "loyalty" },
+                { text: "人生苦短，若不能轟轟烈烈地展現自己的才華與光芒，活著便毫無意義。", type: "art" }
+            ]
+        },
+        {
+            q: "9. 假如你回到了古代，你最希望自己擁有以下哪一種神秘力量？",
+            options: [
+                { text: "至高無上的皇權與威儀，讓四方蠻夷皆來朝拜。", type: "leader" },
+                { text: "看穿人心與預知未來的能力，永遠立於不敗之地。", type: "wisdom" },
+                { text: "萬夫莫敵、能在百萬軍中取上將首級的無雙武藝。", type: "action" },
+                { text: "看透生死、能醫治百病或長生不老的仙道法術。", type: "art" }
+            ]
+        },
+        {
+            q: "10. 如果要用旁人的評價來定義你，你希望聽見哪一句？",
+            options: [
+                { text: "這是一個充滿野心與手腕、讓人不得不服從的強力領袖。", type: "leader" },
+                { text: "他深藏不露，心思細密到讓人感到一絲敬畏，極其靠譜。", type: "wisdom" },
+                { text: "他非常重情重義，是那種在關鍵時刻絕對不會拋棄你的生死之交。", type: "loyalty" },
+                { text: "他是一個極具個人魅力與獨特氣質、活得非常精彩優雅的人。", type: "art" }
+            ]
+        }
+    ];
+
+    // 40位角色的五維特質數值矩陣 (Leader, Wisdom, Loyalty, Action, Art)
+    const characterMatrix = [
+        // 蜀漢陣營 (10人)
+        { name: "劉備", camp: "蜀漢核心", desc: "你擁有強大的【仁義凝聚力】。你擅長以情感與理想感化人心，屢敗屢戰的極致韌性讓你總能吸引頂級人才為你赴湯蹈火。", l: 4, w: 2, y: 5, a: 1, r: 2 },
+        { name: "諸葛亮", camp: "蜀漢核心", desc: "你擁有【完美的理智與責任感】。心思細密，算無遺策，『鞠躬盡瘁，死而後已』是你的宿命，是團隊中最讓人安心的終極操盤手。", l: 2, w: 5, y: 5, a: 1, r: 2 },
+        { name: "關羽", camp: "蜀漢五虎將", desc: "你【義薄雲天，傲骨嶙峋】。視名譽與承諾重於生命。你的世界黑白分明，雖然孤高，但那份不可動搖的忠義讓你成為萬世傳奇。", l: 2, w: 1, y: 5, a: 4, r: 1 },
+        { name: "張飛", camp: "蜀漢五虎將", desc: "你【豪爽耿直，爆發力十足】。討厭虛偽與墨跡，行事風風火火。雖然看似魯莽，但關鍵時刻往往能展現出粗中有細的決斷力。", l: 1, w: 1, y: 5, a: 5, r: 1 },
+        { name: "趙雲", camp: "蜀漢五虎將", desc: "你擁有【極致的執行力與冷靜】。不居功、不狂妄，不論多危險的任務（如長坂坡救主）都能零失誤達成，是完美的護盾與全能王牌。", l: 1, w: 2, y: 5, a: 4, r: 1 },
+        { name: "馬超", camp: "蜀漢五虎將", desc: "你就像【帶刺的孤狼】。血氣方剛、勇猛無雙。你行事帶著強烈的速度感與威懾力，在戰場上所向披靡，但有時容易被情感與憤怒左右。", l: 2, w: 1, y: 3, a: 5, r: 1 },
+        { name: "黃忠", camp: "蜀漢五虎將", desc: "你具備【老當益壯的職人精神】。年齡從不是你的限制，反而為你累積了沉穩。老練可靠，總能用百步穿楊的實力證明自己依然是核心。", l: 1, w: 3, y: 4, a: 3, r: 1 },
+        { name: "姜維", camp: "蜀漢繼承者", desc: "你是【孤獨的理想繼承者】。文武雙全，承接了前輩的宏大意志。即便明知大勢已去，依然憑藉著驚人的毅力與智謀奮戰到最後一刻。", l: 3, w: 4, y: 4, a: 3, r: 1 },
+        { name: "魏延", camp: "蜀漢大將", desc: "你是【備受爭議的孤傲奇才】。你擁有極高的軍事天分與反叛精神（如子午谷奇謀），不甘於墨守成規，但過於鋒芒畢露的性格容易引來排擠。", l: 2, w: 3, y: 2, a: 4, r: 1 },
+        { name: "龐統", camp: "蜀漢鳳雛", desc: "你是【不拘小節的狂傲鳳雛】。外表不顯眼，但內心傲視群雄。你的謀略風格偏向奇正相生、狠辣直接，具備極強的破局能力。", l: 1, w: 5, y: 3, a: 2, r: 1 },
+
+        // 曹魏陣營 (10人)
+        { name: "曹操", camp: "曹魏領袖", desc: "你是【治世能臣，亂世梟雄】。具備強大的霸氣與務實主義，『唯才是舉』。不拘泥於世俗道德，開創帝國的手腕與魄力舉世無雙。", l: 5, w: 4, y: 1, a: 3, r: 3 },
+        { name: "司馬懿", camp: "曹魏（晉基石）", desc: "你是【終極的隱忍獵手】。擁有恐怖的克制力。深諳『活到最後才是贏家』的道理，在時機未成熟前能吞下所有屈辱，給予對手致命一擊。", l: 5, w: 5, y: 1, a: 1, r: 1 },
+        { name: "郭嘉", camp: "曹魏頂級軍師", desc: "你是【洞察人性的鬼才】。行事不拘小節，思維天馬行空。擅長心理戰與極限預測，才華橫溢，追求極致的智力博弈。", l: 1, w: 5, y: 2, a: 2, r: 3 },
+        { name: "荀彧", camp: "曹魏王佐之才", desc: "你是【體制內的道德良心】。擁有卓越的戰略眼光與大管家般的行政能力，幫團隊打下穩固基石。內心深處依然堅守著最初的制度理想。", l: 2, w: 5, y: 4, a: 1, r: 1 },
+        { name: "張遼", camp: "曹魏五子良將", desc: "你具備【大將之風，威震八方】。在戰場上冷靜沉著、有勇有謀，著名的『逍遙津之戰』展現了你無畏的突擊能力與頂級統率力。", l: 3, w: 2, y: 3, a: 5, r: 1 },
+        { name: "典韋", camp: "曹魏惡來", desc: "你是【古之惡來，絕對忠誠】。性格純粹、古道熱腸，擁有壓倒性的怪力。對你而言，保護主公和夥伴的安危高於一切，願意用生命築起防線。", l: 1, w: 1, y: 5, a: 5, r: 1 },
+        { name: "曹植", camp: "曹魏文豪", desc: "你是【才高八斗的浪漫文人】。熱愛藝術、美酒與詩詞，行事充滿感性與華麗才華。但在現實與權力鬥爭面前，往往顯得脆弱且受壓抑。", l: 1, w: 3, y: 3, a: 1, r: 5 },
+        { name: "夏侯惇", camp: "曹魏元勳", desc: "你是【剛烈無雙的鐵血悍將】。拔矢啖睛、勇烈過人。你是領袖最信任的宗親與盾牌，行事作風硬朗，對內極具威望，對外戰鬥力爆表。", l: 3, w: 1, y: 4, a: 4, r: 1 },
+        { name: "張郃", camp: "曹魏五子良將", desc: "你是【應變自如的巧變大將】。擅長根據戰場形勢靈活改變戰術，懂得審時度勢。你的生存能力極強，是一位兼具謀略與戰略眼光的長壽儒將。", l: 2, w: 4, y: 3, a: 3, r: 1 },
+        { name: "賈詡", camp: "曹魏毒士", desc: "你是【算無遺策的終極生存大師】。人稱『毒士』，你的謀略從不談道德大義，只講求精準有效與自身安全。在無數次政治風暴中皆能全身而退。", l: 1, w: 5, y: 1, a: 1, r: 2 },
+
+        // 東吳陣營 (9人)
+        { name: "孫權", camp: "東吳領袖", desc: "你是【卓越的守成與制衡大師】。懂得審時度勢、能屈能伸。最大的才華在於能在各種強大派系與外敵之間尋找平衡，讓基業長青。", l: 5, w: 3, y: 3, a: 1, r: 1 },
+        { name: "周瑜", camp: "東吳大都督", desc: "你是【風流倜儻的少年英才】。文武雙全，音律兵法無一不精。充滿自信與浪漫色彩，善於用驚艷的奇謀（火燒赤壁）開創新局，追求榮耀與品味。", l: 3, w: 4, y: 3, a: 3, r: 4 },
+        { name: "魯肅", camp: "東吳戰略家", desc: "你是【大智若愚、眼光長遠的厚道人】。外表憨厚，實則擁有極宏觀的外交戰略眼光（榻上策）。用大局觀和包容心化解危機，是真正的智者。", l: 2, w: 5, y: 4, a: 1, r: 2 },
+        { name: "陸遜", camp: "東吳儒將", desc: "你是【出奇制勝的儒雅書生】。平時低調、甚至故意示弱讓對手驕傲。然而一旦抓住機會，就能發動如『火燒連營』般毀天滅地的精準反擊。一戰驚天下。", l: 3, w: 5, y: 3, a: 2, r: 1 },
+        { name: "甘寧", camp: "東吳猛將", desc: "你是【快意恩仇的百騎劫營者】。出身草莽，性格桀傲不遜、重義氣。討厭繁文縟節，喜歡用最直接、最刺激的方式（百騎夜襲）打碎阻礙。", l: 1, w: 1, y: 3, a: 5, r: 2 },
+        { name: "大喬", camp: "東吳江東美女", desc: "你是【溫柔如水的默默守護者】。性格內斂、深情且安分。你的一生與江東英雄緊密相連，是英雄疲憊時最渴望回歸的溫暖港灣。", l: 1, w: 2, y: 4, a: 1, r: 4 },
+        { name: "小喬", camp: "東吳江東美女", desc: "你是【充滿靈氣與才華的俏麗佳人】。聰明伶俐、熱愛藝術與生活。你身上帶著亂世中少有的純真與活力，能為緊繃的戰爭歲月帶來優雅亮色。", l: 1, w: 3, y: 3, a: 1, r: 5 },
+        { name: "孫尚香", camp: "東吳梟姬", desc: "你是【巾幗不讓鬚眉的弓腰姬】。雖是女兒身，卻擁有志在四方的豪情與不輸男子的武藝。行事大膽、敢愛敢恨，充滿野性美與行動力。", l: 3, w: 1, y: 3, a: 4, r: 3 },
+        { name: "太史慈", camp: "東吳猛將", desc: "你是【信義重於泰山的弓馬神將】。神射無雙，為人極其注重信義，一言九鼎。與主公不打不相識，一經投靠便終身不負，光明磊落。", l: 1, w: 2, y: 5, a: 4, r: 1 },
+
+        // 群雄、奇人與紅顏 (11人)
+        { name: "呂布", camp: "東漢群雄", desc: "你是【無雙的戰神，也是脫韁的野馬】。個人武力全天下最強，但在性格上缺乏長遠眼光與定力，容易被利益、美女或情緒左右。極致的個人主義者。", l: 3, w: 1, y: 1, a: 5, r: 1 },
+        { name: "董卓", camp: "東漢魔王", desc: "你是【充滿支配慾的暴風雨】。信奉絕對的力量與恐懼統治，行事殘暴、不擇手段。野心極大，一旦掌握權力便容易沉迷於放縱與享樂。", l: 5, w: 1, y: 1, a: 4, r: 2 },
+        { name: "袁紹", camp: "四世三公諸侯", desc: "你是【注重門面與出身的貴族領袖】。極具威儀，擅長聚攏人才。然而性格中帶著優柔寡斷與好大喜功，在關鍵大事上容易因思慮過多而錯失良機。", l: 4, w: 2, y: 2, a: 1, r: 3 },
+        { name: "華佗", camp: "當世神醫", desc: "你是【超越政治的純粹職人】。對權力鬥爭毫無興趣，只專注於醫學技能與拯救世人。擁有超前的思維與醫者仁心，堅持專業與醫德。", l: 1, w: 4, y: 4, a: 1, r: 4 },
+        { name: "水鏡先生", camp: "荊州隱士", desc: "你是【冷眼旁觀的世外高人】。擁有洞悉天下大勢的智慧，卻選擇隱遁山林。樂於發掘、推薦年輕人才（伏龍鳳雛），在幕後靜看歷史轉動。", l: 1, w: 5, y: 3, a: 1, r: 3 },
+        { name: "貂蟬", camp: "亂世紅顏", desc: "你是【柔肩擔大義的奇女子】。外表傾國傾城，內心卻深藏著常人難及的膽識與智慧。為了大義甘願深入險境、周旋於強權之間，用智謀改變歷史。", l: 2, w: 4, y: 4, a: 1, r: 4 },
+        { name: "甄姬", camp: "曹魏絕代佳人", desc: "你是【翩若驚鴻的洛神才女】。具備極高的文化素養與優雅內斂的氣質。不爭不搶、溫和賢淑，將靈魂的才華與哀傷寄託於詩詞藝術之中。", l: 1, w: 3, y: 4, a: 1, r: 5 },
+        { name: "公孫瓚", camp: "北方諸侯", desc: "你是【性格剛烈、重拳出擊的白馬將軍】。行事作風強硬，極具攻擊性，曾以白馬義從威震北方。但性格有時過於剛愎自用，缺乏外交彈性。", l: 4, w: 1, y: 3, a: 4, r: 1 },
+        { name: "孟獲", camp: "南蠻王", desc: "你是【豪爽不羈、極具韌性的南蠻之王】。性格粗獷、崇尚自然與力量。雖然謀略不足，但你對自己人極度護短，且具備越挫越勇（七擒七縱）的豪氣。", l: 4, w: 1, y: 4, a: 4, r: 1 },
+        { name: "祝融夫人", camp: "南蠻王后", desc: "你是【熱情火辣、恩怨分明的帶刺玫瑰】。傳說為火神後裔，武藝高強且擅長飛刀。性格直爽、行事雷厲風行，是一位充滿異國野性魅力的女中豪傑。", l: 3, w: 1, y: 4, a: 4, r: 2 },
+        { name: "左慈", camp: "世外仙道", desc: "你是【戲弄權貴、超脫世俗的神仙隱士】。擁有看穿凡塵的智慧與特立獨行的藝術家性格。喜歡用幻術和幽默戲弄那些不可一世的權臣，追求絕對的身心自由。", l: 1, w: 5, y: 1, a: 1, r: 5 }
+    ];
+
+    let currentQuestionIndex = 0;
+    // 玩家特質累計板
+    let playerTraits = { leader: 0, wisdom: 0, loyalty: 0, action: 0, art: 0 };
+
+    function startQuiz() {
+        document.getElementById("start-card").classList.remove("active");
+        document.getElementById("quiz-card").classList.add("active");
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const currentQ = questions[currentQuestionIndex];
+        document.getElementById("question-text").innerText = currentQ.q;
+        document.getElementById("progress-text").innerText = `第 ${currentQuestionIndex + 1} 題 / 共 ${questions.length} 題`;
+
+        const optionsContainer = document.getElementById("options-container");
+        optionsContainer.innerHTML = ""; 
+
+        currentQ.options.forEach(option => {
+            const button = document.createElement("button");
+            button.className = "option-btn";
+            button.innerText = option.text;
+            button.onclick = () => selectOption(option.type);
+            optionsContainer.appendChild(button);
+        });
+    }
+
+    function selectOption(type) {
+        playerTraits[type] += 2.5; // 增加該特質權重
+        currentQuestionIndex++;
+
+        if (currentQuestionIndex < questions.length) {
+            showQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    // 五維空間幾何歐氏距離演算法
+    function showResult() {
+        document.getElementById("quiz-card").classList.remove("active");
+        document.getElementById("result-card").classList.add("active");
+
+        let bestMatch = null;
+        let minDistance = Infinity;
+
+        // 計算玩家五維度與 40 位角色的幾何距離
+        characterMatrix.forEach(char => {
+            let distance = Math.sqrt(
+                Math.pow(playerTraits.leader - char.l, 2) +
+                Math.pow(playerTraits.wisdom - char.w, 2) +
+                Math.pow(playerTraits.loyalty - char.y, 2) +
+                Math.pow(playerTraits.action - char.a, 2) +
+                Math.pow(playerTraits.art - char.r, 2)
+            );
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                bestMatch = char;
+            }
+        });
+
+        // 輸出結果
+        document.getElementById("character-name").innerText = bestMatch.name;
+        document.getElementById("character-camp").innerText = `✦ 所屬勢力：${bestMatch.camp} ✦`;
+        document.getElementById("character-desc").innerHTML = bestMatch.desc;
+    }
+
+    function restartQuiz() {
+        currentQuestionIndex = 0;
+        playerTraits = { leader: 0, wisdom: 0, loyalty: 0, action: 0, art: 0 };
+        document.getElementById("result-card").classList.remove("active");
+        document.getElementById("start-card").classList.add("active");
+    }
+</script>
+
+</body>
+</html>

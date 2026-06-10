@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>名偵探柯南互動劇本：基德 VS 安室</title>
+
+<style>
+body {
+    font-family: "Microsoft JhengHei", sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 20px;
+    line-height: 1.7;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+
+h1 {
+    text-align: center;
+}
+
+.section {
+    margin-top: 25px;
+}
+
+.option {
+    margin: 10px 0;
+}
+
+button {
+    background: #1e88e5;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1565c0;
+}
+
+textarea {
+    width: 100%;
+    height: 120px;
+    margin-top: 10px;
+    padding: 10px;
+}
+
+.result {
+    margin-top: 25px;
+    padding: 15px;
+    background: #eef7ff;
+    border-left: 5px solid #1e88e5;
+    display: none;
+}
+
+.footer {
+    margin-top: 40px;
+    color: #666;
+    font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>名偵探柯南互動劇本</h1>
+<h2>基德 VS 安室：王妃的瀏海</h2>
+
+<div class="section">
+<h3>故事背景</h3>
+
+<p>
+某次公開展示活動中，一件與王室相關的珍貴文物即將亮相。
+怪盜基德再度發出預告函，宣稱將在眾目睽睽之下完成華麗的竊取行動。
+另一方面，安室透也出現在現場，並開始留意所有可疑人物與異常動向。
+</p>
+
+<p>
+看似單純的寶石竊盜事件，卻可能隱藏著更多秘密。
+究竟基德真正的目標是什麼？
+安室是否已經看穿了一切？
+而柯南又能否在兩人的交鋒之中找出真相？
+</p>
+
+<p>
+現在，故事將依照你的選擇發展出不同結局。
+</p>
+</div>
+
+<div class="section">
+
+<h3>第一步：選擇你的劇本走向</h3>
+
+<div class="option">
+<label>
+<input type="radio" name="story" value="1">
+A. 基德其實不是為了寶石，而是在保護某個重要人物
+</label>
+</div>
+
+<div class="option">
+<label>
+<input type="radio" name="story" value="2">
+B. 安室早已預判基德的行動，設下反制陷阱
+</label>
+</div>
+
+<div class="option">
+<label>
+<input type="radio" name="story" value="3">
+C. 真正的犯人另有其人，基德反而成為協助破案的人
+</label>
+</div>
+
+<div class="option">
+<label>
+<input type="radio" name="story" value="4">
+D. 展覽品其實藏有神秘密碼，引出全新謎團
+</label>
+</div>
+
+<button onclick="showStory()">
+開始劇情
+</button>
+
+</div>
+
+<div id="result" class="result"></div>
+
+<div class="section">
+<h3>自由創作結局</h3>
+
+<p>
+如果你不喜歡以上劇情，也可以自己設計故事發展：
+</p>
+
+<textarea id="customStory"
+placeholder="例如：基德與安室被迫合作追查第三勢力......"></textarea>
+
+<button onclick="saveCustomStory()">
+顯示我的劇本
+</button>
+
+<div id="customResult" class="result"></div>
+</div>
+
+<div class="footer">
+本頁面為粉絲互動創作範例，故事分支為原創延伸內容。
+</div>
+
+</div>
+
+<script>
+
+function showStory() {
+
+    const selected =
+        document.querySelector('input[name="story"]:checked');
+
+    const result =
+        document.getElementById("result");
+
+    if (!selected) {
+        alert("請先選擇一個故事走向！");
+        return;
+    }
+
+    let text = "";
+
+    switch(selected.value) {
+
+        case "1":
+            text = `
+            <h3>劇本 A：守護者的預告函</h3>
+            <p>
+            基德真正想帶走的並非寶石，
+            而是藏在展示櫃中的機密文件。
+            柯南發現有人正企圖利用活動製造意外，
+            於是與基德展開短暫合作。
+            最終，真正的陰謀被揭穿，
+            基德則在煙霧之中神秘離去。
+            </p>
+            `;
+            break;
+
+        case "2":
+            text = `
+            <h3>劇本 B：安室的陷阱</h3>
+            <p>
+            安室提前分析了所有可能的逃脫路線，
+            並設下層層監控。
+            當基德準備行動時，
+            發現自己的每一步都被預測。
+            兩人展開一場智慧與心理戰，
+            現場觀眾甚至不知道真正的對決正在發生。
+            </p>
+            `;
+            break;
+
+        case "3":
+            text = `
+            <h3>劇本 C：真正的犯人</h3>
+            <p>
+            展覽現場發生失竊事件後，
+            所有人都懷疑是基德所為。
+            然而柯南發現手法與基德風格完全不同。
+            基德決定現身提供線索，
+            與柯南一起揭穿幕後主使。
+            </p>
+            `;
+            break;
+
+        case "4":
+            text = `
+            <h3>劇本 D：消失的密碼</h3>
+            <p>
+            王室文物中藏有古老密碼，
+            指向一筆失落的寶藏。
+            基德、安室與柯南各自追查線索，
+            卻發現有神秘組織也在尋找答案。
+            故事將通往更大的冒險。
+            </p>
+            `;
+            break;
+    }
+
+    result.innerHTML = text;
+    result.style.display = "block";
+}
+
+function saveCustomStory() {
+
+    const content =
+        document.getElementById("customStory").value.trim();
+
+    const box =
+        document.getElementById("customResult");
+
+    if (content === "") {
+        alert("請先輸入你的故事！");
+        return;
+    }
+
+    box.innerHTML = `
+        <h3>你的專屬劇本</h3>
+        <p>${content}</p>
+    `;
+
+    box.style.display = "block";
+}
+
+</script>
+
+</body>
+</html>

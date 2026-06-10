@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoodTune 心情音樂推薦</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:"Microsoft JhengHei",sans-serif;
+}
+
+body{
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+padding:20px;
+
+background:
+linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.7)),
+url('https://images.aeonmedia.co/images/bd08867b-48fa-4890-b90a-3fc2fc184d5b/imperial-boy-essay-v2.jpg?width=3840&quality=75&format=auto');
+
+background-size:cover;
+background-position:center;
+background-attachment:fixed;
+}
+
+.container{
+width:100%;
+max-width:900px;
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(15px);
+border-radius:25px;
+padding:30px;
+border:1px solid rgba(255,255,255,.15);
+color:white;
+text-align:center;
+}
+
+.logo{
+font-size:60px;
+margin-bottom:10px;
+}
+
+h1{
+margin-bottom:10px;
+}
+
+.subtitle{
+opacity:.8;
+margin-bottom:25px;
+}
+
+.moods{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:10px;
+margin-bottom:25px;
+}
+
+.mood-btn{
+border:none;
+padding:12px 20px;
+border-radius:50px;
+cursor:pointer;
+background:rgba(255,255,255,.15);
+color:white;
+font-weight:bold;
+transition:.3s;
+}
+
+.mood-btn:hover{
+transform:translateY(-2px);
+background:rgba(255,255,255,.25);
+}
+
+.result{
+display:none;
+justify-content:center;
+margin-top:20px;
+}
+
+.card{
+width:420px;
+max-width:100%;
+background:rgba(255,255,255,.1);
+border-radius:20px;
+overflow:hidden;
+}
+
+.cover{
+width:100%;
+height:240px;
+object-fit:cover;
+display:block;
+}
+
+.info{
+padding:20px;
+}
+
+.song-title{
+font-size:24px;
+font-weight:bold;
+color:#ffe082;
+margin-bottom:8px;
+}
+
+.artist{
+opacity:.85;
+margin-bottom:12px;
+}
+
+.reason{
+line-height:1.8;
+margin-bottom:20px;
+}
+
+.play-btn{
+display:inline-block;
+padding:12px 24px;
+background:#ff0000;
+color:white;
+text-decoration:none;
+border-radius:999px;
+font-weight:bold;
+margin-bottom:15px;
+}
+
+.play-btn:hover{
+opacity:.9;
+}
+
+.retry-btn{
+display:block;
+margin:0 auto;
+padding:12px 24px;
+border:none;
+background:#ffd54f;
+border-radius:999px;
+cursor:pointer;
+font-weight:bold;
+}
+
+footer{
+margin-top:25px;
+opacity:.7;
+}
+
+@media(max-width:768px){
+
+.card{
+width:100%;
+}
+
+.cover{
+height:200px;
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="logo">🎵</div>
+
+<h1>MoodTune</h1>
+
+<div class="subtitle">
+選擇你的心情，讓音樂陪伴你
+</div>
+
+<div class="moods">
+
+<button class="mood-btn" onclick="recommend('happy')">
+😊 開心
+</button>
+
+<button class="mood-btn" onclick="recommend('sad')">
+😢 難過
+</button>
+
+<button class="mood-btn" onclick="recommend('relax')">
+🌿 放鬆
+</button>
+
+<button class="mood-btn" onclick="recommend('energy')">
+🔥 熱血
+</button>
+
+<button class="mood-btn" onclick="recommend('love')">
+💔 失戀
+</button>
+
+<button class="mood-btn" onclick="recommend('night')">
+🌙 深夜
+</button>
+
+</div>
+
+<div id="result" class="result"></div>
+
+<footer>
+歌曲來源：YouTube
+</footer>
+
+</div>
+
+<script>
+
+const songs = {
+
+happy:[
+["Happy","Pharrell Williams","ZbZSe6N_BXs","充滿正能量與快樂氛圍。"],
+["Firework","Katy Perry","QGJuMBdaqIw","鼓勵勇敢做自己。"],
+["Dynamite","BTS","gdZLi9oWNZg","帶來活力與歡樂。"]
+],
+
+sad:[
+["Someone Like You","Adele","hLQl3WQQoQ0","陪伴低落情緒。"],
+["Fix You","Coldplay","k4V3Mo61fJM","帶來安慰與希望。"],
+["Photograph","Ed Sheeran","nSDgHBxUbVQ","懷念過往時光。"]
+],
+
+relax:[
+["River Flows In You","Yiruma","7maJOI3QMu0","舒緩鋼琴旋律。"],
+["Better Together","Jack Johnson","seZMOTGCDag","簡單幸福。"],
+["Perfect","Ed Sheeran","2Vv-BfVoq4g","柔和浪漫。"]
+],
+
+energy:[
+["Believer","Imagine Dragons","7wtfhZwyrcc","激發鬥志。"],
+["Thunder","Imagine Dragons","fKopy74weus","充滿能量。"],
+["Hall Of Fame","The Script","mk48xRzuNvA","追逐夢想。"]
+],
+
+love:[
+["Someone You Loved","Lewis Capaldi","zABLecsR5UE","失戀療癒。"],
+["When I Was Your Man","Bruno Mars","ekzHIouo8Q4","遺憾與思念。"],
+["Apologize","OneRepublic","ZSM3w1v-A_Y","感情反思。"]
+],
+
+night:[
+["Night Changes","One Direction","syFZfO_wfMQ","適合夜晚獨處。"],
+["The Night We Met","Lord Huron","KtlgYxa6BMU","故事感十足。"],
+["Slow Dancing In The Dark","Joji","K3Qzzggn--s","深夜情緒。"]
+]
+
+};
+
+function recommend(mood){
+
+const list = songs[mood];
+
+const song =
+list[Math.floor(Math.random()*list.length)];
+
+document.getElementById("result").style.display="flex";
+
+document.getElementById("result").innerHTML=`
+
+<div class="card">
+
+<img
+class="cover"
+src="https://img.youtube.com/vi/${song[2]}/hqdefault.jpg"
+alt="${song[0]}">
+
+<div class="info">
+
+<div class="song-title">
+${song[0]}
+</div>
+
+<div class="artist">
+${song[1]}
+</div>
+
+<div class="reason">
+${song[3]}
+</div>
+
+<a
+class="play-btn"
+href="https://www.youtube.com/watch?v=${song[2]}"
+target="_blank">
+▶ 前往 YouTube 觀看影片
+</a>
+
+<button
+class="retry-btn"
+onclick="recommend('${mood}')">
+🔄 重新推薦
+</button>
+
+</div>
+
+</div>
+
+`;
+
+}
+
+</script>
+
+</body>
+</html>

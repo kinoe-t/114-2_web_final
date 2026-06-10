@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>基德 VS 安室｜王妃的瀏海・互動故事劇本</title>
+  <style>
+    :root{
+      --bg:#0f1221;
+      --panel:#171b2f;
+      --panel2:#202646;
+      --text:#f4f7ff;
+      --muted:#b7c0e0;
+      --accent:#7dd3fc;
+      --accent2:#f9a8d4;
+      --good:#86efac;
+      --warn:#fde68a;
+      --danger:#fca5a5;
+      --line:#32406f;
+      --shadow: 0 20px 60px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(125,211,252,.14), transparent 25%),
+        radial-gradient(circle at right, rgba(249,168,212,.10), transparent 30%),
+        linear-gradient(180deg, #0b1020 0%, #11162a 100%);
+      color:var(--text);
+      min-height:100vh;
+    }
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:24px;
+    }
+    .hero{
+      background: linear-gradient(135deg, rgba(125,211,252,.14), rgba(249,168,212,.10));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:24px;
+      padding:28px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .hero:after{
+      content:"";
+      position:absolute;
+      inset:auto -80px -80px auto;
+      width:240px;
+      height:240px;
+      border-radius:50%;
+      background:rgba(125,211,252,.12);
+      filter:blur(10px);
+    }
+    h1{
+      margin:0 0 10px;
+      font-size:clamp(28px, 4vw, 48px);
+      line-height:1.15;
+    }
+    .sub{
+      margin:0;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.7;
+      max-width:900px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:18px;
+      margin-top:18px;
+    }
+    .card{
+      background:rgba(23,27,47,.92);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius);
+      padding:20px;
+      box-shadow:var(--shadow);
+    }
+    .card h2{
+      margin:0 0 12px;
+      font-size:22px;
+    }
+    .story{
+      white-space:pre-wrap;
+      line-height:1.9;
+      color:#e9eeff;
+      font-size:16px;
+      min-height:180px;
+    }
+    .choices{
+      display:grid;
+      gap:12px;
+      margin-top:14px;
+    }
+    button.choice, button.nav{
+      border:none;
+      cursor:pointer;
+      padding:14px 16px;
+      border-radius:14px;
+      font-size:15px;
+      transition:.18s transform, .18s opacity, .18s background;
+      color:var(--text);
+      background:linear-gradient(180deg, rgba(50,64,111,.95), rgba(32,38,70,.95));
+      border:1px solid rgba(255,255,255,.08);
+      text-align:left;
+    }
+    button.choice:hover, button.nav:hover{transform:translateY(-1px); opacity:.98}
+    .tag{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(125,211,252,.12);
+      color:var(--accent);
+      font-size:13px;
+      margin-bottom:10px;
+    }
+    .panel{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+    .inputRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    input, textarea{
+      width:100%;
+      background:#0e1330;
+      color:var(--text);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      padding:14px 14px;
+      font-size:15px;
+      outline:none;
+    }
+    textarea{min-height:110px; resize:vertical}
+    .mini{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.65;
+    }
+    .status{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .pill{
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:13px;
+      color:#dbe4ff;
+    }
+    .controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .controls button{
+      padding:12px 14px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background:#121832;
+      color:var(--text);
+      cursor:pointer;
+    }
+    .controls button:hover{background:#182040}
+    .result{
+      margin-top:12px;
+      padding:14px;
+      border-radius:14px;
+      background:rgba(134,239,172,.09);
+      border:1px solid rgba(134,239,172,.18);
+      color:#eafff0;
+      display:none;
+      white-space:pre-wrap;
+      line-height:1.8;
+    }
+    .footer{
+      margin:16px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.7;
+    }
+    .highlight{color:var(--warn)}
+    .danger{color:var(--danger)}
+    .good{color:var(--good)}
+    @media (max-width: 900px){
+      .grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="tag">互動式單檔靜態網頁</span>
+      <h1>基德 VS 安室｜王妃的瀏海</h1>
+      <p class="sub">
+        這是一個把《名偵探柯南》第 1163–1164 集改造成「故事劇本選擇遊戲」的靜態頁面。
+        玩家會先看到背景介紹，接著在不同選項中決定調查方向；自由作答是其中一個選項，
+        不是獨立劇本，而是讓系統沿著原本主線接續推進。
+      </p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>故事背景</h2>
+        <div class="story" id="story">
+在羅巴諾夫帝國秘寶展中，最受注目的展品是「王妃的瀏海」——一頂鑲有巨大石榴石的王冠。
+怪盜基德已提前發出預告，表示要在午夜奪走它，因此展館內外戒備森嚴。
+
+柯南、毛利蘭、鈴木園子前來參觀；安室透與小梓也因咖啡廳臨時安排而同行。
+中森警官負責現場防盜，風見則代表安室方面確認警備細節。
+然而，基德似乎早已混入人群，真正的問題不是「他會不會來」，而是「他會偽裝成誰」。
+        </div>
+
+        <div class="status">
+          <span class="pill">主角：柯南</span>
+          <span class="pill">對手：怪盜基德</span>
+          <span class="pill">觀察對象：安室／小梓／風見</span>
+          <span class="pill">任務：找出真相</span>
+        </div>
+
+        <div class="choices" id="choices"></div>
+      </div>
+
+      <aside class="card panel">
+        <h2>操作區</h2>
+        <div class="mini">
+          自由作答不會一直顯示在旁邊，而是當你在選項裡選到它時，才會展開輸入框。
+          之後系統會保留原本劇本框架，接著往下演出。
+        </div>
+
+        <div id="freeFormBox" style="display:none;">
+          <label for="userInput" class="mini">自由作答：</label>
+          <textarea id="userInput" placeholder="請輸入你想要的劇情內容，例如角色反應、推理方向、想要的走向..."></textarea>
+
+          <div class="controls">
+            <button class="nav" onclick="useFreeForm()">送出自由作答</button>
+            <button class="nav" onclick="hideFreeForm()">取消</button>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="nav" onclick="restartGame()">重新開始</button>
+        </div>
+
+        <div class="result" id="result"></div>
+
+        <div class="footer">
+          本頁為原創互動改寫，僅保留角色與案件前提，劇情內容重新設計成可選擇的故事玩法。
+        </div>
+      </aside>
+    </section>
+  </div>
+
+  <script>
+    const nodes = {
+      start: {
+        text: `你現在站在展館入口。基德的預告已經造成大量人潮，而安室、小梓、風見都在視線範圍內。
+你要先從哪個方向切入？`,
+        choices: [
+          { label: "1. 先檢查展館結構與防盜機關", next: "security" },
+          { label: "2. 先觀察安室、小梓、風見的可疑行為", next: "suspects" },
+          { label: "3. 先推測基德會如何脫身與假扮", next: "kidplan" },
+          { label: "4. 自由作答", next: "free" }
+        ]
+      },
+      security: {
+        text: `你發現展廳天花板、展示櫃、警備動線都經過特別設計，像是專門為基德準備的反制陷阱。
+但越是刻意的佈置，越可能是被反利用的破綻。接下來，你要怎麼做？`,
+        choices: [
+          { label: "1. 重新檢查天花板與展示櫃的連動", next: "trap" },
+          { label: "2. 找中森警官要警備圖與人員配置", next: "police" },
+          { label: "3. 假設基德早就看穿陷阱，改查人員偽裝", next: "suspects" },
+          { label: "4. 自由作答", next: "free" }
+        ]
+      },
+      suspects: {
+        text: `你開始觀察三個人。
+安室表情冷靜，卻對現場細節過度敏銳；小梓似乎對基德特別興奮；風見則一直在確認安室的指示。
+其中一人可能只是普通支持者，另一人可能是在引導現場視線。`,
+        choices: [
+          { label: "1. 直接懷疑小梓", next: "azusa" },
+          { label: "2. 直接懷疑安室", next: "amuro" },
+          { label: "3. 直接懷疑風見", next: "kazami" },
+          { label: "4. 自由作答", next: "free" }
+        ]
+      },
+      kidplan: {
+        text: `你推測基德不只想偷王冠，還想利用混亂製造替身與誤導線索。
+如果是這樣，他很可能在「消失」前先讓某個人看起來最像犯人。`,
+        choices: [
+          { label: "1. 預測基德會用煙霧與人潮撤離", next: "smoke" },
+          { label: "2. 預測基德會故意挑釁安室", next: "taunt" },
+          { label: "3. 預測基德會把罪名推給三人中的一人", next: "frame" },
+          { label: "4. 自由作答", next: "free" }
+        ]
+      },
+      trap: {
+        text: `你確認到陷阱本身確實精密，但仍有一個問題：如果基德提前取得情報，他就能把陷阱變成舞台效果。
+現在的重點不是機關夠不夠強，而是誰先失去冷靜。`,
+        choices: [
+          { label: "1. 讓柯南假裝被騙，逼基德先出手", next: "ending1" },
+          { label: "2. 由安室反向設局，引基德現身", next: "ending2" },
+          { label: "3. 將警備重心轉向觀眾區", next: "ending3" },
+          { label: "4. 自由作答", next: "free" }
+        ]
+      },
+      police: {
+        text: `你拿到警備配置後，發現人員分布看似周全，但只要有人故意製造視線死角，整個佈局就會被打亂。
+柯南提醒你：越是看起來最合理的答案，越要小心它是不是基德放的餌。`,
+        choices: [
+          { label: "1. 追查誰在查看警備圖", next: "ending2" },
+          { label: "2. 盯住小梓的動線", next: "azusa" },
+          { label: "3. 盯住安室的臨場反應", next: "amuro" },
+          { label: "4. 自由作答", next: "free" }
+        ]
+      },
+      azusa: {
+        text: `你懷疑小梓，但她的反應更像是單純熱愛基德，而不是有計畫的犯人。
+這時候，真正的線索反而出現在她看向某個人的瞬間——她似乎早就注意到有人在刻意引導話題。`,
+        choices: [
+          { label: "1. 把注意力轉回安室", next: "amuro" },
+          { label: "2. 把注意力轉回風見", next: "kazami" },
+          { label: "3. 直接公開質問小梓", next: "ending3" },
+          { label: "4. 自由作答", next: "free" }
+        ]
+      },
+      amuro: {
+        text: `你盯上安室後，發現他太鎮定了，鎮定得像早就知道誰會出手。
+但他的觀察也救了現場一次：如果不是他，大家可能早已被真正的基德牽著走。`,
+        choices: [
+          { label: "1. 相信安室是盟友，與他合作追查", next: "ending2" },
+          { label: "2. 假裝不信任他，測試他的反應", next: "ending1" },
+          { label: "3. 把他列為最終觀察對象", next: "ending3" },
+          { label: "4. 自由作答", next: "free" }
+        ]
+      },
+      kazami: {
+        text: `風見的行動很像標準安保人員，但也正因如此，他最適合被拿來做偽裝。
+你意識到，真正的難題不是找出誰在說謊，而是看出誰的語氣忽然不對勁。`,
+        choices: [
+          { label: "1. 比對前後說話習慣", next: "ending3" },
+          { label: "2. 要求他重述剛才看到的細節", next: "ending1" },
+          { label: "3. 觀察他與安室的互動", next: "ending2" },
+          { label: "4. 自由作答", next: "free" }
+        ]
+      },
+      smoke: {
+        text: `你成功預測到煙霧會出現，但基德的目的不是逃跑，而是用煙霧把所有人的判斷力一起偷走。
+現在你必須在混亂中做出最後判斷。`,
+        choices: [
+          { label: "1. 追煙霧來源", next: "ending1" },
+          { label: "2. 守住展示櫃", next: "ending2" },
+          { label: "3. 先保護觀眾", next: "ending3" },
+          { label: "4. 自由作答", next: "free" }
+        ]
+      },
+      taunt: {
+        text: `你猜對了，基德確實喜歡挑釁對手。
+安室越冷靜，基德就越想用更華麗的方式證明自己不是普通小偷。`,
+        choices: [
+          { label: "1. 讓安室回擊基德的挑釁", next: "ending2" },
+          { label: "2. 讓柯南當誘餌", next: "ending1" },
+          { label: "3. 讓中森警官全面包圍出口", next: "ending3" },
+          { label: "4. 自由作答", next: "free" }
+        ]
+      },
+      frame: {
+        text: `你推測基德要嫁禍給某人，而最容易被誤認的對象，往往不是最可疑的人，而是最不會被懷疑的人。
+這下要做的不是抓誰，而是替誰洗清嫌疑。`,
+        choices: [
+          { label: "1. 洗清小梓", next: "ending1" },
+          { label: "2. 洗清安室", next: "ending2" },
+          { label: "3. 洗清風見", next: "ending3" },
+          { label: "4. 自由作答", next: "free" }
+        ]
+      },
+      ending1: {
+        text: `結局 A：
+你選擇讓柯南主動丟出假線索，逼基德提前行動。
+基德果然上鉤，但在最後一刻看穿你的計策，留下一張得意的卡片後漂亮撤退。
+雖然沒有抓到人，卻成功守住了王妃的瀏海，也讓現場所有人都記住了這次精心安排的對決。`,
+        choices: [
+          { label: "回到開頭", next: "start" }
+        ]
+      },
+      ending2: {
+        text: `結局 B：
+你選擇與安室合作，雙方用彼此的觀察力互補。
+在柯南的推理下，基德的偽裝被一步步拆解，雖然還是逃脫了，但他的節奏被完全打亂。
+這一局，是偵探與公安的精準聯手。`,
+        choices: [
+          { label: "回到開頭", next: "start" }
+        ]
+      },
+      ending3: {
+        text: `結局 C：
+你把重心放在全場安全與群眾秩序，讓基德無法利用混亂。
+他雖然成功拿走展品的一瞬間，卻沒能把現場導向他想要的戲碼。
+最後，柯南從細節中鎖定真相，基德的行動被迫中止，留下的是一場沒有傷亡的華麗攻防。`,
+        choices: [
+          { label: "回到開頭", next: "start" }
+        ]
+      },
+      free: {
+        text: `自由作答模式已開啟。
+請在右側輸入你希望角色如何接續劇情。系統不會重寫整個主線，而是沿用目前的案件框架繼續推進。
+如果你要直接結束故事，也可以輸入「結束故事」、「完結」、「停在這裡」或類似語句。`,
+        choices: [
+          { label: "回到開頭", next: "start" }
+        ]
+      }
+    };
+
+    const storyEl = document.getElementById("story");
+    const choicesEl = document.getElementById("choices");
+    const resultEl = document.getElementById("result");
+    const inputEl = document.getElementById("userInput");
+    const freeFormBox = document.getElementById("freeFormBox");
+
+    function render(nodeKey){
+      const node = nodes[nodeKey];
+      storyEl.textContent = node.text;
+      choicesEl.innerHTML = "";
+      node.choices.forEach(c => {
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.textContent = c.label;
+        btn.onclick = () => {
+          if (c.next === "free") {
+            showFreeForm();
+          } else {
+            render(c.next);
+          }
+        };
+        choicesEl.appendChild(btn);
+      });
+      freeFormBox.style.display = "none";
+      resultEl.style.display = "none";
+      resultEl.textContent = "";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function showFreeForm(){
+      freeFormBox.style.display = "block";
+      resultEl.style.display = "none";
+      resultEl.textContent = "";
+      inputEl.focus();
+    }
+
+    function hideFreeForm(){
+      freeFormBox.style.display = "none";
+      inputEl.value = "";
+      resultEl.style.display = "none";
+      resultEl.textContent = "";
+    }
+
+    function useFreeForm(){
+      const text = inputEl.value.trim();
+      resultEl.style.display = "block";
+
+      if(!text){
+        resultEl.textContent = "請先輸入自由作答內容。";
+        return;
+      }
+
+      const endWords = ["結束故事", "完結", "結束", "停在這裡", "到此為止", "END", "end"];
+      const isEnd = endWords.some(w => text.includes(w));
+
+      if(isEnd){
+        resultEl.textContent =
+          "你選擇讓故事在此收束。\n\n" +
+          "柯南已經掌握了關鍵線索，安室也確認了現場的異狀，而基德完成了他一貫華麗的退場。\n" +
+          "這個故事到此結束。";
+        freeFormBox.style.display = "none";
+        return;
+      }
+
+      resultEl.textContent =
+        "系統接續劇本：\n\n" +
+        "你剛才的選擇是：「" + text + "」\n\n" +
+        "柯南沒有推翻原本的案件框架，而是沿著目前線索繼續追查。安室與風見仍在現場行動，小梓也依然是關鍵目擊者，而基德則利用這段對話製造新的視線死角。\n\n" +
+        "接下來，柯南必須在不改變主線的前提下，判斷：誰在說謊、誰在配合、誰正在被利用。";
+    }
+
+    function restartGame(){
+      inputEl.value = "";
+      hideFreeForm();
+      render("start");
+    }
+
+    render("start");
+  </script>
+</body>
+</html>

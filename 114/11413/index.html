@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiffany 線上商店 - 精選好物</title>
+    <style>
+        /* ===== 全局樣式 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --tiffany-blue: #0abab5;
+            --light-tiffany: #a8e6e1;
+            --dark-tiffany: #008b7f;
+            --white: #ffffff;
+            --black: #000000;
+            --light-gray: #f5f5f5;
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--black);
+            background-color: var(--white);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ===== 導航欄 ===== */
+        .navbar {
+            background: linear-gradient(135deg, var(--tiffany-blue) 0%, var(--light-tiffany) 100%);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo h1 {
+            color: var(--white);
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--white);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+
+        /* ===== 頁頭 Banner ===== */
+        .hero {
+            background: linear-gradient(135deg, var(--tiffany-blue) 0%, var(--light-tiffany) 100%);
+            padding: 80px 20px;
+            text-align: center;
+            color: var(--white);
+        }
+
+        .hero-content h2 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero-content p {
+            font-size: 1.3rem;
+            opacity: 0.95;
+        }
+
+        /* ===== 章節標題 ===== */
+        .section-title {
+            font-size: 2.5rem;
+            color: var(--black);
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--tiffany-blue);
+            border-radius: 2px;
+        }
+
+        /* ===== 熱門商品區 ===== */
+        .featured-section {
+            padding: 80px 20px;
+            background-color: var(--white);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .product-card {
+            background: var(--white);
+            border: 2px solid var(--light-tiffany);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(10, 186, 181, 0.1);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 20px rgba(10, 186, 181, 0.2);
+            border-color: var(--tiffany-blue);
+        }
+
+        .product-image {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        .product-card h3 {
+            color: var(--black);
+            font-size: 1.4rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .product-desc {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            min-height: 2.4rem;
+        }
+
+        .product-price {
+            font-size: 1.8rem;
+            color: var(--tiffany-blue);
+            font-weight: 700;
+            margin: 1rem 0;
+        }
+
+        .add-to-cart {
+            background: linear-gradient(135deg, var(--tiffany-blue), var(--dark-tiffany));
+            color: var(--white);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .add-to-cart:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(10, 186, 181, 0.3);
+        }
+
+        .add-to-cart:active {
+            transform: scale(0.98);
+        }
+
+        /* ===== 線上訂購區 ===== */
+        .order-section {
+            padding: 80px 20px;
+            background: linear-gradient(135deg, rgba(10, 186, 181, 0.05), rgba(168, 230, 225, 0.1));
+        }
+
+        .order-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .order-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .order-form-container,
+        .order-info {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 2px solid var(--light-tiffany);
+        }
+
+        .order-form-container h3,
+        .order-info h3 {
+            color: var(--tiffany-blue);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--light-tiffany);
+            padding-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--black);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid var(--light-tiffany);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--tiffany-blue);
+            box-shadow: 0 0 8px rgba(10, 186, 181, 0.3);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--tiffany-blue), var(--dark-tiffany));
+            color: var(--white);
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            width: 100%;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(10, 186, 181, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, rgba(10, 186, 181, 0.1), rgba(168, 230, 225, 0.1));
+            padding: 1.5rem;
+            border-left: 4px solid var(--tiffany-blue);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-box h4 {
+            color: var(--tiffany-blue);
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        .info-box p {
+            color: var(--black);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        /* ===== 線上問答區 ===== */
+        .faq-section {
+            padding: 80px 20px;
+            background: var(--white);
+        }
+
+        .faq-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .faq-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .faq-form,
+        .faq-answers {
+            background: linear-gradient(135deg, rgba(10, 186, 181, 0.05), rgba(168, 230, 225, 0.1));
+            padding: 2rem;
+            border-radius: 12px;
+            border: 2px solid var(--light-tiffany);
+        }
+
+        .faq-form h3,
+        .faq-answers h3 {
+            color: var(--tiffany-blue);
+            font-size: 1.4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-form .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .faq-item {
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--light-tiffany);
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-question {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 1rem 0;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .faq-question:hover {
+            color: var(--tiffany-blue);
+        }
+
+        .faq-question .icon {
+            display: inline-block;
+            margin-right: 1rem;
+            transition: transform 0.3s ease;
+            font-size: 0.9rem;
+            min-width: 20px;
+        }
+
+        .faq-question.active .icon {
+            transform: rotate(90deg);
+        }
+
+        .faq-question h4 {
+            margin: 0;
+            font-size: 1rem;
+            color: var(--black);
+        }
+
+        .faq-answer {
+            display: none;
+            padding: 0 1rem 1rem 2.5rem;
+            color: var(--black);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        .faq-answer.show {
+            display: block;
+        }
+
+        /* ===== 頁腳 ===== */
+        .footer {
+            background: linear-gradient(135deg, var(--tiffany-blue), var(--dark-tiffany));
+            color: var(--white);
+            padding: 3rem 20px 1rem;
+            margin-top: 80px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h4 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--white);
+        }
+
+        .footer-section p {
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.95;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section a {
+            color: var(--white);
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* ===== 動畫 ===== */
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        /* ===== 響應式設計 ===== */
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 1rem;
+            }
+
+            .hero-content h2 {
+                font-size: 1.8rem;
+            }
+
+            .hero-content p {
+                font-size: 1rem;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .product-card h3 {
+                font-size: 1.2rem;
+            }
+
+            .product-price {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo h1 {
+                font-size: 1.2rem;
+            }
+
+            .nav-links {
+                gap: 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .hero-content h2 {
+                font-size: 1.5rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 導航欄 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <h1>✨ Tiffany Store</h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#featured">熱門商品</a></li>
+                <li><a href="#order">線上訂購</a></li>
+                <li><a href="#faq">線上問答</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 頁頭 Banner -->
+    <header class="hero">
+        <div class="hero-content">
+            <h2>歡迎來到 Tiffany 線上商店</h2>
+            <p>精選優質商品，為您帶來高品質的購物體驗</p>
+        </div>
+    </header>
+
+    <!-- 熱門商品區 -->
+    <section id="featured" class="featured-section">
+        <div class="container">
+            <h2 class="section-title">熱門商品</h2>
+            <div class="products-grid">
+                <div class="product-card">
+                    <div class="product-image">🎀</div>
+                    <h3>優雅手錶</h3>
+                    <p class="product-desc">精緻典雅的設計，適合日常搭配</p>
+                    <p class="product-price">NT$ 1,299</p>
+                    <button class="add-to-cart" onclick="addToCart('優雅手錶', 1299)">加入購物車</button>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image">💍</div>
+                    <h3>水鑽項鍊</h3>
+                    <p class="product-desc">閃耀動人，展現優雅氣質</p>
+                    <p class="product-price">NT$ 899</p>
+                    <button class="add-to-cart" onclick="addToCart('水鑽項鍊', 899)">加入購物車</button>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image">👜</div>
+                    <h3>皮質手袋</h3>
+                    <p class="product-desc">高級皮革，容量大方便携帯</p>
+                    <p class="product-price">NT$ 1,599</p>
+                    <button class="add-to-cart" onclick="addToCart('皮質手袋', 1599)">加入購物車</button>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image">🕶️</div>
+                    <h3>太陽眼鏡</h3>
+                    <p class="product-desc">時尚設計，保護眼睛</p>
+                    <p class="product-price">NT$ 749</p>
+                    <button class="add-to-cart" onclick="addToCart('太陽眼鏡', 749)">加入購物車</button>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image">⌚</div>
+                    <h3>鑽石手錶</h3>
+                    <p class="product-desc">奢華閃耀，彰顯氣質</p>
+                    <p class="product-price">NT$ 2,499</p>
+                    <button class="add-to-cart" onclick="addToCart('鑽石手錶', 2499)">加入購物車</button>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image">👗</div>
+                    <h3>優雅洋裝</h3>
+                    <p class="product-desc">舒適布料，百搭款式</p>
+                    <p class="product-price">NT$ 1,099</p>
+                    <button class="add-to-cart" onclick="addToCart('優雅洋裝', 1099)">加入購物車</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 線上訂購區 -->
+    <section id="order" class="order-section">
+        <div class="container">
+            <h2 class="section-title">線上訂購</h2>
+            <div class="order-content">
+                <div class="order-form-container">
+                    <h3>訂購表單</h3>
+                    <form id="orderForm" class="order-form">
+                        <div class="form-group">
+                            <label for="customerName">姓名 *</label>
+                            <input type="text" id="customerName" name="name" required placeholder="請輸入您的姓名">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customerEmail">電郵 *</label>
+                            <input type="email" id="customerEmail" name="email" required placeholder="請輸入您的電郵">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customerPhone">電話 *</label>
+                            <input type="tel" id="customerPhone" name="phone" required placeholder="請輸入您的聯絡電話">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="deliveryAddress">送貨地址 *</label>
+                            <textarea id="deliveryAddress" name="address" required placeholder="請輸入完整的送貨地址" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="productSelect">選擇商品 *</label>
+                            <select id="productSelect" name="product" required>
+                                <option value="">-- 請選擇商品 --</option>
+                                <option value="優雅手錶">優雅手錶 (NT$ 1,299)</option>
+                                <option value="水鑽項鍊">水鑽項鍊 (NT$ 899)</option>
+                                <option value="皮質手袋">皮質手袋 (NT$ 1,599)</option>
+                                <option value="太陽眼鏡">太陽眼鏡 (NT$ 749)</option>
+                                <option value="鑽石手錶">鑽石手錶 (NT$ 2,499)</option>
+                                <option value="優雅洋裝">優雅洋裝 (NT$ 1,099)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="quantity">數量 *</label>
+                            <input type="number" id="quantity" name="quantity" min="1" max="10" value="1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="specialRequest">特殊要求</label>
+                            <textarea id="specialRequest" name="request" placeholder="如有特殊要求，請在此填寫" rows="2"></textarea>
+                        </div>
+
+                        <button type="submit" class="submit-btn">提交訂單</button>
+                    </form>
+                </div>
+
+                <div class="order-info">
+                    <h3>訂購資訊</h3>
+                    <div class="info-box">
+                        <h4>📦 送貨方式</h4>
+                        <p>• 標準送貨：3-5 個工作天</p>
+                        <p>• 快速送貨：1-2 個工作天 (加收 $100)</p>
+                    </div>
+                    <div class="info-box">
+                        <h4>💳 付款方式</h4>
+                        <p>• 信用卡</p>
+                        <p>• 銀行轉帳</p>
+                        <p>• 貨到付款</p>
+                    </div>
+                    <div class="info-box">
+                        <h4>✅ 退貨政策</h4>
+                        <p>• 收貨後 7 天內可退貨</p>
+                        <p>• 商品需保持全新狀態</p>
+                        <p>• 退貨運費由客戶承擔</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 線上問答區 -->
+    <section id="faq" class="faq-section">
+        <div class="container">
+            <h2 class="section-title">線上問答</h2>
+            
+            <div class="faq-container">
+                <div class="faq-form">
+                    <h3>有問題嗎？請提問</h3>
+                    <form id="questionForm" class="question-form">
+                        <div class="form-group">
+                            <label for="askerName">您的名字</label>
+                            <input type="text" id="askerName" name="name" required placeholder="請輸入您的名字">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="askerEmail">您的電郵</label>
+                            <input type="email" id="askerEmail" name="email" required placeholder="請輸入您的電郵">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="questionText">提問內容 *</label>
+                            <textarea id="questionText" name="question" required placeholder="請輸入您的問題..." rows="4"></textarea>
+                        </div>
+
+                        <button type="submit" class="submit-btn">提交問題</button>
+                    </form>
+                </div>
+
+                <div class="faq-answers">
+                    <h3>常見問題</h3>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span class="icon">▶</span>
+                            <h4>Q: 商品是正品嗎？</h4>
+                        </div>
+                        <div class="faq-answer">
+                            <p>A: 是的，我們所有商品都是100%正品，直接從官方授權供應商採購，品質有保證。</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span class="icon">▶</span>
+                            <h4>Q: 訂單提交後多久會收到商品？</h4>
+                        </div>
+                        <div class="faq-answer">
+                            <p>A: 標準送貨為3-5個工作天。選擇快速送貨可在1-2個工作天內收到，需加收$100運費。</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span class="icon">▶</span>
+                            <h4>Q: 可以取消訂單嗎？</h4>
+                        </div>
+                        <div class="faq-answer">
+                            <p>A: 訂單確認後可在24小時內申請取消。超過此時限，商品已進入出貨流程則無法取消。</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span class="icon">▶</span>
+                            <h4>Q: 商品損壞或不符預期可以退貨嗎？</h4>
+                        </div>
+                        <div class="faq-answer">
+                            <p>A: 可以。收貨後7天內，商品保持全新狀態，可申請退貨。退貨運費由客戶承擔。</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span class="icon">▶</span>
+                            <h4>Q: 有會員優惠嗎？</h4>
+                        </div>
+                        <div class="faq-answer">
+                            <p>A: 我們正在開發會員系統，註冊會員即可獲得首次購物85折優惠，敬請期待！</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span class="icon">▶</span>
+                            <h4>Q: 如何聯絡客服？</h4>
+                        </div>
+                        <div class="faq-answer">
+                            <p>A: 您可以通過電郵 service@tiffanystore.com 或撥打客服熱線 0800-888-888 (營業時間：週一至週五 09:00-18:00) 聯絡我們。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 頁腳 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>關於我們</h4>
+                    <p>Tiffany Store 致力於提供高品質的商品和優質的購物體驗。</p>
+                </div>
+                <div class="footer-section">
+                    <h4>聯絡方式</h4>
+                    <p>📧 Email: service@tiffanystore.com</p>
+                    <p>📞 Phone: 0800-888-888</p>
+                    <p>📍 地址: 台北市信義區101號</p>
+                </div>
+                <div class="footer-section">
+                    <h4>快速連結</h4>
+                    <ul>
+                        <li><a href="#featured">熱門商品</a></li>
+                        <li><a href="#order">線上訂購</a></li>
+                        <li><a href="#faq">線上問答</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Tiffany Store. All rights reserved. | 隱私政策 | 使用條款</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ===== 購物車功能 =====
+        let cart = [];
+
+        function addToCart(productName, price) {
+            const existingProduct = cart.find(item => item.name === productName);
+            
+            if (existingProduct) {
+                existingProduct.quantity += 1;
+            } else {
+                cart.push({
+                    name: productName,
+                    price: price,
+                    quantity: 1
+                });
+            }
+            
+            showNotification(`✓ ${productName} 已加入購物車！`);
+            updateCartCount();
+        }
+
+        function updateCartCount() {
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            console.log(`購物車中有 ${totalItems} 件商品`);
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: linear-gradient(135deg, #0abab5, #008b7f);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(10, 186, 181, 0.3);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+                font-weight: 600;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // ===== 訂購表單提交 =====
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const customerName = document.getElementById('customerName').value;
+            const customerEmail = document.getElementById('customerEmail').value;
+            const customerPhone = document.getElementById('customerPhone').value;
+            const deliveryAddress = document.getElementById('deliveryAddress').value;
+            const product = document.getElementById('productSelect').value;
+            const quantity = document.getElementById('quantity').value;
+            const specialRequest = document.getElementById('specialRequest').value;
+            
+            if (!customerName || !customerEmail || !customerPhone || !deliveryAddress || !product || !quantity) {
+                showNotification('❌ 請填寫所有必填欄位！');
+                return;
+            }
+            
+            const orderData = {
+                timestamp: new Date().toLocaleString('zh-TW'),
+                customerName: customerName,
+                customerEmail: customerEmail,
+                customerPhone: customerPhone,
+                deliveryAddress: deliveryAddress,
+                product: product,
+                quantity: quantity,
+                specialRequest: specialRequest
+            };
+            
+            console.log('訂單資訊：', orderData);
+            
+            showNotification('✓ 訂單已成功提交！我們會儘快與您聯絡。');
+            
+            this.reset();
+            
+            alert(`訂單提交成功！\n\n訂單詳情：\n客戶姓名：${customerName}\n商品：${product}\n數量：${quantity}\n送貨地址：${deliveryAddress}\n\n我們將於24小時內與您聯絡確認訂單。`);
+        });
+
+        // ===== 問答表單提交 =====
+        document.getElementById('questionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const askerName = document.getElementById('askerName').value;
+            const askerEmail = document.getElementById('askerEmail').value;
+            const questionText = document.getElementById('questionText').value;
+            
+            if (!askerName || !askerEmail || !questionText) {
+                showNotification('❌ 請填寫所有欄位！');
+                return;
+            }
+            
+            const questionData = {
+                timestamp: new Date().toLocaleString('zh-TW'),
+                askerName: askerName,
+                askerEmail: askerEmail,
+                question: questionText
+            };
+            
+            console.log('提問資訊：', questionData);
+            
+            showNotification('✓ 感謝您的提問！我們會儘快回覆您。');
+            
+            this.reset();
+            
+            alert(`感謝您的提問！\n\n我們已收到您的問題：\n"${questionText}"\n\n客服團隊會於24小時內回覆至 ${askerEmail}。`);
+        });
+
+        // ===== FAQ 折疊功能 =====
+        function toggleFaq(element) {
+            const faqItem = element.parentElement;
+            const faqAnswer = faqItem.querySelector('.faq-answer');
+            
+            document.querySelectorAll('.faq-question').forEach(q => {
+                if (q !== element) {
+                    q.classList.remove('active');
+                }
+            });
+            
+            document.querySelectorAll('.faq-answer').forEach(a => {
+                if (a !== faqAnswer) {
+                    a.classList.remove('show');
+                }
+            });
+            
+            element.classList.toggle('active');
+            faqAnswer.classList.toggle('show');
+        }
+
+        // ===== 平滑滾動到章節 =====
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // ===== 頁面加載時的初始化 =====
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Tiffany 線上商店 已加載！');
+            updateCartCount();
+        });
+
+        // ===== 數量輸入驗證 =====
+        document.getElementById('quantity').addEventListener('change', function() {
+            let value = parseInt(this.value);
+            
+            if (value < 1) {
+                this.value = 1;
+            } else if (value > 10) {
+                this.value = 10;
+            }
+        });
+
+        // ===== 返回頂部按鈕 =====
+        function showBackToTop() {
+            const backToTopBtn = document.createElement('button');
+            backToTopBtn.innerHTML = '↑ 返回頂部';
+            backToTopBtn.style.cssText = `
+                position: fixed;
+                bottom: 30px;
+                right: 30px;
+                background: linear-gradient(135deg, #0abab5, #008b7f);
+                color: white;
+                border: none;
+                padding: 0.8rem 1.2rem;
+                border-radius: 50px;
+                cursor: pointer;
+                font-weight: 600;
+                display: none;
+                z-index: 999;
+                box-shadow: 0 4px 12px rgba(10, 186, 181, 0.3);
+                transition: all 0.3s ease;
+            `;
+            
+            document.body.appendChild(backToTopBtn);
+            
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTopBtn.style.display = 'block';
+                } else {
+                    backToTopBtn.style.display = 'none';
+                }
+            });
+            
+            backToTopBtn.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            
+            backToTopBtn.addEventListener('mouseover', function() {
+                this.style.transform = 'translateY(-3px)';
+            });
+            
+            backToTopBtn.addEventListener('mouseout', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        }
+
+        showBackToTop();
+    </script>
+</body>
+</html>

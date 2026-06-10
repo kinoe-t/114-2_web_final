@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>別惹橘貓！摸貓生存遊戲</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f0e6df;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 100vh;
+            max-height: 850px;
+            background: #fff5eb;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: none; /* 隱藏預設游標，使用自訂手手 */
+        }
+        /* UI 資訊欄 */
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 10;
+        }
+        .info-box {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #5d4037;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        #timer { color: #d32f2f; }
+        #score { color: #f57c00; }
+
+        /* 警告提示標語 */
+        #warning-alert {
+            position: absolute;
+            top: 90px;
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+            padding: 10px 30px;
+            border-radius: 30px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            z-index: 10;
+            display: none;
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+            animation: pulse 0.2s infinite alternate;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+
+        /* 貓咪本體與場景 */
+        #stage {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 20px;
+        }
+        .cat-layer {
+            position: absolute;
+            bottom: 20px;
+            width: 500px; /* 放大貓咪尺寸 */
+            height: 600px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom center;
+        }
+        /* 預設：背對的橘貓全身 */
+        #cat-back {
+            background-image: url('https://images.unsplash.com/photo-1561948955-570b270e7c36?auto=format&fit=crop&q=80&w=600'); 
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.15));
+            transform: scaleX(-1); /* 轉成背面感 */
+            clip-path: inset(10% 0px 0px 0px); 
+        }
+        /* 回頭狠瞪的貓頭 */
+        #cat-turn {
+            width: 250px;
+            height: 250px;
+            bottom: 340px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-image: url('https://images.unsplash.com/photo-1618826411640-d6df44dd3f7a?auto=format&fit=crop&q=80&w=400');
+            border-radius: 50%;
+            border: 6px solid #fff5eb;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            display: none;
+            z-index: 3;
+        }
+        /* 咬人瞬間 */
+        #cat-bite {
+            width: 100%;
+            height: 100%;
+            bottom: 0;
+            background-image: url('https://images.unsplash.com/photo-1592194996308-7b43878e84a6?auto=format&fit=crop&q=80&w=600');
+            background-position: center;
+            display: none;
+            z-index: 5;
+        }
+
+        /* 自訂手手游擺 */
+        #custom-hand {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            font-size: 60px;
+            line-height: 80px;
+            text-align: center;
+            pointer-events: none;
+            z-index: 100;
+            transform: translate(-50%, -50%);
+            transition: transform 0.05s ease;
+        }
+        .petting #custom-hand {
+            transform: translate(-50%, -50%) scale(0.8) rotate(-15deg);
+        }
+
+        /* 摸貓時的特效文字 */
+        .pet-effect {
+            position: absolute;
+            color: #ff5722;
+            font-weight: bold;
+            font-size: 1.6rem;
+            pointer-events: none;
+            animation: floatUp 0.5s ease-out forwards;
+            z-index: 20;
+            text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.8); opacity: 1; }
+            100% { transform: translateY(-70px) scale(1.3); opacity: 0; }
+        }
+
+        /* 結算 / 結束畫面遮罩 */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.88);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .overlay h1 {
+            font-size: 4rem;
+            margin: 0 0 10px 0;
+            letter-spacing: 2px;
+        }
+        .overlay p {
+            font-size: 1.4rem;
+            color: #ddd;
+            margin-bottom: 30px;
+            text-align: center;
+            padding: 0 20px;
+        }
+        .die-title {
+            color: #ff1744;
+            text-transform: uppercase;
+            animation: shake 0.3s infinite;
+        }
+        .win-title {
+            color: #ffb74d;
+        }
+        @keyframes shake {
+            0% { transform: translate(2px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(0px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(2px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(2px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        
+        /* 按鈕 */
+        .btn {
+            background: #f57c00;
+            color: white;
+            border: none;
+            padding: 15px 45px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(245, 124, 0, 0.4);
+            transition: transform 0.2s, background 0.2s;
+        }
+        .btn:hover {
+            background: #e65100;
+            transform: scale(1.05);
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="ui-layer">
+            <div id="timer" class="info-box">時間: 60s</div>
+            <div id="score" class="info-box">摸摸次數: 0</div>
+        </div>
+
+        <div id="warning-alert">⚠️ 茂咪回頭注意！！</div>
+
+        <div id="stage">
+            <div id="cat-back" class="cat-layer"></div>
+            <div id="cat-turn" class="cat-layer"></div>
+            <div id="cat-bite" class="cat-layer"></div>
+        </div>
+
+        <div id="custom-hand">✋</div>
+
+        <div id="die-screen" class="overlay">
+            <h1 class="die-title">YOU DIE</h1>
+            <p>慘了！你沒理會警告，被暴怒的卯咪回頭狠狠咬住！</p>
+            <button class="btn" onclick="resetGame()">重新開始</button>
+        </div>
+
+        <div id="win-screen" class="overlay">
+            <h1 class="win-title">時間到！</h1>
+            <p id="final-result">你成功在巨貓爪下存活，一共撫摸了 0 次！</p>
+            <button class="btn" onclick="resetGame()">再次挑戰</button>
+        </div>
+    </div>
+
+    <script>
+        const container = document.getElementById('game-container');
+        const hand = document.getElementById('custom-hand');
+        const catBack = document.getElementById('cat-back');
+        const catTurn = document.getElementById('cat-turn');
+        const catBite = document.getElementById('cat-bite');
+        const warningAlert = document.getElementById('warning-alert');
+        
+        const timerDisplay = document.getElementById('timer');
+        const scoreDisplay = document.getElementById('score');
+        const dieScreen = document.getElementById('die-screen');
+        const winScreen = document.getElementById('win-screen');
+        const finalResult = document.getElementById('final-result');
+
+        // 遊戲變數
+        let timeLeft = 60;
+        let score = 0;
+        let isGameOver = false;
+        let isCatLooking = false;
+        let isPressing = false;
+        
+        // 滑動偵測變數
+        let lastX = 0;
+        let lastY = 0;
+        const MIN_DIST = 12; // 調整滑動靈敏度
+
+        // 定時器
+        let gameTimerId;
+        let catBehaviorId;
+        let warningId;
+
+        // --- 1. 游標與手手同步 ---
+        const updateHandPosition = (clientX, clientY) => {
+            const rect = container.getBoundingClientRect();
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
+            hand.style.left = `${x}px`;
+            hand.style.top = `${y}px`;
+            return { x, y };
+        };
+
+        container.addEventListener('mousemove', (e) => {
+            const pos = updateHandPosition(e.clientX, e.clientY);
+            if (isPressing && !isGameOver) checkPetting(pos.x, pos.y);
+        });
+
+        container.addEventListener('touchmove', (e) => {
+            if(e.touches.length > 0) {
+                const pos = updateHandPosition(e.touches[0].clientX, e.touches[0].clientY);
+                if (isPressing && !isGameOver) checkPetting(pos.x, pos.y);
+            }
+        });
+
+        // --- 2. 按下滑動判定 ---
+        const startPress = (e) => {
+            if (isGameOver) return;
+            isPressing = true;
+            container.classList.add('petting');
+            hand.textContent = '✊'; 
+            
+            const rect = container.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            lastX = clientX - rect.left;
+            lastY = clientY - rect.top;
+        };
+
+        const endPress = () => {
+            isPressing = false;
+            container.classList.remove('petting');
+            hand.textContent = '✋';
+        };
+
+        container.addEventListener('mousedown', startPress);
+        container.addEventListener('mouseup', endPress);
+        container.addEventListener('touchstart', (e) => { startPress(e); e.preventDefault(); });
+        container.addEventListener('touchend', endPress);
+
+        // 滑動觸發「撫摸」核心邏輯
+        function checkPetting(currentX, currentY) {
+            const dist = Math.hypot(currentX - lastX, currentY - lastY);
+            
+            if (dist > MIN_DIST) {
+                lastX = currentX;
+                lastY = currentY;
+
+                // 擴大後的貓咪有效觸碰碰撞區 (大約在舞台中央大部分區域)
+                const stageRect = document.getElementById('stage').getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                const relativeTop = stageRect.top - containerRect.top;
+
+                if (currentY > relativeTop + 150 && currentX > 80 && currentX < 520) {
+                    if (isCatLooking) {
+                        triggerDie();
+                    } else {
+                        gainScore(currentX, currentY);
+                    }
+                }
+            }
+        }
+
+        // --- 3. 得分與死亡機制 ---
+        function gainScore(x, y) {
+            score++;
+            scoreDisplay.textContent = `摸摸次數: ${score}`;
+            
+            const effect = document.createElement('div');
+            effect.className = 'pet-effect';
+            effect.textContent = '🐾 摸！';
+            effect.style.left = `${x - 20}px`;
+            effect.style.top = `${y - 20}px`;
+            container.appendChild(effect);
+            
+            setTimeout(() => effect.remove(), 500);
+        }
+
+        function triggerDie() {
+            isGameOver = true;
+            clearInterval(gameTimerId);
+            clearTimeout(catBehaviorId);
+            clearTimeout(warningId);
+            
+            warningAlert.style.display = 'none';
+            catBite.style.display = 'block';
+            dieScreen.classList.add('active');
+            hand.textContent = '☠️';
+        }
+
+        function triggerWin() {
+            isGameOver = true;
+            clearInterval(gameTimerId);
+            clearTimeout(catBehaviorId);
+            clearTimeout(warningId);
+
+            warningAlert.style.display = 'none';
+            finalResult.textContent = `太神了！你成功在小卯咪眼皮底下摸了 ${score} 次！`;
+            winScreen.classList.add('active');
+        }
+
+        // --- 4. 貓咪行為機制 (不固定頻率 5-7 秒 + 前置 1 秒提示) ---
+        function loopCatBehavior() {
+            if (isGameOver) return;
+
+            // 隨機安全時間改為 5秒 ~ 7秒
+            let safeInterval = Math.random() * 2000 + 5000;
+
+            // 在安全時間結束前的 1 秒鐘，觸發預警提示
+            warningId = setTimeout(() => {
+                if (isGameOver) return;
+                
+                // 顯示警告標語
+                warningAlert.style.display = 'block';
+
+                // 嚴格等待 1 秒 (1000ms) 後，貓咪正式回頭
+                catBehaviorId = setTimeout(() => {
+                    if (isGameOver) return;
+                    
+                    warningAlert.style.display = 'none';
+                    isCatLooking = true;
+                    catTurn.style.display = 'block';
+
+                    // 檢查玩家有沒有及時停手
+                    if (isPressing) {
+                        setTimeout(() => {
+                            if (isPressing && isCatLooking && !isGameOver) {
+                                triggerDie();
+                            }
+                        }, 50); // 反應緩衝緩衝時間
+                    }
+
+                    // 回頭狠瞪持續 1.5 秒
+                    setTimeout(() => {
+                        if (isGameOver) return;
+                        
+                        isCatLooking = false;
+                        catTurn.style.none;
+                        catTurn.style.display = 'none';
+                        
+                        // 進入下一輪循環
+                        loopCatBehavior();
+                    }, 1500);
+
+                }, 500); // 預警 1 秒
+
+            }, safeInterval - 500);
+        }
+
+        // --- 5. 計時與重置 ---
+        function startTimer() {
+            gameTimerId = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `時間: ${timeLeft}s`;
+
+                if (timeLeft <= 0) {
+                    triggerWin();
+                }
+            }, 1000);
+        }
+
+        function resetGame() {
+            score = 0;
+            timeLeft = 60;
+            isGameOver = false;
+            isCatLooking = false;
+            isPressing = false;
+
+            scoreDisplay.textContent = `摸摸次數: ${score}`;
+            timerDisplay.textContent = `時間: ${timeLeft}s`;
+            hand.textContent = '✋';
+
+            warningAlert.style.display = 'none';
+            catTurn.style.display = 'none';
+            catBite.style.display = 'none';
+            dieScreen.classList.remove('active');
+            winScreen.classList.remove('active');
+
+            clearInterval(gameTimerId);
+            clearTimeout(catBehaviorId);
+            clearTimeout(warningId);
+
+            startTimer();
+            loopCatBehavior();
+        }
+
+        // 初始化啟動
+        resetGame();
+    </script>
+</body>
+</html>

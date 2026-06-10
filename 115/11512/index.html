@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>期末歐過分/補考分數落點計算器</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --success-color: #2ec4b6;
+            --warning-color: #ff9f1c;
+            --danger-color: #e71d36;
+            --bg-color: #f7f9fc;
+            --card-bg: #ffffff;
+            --text-color: #2b2d42;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+        }
+
+        .section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #475569;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        @media (max-width: 500px) {
+            .grid-4 {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #64748b;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--primary-color);
+        }
+
+        .weight-badge {
+            font-size: 0.8rem;
+            background: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: normal;
+        }
+
+        /* Slider Styling */
+        .slider-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .slider-label {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin: 15px 0;
+            -webkit-appearance: none;
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* Result Cards */
+        .result-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .card {
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+        }
+
+        .card-60 {
+            background: linear-gradient(135deg, #2ec4b6, #0f9f90);
+        }
+
+        .card-40 {
+            background: linear-gradient(135deg, #ff9f1c, #e67e22);
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .card-score {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        .impossible {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+
+        .safe {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+        
+        .error-msg {
+            color: var(--danger-color);
+            font-size: 0.85rem;
+            margin-top: 5px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>期末成績落點試算器</h1>
+
+    <div class="section">
+        <div class="section-title">1. 輸入已知的段考成績</div>
+        <div class="grid-2">
+            <div>
+                <label for="exam1">第一次段考 (分)</label>
+                <input type="number" id="exam1" min="0" max="100" value="60" oninput="calculate()">
+            </div>
+            <div>
+                <label for="exam2">第二次段考 (分)</label>
+                <input type="number" id="exam2" min="0" max="100" value="60" oninput="calculate()">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">
+            <span>2. 各項成績權重 (%)</span>
+            <span class="weight-badge" id="weight-total">總和: 100%</span>
+        </div>
+        <div class="grid-4">
+            <div>
+                <label for="w1">一投 (%)</label>
+                <input type="number" id="w1" min="0" max="100" value="24" oninput="calculate()">
+            </div>
+            <div>
+                <label for="w2">二段 (%)</label>
+                <input type="number" id="w2" min="0" max="100" value="24" oninput="calculate()">
+            </div>
+            <div>
+                <label for="w3">三段 (%)</label>
+                <input type="number" id="w3" min="0" max="100" value="24" oninput="calculate()">
+            </div>
+            <div>
+                <label for="w4">平時 (%)</label>
+                <input type="number" id="w4" min="0" max="100" value="28" oninput="calculate()">
+            </div>
+        </div>
+        <div id="weight-error" class="error-msg">⚠️ 權重加總必須等於 100% 喔！</div>
+    </div>
+
+    <div class="section" style="background: #fff; border: 2px solid var(--primary-color);">
+        <div class="section-title" style="color: var(--primary-color);">3. 互動式試算結果</div>
+        
+        <div class="slider-container">
+            <div class="slider-label">假設您的平時成績為：<span id="slider-val" style="font-size: 1.5rem;">60</span> 分</div>
+            <input type="range" id="daily-slider" min="0" max="100" value="60" oninput="updateSlider(this.value)">
+        </div>
+
+        <p style="font-size: 0.9rem; color:#64748b; text-align:center; margin-bottom: 10px;">
+            在此平時成績下，您的<b>第三次段考</b>必須考到：
+        </p>
+
+        <div class="result-box">
+            <div class="card card-60">
+                <div class="card-title">總分達到 60 分 (及格)</div>
+                <div class="card-score" id="res-60">--</div>
+            </div>
+            <div class="card card-40">
+                <div class="card-title">總分達到 40 分 (補考線)</div>
+                <div class="card-score" id="res-40">--</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">4. 各種平時成績對照表 (第三次段考需考分數)</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>假設平時分數</th>
+                    <th>總分 60分 (及格)</th>
+                    <th>總分 40分 (補考)</th>
+                </tr>
+            </thead>
+            <tbody id="matrix-body">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function calculate() {
+        // 讀取輸入值
+        const e1 = parseFloat(document.getElementById('exam1').value) || 0;
+        const e2 = parseFloat(document.getElementById('exam2').value) || 0;
+        
+        const w1 = parseFloat(document.getElementById('w1').value) || 0;
+        const w2 = parseFloat(document.getElementById('w2').value) || 0;
+        const w3 = parseFloat(document.getElementById('w3').value) || 0;
+        const w4 = parseFloat(document.getElementById('w4').value) || 0;
+
+        // 驗證權重是否為 100
+        const totalWeight = w1 + w2 + w3 + w4;
+        document.getElementById('weight-total').innerText = `總和: ${totalWeight}%`;
+        
+        if (totalWeight !== 100) {
+            document.getElementById('weight-error').style.display = 'block';
+            document.getElementById('res-60').innerText = '錯誤';
+            document.getElementById('res-40').innerText = '錯誤';
+            document.getElementById('matrix-body').innerHTML = '<tr><td colspan="3" style="color:red;">請先修正權重加總為 100%</td></tr>';
+            return;
+        } else {
+            document.getElementById('weight-error').style.display = 'none';
+        }
+
+        // 已獲得的加權分數 (前兩次段考)
+        const earned = (e1 * w1) + (e2 * w2);
+
+        // 獲取當前滑桿的平時成績
+        const currentDaily = parseFloat(document.getElementById('daily-slider').value);
+
+        // 1. 更新互動結果
+        document.getElementById('res-60').innerText = getRequiredFinal(60, earned, currentDaily, w4, w3);
+        document.getElementById('res-40').innerText = getRequiredFinal(40, earned, currentDaily, w4, w3);
+
+        // 2. 更新快速對照表 (測試平時分數從 50 到 100，每 10 分一跳)
+        const matrixBody = document.getElementById('matrix-body');
+        matrixBody.innerHTML = '';
+        
+        const benchmarkDailyScores = [50, 60, 70, 80, 90, 100];
+        benchmarkDailyScores.forEach(daily => {
+            const req60 = getRequiredFinal(60, earned, daily, w4, w3);
+            const req40 = getRequiredFinal(40, earned, daily, w4, w3);
+            
+            let row = `<tr>
+                <td><strong>${daily} 分</strong></td>
+                <td class="${getClassName(req60)}">${req60}</td>
+                <td class="${getClassName(req40)}">${req40}</td>
+            </tr>`;
+            matrixBody.innerHTML += row;
+        });
+    }
+
+    // 計算在特定平時分數下，期末考所需分數的公式
+    function getRequiredFinal(targetTotal, earned, dailyScore, wDaily, wFinal) {
+        if (wFinal === 0) return '無權重';
+        
+        // 剩餘目標分數 = (目標總分 * 100) - 已得加權 - (平時加權)
+        const neededSubtotal = (targetTotal * 100) - earned - (dailyScore * wDaily);
+        const requiredExam3 = neededSubtotal / wFinal;
+        
+        const finalScore = Math.ceil(requiredExam3 * 10) / 10; // 四捨五入到小數點後第一位
+
+        if (finalScore > 100) {
+            return '不可能達標 😭';
+        } else if (finalScore <= 0) {
+            return '0 分即可過 🎉';
+        } else {
+            return `${finalScore} 分`;
+        }
+    }
+
+    // 根據結果給予不同表格樣式
+    function getClassName(resultStr) {
+        if (resultStr.includes('不可能')) return 'impossible';
+        if (resultStr.includes('0 分')) return 'safe';
+        return '';
+    }
+
+    // 當滑桿移動時觸發
+    function updateSlider(val) {
+        document.getElementById('slider-val').innerText = val;
+        calculate();
+    }
+
+    // 頁面載入時初始化計算
+    window.onload = function() {
+        calculate();
+    };
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>偵探遊戲：基德 VS 安室 王妃的瀏海</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #161f33;
+            --text-color: #e2e8f0;
+            --accent-gold: #c5a880;
+            --accent-blue: #3b82f6;
+            --accent-white: #ffffff;
+            --accent-purple: #a855f7;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(197, 168, 128, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple), var(--accent-gold));
+        }
+
+        h1 {
+            color: var(--accent-gold);
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #8a99ad;
+            font-size: 1rem;
+            margin-bottom: 30px;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        .story-section {
+            display: none;
+            animation: fadeIn 0.6s ease;
+        }
+
+        .story-section.active {
+            display: block;
+        }
+
+        .bg-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 4px solid var(--accent-gold);
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .options-container {
+            margin: 20px 0;
+        }
+
+        .option-label {
+            display: block;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 18px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .option-label:hover {
+            background: rgba(197, 168, 128, 0.1);
+            border-color: var(--accent-gold);
+        }
+
+        input[type="radio"] {
+            margin-right: 12px;
+            accent-color: var(--accent-gold);
+        }
+
+        .free-response {
+            margin-top: 20px;
+        }
+
+        label.block-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+
+        textarea {
+            width: 100%;
+            height: 80px;
+            background: #0b0f19;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            color: var(--text-color);
+            padding: 10px;
+            box-sizing: border-box;
+            resize: none;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: var(--accent-gold);
+            border: 1px solid var(--accent-gold);
+            padding: 12px 24px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 25px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: var(--accent-gold);
+            color: var(--bg-color);
+            box-shadow: 0 0 15px rgba(197, 168, 128, 0.4);
+        }
+
+        .ai-feedback {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+        }
+
+        .personality-card {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(168, 85, 247, 0.15);
+            border: 2px solid var(--accent-purple);
+            border-radius: 8px;
+            animation: pulse 2s infinite alternate;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>基德 VS 安室：王妃的瀏海</h1>
+    <div class="subtitle">互動式偵探劇本推理遊戲</div>
+
+    <div id="intro" class="story-section active">
+        <div class="bg-box">
+            <h3>【案件背景前情提要】</h3>
+            <p>鈴木大博物館即將展出羅曼諾夫王朝的至寶——<strong>「王妃的瀏海」</strong>（裝飾於王冠頭飾上的珍貴寶石）。怪盜基德一如既往地發出了預告信。然而，這一次展覽會場除了柯南與中森警官外，還迎來了一位意想不到的稀客——公安警察兼黑衣組織成員波本（安室透）。</p>
+            <p>安室透自從在神秘列車篇（Bell Tree Express）與偽裝成雪莉的基德交手後，便對基德有一種異樣的熟悉感；而基德也認出了安室就是當初用槍指著他的危險男人。兩大天才的智力博弈，在裝有防盜噴霧與神祕盒子機關的展廳內正式拉開序幕！</p>
+        </div>
+        <p>你現在將代替柯南與安室透的視角，介入這場世紀對決。請點擊下方開始按鈕，進入第一章。</p>
+        <button class="btn" onclick="nextStage('intro', 'chapter-1')">開始調查案件</button>
+    </div>
+
+    <div id="chapter-1" class="story-section">
+        <div class="bg-box">
+            <h3>第一幕：消失的預告時間與防盜盲點</h3>
+            <p>展廳內戒備森嚴，寶石「王妃的瀏海」被安置在一個複雜的防盜展示盒中。一旦有人非正常觸碰，強力的有色防盜噴霧將會瞬間啟動，將嫌犯全身染成無法清洗的藍色。然而，就在燈光閃爍的短短數秒內，基德竟然好整以暇地在眾目睽睽下留下了空盒子與嘲弄的卡片，人卻消失無蹤。</p>
+        </div>
+        
+        <div class="options-container">
+            <label class="block-label">Q1: 作為名偵探，你認為基德是如何避開防盜噴霧並盜走寶石的？</label>
+            <label class="option-label"><input type="radio" name="q1" value="A"> A) 利用了鏡子反射與假牆的立體視覺誤導</label>
+            <label class="option-label"><input type="radio" name="q1" value="B"> B) 提前切斷了噴霧裝置的氣壓管線路</label>
+            <label class="option-label"><input type="radio" name="q1" value="C"> C) 使用了雙重假盒子詭計，根本沒有觸碰機關本體</label>
+            <label class="option-label"><input type="radio" name="q1" value="D"> D) 化裝成在場維護的技術人員，在眾人面前光明正大拆除</label>
+        </div>
+
+        <div class="free-response">
+            <label class="block-label">自由補充推理（可選填）：</label>
+            <textarea id="free-1" placeholder="你是否發現了其他可疑的細節？例如現場的通風口、或某個心神不寧的人..."></textarea>
+        </div>
+
+        <button class="btn" onclick="submitStage1()">提交第一幕推理</button>
+        
+        <div id="feedback-1" class="ai-feedback" style="display:none;"></div>
+    </div>
+
+    <div id="chapter-2" class="story-section">
+        <div class="bg-box">
+            <h3>第二幕：安室透的審訊與宿命對峙</h3>
+            <p>基德並未離開博物館，他必然偽裝成了現場的某個人。安室透封鎖了所有出口，犀利的目光掃過中森警官、梓小姐、以及鈴木次郎吉。安室透敏銳地感覺到，那個在神祕列車上用滑翔翼逃脫的少年，此時正在用某種挑釁的眼神看著自己。</p>
+        </div>
+        
+        <div class="options-container">
+            <label class="block-label">Q2: 面對高度可疑的嫌疑人們，你打算教安室透採取什麼審訊策略來扯下基德的面具？</label>
+            <label class="option-label"><input type="radio" name="q2" value="A"> A) 故意提起「神秘列車與雪莉」的話題，觀察誰的瞳孔產生瞬間動搖</label>
+            <label class="option-label"><input type="radio" name="q2" value="B"> B) 強制所有人進行臉部皮膚拉扯測試，確認是否有易容面具</label>
+            <label class="option-label"><input type="radio" name="q2" value="C"> C) 檢查所有人的衣服袖口，尋找是否殘留防盜噴霧的特殊氣味</label>
+            <label class="option-label"><input type="radio" name="q2" value="D"> D) 利用博物館內的密室施加心理壓力，誘使基德主動使用閃光彈</label>
+        </div>
+
+        <div class="free-response">
+            <label class="block-label">自由補充推理（可選填）：</label>
+            <textarea id="free-2" placeholder="你想讓安室透對嫌疑人說出哪句關鍵的試探性台詞？"></textarea>
+        </div>
+
+        <button class="btn" onclick="submitStage2()">提交第二幕推理</button>
+        
+        <div id="feedback-2" class="ai-feedback" style="display:none;"></div>
+    </div>
+
+    <div id="chapter-3" class="story-section">
+        <div class="bg-box">
+            <h3>第三幕：終局之戰，王妃的真相</h3>
+            <p>月光灑落在博物館的頂樓。安室透與柯南成功將基德逼入絕境。然而，這時候大家才發現，今晚展出的「王妃的瀏海」其實隱藏著涉及羅曼諾夫王朝後裔的重大秘密，而基德這一次的目標並非偷竊，而是為了履行某個過去的約定……</p>
+        </div>
+        
+        <div class="options-container">
+            <label class="block-label">Q3: 關於這場宿命對決的劇本結局，你選擇引導向哪一個故事走向？</label>
+            <label class="option-label"><input type="radio" name="q3" value="A"> A) 【名偵探的默契】柯南與安室看穿真相，故意放走基德以保護寶石背後的王室遺孤</label>
+            <label class="option-label"><input type="radio" name="q3" value="B"> B) 【公安的勝利】安室透技高一籌，成功扣下基德，但承諾在組織威脅解除前不公開其身份</label>
+            <label class="option-label"><input type="radio" name="q3" value="C"> C) 【魔術師的華麗謝幕】基德利用防盜噴霧反向將了安室一軍，留下王冠並留下一句關於黑衣組織的重大提示後消失</label>
+            <label class="option-label"><input type="radio" name="q3" value="D"> D) 【出乎意料的聯手】黑衣組織的刺客突然現身爭奪寶石，安室透、柯南與怪盜基德三人被迫臨時結盟戰鬥</label>
+        </div>
+
+        <div class="free-response">
+            <label class="block-label">🔮 心理特質測驗 — 自由編寫專屬結局/想法（**輸入文字將開啟角色分析**）：</label>
+            <textarea id="free-3" placeholder="在這裡自由寫下你的推理想法、情感觀點，或是任何想讓主角們說的台詞..."></textarea>
+        </div>
+
+        <button class="btn" onclick="submitStage3()">見證最終推理與人格特質分析</button>
+        
+        <div id="feedback-3" class="ai-feedback" style="display:none;"></div>
+    </div>
+</div>
+
+<script>
+    function nextStage(currentId, nextId) {
+        document.getElementById(currentId).classList.remove('active');
+        document.getElementById(nextId).classList.add('active');
+    }
+
+    function submitStage1() {
+        const selected = document.querySelector('input[name="q1"]:checked');
+        if (!selected) {
+            alert("請先選擇一個推理選項！");
+            return;
+        }
+
+        const choice = selected.value;
+        const freeText = document.getElementById('free-1').value;
+        const feedbackDiv = document.getElementById('feedback-1');
+        
+        let aiAnalysis = "";
+        if (choice === "C") {
+            aiAnalysis = "<strong>【柯南的精準分析】</strong>：真厲害！你注意到了盒子本身。沒錯，基德使用了經典的<strong>盒子誤導詭計</strong>！現場看到的盒子只是個視覺機關，當大家以為他避開了噴霧，其實他一開始就掉包了整個箱子。";
+        } else {
+            aiAnalysis = "<strong>【安室透的沉思】</strong>：有意思的切入點。不過基德這傢伙更狡猾一些。如果去動噴霧線路或使用假牆，很容易被我的公安部下事先布置的感應器抓到。他這次其實是利用了視覺上的盲點。";
+        }
+
+        if (freeText.trim() !== "") {
+            aiAnalysis += `<br><br>💡 <strong>針對你的自由作答：</strong> 「${freeText}」這點連我也差點忽略了，這確實很符合怪盜基德引導現場視線的作風！`;
+        }
+
+        aiAnalysis += `<br><br><button class="btn" onclick="nextStage('chapter-1', 'chapter-2')">前進至第二幕：審訊與宿命對峙</button>`;
+        
+        feedbackDiv.innerHTML = aiAnalysis;
+        feedbackDiv.style.display = "block";
+    }
+
+    function submitStage2() {
+        const selected = document.querySelector('input[name="q2"]:checked');
+        if (!selected) {
+            alert("請先選擇一個審訊策略！");
+            return;
+        }
+
+        const choice = selected.value;
+        const freeText = document.getElementById('free-2').value;
+        const feedbackDiv = document.getElementById('feedback-2');
+        
+        let aiAnalysis = "";
+        if (choice === "A") {
+            aiAnalysis = "<strong>【安室透的冷笑】</strong>：正合我意。神秘列車（Bell Tree Express）的事，全天下只有我和那個當時假冒雪莉的傢伙心知肚明。只要我提起那個名字，不管他多會易容，肌肉反射是騙不了人的。";
+        } else {
+            aiAnalysis = "<strong>【柯南的悄悄話】</strong>：用這個方法雖然穩妥，但可能會驚動到館內的其他無辜民眾喔！不過，這確實很符合安室先生雷厲風行的公安作風呢。";
+        }
+
+        if (freeText.trim() !== "") {
+            aiAnalysis += `<br><br>💡 <strong>針對你的自由作答：</strong> 「${freeText}」這句台詞太有張力了！如果由安室透用低沉的聲音在嫌疑人耳邊說出來，基德的撲克臉絕對會瞬間瓦解。`;
+        }
+
+        aiAnalysis += `<br><br><button class="btn" onclick="nextStage('chapter-2', 'chapter-3')">前進至最終幕：命運的交會</button>`;
+        
+        feedbackDiv.innerHTML = aiAnalysis;
+        feedbackDiv.style.display = "block";
+    }
+
+    // 關鍵的人格特質演算法分析系統
+    function analyzePersonality(text) {
+        if (!text || text.trim() === "") {
+            return `<div class="personality-card" style="background: rgba(239, 68, 68, 0.1); border-color: #ef4444; color: #fca5a5;">
+                        <strong>🔍 系統提示：</strong><br>
+                        可重新開始並輸入自己的想法，看看你是柯南裡面的誰？
+                    </div>`;
+        }
+
+        const input = text.toLowerCase();
+        
+        // 定義特質權重矩陣
+        let scores = {
+            conan: 0,   // 邏輯、正義
+            kid: 0,     // 華麗、浪漫、傲嬌
+            amuro: 0,   // 機密、大局、雙面
+            haibara: 0, // 吐槽、冷酷、細膩
+            ran: 0      // 守護、情感、溫柔
+        };
+
+        // 關鍵字檢索匹配
+        if (/真相|證據|發現|線索|推測|思考|犯人|漏洞/.test(input)) scores.conan += 3;
+        if (/魔術|華麗|微笑|帥|預告|飛|驚訝|撲克臉|藝術/.test(input)) scores.kid += 3;
+        if (/公安|國家|臥底|組織|計畫|利益|潛伏|背後/.test(input)) scores.amuro += 3;
+        if (/解藥|笨蛋|愚蠢|解藥|命運|逃避|冷酷|灰原/.test(input)) scores.haibara += 3;
+        if (/溫柔|等待|保護|相信|可憐|流淚|回家|心疼/.test(input)) scores.ran += 3;
+
+        // 長度與複雜度補正
+        if (input.length > 25) { scores.conan += 1; scores.amuro += 1; }
+
+        // 找出最高分的角色
+        let maxCharacter = "conan";
+        let maxScore = -1;
+        for (let char in scores) {
+            if (scores[char] > maxScore) {
+                maxScore = scores[char];
+                maxCharacter = char;
+            }
+        }
+
+        // 當完全沒有觸發關鍵字時，依照隨機或預設
+        if (maxScore === 0) {
+            const chars = ["conan", "kid", "amuro", "haibara", "ran"];
+            maxCharacter = chars[Math.floor(Math.random() * chars.length)];
+        }
+
+        // 角色特質結果字典
+        const results = {
+            conan: {
+                name: "江戶川柯南 / 工藤新一",
+                trait: "【絕對理性的邏輯探索者】",
+                desc: "你擁有極強的觀察力與正義感，在面對問題時習慣尋找證據與真相。你就像柯南一樣，不被表象迷惑，總能冷靜抽絲剝繭，是團隊中不可或缺的智囊！"
+            },
+            kid: {
+                name: "怪盜基德 / 黑羽快斗",
+                trait: "【跳脫框架的浪漫藝術家】",
+                desc: "你骨子裡充滿了創造力與幽默感，不喜歡一成不變的規則。你就像怪盜基德一樣，擅長在逆境中用華麗的思維逆轉局勢，讓人永遠猜不透你的下一步。"
+            },
+            amuro: {
+                name: "安室透 / 降谷零 (波本)",
+                trait: "【深謀遠慮的孤獨守護者】",
+                desc: "你的心思沉穩縝密，習慣在行動前做好全面佈局。你就像擁有三重身份的安室透一樣，能完美適應各種環境，為了心中的大局或保護珍視的事物，甘願承擔極大的壓力和責任。"
+            },
+            haibara: {
+                name: "灰原哀 / 宮野志保",
+                trait: "【外冷內熱的優雅毒舌派】",
+                desc: "你看似冷靜、甚至帶有一絲悲觀與犀利的吐槽，但內心其實無比細膩且極其重視同伴。你就像灰原哀一樣，用高冷外表防衛自己，卻總在關鍵時刻給予身邊人最強大的心理支援。"
+            },
+            ran: {
+                name: "毛利蘭",
+                trait: "【堅韌純粹的情感守護者】",
+                desc: "你具備極高的同理心與情感包容力。你就像小蘭一樣，雖然面對混亂內心也會動搖，但卻擁有無比強大的精神力量，永遠選擇相信與守護身邊最重要的人。"
+            }
+        };
+
+        const finalRole = results[maxCharacter];
+        return `<div class="personality-card">
+                    <h4 style="color:var(--accent-gold); margin-top:0;">🔮 玩家人格特質分析結果</h4>
+                    <p>根據你在劇本對決中的心路軌跡與文字輸入，你隱藏的柯南動漫基因是：</p>
+                    <h3 style="color:var(--accent-white); margin: 10px 0;">✨ ${finalRole.name} — ${finalRole.trait}</h3>
+                    <p style="font-size:0.95rem; color:#cbd5e1;">${finalRole.desc}</p>
+                </div>`;
+    }
+
+    function submitStage3() {
+        const selected = document.querySelector('input[name="q3"]:checked');
+        if (!selected) {
+            alert("請選擇你期望的故事結局走向！");
+            return;
+        }
+
+        const choice = selected.value;
+        const freeText = document.getElementById('free-3').value;
+        const feedbackDiv = document.getElementById('feedback-3');
+        
+        let aiAnalysis = "<h3>【劇本最終評定】</h3>";
+        
+        switch(choice) {
+            case "A":
+                aiAnalysis += "<strong>【結局 A：名偵探的默契】</strong> 這是一個非常有柯南溫情風格的結局。安室透展現了他身為日本公安保護弱小的一面，而柯南則再次看穿了基德高潔的本質。宿命的對手，在月光下達成了不言而喻的平衡。";
+                break;
+            case "B":
+                aiAnalysis += "<strong>【結局 B：公安的勝利】</strong> 充滿張力的硬核劇本！安室透成功維護了官方的尊嚴，而基德與波本在小房間裡的談判，更將整個黑衣組織的情報戰推向了最高潮。";
+                break;
+            case "C":
+                aiAnalysis += "<strong>【結局 C：魔術師的華麗謝幕】</strong> 這是最純粹的基德狂歡劇本！即便是強如安室透，在魔術師的主場（月光與高空）依然被華麗地戲耍了一番。而留下的黑衣組織線索，也為下一場對決埋下了伏筆。";
+                break;
+            case "D":
+                aiAnalysis += "<strong>【結局 D：出乎意料的聯手】</strong> 最令人熱血沸騰的夢幻展開！當共同的敵人（黑衣組織）現身時，紅方與銀翼魔術師的聯手直接將時髦值拉滿。足球、琴弦與格鬥術的交織，絕對是劇場版等級的震撼！";
+                break;
+        }
+
+        // 呼叫特質分析並融合進去
+        const personalityHTML = analyzePersonality(freeText);
+        aiAnalysis += "<br><br>" + personalityHTML;
+
+        aiAnalysis += `<br><br style="clear:both;"><span style="color:var(--accent-gold); font-weight:bold;">🎉 遊戲結束。感謝你的精彩推理與劇本創作！</span>`;
+        aiAnalysis += `<br><button class="btn" onclick="location.reload()">重新體驗其他故事走向 / 測試其他性格結果</button>`;
+
+        feedbackDiv.innerHTML = aiAnalysis;
+        feedbackDiv.style.display = "block";
+    }
+</script>
+
+</body>
+</html>

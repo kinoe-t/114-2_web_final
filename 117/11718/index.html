@@ -1,0 +1,64 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>心理測驗</title>
+<style>
+body{font-family:Microsoft JhengHei,sans-serif;background:linear-gradient(#ffe4f1,#fff0f8);padding:20px}
+.box{max-width:900px;margin:auto;background:white;padding:25px;border-radius:25px;box-shadow:0 8px 25px rgba(255,105,180,.2)}
+h1{color:#ff69b4;text-align:center}
+.option{border:2px solid #ffc0db;padding:12px;margin:10px 0;border-radius:15px;cursor:pointer}
+.option:hover{background:#fff0f7}
+button{background:#ff8fc4;color:white;border:none;padding:12px 22px;border-radius:999px;cursor:pointer}
+#quiz,#result{display:none}
+</style></head><body>
+<div class="box">
+<h1>🎀 心理測驗 🎀</h1>
+<div id="start"><p>有30題唷(≧▽≦)</p><button onclick="startQuiz()">開始測驗</button></div>
+<div id="quiz"><h3 id="q"></h3><div id="opts"></div></div>
+<div id="result"><h2>測驗結果 ✨</h2><p id="r"></p></div>
+</div>
+<script>
+
+const questions = [
+{q:"🌸 放假時最想做什麼？",a:[["🛏️ ( ˘͈ ᵕ ˘͈♡) 窩在床上追劇",1],["🎀 (≧▽≦) 和朋友逛街",2],["✨ ( •̀ ω •́ )✧ 去探險",3],["📚 (◕‿◕✿) 學新技能",4]]},
+{q:"🧸 收到神秘禮物時？",a:[["💌 立刻拆開",2],["📸 先拍照",1],["🧐 猜內容",3],["🎁 找朋友一起拆",4]]},
+{q:"🌙 睡前最常做什麼？",a:[["📱 滑手機",1],["🎵 聽音樂",2],["📖 看書",4],["🌌 發呆",3]]},
+{q:"🍰 最喜歡哪種甜點？",a:[["🍓 草莓蛋糕",1],["🍫 巧克力蛋糕",2],["🍮 布丁",3],["🧁 杯子蛋糕",4]]},
+{q:"🐰 想養哪種寵物？",a:[["🐇 兔兔",1],["🐱 貓咪",2],["🐶 狗狗",3],["🦊 小狐狸",4]]},
+{q:"☔ 下雨天會？",a:[["☕ 喝熱飲",1],["😴 睡覺",2],["🎮 玩遊戲",3],["📚 看小說",4]]},
+{q:"🎨 最喜歡的顏色？",a:[["💗 粉紅",1],["💜 紫色",2],["💙 藍色",3],["🤍 白色",4]]},
+{q:"🌟 別人通常怎麼形容妳？",a:[["溫柔",1],["可愛",2],["活潑",3],["聰明",4]]},
+{q:"🎡 遊樂園先玩什麼？",a:[["旋轉木馬",1],["拍照景點",2],["雲霄飛車",3],["鬼屋",4]]},
+{q:"📚 喜歡哪類書？",a:[["愛情",1],["奇幻",2],["冒險",3],["知識",4]]},
+{q:"🍹 最愛哪種飲料？",a:[["奶茶",1],["果汁",2],["汽水",3],["咖啡",4]]},
+{q:"✈️ 夢想旅行方式？",a:[["海邊度假",1],["城市購物",2],["自由行",3],["文化探索",4]]},
+{q:"🎵 常聽什麼音樂？",a:[["抒情",1],["流行",2],["動漫",3],["輕音樂",4]]},
+{q:"💬 朋友難過時？",a:[["陪伴",1],["安慰",2],["逗笑",3],["分析問題",4]]},
+{q:"🍀 喜歡哪種小物？",a:[["娃娃",1],["髮飾",2],["吊飾",3],["手帳",4]]},
+{q:"🌈 如果有超能力？",a:[["治癒",1],["飛行",2],["瞬移",3],["預知未來",4]]},
+{q:"🎀 喜歡什麼穿搭？",a:[["甜美",1],["韓系",2],["休閒",3],["文青",4]]},
+{q:"📱 社群媒體使用習慣？",a:[["潛水",1],["按讚",2],["常發文",3],["分享知識",4]]},
+{q:"🌸 最愛哪個季節？",a:[["春",1],["夏",2],["秋",3],["冬",4]]},
+{q:"⭐ 看到流星會？",a:[["許願",1],["拍照",2],["尖叫",3],["思考人生",4]]},
+{q:"🍜 宵夜選什麼？",a:[["蛋糕",1],["炸物",2],["泡麵",3],["水果",4]]},
+{q:"🎬 喜歡哪種電影？",a:[["愛情",1],["喜劇",2],["動作",3],["推理",4]]},
+{q:"🦄 如果進入童話世界？",a:[["當公主",1],["開店",2],["冒險",3],["研究魔法",4]]},
+{q:"🎁 最喜歡收到什麼？",a:[["卡片",1],["零食",2],["周邊",3],["書籍",4]]},
+{q:"🌻 假日下午會？",a:[["睡午覺",1],["出門玩",2],["運動",3],["看展覽",4]]},
+{q:"🍓 草莓、葡萄、芒果、藍莓？",a:[["草莓",1],["葡萄",2],["芒果",3],["藍莓",4]]},
+{q:"🎨 做手作時？",a:[["照著做",1],["加可愛裝飾",2],["自由發揮",3],["研究技巧",4]]},
+{q:"💖 理想的自己？",a:[["溫暖",1],["有魅力",2],["勇敢",3],["有智慧",4]]},
+{q:"🌷 最常用顏文字？",a:[["(｡♥‿♥｡)",1],["(≧▽≦)",2],["٩(◕‿◕｡)۶",3],["(๑•̀ㅂ•́)و✧",4]]},
+{q:"✨ 最後一題！妳覺得自己是？",a:[["感性派",1],["可愛派",2],["樂天派",3],["理性派",4]]}
+];
+
+let i=0,score=0;
+function startQuiz(){document.getElementById('start').style.display='none';document.getElementById('quiz').style.display='block';showQ();}
+function showQ(){let x=questions[i];document.getElementById('q').innerHTML='第 '+(i+1)+' 題 / '+questions.length+'<br><br>'+x.q;let h='';x.a.forEach(v=>h+=`<div class="option" onclick="pick(${v[1]})">${v[0]}</div>`);document.getElementById('opts').innerHTML=h;}
+function pick(v){score+=v;i++; if(i<questions.length)showQ(); else showR();}
+function showR(){document.getElementById('quiz').style.display='none';document.getElementById('result').style.display='block';
+let t='';
+if(score<60)t='🌷 溫柔療癒型 (｡♥‿♥｡)<br>妳細膩又溫暖。';
+else if(score<85)t='🎀 活潑甜心型 (≧▽≦)<br>妳充滿魅力與活力。';
+else if(score<105)t='🦋 自由冒險型 ٩(◕‿◕｡)۶<br>妳喜歡新鮮事物。';
+else t='✨ 智慧夢想型 (๑•̀ㅂ•́)و✧<br>妳喜歡思考與規劃未來。';
+document.getElementById('r').innerHTML=t;}
+</script></body></html>

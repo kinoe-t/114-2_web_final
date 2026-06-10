@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>你是我的眼</title>
+
+<style>
+body{
+    background:white;
+    text-align:center;
+    font-family:Arial,sans-serif;
+    margin:30px;
+}
+
+h1{
+    font-size:80px;
+    font-weight:900;
+    margin-bottom:20px;
+    background:linear-gradient(
+        90deg,
+        red,
+        orange,
+        yellow,
+        green,
+        cyan,
+        blue,
+        purple
+    );
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+img{
+    max-width:400px;
+    width:90%;
+    border:4px solid black;
+    margin:20px 0;
+}
+
+input{
+    font-size:24px;
+    padding:10px;
+    width:120px;
+    text-align:center;
+}
+
+button{
+    font-size:24px;
+    padding:10px 25px;
+    cursor:pointer;
+}
+
+#result{
+    font-size:32px;
+    font-weight:bold;
+    margin-top:20px;
+}
+
+#fullImage{
+    display:none;
+}
+
+footer{
+    margin-top:60px;
+    color:#666;
+}
+</style>
+
+<!-- 彩帶動畫 -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+</head>
+
+<body>
+
+<h1>你是我的眼</h1>
+
+<h2>猜這是誰的眼睛👀</h2>
+
+<!-- 眼睛照片 -->
+<img id="eyesImage" src="18-2.jpg" alt="眼睛照片">
+
+<br>
+
+<input
+    type="text"
+    id="answer"
+    placeholder="例如 02"
+    maxlength="4"
+>
+
+<button onclick="checkAnswer()">
+送出答案
+</button>
+
+<div id="result"></div>
+
+<div id="fullImage">
+    <h2>完整照片</h2>
+    <img id="fullPhoto" src="18-1.jpg" alt="完整照片">
+</div>
+
+<footer>
+此網站僅供娛樂，感謝各位的盛情演出💃❤️‍🔥❤️‍🔥
+</footer>
+
+<script>
+
+/*
+====================
+修改這裡即可
+====================
+*/
+
+// 正確答案
+const correctAnswer = "18";
+
+// 完整照片檔名
+const fullImageFile = "18-1.jpg";
+
+// 眼睛照片檔名
+const eyesImageFile = "18-2.jpg";
+
+/*
+02號與18號特殊命名範例：
+
+02醜-1.jpg
+02醜-2.jpg
+
+02美-1.jpg
+02美-2.jpg
+
+18醜-1.jpg
+18醜-2.jpg
+
+18美-1.jpg
+18美-2.jpg
+
+只要把上面的檔名填進來即可
+*/
+
+document.getElementById("eyesImage").src = eyesImageFile;
+document.getElementById("fullPhoto").src = fullImageFile;
+
+function checkAnswer(){
+
+    const userAnswer =
+        document.getElementById("answer")
+        .value
+        .trim();
+
+    const result =
+        document.getElementById("result");
+
+    if(userAnswer === correctAnswer){
+
+        result.innerHTML =
+        "🎉 答對了！你是眼睛專家😎！";
+
+        confetti({
+            particleCount:150,
+            spread:100,
+            origin:{y:0.6}
+        });
+
+    }else{
+
+        result.innerHTML =
+        "😡 答錯了！你太不了解同學了！<br><br>同學表示很受傷💔";
+
+    }
+
+    document.getElementById("fullImage")
+        .style.display = "block";
+}
+
+</script>
+
+</body>
+</html>

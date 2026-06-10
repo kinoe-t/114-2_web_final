@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>失落的研究室 - 點擊互動版</title>
+<style>
+body{margin:0;background:#111;color:#fff;font-family:Arial}
+h1{text-align:center}
+.room{position:relative;max-width:1200px;margin:auto}
+.room img{width:100%;display:block}
+.hotspot{
+    position:absolute;
+    cursor:pointer;
+    border:2px solid transparent;
+    transition:.3s;
+}
+
+.hotspot:hover{
+    border:2px solid #ffd700;
+    background:rgba(255,215,0,.15);
+    box-shadow:0 0 20px #ffd700;
+}
+#dialog{
+ position:fixed;inset:0;background:rgba(0,0,0,.7);
+ display:none;align-items:center;justify-content:center;
+}
+.box{
+ background:#222;padding:20px;border-radius:10px;
+ width:500px;max-width:90%;
+}
+input{padding:8px}
+button{padding:8px 12px}
+#log{padding:10px;text-align:center;color:#ffd700}
+</style>
+</head>
+<body>
+
+<h1>《失落的研究室：AI失控事件》</h1>
+<div id="log">觀察房間並點擊物件開始解謎。</div>
+
+<div class="room">
+<img src="房間圖.png">
+
+<!-- 時鐘 -->
+<div class="hotspot clock"
+     style="left:46%;top:18%;width:9%;height:13%;"
+     onclick="clockPuzzle()"></div>
+
+<!-- 電腦 -->
+<div class="hotspot computer"
+     style="left:43%;top:49%;width:17%;height:19%;"
+     onclick="computerPuzzle()"></div>
+
+<!-- 書櫃 -->
+<div class="hotspot bookshelf"
+     style="left:0%;top:13%;width:38%;height:74%;"
+     onclick="bookshelfPuzzle()"></div>
+
+<!-- 保險箱 -->
+<div class="hotspot safe"
+     style="left:89%;top:57%;width:11%;height:34%;"
+     onclick="safePuzzle()"></div>
+
+<!-- 彩燈 -->
+<div class="hotspot lights"
+     style="left:61%;top:63%;width:6%;height:10%;"
+     onclick="lightPuzzle()"></div>
+
+<!-- 門 -->
+<div class="hotspot door"
+     style="left:64%;top:20%;width:18%;height:67%;"
+     onclick="doorPuzzle()"></div><div id="dialog">
+ <div class="box" id="content"></div>
+</div>
+
+<script>
+let state={clock:false,computer:false,book:false,safe:false,light:false,final:false};
+
+function modal(html){
+ content.innerHTML=html;
+ dialog.style.display='flex';
+}
+function closeModal(){dialog.style.display='none';}
+
+function clockPuzzle(){
+ if(state.clock){modal("<h2>時鐘</h2><p>已解開：8001</p><button onclick='closeModal()'>關閉</button>");return;}
+ modal(`
+ <h2>時鐘</h2>
+ <p>時間顯示 10:08</p>
+ <p>提示：把我倒過來看</p>
+ <input id='ans'>
+ <button onclick='checkClock()'>確認</button>`);
+}
+function checkClock(){
+ if(ans.value=="8001"){
+   state.clock=true;
+   log.innerText="獲得第一組密碼：8001";
+   closeModal();
+ } else alert("錯誤");
+}
+
+function computerPuzzle(){
+ if(!state.clock){alert("先研究時鐘。");return;}
+ modal(`
+ <h2>電腦</h2>
+ <p>8-1-12-12</p>
+ <input id='ans'>
+ <button onclick='checkComputer()'>確認</button>`);
+}
+function checkComputer(){
+ if(ans.value.toUpperCase()=="HALL"){
+   state.computer=true;
+   log.innerText="電腦破解成功，關鍵字：HALL";
+   closeModal();
+ } else alert("錯誤");
+}
+
+function bookshelfPuzzle(){
+ if(!state.computer){alert("先破解電腦。");return;}
+ modal(`
+ <h2>書櫃</h2>
+ <p>SCIENCE / MATH / HISTORY / HALL / BIOLOGY</p>
+ <p>輸入你要抽出的書：</p>
+ <input id='ans'>
+ <button onclick='checkBook()'>確認</button>`);
+}
+function checkBook(){
+ if(ans.value.toUpperCase()=="HALL"){
+   state.book=true;
+   log.innerText="你找到 HALL，第 33 頁被摺角。";
+   closeModal();
+ } else alert("不是這本書");
+}
+
+function safePuzzle(){
+ if(!state.book){alert("先找出摺角頁碼。");return;}
+ modal(`
+ <h2>保險箱</h2>
+ <input id='ans'>
+ <button onclick='checkSafe()'>確認</button>`);
+}
+function checkSafe(){
+ if(ans.value=="33"){
+   state.safe=true;
+   log.innerText="保險箱打開：獲得紙條『紅 > 綠 > 藍』";
+   closeModal();
+ } else alert("錯誤");
+}
+
+let seq=[];
+function lightPuzzle(){
+ if(!state.safe){alert("先打開保險箱。");return;}
+ modal(`
+ <h2>彩色燈</h2>
+ <p>依照線索按下顏色</p>
+ <button onclick="press('R')">🔴</button>
+ <button onclick="press('G')">🟢</button>
+ <button onclick="press('B')">🔵</button>
+ <p id='status'></p>
+ `);
+}
+function press(c){
+ seq.push(c);
+ let target="RGB";
+ if(seq.join("")===target){
+   state.light=true;
+   log.innerText="彩燈啟動成功，牆上浮現數字：729";
+   closeModal();
+ }
+ else if(!target.startsWith(seq.join(""))){
+   seq=[];
+   alert("失敗，重新開始");
+ }
+}
+
+function doorPuzzle(){
+ if(!state.light){
+   alert("門鎖著，還有謎題未完成。");
+   return;
+ }
+ modal(`
+ <h2>最終門</h2>
+ <p>3→9<br>9→81<br>?</p>
+ <p>得到的數字：</p>
+ <input id='n1'><br><br>
+ <p>第一組密碼最後一位 × 最後得到的數字</p>
+ <input id='n2'>
+ <button onclick='finishGame()'>開門</button>
+ `);
+}
+function finishGame(){
+ if(n1.value=="27" && n2.value=="27"){
+   modal("<h1>🎉 逃脫成功！</h1><p>你成功離開研究室。</p>");
+ } else alert("錯誤");
+}
+</script>
+</body>
+</html>

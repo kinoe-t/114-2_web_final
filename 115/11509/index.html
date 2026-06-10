@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>生日月份影視查詢 - 三大領域黃金組合版</title>
+  <style>
+    /* 全域電影院暗色奢華風 */
+    body { 
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+      background: radial-gradient(circle at 50% 30%, #141520 0%, #07080d 100%); 
+      color: #fff; 
+      text-align: center; 
+      margin: 0; 
+      padding: 0; 
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* 1. 精美首頁控制區 (毛玻璃質感) */
+    #searchControls { 
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 3rem 2rem; 
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255,255,255,0.1);
+      max-width: 600px;
+      width: 90%;
+      box-sizing: border-box;
+      transition: all 0.5s ease;
+    }
+    
+    #searchControls h1 { 
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-top: 0;
+      margin-bottom: 10px;
+      background: linear-gradient(45deg, #00bcd4, #e91e63);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    #searchControls p {
+      color: #aaa;
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+
+    /* 三大領域裝飾標籤 */
+    .intro-badges {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+    .intro-badge {
+      font-size: 0.8rem;
+      padding: 6px 14px;
+      border-radius: 30px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #ddd;
+    }
+    .intro-badge span { font-weight: bold; margin-right: 4px; }
+    .intro-badge.m span { color: #00bcd4; }
+    .intro-badge.a span { color: #ff9800; }
+    .intro-badge.d span { color: #e91e63; }
+    
+    /* 下拉選單美化 */
+    select { 
+      width: 100%;
+      max-width: 320px;
+      padding: 14px 20px; 
+      margin-bottom: 20px;
+      font-size: 16px; 
+      color: #fff;
+      background: #1a1b26;
+      border: 1px solid #333644;
+      border-radius: 8px; 
+      cursor: pointer; 
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%23aaa'><polygon points='0,0 10,0 5,5'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 20px center;
+      text-align-last: center;
+      transition: border 0.3s;
+    }
+    select:focus {
+      outline: none;
+      border-color: #e50914;
+    }
+
+    /* 豪華霓虹按鈕 */
+    .btn-premium {
+      background: linear-gradient(90deg, #e50914, #ff1523);
+      color: #fff;
+      border: none;
+      padding: 14px 40px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);
+      transition: all 0.3s ease;
+      letter-spacing: 1px;
+    }
+    .btn-premium:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(229, 9, 20, 0.6);
+      background: linear-gradient(90deg, #ff1523, #e50914);
+    }
+    .btn-premium:active {
+      transform: translateY(1px);
+    }
+    
+    /* 滿版經典場景 */
+    #classicScreen { 
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black;
+      display: flex; justify-content: center; align-items: center; 
+      opacity: 0; pointer-events: none; transition: opacity 1.5s ease; z-index: 10; 
+    }
+    #classicScreen.active { opacity: 1; pointer-events: auto; }
+    #classicScreen img { max-width: 90%; max-height: 90%; border: 5px solid #fff; box-shadow: 0 0 30px rgba(255,255,255,0.3); border-radius: 4px; }
+    
+    /* 結果呈現區 */
+    #result { display: none; padding: 40px 20px; max-width: 1000px; margin: 0 auto; }
+    #result h2 { font-size: 2rem; letter-spacing: 2px; margin-bottom: 30px; text-shadow: 0 2px 10px rgba(255,255,255,0.2); }
+    .movies-container { display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; margin-top: 20px; }
+    
+    /* 電影卡片美化 */
+    .work { 
+      background: #13141f; 
+      border: 1px solid #222533; 
+      border-radius: 12px; 
+      padding: 16px; 
+      width: 260px; 
+      text-align: left;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+      opacity: 0; 
+      transform: translateY(30px); 
+      transition: opacity 1.5s ease, transform 1.5s ease; 
+    }
+    .work.visible { opacity: 1; transform: translateY(0); }
+    .work img { width: 100%; height: 360px; object-fit: cover; border-radius: 8px; }
+    .work h3 { margin: 12px 0 8px; font-size: 1.25rem; font-weight: bold; color: #fff; }
+    
+    /* 分類標籤樣式 */
+    .work .badge { display: inline-block; padding: 4px 10px; font-size: 0.75rem; border-radius: 4px; margin-bottom: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .work .badge.movie { background: rgba(0, 188, 212, 0.15); color: #00bcd4; border: 1px solid rgba(0, 188, 212, 0.3); }
+    .work .badge.anime { background: rgba(255, 152, 0, 0.15); color: #ff9800; border: 1px solid rgba(255, 152, 0, 0.3); }
+    .work .badge.disney { background: rgba(233, 30, 99, 0.15); color: #e91e63; border: 1px solid rgba(233, 30, 99, 0.3); }
+    
+    .work .desc { font-size: 0.9rem; color: #a0a5c0; line-height: 1.5; }
+    
+    #exitBtn { display: none; margin: 50px auto; padding: 12px 35px; font-size: 16px; font-weight: bold; background: #222533; color: #aaa; border: 1px solid #333644; border-radius: 6px; cursor: pointer; transition: all 0.3s; }
+    #exitBtn:hover { background: #e50914; color: #fff; border-color: #e50914; box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4); }
+  </style>
+</head>
+<body>
+
+  <div id="searchControls">
+    <h1>🎂 生日月份影視查詢</h1>
+    <p>輸入你的生日月份，解鎖量身打造的時光片單，<br>開啟一場連結經典銀幕、熱血動漫與夢幻童話的專屬首映會。</p>
+    
+    <div class="intro-badges">
+      <div class="intro-badge m"><span>🎬</span>真人電影</div>
+      <div class="intro-badge a"><span>🦊</span>日本動漫</div>
+      <div class="intro-badge d"><span>🏰</span>迪士尼動畫</div>
+    </div>
+    
+    <div>
+      <select id="month">
+        <option value="">請選擇您的生日月份</option>
+        <option value="01">1 月份</option>
+        <option value="02">2 月份</option>
+        <option value="03">3 月份</option>
+        <option value="04">4 月份</option>
+        <option value="05">5 月份</option>
+        <option value="06">6 月份</option>
+        <option value="07">7 月份</option>
+        <option value="08">8 月份</option>
+        <option value="09">9 月份</option>
+        <option value="10">10 月份</option>
+        <option value="11">11 月份</option>
+        <option value="12">12 月份</option>
+      </select>
+    </div>
+    
+    <button class="btn-premium" onclick="checkBirthdayMonth()">開啟月份密碼</button>
+  </div>
+  
+  <div id="classicScreen">
+    <img id="classicImage" src="" alt="經典場景">
+    <audio id="bgm"></audio>
+  </div>
+
+  <div id="result">
+    <h2>✨ 您的生日月份代表作品 ✨</h2>
+    <div class="movies-container" id="moviesContainer"></div>
+  </div>
+  
+  <button id="exitBtn" onclick="goHome()">回到首頁</button>
+
+  <script>
+    // --- 【12個月 x 1電影 + 1動漫 + 1迪士尼 終極資料庫】 ---
+    const movieDatabase = {
+      "01": [
+        { "type": "真人電影", "title": "教父", "poster": "https://upload.wikimedia.org/wikipedia/en/1/1c/Godfather_ver1.jpg", "classic": "https://upload.wikimedia.org/wikipedia/en/0/0c/Godfather_part1_scene.jpg", "music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", "description": "尊嚴與家族的極致交織，影史無可撼動的黑幫史詩神作。" },
+        { "type": "日本動漫", "title": "灌籃高手", "poster": "https://upload.wikimedia.org/wikipedia/zh/d/d4/Slam_Dunk_poster.jpg", "description": "湘北籃球隊的熱血青春，櫻木與流川楓承載無數人的籃球夢。" },
+        { "type": "迪士尼動畫", "title": "獅子王", "poster": "https://upload.wikimedia.org/wikipedia/en/3/3d/The_Lion_King_poster.jpg", "description": "辛巴的榮耀王國成長史，迪士尼手繪動畫時期的巔峰傳奇。" }
+      ],
+      "02": [
+        { "type": "真人電影", "title": "鐵達尼號", "poster": "https://upload.wikimedia.org/wikipedia/en/2/2e/Titanic_poster.jpg", "classic": "https://upload.wikimedia.org/wikipedia/en/1/1f/Titanic_Jack_Rose.jpg", "music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", "description": "在世紀災難面前，見證傑克與蘿絲永恆不滅的極致浪漫愛情。" },
+        { "type": "日本動漫", "title": "鬼滅之刃", "poster": "https://upload.wikimedia.org/wikipedia/zh/d/d2/Demon_Slayer_Kimetsu_no_Yaiba_manga_volume_1.jpg", "description": "炭治郎與禰豆子的羈絆之戰，絢麗的水之呼吸，全球現象級動漫。" },
+        { "type": "迪士尼動畫", "title": "冰雪奇緣", "poster": "https://upload.wikimedia.org/wikipedia/en/0/05/Frozen_(2013)_film_poster.jpg", "description": "艾莎與安娜的姊妹情深，風靡全球的魔幻冰雪世界與神曲 Let It Go。" }
+      ],
+      "03": [
+        { "type": "真人電影", "title": "阿甘正傳", "poster": "https://upload.wikimedia.org/wikipedia/en/6/67/Forrest_Gump_poster.jpg", "classic": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Forrest_Gump_bench.jpg", "music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", "description": "『人生就像一盒巧克力。』跟著阿甘單純的腳步奔跑，見證大時代。" },
+        { "type": "日本動漫", "title": "航海王 ONE PIECE", "poster": "https://upload.wikimedia.org/wikipedia/zh/b/b5/One_Piece_comic_vol_1.jpg", "description": "草帽一行人的偉大航道之旅：『我要成為海賊王！』關於夢想的史詩。" },
+        { "type": "迪士尼動畫", "title": "阿拉丁", "poster": "https://upload.wikimedia.org/wikipedia/en/c/c8/Aladdin_poster.jpg", "description": "乘著魔毯翱翔天際，神燈精靈大顯神威，充滿異國色彩的浪漫冒險。" }
+      ],
+      "04": [
+        { "type": "真人電影", "title": "全面啟動", "poster": "https://upload.wikimedia.org/wikipedia/en/2/2e/Inception_(2010)_theatrical_poster.jpg", "classic": "https://upload.wikimedia.org/wikipedia/en/7/7f/Inception_spinning_top.jpg", "music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", "description": "潛入夢境深層偷取機密的燒腦神作。旋轉的陀螺究竟停下了沒？" },
+        { "type": "日本動漫", "title": "進擊的巨人", "poster": "https://upload.wikimedia.org/wikipedia/zh/a/a3/Attack_on_Titan_vol_1.jpg", "description": "高牆內的絕望與牆外的殘酷真相，探討自由與戰爭的神級宏大敘事。" },
+        { "type": "迪士尼動畫", "title": "動物方城市", "poster": "https://upload.wikimedia.org/wikipedia/en/e/ea/Zootopia_poster.jpg", "description": "哈茱蒂兔子警官與狐狸尼克的爆笑搭檔，幽默中帶有深意的現代都市。" }
+      ],
+      "05": [
+        { "type": "真人電影", "title": "星際大戰：帝國大反擊", "poster": "https://upload.wikimedia.org/wikipedia/en/3/3c/SW_-_Empire_Strikes_Back.jpg", "classic": "https://upload.wikimedia.org/wikipedia/en/2/2f/Darth_Vader_Luke.jpg", "music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", "description": "科幻殿堂巨作，黑武士揭露震驚影史的血緣秘密：『我是你的父親。』" },
+        { "type": "日本動漫", "title": "火影忍者", "poster": "https://upload.wikimedia.org/wikipedia/zh/c/c7/Naruto_Volume_1_cover.jpg", "description": "漩渦鳴人的忍道與友情羈絆，熱血忍術大戰與火之意志的偉大傳承。" },
+        { "type": "迪士尼動畫", "title": "美女與野獸", "poster": "https://upload.wikimedia.org/wikipedia/en/7/7c/Beauty_and_the_Beast_(1991_poster).jpg", "description": "貝兒與野獸在華麗宴會廳的經典共舞，破除魔咒的真愛傳奇動畫。" }
+      ],
+      "06": [
+        { "type": "真人電影", "title": "侏羅紀公園", "poster": "https://upload.wikimedia.org/wikipedia/en/e/e7/Jurassic_Park_poster.jpg", "classic": "https://upload.wikimedia.org/wikipedia/en/9/9d/Jurassic_Park_T_Rex.jpg", "music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", "description": "開啟全球恐龍熱潮的跨時代震撼。名言：『生命自有出路。』" },
+        { "type": "日本動漫", "title": "名偵探柯南", "poster": "https://upload.wikimedia.org/wikipedia/zh/1/14/Case_Closed_volume_1.jpg", "description": "外表看似小孩，智慧卻過於常人的名偵探。真相永遠只有一個！" },
+        { "type": "迪士尼動畫", "title": "玩具總動員", "poster": "https://upload.wikimedia.org/wikipedia/en/0/0a/Toy_Story_logo_and_poster.jpg", "description": "皮克斯與迪士尼的起點，胡迪與巴斯的冒險：『飛向宇宙，浩瀚無垠！』" }
+      ],
+      "07": [
+        { "type": "真人電影", "title": "黑暗騎士", "poster": "https://upload.wikimedia.org/wikipedia/en/8/8a/Dark_Knight.jpg", "classic": "https://upload.wikimedia.org/wikipedia/en/0/0c/Joker_Heath_Ledger.jpg", "music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3", "description": "希斯萊傑完美的 Joker 演繹，高譚市正義與混亂對決的最高巔峰。" },
+        { "type": "日本動漫", "title": "咒術迴戰", "poster": "https://upload.wikimedia.org/wikipedia/zh/4/46/Jujutsu_Kaisen_volume_1_cover.jpg", "description": "誤入詛咒世界的虎杖悠仁，與最強導師五條悟展開的超帥氣高速戰鬥。" },
+        { "type": "迪士尼動畫", "title": "魔髮奇緣", "poster": "https://upload.wikimedia.org/wikipedia/en/a/a8/Tangled_poster.jpg", "description": "樂佩公主揮舞黃金長髮衝出高塔，夜空中萬盞天燈齊放的絕美視覺名場面。" }
+      ],
+      "08": [
+        { "type": "真人電影", "title": "駭客任務", "poster": "https://upload.wikimedia.org/wikipedia/en/c/c1/The_Matrix_Poster.jpg", "classic": "https://upload.wikimedia.org/wikipedia/en/a/ba/The_Matrix_Bullet_Time.jpg", "music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3", "description": "科幻動作片分水嶺，經典的下腰躲子彈。你要吞下紅膠囊還是藍膠囊？" },
+        { "type": "日本動漫", "title": "你的名字", "poster": "https://upload.wikimedia.org/wikipedia/en/3/30/Youre_Name_poster.png", "description": "新海誠現象級浪漫神作，璀璨彗星下的靈魂互換與跨越時空的揪心尋覓。" },
+        { "type": "迪士尼動畫", "title": "怪獸電力公司", "poster": "https://upload.wikimedia.org/wikipedia/en/6/63/Monsters_Inc.JPG", "description": "收集小孩尖叫轉換為電力的怪獸世界，毛怪、大眼仔與萌翻天的小女孩阿布。" }
+      ],
+      "09": [
+        { "type": "真人電影", "title": "神鬼認證", "poster": "https://upload.wikimedia.org/wikipedia/en/a/ae/BourneIdentityfilm.jpg", "classic": "https://upload.wikimedia.org/wikipedia/en/2/25/Bourne_identity_ver1.jpg", "music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3", "description": "麥特戴慢主演，寫實特務動作片標竿，行雲流水的近身格鬥與失憶謎團。" },
+        { "type": "日本動漫", "title": "獵人 HUNTER×HUNTER", "poster": "https://upload.wikimedia.org/wikipedia/zh/f/f6/Hunter_%C3%97_Hunter_vol_1.jpg", "description": "小傑與奇犽的冒險，縝密無比的「念能力」系統，動漫界智鬥的天花板。" },
+        { "type": "迪士尼動畫", "title": "腦筋急轉彎", "poster": "https://upload.wikimedia.org/wikipedia/en/0/0a/Inside_Out_Main_Poster.jpg", "description": "將大腦中的樂樂、憂憂等情緒擬人化，讓無數大人落淚的笑中帶淚神作。" }
+      ],
+      "10": [
+        { "type": "真人電影", "title": "小丑", "poster": "https://upload.wikimedia.org/wikipedia/en/e/e1/Joker_(2019_film)_poster.jpg", "classic": "https://upload.wikimedia.org/wikipedia/en/5/5a/Joker_stairs_dance.jpg", "music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3", "description": "深刻描繪社會邊緣人如何步步走向瘋狂，階級撕裂下化身犯罪王子的輓歌。" },
+        { "type": "日本動漫", "title": "新世紀福音戰士 EVA", "poster": "https://upload.wikimedia.org/wikipedia/zh/2/29/Neon_Genesis_Evangelion_theatrical_poster.jpg", "description": "神經質少年駕駛巨大兵器的孤獨、存在主義反思與劃時代的意識流神作。" },
+        { "type": "迪士尼動畫", "title": "尋夢歷險記 (可可夜總會)", "poster": "https://upload.wikimedia.org/wikipedia/en/9/98/Coco_(2017_film)_poster.jpg", "description": "斑斕絢麗的墨西哥亡靈節世界，探討親情、記憶，『真正的死亡是世界上沒有人記得你。』" }
+      ],
+      "11": [
+        { "type": "真人電影", "title": "哈利波特：神秘的魔法石", "poster": "https://upload.wikimedia.org/wikipedia/en/3/3a/Harry_Potter_and_the_Philosopher%27s_Stone_movie.jpg", "classic": "https://upload.wikimedia.org/wikipedia/en/d/d7/Harry_Potter_Sorcerers_Stone.jpg", "music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3", "description": "魔法史詩的起點，斜角巷與九又四分之三月台，『你是一個巫師，哈利。』" },
+        { "type": "日本動漫", "title": "鋼之鍊金術師", "poster": "https://upload.wikimedia.org/wikipedia/zh/4/4e/Hagane_no_Renkinjutsushi_volume_1_cover.jpg", "description": "愛德華與阿爾馮斯兄弟的鍊金術旅程，對「等價交換」代價的終極體悟。" },
+        { "type": "迪士尼動畫", "title": "超人特攻隊", "poster": "https://upload.wikimedia.org/wikipedia/en/2/27/The_Incredibles_(2004_animated_feature_film).jpg", "description": "超人家族隱姓埋名後的搞笑職場復出，充滿美式復古風的精彩超能力大戰。" }
+      ],
+      "12": [
+        { "type": "真人電影", "title": "阿凡達", "poster": "https://upload.wikimedia.org/wikipedia/en/b/b0/Avatar-Teaser-Poster.jpg", "classic": "https://upload.wikimedia.org/wikipedia/en/9/9e/Avatar_jake_sully.jpg", "music": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3", "description": "潘朵拉星球的壯麗宏大世界，開啟全球 3D 視覺新紀元：『I see you.』" },
+        { "type": "日本動漫", "title": "七龍珠", "poster": "https://upload.wikimedia.org/wikipedia/zh/3/31/Dragon_Ball_vol_1.jpg", "description": "鳥山明不朽名作，悟空的熱血進化史與超級賽亞人，全球動漫的頂天柱。" },
+        { "type": "迪士尼動畫", "title": "超能陸戰隊 (大英雄天團)", "poster": "https://upload.wikimedia.org/wikipedia/en/4/4b/Big_Hero_6_(film)_poster.jpg", "description": "舊京山科技少年的復仇與釋懷，全網最暖心充氣機器人「杯麵」的終極治癒。" }
+      ]
+    };
+
+    // 核心查詢功能
+    function checkBirthdayMonth() {
+      const month = document.getElementById("month").value;
+      
+      if (!month) {
+        alert("請選擇你的生日月份！");
+        return;
+      }
+      
+      const movies = movieDatabase[month]; 
+      
+      // 隱藏查詢控制區
+      document.getElementById("searchControls").style.display = "none";
+      
+      const firstMovie = movies[0]; // 第一部：真人電影
+      const classicScreen = document.getElementById("classicScreen");
+      const bgm = document.getElementById("bgm");
+      
+      // 設定真人電影大螢幕劇照與音樂
+      document.getElementById("classicImage").src = firstMovie.classic;
+      bgm.src = firstMovie.music;
+      
+      // 顯示滿版開場劇照並播放背景音樂
+      classicScreen.classList.add("active");
+      bgm.play().catch(e => console.log("音樂播放受限，需使用者互動", e));
+      
+      // 預先在幕後把結果卡片 HTML 生成好
+      const container = document.getElementById("moviesContainer");
+      container.innerHTML = ""; 
+      
+      movies.forEach(item => {
+        let badgeClass = "movie";
+        if (item.type === "日本動漫") badgeClass = "anime";
+        if (item.type === "迪士尼動畫") badgeClass = "disney";
+        
+        const cardHtml = `
+          <div class="work">
+            <span class="badge ${badgeClass}">${item.type}</span>
+            <img src="${item.poster}" alt="${item.title}">
+            <h3>${item.title}</h3>
+            <p class="desc">${item.description}</p>
+          </div>
+        `;
+        container.innerHTML += cardHtml;
+      });
+
+      // 設定 4 秒後大螢幕「淡出」，並接續「依序淡入」卡片
+      setTimeout(() => {
+        classicScreen.classList.remove("active");
+        bgm.pause();
+        bgm.currentTime = 0; 
+        
+        // 顯示結果外層
+        document.getElementById("result").style.display = "block";
+        
+        const cards = document.querySelectorAll(".work");
+        
+        // 卡片依序優雅淡入
+        setTimeout(() => { cards[0].classList.add("visible"); }, 100);
+        setTimeout(() => { if(cards[1]) cards[1].classList.add("visible"); }, 1600);
+        setTimeout(() => { if(cards[2]) cards[2].classList.add("visible"); }, 3100);
+        
+        // 最後顯示「回到首頁」按鈕
+        setTimeout(() => {
+          document.getElementById("exitBtn").style.display = "block";
+        }, 4100);
+
+      }, 4000); 
+    }
+
+    // 回到首頁功能
+    function goHome() {
+      document.getElementById("result").style.display = "none";
+      document.getElementById("exitBtn").style.display = "none";
+      document.getElementById("month").value = "";
+      document.getElementById("searchControls").style.display = "block";
+    }
+  </script>
+</body>
+</html>

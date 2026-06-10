@@ -1,0 +1,2763 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>愛子 ─ 地雷系戀愛攻略</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=Zen+Maru+Gothic:wght@300;400;500&family=Shippori+Mincho:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0810;
+    --surface: #140f1a;
+    --surface2: #1c1525;
+    --border: #3a2545;
+    --accent: #e06fa0;
+    --accent2: #b84c82;
+    --accent3: #f7a8c4;
+    --text: #f0e8f5;
+    --text2: #c4aad4;
+    --text3: #8a6a9a;
+    --danger: #ff4f7b;
+    --safe: #7ec8a0;
+    --warn: #f0c060;
+    --ribbon: #c45080;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Zen Maru Gothic', 'Noto Serif JP', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* ─── noise overlay ─── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999;
+  }
+
+  /* ─── petals ─── */
+  .petal { position: fixed; pointer-events: none; z-index: 1; font-size: 1rem; animation: fall linear infinite; opacity: 0.18; }
+  @keyframes fall {
+    0%   { transform: translateY(-40px) rotate(0deg); opacity: 0.18; }
+    100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* ─── layout ─── */
+  #app {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 20px 16px 60px;
+    position: relative; z-index: 2;
+  }
+
+  /* ─── header ─── */
+  .game-header {
+    text-align: center;
+    padding: 40px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+  .game-header h1 {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    color: var(--accent3);
+    letter-spacing: 0.15em;
+    text-shadow: 0 0 30px rgba(224,111,160,0.5);
+  }
+  .game-header .subtitle {
+    font-size: 0.78rem;
+    color: var(--text3);
+    letter-spacing: 0.3em;
+    margin-top: 6px;
+  }
+
+  /* ─── status bar ─── */
+  #status-bar {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 18px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.78rem;
+    color: var(--text2);
+  }
+  .stat { display: flex; align-items: center; gap: 5px; }
+  .stat-label { color: var(--text3); }
+  .stat-val { color: var(--accent3); font-weight: 600; }
+  .stat-hearts { color: var(--accent); }
+  .meter-wrap { flex: 1; min-width: 120px; }
+  .meter-label { font-size: 0.72rem; color: var(--text3); margin-bottom: 3px; }
+  .meter-bar {
+    height: 5px; background: var(--surface2);
+    border-radius: 3px; overflow: hidden;
+  }
+  .meter-fill {
+    height: 100%; border-radius: 3px;
+    transition: width 0.6s ease;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+  }
+  .meter-fill.danger { background: linear-gradient(90deg, #c0304a, var(--danger)); }
+  .meter-fill.warn   { background: linear-gradient(90deg, #c08020, var(--warn)); }
+
+  /* ─── scene card ─── */
+  .scene-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 26px 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .scene-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+  .scene-day {
+    font-size: 0.72rem; letter-spacing: 0.25em;
+    color: var(--text3); margin-bottom: 10px;
+  }
+  .scene-location {
+    display: inline-block;
+    font-size: 0.7rem; color: var(--accent2);
+    border: 1px solid var(--accent2);
+    border-radius: 20px; padding: 2px 10px;
+    margin-bottom: 14px; letter-spacing: 0.1em;
+  }
+  .scene-text {
+    font-size: 0.95rem; line-height: 1.95;
+    color: var(--text); white-space: pre-wrap;
+  }
+  .scene-text .aiko { color: var(--accent3); font-weight: 500; }
+  .scene-text .player { color: #a0d8b0; font-weight: 500; }
+  .scene-text .narr { color: var(--text2); font-style: italic; }
+  .scene-text .msg {
+    display: block;
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    padding: 8px 12px; margin: 10px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.88rem; color: var(--text2);
+  }
+  .scene-text .msg.system {
+    border-left-color: var(--text3); color: var(--text3); font-size: 0.8rem;
+  }
+  .aiko-portrait {
+    float: right; margin: 0 0 12px 18px;
+    width: 90px; height: 90px;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.5rem;
+    box-shadow: 0 0 20px rgba(224,111,160,0.3);
+    flex-shrink: 0;
+  }
+  .mood-label {
+    clear: both;
+    display: inline-block;
+    font-size: 0.68rem;
+    padding: 2px 8px; border-radius: 10px;
+    margin-bottom: 14px;
+    letter-spacing: 0.1em;
+  }
+  .mood-sweet  { background: rgba(247,168,196,0.15); color: var(--accent3); border: 1px solid rgba(247,168,196,0.3); }
+  .mood-dark   { background: rgba(255,79,123,0.1);  color: var(--danger);  border: 1px solid rgba(255,79,123,0.25); }
+  .mood-normal { background: rgba(138,106,154,0.15); color: var(--text2);  border: 1px solid var(--border); }
+  .mood-obsess { background: rgba(192,48,74,0.15);  color: #ff8080;        border: 1px solid rgba(192,48,74,0.4); }
+
+  /* ─── choices ─── */
+  .choices { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .choice-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 13px 18px;
+    color: var(--text);
+    font-family: inherit; font-size: 0.9rem;
+    text-align: left; cursor: pointer;
+    transition: all 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .choice-btn::after {
+    content: '›';
+    position: absolute; right: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3); font-size: 1.1rem;
+    transition: all 0.2s;
+  }
+  .choice-btn:hover {
+    border-color: var(--accent);
+    background: rgba(224,111,160,0.08);
+    color: var(--accent3);
+    transform: translateX(3px);
+  }
+  .choice-btn:hover::after { color: var(--accent); right: 10px; }
+  .choice-btn.risky  { border-color: rgba(255,79,123,0.4); }
+  .choice-btn.risky:hover { border-color: var(--danger); background: rgba(255,79,123,0.08); color: #ff8080; }
+  .choice-btn.safe   { border-color: rgba(126,200,160,0.3); }
+  .choice-btn.safe:hover  { border-color: var(--safe); background: rgba(126,200,160,0.08); color: var(--safe); }
+
+  /* ─── ending card ─── */
+  .ending-card {
+    text-align: center;
+    padding: 40px 28px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    margin-top: 20px;
+  }
+  .ending-card.good { border-color: rgba(126,200,160,0.5); background: rgba(126,200,160,0.05); }
+  .ending-card.bad  { border-color: rgba(255,79,123,0.5);  background: rgba(255,79,123,0.05); }
+  .ending-card.true-end { border-color: rgba(247,168,196,0.6); background: rgba(224,111,160,0.06); }
+  .ending-card h2 { font-family: 'Shippori Mincho', serif; font-size: 1.6rem; margin-bottom: 12px; }
+  .ending-card.good h2 { color: var(--safe); }
+  .ending-card.bad  h2 { color: var(--danger); }
+  .ending-card.true-end h2 { color: var(--accent3); }
+  .ending-label {
+    font-size: 0.7rem; letter-spacing: 0.3em;
+    color: var(--text3); margin-bottom: 20px;
+  }
+  .ending-text { font-size: 0.92rem; line-height: 1.9; color: var(--text2); margin-bottom: 24px; }
+  .restart-btn {
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    color: var(--accent3); font-family: inherit;
+    font-size: 0.88rem; padding: 10px 28px;
+    border-radius: 20px; cursor: pointer;
+    transition: all 0.2s; letter-spacing: 0.1em;
+  }
+  .restart-btn:hover { background: rgba(224,111,160,0.1); }
+
+  /* ─── setup screen ─── */
+  #setup-screen {
+    max-width: 420px; margin: 60px auto;
+    text-align: center;
+  }
+  #setup-screen h2 {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 1.5rem; color: var(--accent3);
+    margin-bottom: 8px;
+  }
+  #setup-screen p { font-size: 0.85rem; color: var(--text3); margin-bottom: 30px; line-height: 1.7; }
+  .setup-group { margin-bottom: 22px; text-align: left; }
+  .setup-label { font-size: 0.8rem; color: var(--text2); margin-bottom: 8px; letter-spacing: 0.1em; }
+  .setup-options { display: flex; gap: 10px; }
+  .gender-btn {
+    flex: 1; padding: 12px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px; cursor: pointer;
+    font-family: inherit; font-size: 0.88rem;
+    color: var(--text2); transition: all 0.2s;
+  }
+  .gender-btn.active { border-color: var(--accent); color: var(--accent3); background: rgba(224,111,160,0.1); }
+  .name-input {
+    width: 100%; padding: 11px 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text);
+    font-family: inherit; font-size: 0.92rem;
+    outline: none; transition: border 0.2s;
+  }
+  .name-input:focus { border-color: var(--accent); }
+  .start-btn {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border: none; border-radius: 10px;
+    color: #fff; font-family: inherit;
+    font-size: 1rem; font-weight: 600;
+    cursor: pointer; letter-spacing: 0.15em;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(224,111,160,0.3);
+  }
+  .start-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(224,111,160,0.45); }
+  .start-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ─── title screen ─── */
+  #title-screen { text-align: center; padding: 60px 20px; }
+  #title-screen .big-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(2.5rem, 8vw, 4.5rem);
+    color: var(--accent3);
+    text-shadow: 0 0 50px rgba(224,111,160,0.6);
+    margin-bottom: 10px; line-height: 1.2;
+  }
+  #title-screen .jp-sub {
+    font-size: 0.9rem; color: var(--text3);
+    letter-spacing: 0.3em; margin-bottom: 50px;
+  }
+  .title-deco { font-size: 2rem; margin-bottom: 30px; opacity: 0.6; }
+  .begin-btn {
+    padding: 14px 50px;
+    background: transparent;
+    border: 1px solid var(--accent);
+    border-radius: 30px; color: var(--accent3);
+    font-family: 'Shippori Mincho', serif;
+    font-size: 1.05rem; cursor: pointer;
+    letter-spacing: 0.25em; transition: all 0.3s;
+  }
+  .begin-btn:hover {
+    background: rgba(224,111,160,0.12);
+    box-shadow: 0 0 30px rgba(224,111,160,0.3);
+  }
+
+  /* ─── phone notification ─── */
+  .notif {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin: 14px 0;
+    display: flex; align-items: flex-start; gap: 12px;
+    font-size: 0.85rem;
+    animation: slideIn 0.4s ease;
+  }
+  @keyframes slideIn { from { opacity:0; transform: translateX(-10px); } to { opacity:1; transform: none; } }
+  .notif-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+  .notif-app  { font-size: 0.68rem; color: var(--text3); letter-spacing: 0.1em; margin-bottom: 4px; }
+  .notif-body { color: var(--text2); line-height: 1.6; }
+  .notif.line  { border-left: 3px solid #00b900; }
+  .notif.sns   { border-left: 3px solid #e1306c; }
+  .notif.sms   { border-left: 3px solid var(--accent2); }
+  .notif.sys   { border-left: 3px solid var(--text3); }
+
+  /* ─── affection display ─── */
+  .aff-change {
+    display: inline-block;
+    font-size: 0.75rem; padding: 2px 8px;
+    border-radius: 10px; margin-left: 8px;
+    font-weight: 600;
+  }
+  .aff-up   { background: rgba(224,111,160,0.2); color: var(--accent3); }
+  .aff-down { background: rgba(255,79,123,0.15); color: var(--danger); }
+
+  .chapter-banner {
+    text-align: center; padding: 16px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin: 24px 0;
+  }
+  .chapter-banner span {
+    font-size: 0.72rem; letter-spacing: 0.4em; color: var(--text3);
+  }
+  .chapter-banner h3 {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 1.25rem; color: var(--accent3); margin-top: 4px;
+  }
+
+  @media (max-width: 480px) {
+    .scene-card { padding: 18px 16px; }
+    .aiko-portrait { width: 70px; height: 70px; font-size: 1.9rem; }
+  }
+
+  .fade-in { animation: fadeIn 0.5s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+
+<!-- floating petals -->
+<div id="petals"></div>
+
+<div id="app">
+  <div class="game-header">
+    <h1>🎀 愛子 ─ 束縛系戀愛譚</h1>
+    <div class="subtitle">AIKO ─ YANDERE LOVE CHRONICLE</div>
+  </div>
+
+  <div id="status-bar" style="display:none">
+    <div class="stat"><span class="stat-label">Day</span><span class="stat-val" id="s-day">1</span></div>
+    <div class="stat"><span class="stat-label">好感度</span><span class="stat-hearts" id="s-hearts">♡♡♡♡♡</span></div>
+    <div class="meter-wrap">
+      <div class="meter-label">執著度 <span id="s-obs-val">0</span>%</div>
+      <div class="meter-bar"><div class="meter-fill" id="s-obs" style="width:0%"></div></div>
+    </div>
+    <div class="meter-wrap">
+      <div class="meter-label">警戒值 <span id="s-wary-val">0</span>%</div>
+      <div class="meter-bar"><div class="meter-fill warn" id="s-wary" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div id="main-content" class="fade-in"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   GAME ENGINE
+═══════════════════════════════════════════════ */
+const state = {
+  screen: 'title',
+  playerName: '',
+  playerGender: '',
+  suffix: '',
+  day: 1,
+  affection: 20,    // 0-100
+  obsession: 10,    // 0-100 (愛子執著度)
+  wariness: 0,      // 0-100 (主控警戒度)
+  flags: {},        // story flags
+  chapter: 1,
+  ending: null,
+};
+
+// ─── Helpers ───
+const $ = id => document.getElementById(id);
+const content = () => $('main-content');
+const P = () => state.playerName;
+const A = name => `<span class="aiko">${name}</span>`;
+const PL = name => `<span class="player">${name}</span>`;
+const N = txt => `<span class="narr">${txt}</span>`;
+const MSG = (txt, type='') => `<span class="msg ${type}">${txt}</span>`;
+
+function hearts(n) {
+  const full = Math.floor(n / 20);
+  const arr = Array(5).fill('♡').map((h,i) => i < full ? '♥' : '♡');
+  return arr.join('');
+}
+
+function updateStatus() {
+  if (state.screen === 'game') {
+    $('status-bar').style.display = 'flex';
+    $('s-day').textContent = state.day;
+    $('s-hearts').textContent = hearts(state.affection);
+    const obsEl = $('s-obs');
+    obsEl.style.width = state.obsession + '%';
+    obsEl.className = 'meter-fill' + (state.obsession > 70 ? ' danger' : '');
+    $('s-obs-val').textContent = state.obsession;
+    const waryEl = $('s-wary');
+    waryEl.style.width = state.wariness + '%';
+    $('s-wary-val').textContent = state.wariness;
+  }
+}
+
+function clamp(v, min=0, max=100) { return Math.max(min, Math.min(max, v)); }
+
+function delta(aff=0, obs=0, war=0) {
+  state.affection  = clamp(state.affection + aff);
+  state.obsession  = clamp(state.obsession + obs);
+  state.wariness   = clamp(state.wariness  + war);
+  updateStatus();
+}
+
+function render(html) {
+  content().innerHTML = html;
+  content().classList.remove('fade-in');
+  void content().offsetWidth;
+  content().classList.add('fade-in');
+  updateStatus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function scene(opts) {
+  // opts: { day, loc, mood, portrait, text, choices, notifs }
+  const moodMap = {
+    sweet: ['mood-sweet', '甜甜的♡'],
+    dark:  ['mood-dark',  '陰暗模式'],
+    normal:['mood-normal','普通'],
+    obsess:['mood-obsess','危險信號⚠'],
+  };
+  const [moodCls, moodTxt] = moodMap[opts.mood] || moodMap.normal;
+  const dayStr = opts.day ? `DAY ${opts.day}` : '';
+  const locStr = opts.loc ? `<div class="scene-location">📍 ${opts.loc}</div>` : '';
+  const portraitStr = opts.portrait !== false
+    ? `<div class="aiko-portrait">${opts.portrait || '🎀'}</div>` : '';
+
+  const notifStr = (opts.notifs || []).map(n => `
+    <div class="notif ${n.type}">
+      <div class="notif-icon">${n.icon}</div>
+      <div>
+        <div class="notif-app">${n.app}</div>
+        <div class="notif-body">${n.text}</div>
+      </div>
+    </div>`).join('');
+
+  const choicesStr = opts.choices.map(c => `
+    <button class="choice-btn ${c.cls||''}" onclick="choose(${JSON.stringify(c.next).replace(/"/g,'&quot;')},${c.aff||0},${c.obs||0},${c.war||0},${JSON.stringify(c.flag||null).replace(/"/g,'&quot;')})">
+      ${c.text}
+    </button>`).join('');
+
+  render(`
+    <div class="scene-card">
+      ${portraitStr}
+      <div class="scene-day">${dayStr}</div>
+      ${locStr}
+      <div class="mood-label ${moodCls}">${moodTxt}</div>
+      <div class="scene-text">${opts.text}</div>
+      ${notifStr}
+    </div>
+    <div class="choices">${choicesStr}</div>
+  `);
+}
+
+function chapterBanner(num, title) {
+  return `<div class="chapter-banner"><span>CHAPTER ${num}</span><h3>${title}</h3></div>`;
+}
+
+function choose(next, aff, obs, war, flag) {
+  delta(aff, obs, war);
+  if (flag) state.flags[flag] = true;
+  if (typeof next === 'string') {
+    SCENES[next]();
+  } else if (typeof next === 'function') {
+    next();
+  }
+}
+
+function notif(type, icon, app, text) {
+  return { type, icon, app, text };
+}
+
+// ─── Petals ───
+function makePetals() {
+  const container = $('petals');
+  const symbols = ['🌸','✿','❀','✾','♡'];
+  for (let i = 0; i < 14; i++) {
+    const d = document.createElement('div');
+    d.className = 'petal';
+    d.textContent = symbols[Math.floor(Math.random()*symbols.length)];
+    d.style.left = Math.random()*100 + 'vw';
+    d.style.animationDuration = (8 + Math.random()*12) + 's';
+    d.style.animationDelay = (Math.random()*12) + 's';
+    d.style.fontSize = (0.6 + Math.random()*0.8) + 'rem';
+    container.appendChild(d);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   SCREENS
+═══════════════════════════════════════════════ */
+function showTitle() {
+  state.screen = 'title';
+  $('status-bar').style.display = 'none';
+  render(`
+    <div id="title-screen">
+      <div class="title-deco">🎀 ✿ 🎀</div>
+      <div class="big-title">愛 子</div>
+      <div class="jp-sub">YANDERE LOVE CHRONICLE</div>
+      <p style="color:var(--text3);font-size:0.82rem;line-height:1.8;margin-bottom:40px;max-width:320px;margin-left:auto;margin-right:auto;">
+        表面甜美，內心暗黑。<br>
+        她用微笑包裹著執著，<br>
+        用愛意編織成囚籠。<br>
+        ──你還敢走進去嗎？
+      </p>
+      <button class="begin-btn" onclick="showSetup()">✦ 開始遊戲 ✦</button>
+    </div>
+  `);
+}
+
+function showSetup() {
+  state.screen = 'setup';
+  render(`
+    <div id="setup-screen">
+      <h2>🎀 遊戲設定</h2>
+      <p>在故事開始之前，先告訴她一些關於你的事。</p>
+
+      <div class="setup-group">
+        <div class="setup-label">你的性別</div>
+        <div class="setup-options">
+          <button class="gender-btn" id="btn-male" onclick="setGender('male')">♂ 男生</button>
+          <button class="gender-btn" id="btn-female" onclick="setGender('female')">♀ 女生</button>
+        </div>
+      </div>
+
+      <div class="setup-group">
+        <div class="setup-label">你的名字（姓氏或全名皆可）</div>
+        <input class="name-input" id="name-input" type="text" placeholder="輸入你的名字..." maxlength="10"
+          oninput="checkSetup()" />
+      </div>
+
+      <button class="start-btn" id="start-btn" disabled onclick="startGame()">
+        ✦ 進入故事 ✦
+      </button>
+    </div>
+  `);
+}
+
+function setGender(g) {
+  state.playerGender = g;
+  state.suffix = g === 'male' ? 'くん' : 'ちゃん';
+  document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+  $(`btn-${g}`).classList.add('active');
+  checkSetup();
+}
+
+function checkSetup() {
+  const name = $('name-input') ? $('name-input').value.trim() : '';
+  const ok = name.length > 0 && state.playerGender !== '';
+  if ($('start-btn')) $('start-btn').disabled = !ok;
+}
+
+function startGame() {
+  state.playerName = $('name-input').value.trim();
+  state.screen = 'game';
+  state.day = 1;
+  state.affection = 20;
+  state.obsession = 10;
+  state.wariness = 0;
+  state.flags = {};
+  state.chapter = 1;
+  SCENES.intro();
+}
+
+/* ═══════════════════════════════════════════════
+   SCENES
+═══════════════════════════════════════════════ */
+const SCENES = {};
+
+// ─────────────────────────────────────────
+// CHAPTER 1: 邂逅
+// ─────────────────────────────────────────
+SCENES.intro = function() {
+  render(chapterBanner(1, '偶然的邂逅') + `
+    <div class="scene-card">
+      <div class="scene-day">DAY 1</div>
+      <div class="scene-location">📍 便利商店外・傍晚六點</div>
+      <div class="mood-label mood-normal">普通</div>
+      <div class="scene-text">
+${N('秋天的傍晚，橙色的光線把城市染得暖洋洋的。')}
+${N(`你像往常一樣在下班途中路過那間熟悉的便利商店，準備買罐咖啡。`)}
+${N('就在你走近入口時——')}
+
+一個穿著淡粉色蓬蓬裙的女孩突然從旁邊的台階踩空，整個人向前傾。
+
+${A('——啊！')}
+
+${N('反射動作讓你伸手扶住了她的手臂。她的袋子滑落，一盒造型可麗餅在地上滾了兩圈。')}
+${N('你們四目相交。她的眼睛又大又圓，眼尾有精心描繪的眼線，睫毛上掛著假睫毛。')}
+${N('身高比你矮上一截，頭髮被精緻地編成兩條辮子，綁著蕾絲蝴蝶結。')}
+${N('她愣了約三秒，然後露出了一個讓人心跳漏拍的笑容。')}
+
+${A('……謝謝你救了我。你真好。♡')}
+      </div>
+    </div>
+    <div class="choices">
+      <button class="choice-btn safe" onclick="choose('c1_a',5,3,0,null)">撿起她掉落的可麗餅，輕描淡寫地說「沒事就好」</button>
+      <button class="choice-btn" onclick="choose('c1_b',8,5,0,null)">關心地問「你沒受傷吧？」並蹲下來幫她撿東西</button>
+      <button class="choice-btn risky" onclick="choose('c1_c',3,8,5,null)">只是點個頭，拿起咖啡就準備離開</button>
+    </div>
+  `);
+};
+
+SCENES.c1_a = function() {
+  scene({
+    day: 1, loc: '便利商店外', mood: 'sweet',
+    text: `
+你彎腰撿起那盒可麗餅，遞還給她。
+
+${A('哎……盒子壓扁了一點。不過沒關係啦，謝謝你♡')}
+
+${N('她抱著可麗餅，睫毛輕輕眨動，視線落在你臉上有那麼一秒。')}
+${N('然後她轉身，裙擺在秋風裡微微飄起，走進了便利商店。')}
+${N('你喝完咖啡，回家，以為這只是平凡的一天。')}
+    `,
+    choices: [
+      { text: '──隔天，照常上班', next: 'day2_morning', aff: 0, obs: 2 },
+    ]
+  });
+};
+
+SCENES.c1_b = function() {
+  scene({
+    day: 1, loc: '便利商店外', mood: 'sweet',
+    text: `
+你蹲下來幫她把散落的東西撿起，一邊問她有沒有受傷。
+
+${A('沒事沒事！就是嚇了一跳而已～')}
+${N('她蹲下來跟你面對面，整理袋子，近距離讓你注意到她發梢的香氣。')}
+
+${A('……你叫什麼名字？')}
+
+${N('問得很自然，好像認識多年的老朋友。')}
+${PL(`你告訴了她你的名字：${P()}。`)}
+
+${A(`${P()}${state.suffix}……♡ 我叫愛子。以後你如果再看到我，要再救我喔。`)}
+
+${N('她站起來，輕輕揮了揮手，裙子旋轉著消失在便利商店裡。')}
+${N('你當作是無心之語，繼續你的夜晚。')}
+    `,
+    choices: [
+      { text: '──隔天，照常上班', next: 'day2_morning', aff: 3, obs: 5, flag: 'told_name_early' },
+    ]
+  });
+};
+
+SCENES.c1_c = function() {
+  scene({
+    day: 1, loc: '便利商店外', mood: 'dark',
+    text: `
+你只是淡淡地點了個頭確認她站穩了，便轉身走向收銀台。
+
+${N('身後傳來她撿起可麗餅的聲音，還有輕輕的……')}
+
+${A('……')}
+
+${N('當你結帳轉頭，女孩已經不見了。你以為這件事就這樣結束了。')}
+${N('但在你走出便利商店時，你莫名覺得背後有一道視線。')}
+${N('你回頭，街道空蕩蕩的，只有路燈在地上拉出長影。')}
+    `,
+    choices: [
+      { text: '──隔天，照常上班', next: 'day2_morning', aff: 0, obs: 8, war: 5 },
+    ]
+  });
+};
+
+SCENES.day2_morning = function() {
+  const hadName = state.flags.told_name_early;
+  scene({
+    day: 2, loc: '公司附近・早晨', mood: 'normal',
+    text: `
+${N('第二天早上，你踏出家門，天空是淡灰色的。')}
+
+${hadName
+  ? `你隱約還記得那個叫愛子的女孩，但也僅止於此。`
+  : `昨天便利商店的事已經淡出記憶。`
+}
+
+${N('你走到平常搭電梯的大廳……')}
+${N('然後你愣了一秒。')}
+
+便利商店的女孩站在你公司大樓的門口。
+
+穿著一套白底碎花的洋裝，頭髮今天是低馬尾，粉色緞帶蝴蝶結掛在耳邊。
+她手上拿著一個小紙袋，站在那裡，臉朝向大門。
+
+${N('然後她轉過頭，正好對上你的眼睛。')}
+${A(`啊──${hadName ? P()+state.suffix+'，' : ''}找到你了。♡`)}
+    `,
+    choices: [
+      { text: '「你怎麼知道我在這裡上班？」警覺地問', next: 'day2_wary', aff: -3, obs: 8, war: 10 },
+      { text: '「……愛子？」驚訝地確認她的名字', next: 'day2_gentle', aff: 5, obs: 6, war: 3 },
+      { text: '裝作不認識，低頭走向電梯', next: 'day2_cold', aff: -5, obs: 12, war: 2 },
+    ]
+  });
+};
+
+SCENES.day2_wary = function() {
+  scene({
+    day: 2, loc: '公司大樓門口', mood: 'sweet',
+    text: `
+${A('嗯～？')}
+
+她把頭歪向一側，笑得眉眼彎彎。
+
+${A('我就是想謝謝你啊，昨天你幫了我。所以找了一下。')}
+
+${N('「找了一下」。那輕巧的語氣讓你說不出話來。')}
+
+${A('你不用那麼緊張啦～我只是想把這個給你。')}
+
+${N('她把紙袋遞向你。裡面是一盒可麗餅，造型是小兔子，包裝上有她用粉筆寫的文字：')}
+${MSG('「謝謝你昨天救了我。♡ ─ 愛子」')}
+    `,
+    choices: [
+      { text: '接過來，道謝，快步走進大樓', next: 'day2_end_neutral', aff: 3, obs: 5, war: 0 },
+      { text: '「下次不要這樣，會嚇到別人的。」輕聲提醒她', next: 'day2_end_warn', aff: 0, obs: 3, war: -3 },
+    ]
+  });
+};
+
+SCENES.day2_gentle = function() {
+  scene({
+    day: 2, loc: '公司大樓門口', mood: 'sweet',
+    text: `
+她臉上綻開笑容，腳尖微微踮起。
+
+${A(`對！是我！你還記得我♡`)}
+
+${N('她把手上的紙袋推到你面前。裡面是一盒造型可麗餅，草莓兔子款式，還掛著一個小紙條。')}
+${MSG('「謝謝你昨天救了我。♡ ─ 愛子」')}
+
+${A('我不知道你喜不喜歡吃甜的，但這是我最喜歡的口味，所以想讓你嚐嚐看。')}
+
+${N('她說話的時候，眼睛一直沒有離開你的臉。')}
+    `,
+    choices: [
+      { text: '「謝謝，很可愛。」收下，然後進公司', next: 'day2_end_soft', aff: 5, obs: 6, war: 0 },
+      { text: '「你怎麼知道我在這上班的？」好奇地問', next: 'day2_end_curious', aff: 2, obs: 5, war: 8 },
+    ]
+  });
+};
+
+SCENES.day2_cold = function() {
+  scene({
+    day: 2, loc: '公司大樓門口', mood: 'dark',
+    text: `
+${N('你低下頭，假裝沒看到她，快步走向電梯。')}
+${N('身後沉默了兩秒。')}
+
+${A('……')}
+
+${N('你按下樓層按鈕，電梯門緩緩關閉的瞬間，你從縫隙裡看到她還站在原地，臉上表情沒有變化。')}
+${N('她手上的紙袋還提著。')}
+${N('那雙眼睛……直直地盯著電梯門關上。')}
+
+─────
+
+${N('你在辦公室坐下，打開電腦，試著不去想那雙眼睛。')}
+${N('然後你的手機震動了。')}
+    `,
+    notifs: [
+      notif('sns','📷','Instagram 通知','有人開始追蹤你：aiko._.xxxx'),
+    ],
+    choices: [
+      { text: '點進去看她的帳號', next: 'day2_end_check_sns', aff: 3, obs: 10, war: 3 },
+      { text: '不理，封鎖帳號', next: 'day2_end_block', aff: -5, obs: 15, war: 8 },
+    ]
+  });
+};
+
+SCENES.day2_end_neutral = function() {
+  day2Transition('你在電梯裡打開紙袋，可麗餅是草莓口味的，很甜。\n你吃了一口，想著她到底是怎麼找到這裡的。');
+};
+SCENES.day2_end_warn = function() {
+  day2Transition(`她愣了一下，然後笑了：「好啦好啦～」\n你不確定她有沒有聽進去。`);
+};
+SCENES.day2_end_soft = function() {
+  day2Transition('你把可麗餅放進公司冰箱，中午吃完，確實很好吃。\n你打開Instagram，想著要不要謝謝她，然後發現你根本沒有她的聯絡方式。');
+};
+SCENES.day2_end_curious = function() {
+  day2Transition(`她笑了笑，沒有直接回答：「反正就是找到了嘛。」\n那句話讓你心裡有點不對勁，但說不上來哪裡不對。`);
+};
+SCENES.day2_end_check_sns = function() {
+  state.flags.follows_sns = true;
+  day2Transition('她的Instagram是滿滿的地雷系穿搭和可麗餅照片。最新一則貼文，十分鐘前上傳的，是公司大樓的外牆。配文只有一顆心型emoji。');
+};
+SCENES.day2_end_block = function() {
+  state.flags.blocked_sns = true;
+  day2Transition('你封鎖了她。\n但在你封鎖之前，你看到她的大頭照，是一張她對著鏡子拍的自拍，笑得很甜。\n你不知道為什麼，有一種說不清楚的不安。');
+};
+
+function day2Transition(epilogue) {
+  scene({
+    day: 2, loc: '傍晚・回家途中', mood: 'normal',
+    portrait: '🎀',
+    text: `
+${N(epilogue)}
+
+─────
+
+${N('就這樣，第二天結束了。')}
+${N('你告訴自己，一個陌生女孩送可麗餅算不上什麼大事。')}
+${N('你告訴自己，她只是個熱情的人。')}
+
+${N('但你走在回家的路上，街角那個電線桿後面……')}
+${N('有一道淡粉色的裙擺。')}
+${N('你加快了腳步。')}
+    `,
+    choices: [
+      { text: '──Day 3，星期六的早上', next: 'day3_morning', aff: 0, obs: 5 },
+    ]
+  });
+}
+
+// ─────────────────────────────────────────
+// CHAPTER 2: 滲透
+// ─────────────────────────────────────────
+SCENES.day3_morning = function() {
+  render(chapterBanner(2, '她開始滲透你的生活') + `<div style="height:8px"></div>`);
+  setTimeout(() => {
+  scene({
+    day: 3, loc: '你的家・早晨', mood: 'normal',
+    portrait: '🎀',
+    text: `
+${N('週六。你在睡懶覺。')}
+
+${N('手機震動把你從夢裡拉出來，你迷迷糊糊地拿起手機。')}
+    `,
+    notifs: [
+      notif('line','💬','LINE','你有 1 則新訊息 ─ 愛子🎀'),
+    ],
+    text: `
+${N('你盯著畫面。')}
+${N('你沒有給她你的LINE。')}
+${N('你……根本沒有給她任何聯絡方式。')}
+
+你打開訊息。
+
+${MSG('愛子🎀：おはよう♡ 今天天氣很好耶，${P()}${state.suffix}有沒有要出門～？')}
+${MSG('愛子🎀：剛剛路過你家附近，可麗餅店今天有新口味！', '')}
+
+${N('你的手頓在畫面上。')}
+${N('路過你家附近。')}
+    `,
+    choices: [
+      { text: '「你是怎麼拿到我LINE的？」直接問她', next: 'day3_confront', aff: -3, obs: 5, war: 12 },
+      { text: '先不回，下午再看', next: 'day3_ignore_morning', aff: -5, obs: 8, war: 3 },
+      { text: '「早。可麗餅什麼口味？」順著話題回', next: 'day3_reply_sweet', aff: 8, obs: 10, war: 0 },
+    ]
+  });
+  }, 100);
+};
+
+SCENES.day3_confront = function() {
+  scene({
+    day: 3, loc: '手機對話', mood: 'sweet',
+    text: `
+你傳了過去：「妳怎麼有我的LINE？」
+
+三個點點點浮現，然後消失，又浮現。
+
+${MSG('愛子🎀：嗯～？')}
+${MSG('愛子🎀：找到的呀♡')}
+${MSG('愛子🎀：不高興嗎？')}
+${MSG('愛子🎀：……如果你不想要的話我可以刪掉你的')}
+${MSG('愛子🎀：但這樣我會很難過')}
+${MSG('愛子🎀：非常非常難過')}
+
+${N('她的訊息停在那裡。你放下手機，坐在床上，盯著天花板。')}
+${N('她是怎麼找到你的LINE的。')}
+    `,
+    choices: [
+      { text: '「沒有，不用刪。只是問一下。」打圓場', next: 'day3_neutral', aff: 5, obs: 8, war: -3 },
+      { text: '「你這樣讓我不舒服。」說清楚', next: 'day3_stern', aff: -5, obs: 12, war: 5 },
+    ]
+  });
+};
+
+SCENES.day3_ignore_morning = function() {
+  scene({
+    day: 3, loc: '家裡・午後', mood: 'obsess',
+    text: `
+${N('你把手機翻過去，繼續睡。')}
+${N('醒來是中午，你看了一眼手機。')}
+
+${MSG('愛子🎀：？', '')}
+${MSG('愛子🎀：${P()}${state.suffix}？', '')}
+${MSG('愛子🎀：你在嗎', '')}
+${MSG('愛子🎀：沒事，可能睡著了吧', '')}
+${MSG('愛子🎀：我在你家樓下等你哦', '')}
+
+${N('最後一則訊息是二十分鐘前。')}
+${N('你走到窗邊往下看。')}
+${N('街道上，有一個淡粉色的身影靠著對面的牆，低頭看著手機。')}
+    `,
+    choices: [
+      { text: '下樓去，問她在做什麼', next: 'day3_godown', aff: 8, obs: 12, war: 5 },
+      { text: '不下樓，傳訊息說「有事出不來」', next: 'day3_lie', aff: -3, obs: 15, war: 3 },
+    ]
+  });
+};
+
+SCENES.day3_reply_sweet = function() {
+  scene({
+    day: 3, loc: '手機對話', mood: 'sweet',
+    text: `
+${MSG('愛子🎀：哇！${P()}${state.suffix}回我了♡♡♡')}
+${MSG('愛子🎀：今天有草莓大福口味！超可愛的！')}
+${MSG('愛子🎀：你想不想一起去啊～')}
+
+${N('她的訊息打得飛快，每隔幾秒就一則。你看著那三行內容，想著她剛才說「路過你家附近」。')}
+    `,
+    choices: [
+      { text: '「好啊，幾點？」答應她', next: 'day3_date', aff: 12, obs: 15, war: 0 },
+      { text: '「今天有事，改天吧。」婉拒', next: 'day3_reject_first', aff: -5, obs: 10, war: 0 },
+    ]
+  });
+};
+
+SCENES.day3_neutral = function() {
+  scene({
+    day: 3, loc: '家裡', mood: 'sweet',
+    text: `
+${MSG('愛子🎀：真的嗎♡ 謝謝你～！')}
+${MSG('愛子🎀：那今天一起去吃可麗餅嗎？我在你家附近♡')}
+
+${N('她的訊息裡有太多的心型符號，每一個都讓你胃裡有點不對勁。')}
+    `,
+    choices: [
+      { text: '「好，我下樓。」答應', next: 'day3_date', aff: 10, obs: 10 },
+      { text: '「今天沒空。」拒絕', next: 'day3_reject_first', aff: -5, obs: 12 },
+    ]
+  });
+};
+
+SCENES.day3_stern = function() {
+  scene({
+    day: 3, loc: '手機對話', mood: 'dark',
+    text: `
+你傳了過去：「妳這樣讓我不舒服。」
+
+長達三分鐘的沉默。
+
+然後：
+
+${MSG('愛子🎀：……')}
+${MSG('愛子🎀：對不起')}
+${MSG('愛子🎀：我只是想靠近你一點')}
+${MSG('愛子🎀：但我知道我做錯了')}
+${MSG('愛子🎀：我很壞對不對')}
+${MSG('愛子🎀：你要討厭我了嗎')}
+
+${N('你盯著那些訊息，有一種說不清楚的窒息感。')}
+    `,
+    choices: [
+      { text: '「沒有，只是需要你尊重我的界線。」', next: 'day3_neutral', aff: 3, obs: 8, war: -5 },
+      { text: '不回訊息', next: 'day3_ignore_reply', aff: -8, obs: 18, war: 0 },
+    ]
+  });
+};
+
+SCENES.day3_godown = function() {
+  scene({
+    day: 3, loc: '公寓門口', mood: 'sweet',
+    text: `
+你換上外出服，下樓。
+
+推開大門的瞬間，她抬起頭。
+
+${A(`${P()}${state.suffix}！`)}
+
+${N('她的表情從呆滯秒速轉為燦爛，像有人把陽光開關打開了一樣。她跑過來，裙子在風裡飄起。')}
+
+${A('我沒有打擾你吧？我只是……剛好路過，然後就想在這裡等等看。')}
+
+${N('她用腳尖踢著地磚，不太自然地別開眼睛。')}
+${N('「剛好路過」，然後在樓下等了至少半小時。')}
+    `,
+    choices: [
+      { text: '「既然來了，要去吃可麗餅嗎？」順勢邀她', next: 'day3_date', aff: 12, obs: 10 },
+      { text: '「你下次先傳訊息問一下好嗎？」設界線', next: 'day3_set_boundary', aff: -2, obs: 5, war: -5 },
+    ]
+  });
+};
+
+SCENES.day3_lie = function() {
+  scene({
+    day: 3, loc: '手機對話', mood: 'dark',
+    text: `
+你傳了訊息說有事出不來。
+
+${MSG('愛子🎀：好……')}
+${MSG('愛子🎀：那我在這裡等久一點，等你空了♡')}
+
+${N('你扒開窗簾一角，她還在。')}
+${N('一個小時後，她還在。')}
+${N('兩個小時後……')}
+${N('你忍不住再看一眼。她換了個姿勢，靠在牆上刷著手機，偶爾抬頭看向你的窗。')}
+
+${N('黃昏的時候，她傳了最後一則訊息。')}
+
+${MSG('愛子🎀：今天天氣好好，有想到你♡')}
+${MSG('愛子🎀：明天見♡')}
+
+${N('然後她走了。')}
+    `,
+    choices: [
+      { text: '──這一天就這樣結束了', next: 'day5_week', aff: -3, obs: 15, war: 5 },
+    ]
+  });
+};
+
+SCENES.day3_ignore_reply = function() {
+  scene({
+    day: 3, loc: '家裡', mood: 'obsess',
+    text: `
+${N('你放下手機，不再回。')}
+${N('訊息停在那裡，已讀不回。')}
+${N('半小時後，你的手機震動。')}
+
+${MSG('愛子🎀：[圖片]', '')}
+
+${N('你點開圖片。是你家對面的牆面，她站在路燈下，用手機自拍，表情漠然。')}
+${N('圖片背景裡，你認得出那是你家的樓層。')}
+${N('她知道你住在幾樓。')}
+    `,
+    choices: [
+      { text: '傳訊息：「我在。我只是需要一點時間。」', next: 'day3_recover', aff: 5, obs: 8, war: 3 },
+      { text: '還是不回，開始認真感到恐懼', next: 'day5_fear', aff: -5, obs: 20, war: 15 },
+    ]
+  });
+};
+
+SCENES.day3_set_boundary = function() {
+  scene({
+    day: 3, loc: '公寓門口', mood: 'sweet',
+    text: `
+${A('……好。')}
+
+${N('她笑了，但這個笑容比剛才淺了一點，像是有什麼被壓進去了。')}
+
+${A('那下次我會先問哦♡ 那今天既然都見到了……可以一起去吃可麗餅嗎？')}
+
+${N('她的眼神很直接，沒有迴避。')}
+    `,
+    choices: [
+      { text: '「好啊。」答應', next: 'day3_date', aff: 10, obs: 8 },
+      { text: '「今天還有事。」回去', next: 'day3_alone_end', aff: -5, obs: 12, war: 3 },
+    ]
+  });
+};
+
+SCENES.day3_reject_first = function() {
+  scene({
+    day: 3, loc: '手機對話', mood: 'dark',
+    text: `
+你傳了「今天有事，改天吧」。
+
+等了十分鐘。
+
+${MSG('愛子🎀：……改天是哪天♡')}
+${MSG('愛子🎀：你今天真的有事嗎')}
+${MSG('愛子🎀：還是你不想見我')}
+${MSG('愛子🎀：說實話嘛')}
+${MSG('愛子🎀：我可以接受的♡')}
+
+${N('她的訊息裡那個心型，讓你說不清楚是什麼感覺。')}
+    `,
+    choices: [
+      { text: '「真的有事，不是不想見。」解釋', next: 'day3_neutral', aff: 3, obs: 10 },
+      { text: '繼續不回', next: 'day3_ignore_reply', aff: -5, obs: 15, war: 5 },
+    ]
+  });
+};
+
+SCENES.day3_recover = function() {
+  scene({
+    day: 3, loc: '手機對話', mood: 'sweet',
+    text: `
+${MSG('愛子🎀：♡♡♡')}
+${MSG('愛子🎀：我就知道你不是真的生氣')}
+${MSG('愛子🎀：${P()}${state.suffix}最好了')}
+${MSG('愛子🎀：明天見面好嗎♡')}
+
+${N('你盯著那三個心，不知道說什麼好。')}
+    `,
+    choices: [
+      { text: '──接受了，繼續', next: 'day5_week', aff: 5, obs: 10 },
+    ]
+  });
+};
+
+// ─────────────────────────────────────────
+// DAY 3: 第一次約會
+// ─────────────────────────────────────────
+SCENES.day3_date = function() {
+  scene({
+    day: 3, loc: '可麗餅店・下午', mood: 'sweet',
+    portrait: '🌸',
+    text: `
+${N('街角的可麗餅店，淡粉色的遮陽棚，窗口貼著手繪的草莓插圖。')}
+${N('愛子拿著剛點好的草莓大福口味可麗餅，舉到面前端詳了三秒。')}
+
+${A('好可愛♡ 要先吃掉兔耳朵，還是從下面開始……')}
+
+${N('她認認真真地思考這個問題，讓你不知不覺也跟著看著那個可麗餅。')}
+${N('陽光穿過遮陽棚，落在她的頭髮上，蝴蝶結的緞帶閃著光。')}
+
+${A('你呢？${P()}${state.suffix}要怎麼吃？')}
+
+${N('她側過臉，睫毛在光裡很長，眼尾的眼線描得很精緻。')}
+${N('你突然理解了為什麼有人會說她很可愛。')}
+    `,
+    choices: [
+      { text: '「從下面開始，留最好的在最後。」', next: 'date_talk_deep', aff: 8, obs: 8 },
+      { text: '「先吃最可愛的部分。」', next: 'date_talk_light', aff: 10, obs: 10 },
+      { text: '「隨便，好吃就行。」', next: 'date_talk_cool', aff: 3, obs: 5 },
+    ]
+  });
+};
+
+SCENES.date_talk_deep = function() {
+  scene({
+    day: 3, loc: '可麗餅店', mood: 'sweet',
+    text: `
+${A('哦～有想法的人♡')}
+
+${N('她若有所思地點點頭，然後咬了一口可麗餅的底部。')}
+
+${A('我都是先吃耳朵的。')}
+${N('她說得理直氣壯。')}
+${A('因為最可愛的東西要第一個保護──不對，是吃掉。留著沒意義。')}
+
+${N('然後她側過臉，帶著一種難以名狀的笑容看著你。')}
+
+${A('${P()}${state.suffix}，你是那種會「把最好的留到最後」的人？')}
+${A('……那很危險喔。最好的東西如果不馬上抓住，會不見的。♡')}
+
+${N('你說不清楚她在說可麗餅，還是別的什麼。')}
+    `,
+    choices: [
+      { text: '──繼續聊下去，直到太陽西斜', next: 'day3_date_end', aff: 10, obs: 12 },
+    ]
+  });
+};
+
+SCENES.date_talk_light = function() {
+  scene({
+    day: 3, loc: '可麗餅店', mood: 'sweet',
+    text: `
+她的眼睛亮了。
+
+${A('同學！！♡ 一樣的想法！')}
+
+${N('她高興得把可麗餅的兔子耳朵一口咬掉，然後捧腹大笑。')}
+${N('你看著她笑，突然覺得這個下午有那麼一點不真實的美好。')}
+
+${A('我媽說我吃東西的方式很幼稚。')}
+${A('但我覺得，如果最可愛的東西不馬上吃掉，等它不再可愛了再吃，多可悲。')}
+
+${N('她說著，拿走了你的可麗餅耳朵，一口塞進嘴裡，理直氣壯地說：')}
+${A('這個也是我的♡')}
+    `,
+    choices: [
+      { text: '──笑著繼續聊下去', next: 'day3_date_end', aff: 15, obs: 15 },
+    ]
+  });
+};
+
+SCENES.date_talk_cool = function() {
+  scene({
+    day: 3, loc: '可麗餅店', mood: 'normal',
+    text: `
+${A('……')}
+
+${N('她靜靜地看了你一秒。')}
+
+${A('${P()}${state.suffix}，你對什麼都這樣嗎？')}
+
+${N('她把可麗餅的兔子耳朵咬掉，細細地咀嚼，然後繼續說：')}
+
+${A('「好吃就行」的人，很少真的懂得什麼叫好吃。')}
+
+${N('你不確定這是在說可麗餅。')}
+    `,
+    choices: [
+      { text: '──聊了一陣，說不上好不好', next: 'day3_date_end', aff: 5, obs: 8 },
+    ]
+  });
+};
+
+SCENES.day3_date_end = function() {
+  scene({
+    day: 3, loc: '回家路上・傍晚', mood: 'normal',
+    text: `
+${N('太陽快下山的時候，你們走到了分岔口。')}
+
+${A('今天很開心♡')}
+
+${N('她回過頭，頭髮在晚風裡輕輕飄起，背對著橙色的夕陽。')}
+
+${A('${P()}${state.suffix}，我還想再跟你見面。')}
+
+${N('她說得很直接，沒有猶豫。')}
+${N('你想說什麼，但她已經先轉身走了，裙子旋轉著消失在轉角。')}
+${N('留下你一個人站在路口。')}
+
+─────
+
+${N('當天晚上，你查了一下她的Instagram。')}
+${N('她上傳了今天的可麗餅照片，兔子耳朵已經被吃掉了，畫面裡有你的手的一部分。')}
+${N('配文是：「今天遇到了很重要的人♡」')}
+    `,
+    choices: [
+      { text: '──進入第二週', next: 'week2_start', aff: 5, obs: 5 },
+    ]
+  });
+};
+
+SCENES.day3_alone_end = function() {
+  scene({
+    day: 3, loc: '家裡', mood: 'normal',
+    text: `
+${N('你回到家，關上門，在沙發上坐了很久。')}
+${N('不知道為什麼，腦子裡一直有她站在路燈下的樣子。')}
+${N('那個眼神說不上是悲傷，說不上是憤怒，只是一種很安靜的堅定。')}
+
+${N('晚上九點，她傳了一則訊息。')}
+    `,
+    notifs: [
+      notif('line','💬','LINE','愛子🎀：晚安♡ 明天見。'),
+    ],
+    choices: [
+      { text: '──進入第二週', next: 'week2_start', aff: 0, obs: 10 },
+    ]
+  });
+};
+
+SCENES.day5_week = function() {
+  scene({
+    day: 5, loc: '一週後', mood: 'obsess',
+    text: `
+${N('幾天過去了。')}
+${N('你發現了一些事情。')}
+
+每天早上，你出門時，街對面的咖啡廳有時候會有個穿淡色系洋裝的身影。
+
+你公司附近的花店，老闆開始認識你：「哎，你那個女朋友每次你下班前都會來看一下。」
+
+你的Instagram有時候會有一個陌生帳號觀看了你的限時動態，然後消失。
+
+${N('你不確定是不是自己在疑神疑鬼。')}
+${N('但有一天，你打開手機備忘錄，發現裡面有一則你完全沒有印象建立的紀錄：')}
+
+${MSG('「${P()}${state.suffix}今天穿藍色。喜歡♡」', '')}
+    `,
+    choices: [
+      { text: '直接傳訊息問愛子「那個備忘錄是你嗎」', next: 'week2_confront_memo', aff: -3, obs: 5, war: 15 },
+      { text: '刪掉備忘錄，繼續觀察', next: 'week2_observe', aff: 0, obs: 5, war: 8 },
+      { text: '試著找機會正面跟她說清楚邊界', next: 'week2_talk_boundary', aff: -5, obs: 5, war: 5 },
+    ]
+  });
+};
+
+SCENES.day5_fear = function() {
+  scene({
+    day: 5, loc: '幾天後・你家', mood: 'obsess',
+    text: `
+${N('你開始注意到更多事情。')}
+
+你的公司同事問你：「有個女生打電話來說是你朋友，問了你今天幾點下班。」
+
+你在超商買東西時，旁邊貨架傳來熟悉的香水味，你轉頭，空的。
+
+你回到家，信箱裡有一張明信片。沒有寄件人，只有一顆手寫的心型，和三個字：
+
+${MSG('「一直都在♡」', '')}
+
+${N('你把明信片翻過去放在桌上，手有點抖。')}
+    `,
+    choices: [
+      { text: '傳訊息給愛子：「我們需要談一談。」', next: 'week2_talk_boundary', aff: -5, obs: 3, war: 8 },
+      { text: '查警察相關資訊……', next: 'week2_police_check', aff: -10, obs: 5, war: 15 },
+    ]
+  });
+};
+
+// ─────────────────────────────────────────
+// CHAPTER 3: 第二週 — 加深糾纏
+// ─────────────────────────────────────────
+SCENES.week2_start = function() {
+  render(chapterBanner(3, '她的世界越來越近') + `<div style="height:8px"></div>`);
+  setTimeout(() => {
+  scene({
+    day: 8, loc: '第二週・星期三', mood: 'sweet',
+    portrait: '🌸',
+    text: `
+${N('第二週開始，愛子已經成為你生活中的常態。')}
+
+每天早上她會傳一則「早安」訊息，裡面固定有至少一個心型符號。
+你回覆的機率越來越高，因為你發現不回覆比回覆還要讓人不安。
+
+今天，她出現在你常去的那間定食餐廳。
+
+${A('哇！${P()}${state.suffix}也來這裡吃午餐？好巧♡')}
+
+${N('她站在你桌旁，裙子今天是黑色的，上面繡著白色的小花，頭髮盤起來，幾縷碎發垂在耳邊。')}
+${N('她看起來精心打扮過，但說著「好巧」。')}
+    `,
+    choices: [
+      { text: '「要一起坐嗎？」讓她坐下', next: 'week2_lunch_yes', aff: 10, obs: 12 },
+      { text: '「我快吃完了。」維持距離', next: 'week2_lunch_no', aff: -5, obs: 10, war: 5 },
+    ]
+  });
+  }, 100);
+};
+
+SCENES.week2_confront_memo = function() {
+  scene({
+    day: 6, loc: '手機對話', mood: 'sweet',
+    text: `
+你傳了過去：「我手機的備忘錄裡有一則紀錄，是你寫的嗎？」
+
+她回得很快。
+
+${MSG('愛子🎀：♡')}
+${MSG('愛子🎀：你看到了啊♡♡')}
+${MSG('愛子🎀：我只是想記錄一下嘛')}
+${MSG('愛子🎀：有什麼不好嗎')}
+
+${N('你盯著畫面，感覺胸口有什麼東西往下沉。')}
+
+她竟然承認了，而且語氣裡毫無意識到這有任何問題。
+
+${MSG('愛子🎀：${P()}${state.suffix}那天穿藍色真的很好看♡')}
+    `,
+    choices: [
+      { text: '「妳不能動我的手機。」嚴正告訴她', next: 'week2_talk_boundary', aff: -5, obs: 5, war: 5 },
+      { text: '沉默，不知道該說什麼', next: 'week2_start', aff: -3, obs: 8 },
+    ]
+  });
+};
+
+SCENES.week2_observe = function() {
+  day8Shortcut();
+};
+
+function day8Shortcut() { SCENES.week2_start(); }
+
+SCENES.week2_police_check = function() {
+  scene({
+    day: 5, loc: '家裡', mood: 'dark',
+    text: `
+${N('你搜尋了跟蹤騷擾防制法的相關資訊。')}
+${N('台灣2022年通過了《跟蹤騷擾防制法》，構成要件是反覆或持續的跟蹤騷擾行為……')}
+${N('你把手機放下，盯著天花板。')}
+${N('她只是……送可麗餅，偶爾出現。對嗎？')}
+${N('你不確定。但你把警察局的電話存進了聯絡人，以備不時之需。')}
+
+然後你的手機震動了。
+
+${MSG('愛子🎀：${P()}${state.suffix}，今天吃飯了嗎♡')}
+${MSG('愛子🎀：我在你家附近的拉麵店，要來嗎')}
+    `,
+    choices: [
+      { text: '「好，我來。」去見她，直接說清楚', next: 'week2_talk_boundary', aff: -3, obs: 3, war: -3 },
+      { text: '不回，開始計畫切斷聯絡', next: 'route_escape_early', aff: -10, obs: 5, war: 10 },
+    ]
+  });
+};
+
+SCENES.week2_talk_boundary = function() {
+  scene({
+    day: 7, loc: '公園・傍晚', mood: 'dark',
+    text: `
+你約她在附近的公園見面。
+
+她來得很準時，穿著她最喜歡的那件粉色蓬蓬裙，手上拿著兩杯飲料，遞了一杯給你。
+
+${A('你說有話要說♡ 什麼事嘛。')}
+
+她笑著，眼睛亮閃閃的。
+
+你深吸一口氣，把你這幾天的不安感說出來：她出現在你家附近、公司附近、拿到你的私人聯絡方式……
+
+她一直沒有說話，只是聽著，手上的飲料杯被她捏緊了。
+
+等你說完，沉默了大約十秒。
+
+${A('……你是在叫我離開嗎。')}
+
+她的語氣很平靜，但視線落在地上，不看你的臉。
+    `,
+    choices: [
+      { text: '「不是叫你離開，是希望你尊重一些規則。」', next: 'boundary_soft', aff: -3, obs: -5, war: -5 },
+      { text: '「我需要你停止跟蹤我的行為。」說清楚', next: 'boundary_hard', aff: -10, obs: -5, war: -8 },
+      { text: '「……我只是想聊聊。」打退堂鼓', next: 'boundary_retreat', aff: 5, obs: 8, war: -5 },
+    ]
+  });
+};
+
+SCENES.boundary_soft = function() {
+  scene({
+    day: 7, loc: '公園', mood: 'dark',
+    text: `
+長長的沉默。
+
+然後她把視線移回你的臉上。
+
+${A('……規則。')}
+
+她重複了這個詞，語氣很難解讀。
+
+${A('好。我知道了。')}
+
+她站起來，把飲料放在椅子旁邊，裙子旋轉著。
+
+${A('謝謝你沒有直接叫我走。♡')}
+
+${N('她走了，背影很筆直，沒有回頭。')}
+${N('那個「♡」不知道為什麼讓你覺得背脊發涼。')}
+    `,
+    choices: [
+      { text: '──進入第三週', next: 'week3_uneasy', aff: 0, obs: -3 },
+    ]
+  });
+};
+
+SCENES.boundary_hard = function() {
+  scene({
+    day: 7, loc: '公園', mood: 'obsess',
+    text: `
+她的手指緊緊捏著飲料杯。
+
+${A('跟蹤。')}
+
+她重複了那兩個字，聲音很輕。
+
+${A('你覺得我在跟蹤你。')}
+
+${N('她終於抬起臉，你第一次看到她不是在笑的樣子。')}
+${N('她的表情是空的，像一張白紙，讓你說不清楚她在想什麼。')}
+
+${A('我只是……很想靠近你。')}
+${A('那是我的錯嗎。')}
+
+${N('她站起來，飲料放在椅子上，沒有帶走。')}
+${N('走了兩步又停下。')}
+
+${A('我不會再出現了。放心。♡')}
+
+${N('那個「♡」在這個語境裡很違和，違和到讓你不安。')}
+    `,
+    choices: [
+      { text: '──她走了。你不確定這是結束，還是開始。', next: 'week3_after_hard', aff: -5, obs: -8, war: 5 },
+    ]
+  });
+};
+
+SCENES.boundary_retreat = function() {
+  scene({
+    day: 7, loc: '公園', mood: 'sweet',
+    text: `
+她的表情緩和下來，小心翼翼地把視線移回你身上。
+
+${A('只是想聊聊？')}
+${A('……那聊什麼？♡')}
+
+${N('你說不清楚為什麼打退堂鼓，只是當她那樣看著你，你說不出口了。')}
+${N('你們就那樣在公園坐到了天黑，說了很多沒有重量的話。')}
+${N('分開的時候，她握了一下你的手，很快就放開了。')}
+
+${A('今天謝謝你找我說話。♡')}
+    `,
+    choices: [
+      { text: '──進入第三週', next: 'week3_soft', aff: 8, obs: 8 },
+    ]
+  });
+};
+
+// ─────────────────────────────────────────
+// CHAPTER 4: 第三週 — 分叉點
+// ─────────────────────────────────────────
+SCENES.week2_lunch_yes = function() {
+  scene({
+    day: 8, loc: '定食餐廳', mood: 'sweet',
+    text: `
+她在對面坐下，把裙子理好，從包包裡拿出一個小貼紙本，開始貼在她的飲料杯上。
+
+${A('這裡的鮭魚定食很好吃吧？♡')}
+
+${N('你問她怎麼知道你會來這裡。')}
+
+${A('哎～你上次在限動分享了這附近的街景，我就想說也許你中午會在這一帶～')}
+
+${N('你看著她，她用一種完全理所當然的表情繼續貼貼紙。')}
+${N('她的解釋聽起來……合理？但是又不對。')}
+
+${A('${P()}${state.suffix}，你下周末有空嗎？')}
+    `,
+    choices: [
+      { text: '「有，怎麼了？」', next: 'week2_plan_date', aff: 8, obs: 10 },
+      { text: '「要看情況。」模糊回應', next: 'week2_vague', aff: 2, obs: 5 },
+    ]
+  });
+};
+
+SCENES.week2_lunch_no = function() {
+  scene({
+    day: 8, loc: '定食餐廳', mood: 'dark',
+    text: `
+${A('……')}
+
+她的表情沒有崩，只是笑容淡了一點點。
+
+${A('好。那你慢慢吃。♡')}
+
+${N('她轉身，找了一個隔幾桌的位子坐下，背對著你。')}
+${N('你吃完結帳，路過她的桌子。她頭也不回，但你聽到她用很輕的聲音說：')}
+
+${A('……明天見。')}
+
+${N('你走出餐廳，天空是陰的。')}
+    `,
+    choices: [
+      { text: '──進入第三週', next: 'week3_uneasy', aff: -5, obs: 10, war: 8 },
+    ]
+  });
+};
+
+SCENES.week2_plan_date = function() {
+  scene({
+    day: 8, loc: '定食餐廳', mood: 'sweet',
+    text: `
+她臉上的笑容擴大了，把貼紙本收進包包。
+
+${A('那個，有一個地方我一直很想去，但一個人去感覺怪怪的……')}
+${A('你願意陪我去嗎♡')}
+
+${N('她從包包裡拿出一張明信片大小的紙，上面是她手寫的活動資訊：')}
+
+${MSG('山手町・老宅市集 × 手作雜貨展')}
+${MSG('─ 只有週末限定 ─', 'system')}
+
+${A('會有手作飾品，還有可麗餅攤位♡ 很符合我♡')}
+
+${N('她笑得彎眼，腳尖在桌子下輕輕踩著節拍。')}
+    `,
+    choices: [
+      { text: '「好啊，聽起來不錯。」正式答應', next: 'week3_market_date', aff: 12, obs: 12 },
+      { text: '「我再想想。」不確定', next: 'week3_soft', aff: 2, obs: 5 },
+    ]
+  });
+};
+
+SCENES.week2_vague = function() {
+  day8Shortcut2();
+};
+
+function day8Shortcut2() { SCENES.week3_soft(); }
+
+SCENES.week3_uneasy = function() {
+  render(chapterBanner(3, '界線模糊的第三週') + `<div style="height:8px"></div>`);
+  setTimeout(() => {
+  scene({
+    day: 15, loc: '第三週・某個下午', mood: 'obsess',
+    text: `
+${N('進入第三週，你們之間形成了一種奇怪的默契。')}
+
+她不再說「路過」，她直接說「我在你家附近，要出來嗎」。
+你有時候答應，有時候不答應。
+她接受你的不答應，但第二天會加倍出現。
+
+今天，你下班走出公司，她站在門口，手上拿著兩個可麗餅。
+
+${A('今天限定口味，買一送一♡ 所以我就來了。')}
+
+${N('旁邊的同事看了你一眼，悄悄對你比了個讚。')}
+
+${N('你接過可麗餅，心裡說不清是溫暖還是不安。')}
+    `,
+    choices: [
+      { text: '一起在附近的公園邊走邊吃', next: 'week3_park_walk', aff: 10, obs: 10 },
+      { text: '「謝謝，但我有事。」接過後說再見', next: 'week3_reject_again', aff: -5, obs: 12, war: 5 },
+    ]
+  });
+  }, 100);
+};
+
+SCENES.week3_after_hard = function() {
+  scene({
+    day: 10, loc: '一週後', mood: 'obsess',
+    text: `
+${N('她說「不會再出現了」之後，消失了三天。')}
+
+你的LINE一則訊息也沒有。
+你公司門口乾淨，餐廳沒有見到她，路燈下空空的。
+
+你告訴自己這樣很好。
+
+但第四天早上，你打開手機……
+
+    `,
+    notifs: [
+      notif('line','💬','LINE','愛子🎀：早安♡'),
+      notif('line','💬','LINE','愛子🎀：我沒辦法真的消失的。♡'),
+    ],
+    choices: [
+      { text: '回「早安」，什麼都不提', next: 'week3_soft', aff: 5, obs: 8 },
+      { text: '不回，繼續保持沉默', next: 'week3_uneasy', aff: -5, obs: 15, war: 5 },
+    ]
+  });
+};
+
+SCENES.week3_soft = function() {
+  scene({
+    day: 14, loc: '第三週', mood: 'sweet',
+    text: `
+${N('第三週，你們維持著某種脆弱的平衡。')}
+
+她依然每天早上傳「早安」，你開始習慣了回覆。
+她偶爾會出現在你生活的邊緣，但不再強迫進入你的空間。
+
+週末，你傳訊息說想去看看她常說的那個雜貨市集。
+她回覆只有四個字：「等你來喔♡」
+
+${N('市集在一個老宅院子裡，陽光很好，地上鋪著碎石，攤位都是手工製的飾品和文具。')}
+${N('愛子穿著她那件草莓圖案的黑色洋裝，在一個耳環攤前蹲下來細細挑選。')}
+
+${A('${P()}${state.suffix}你看，這個耳環是不是很像我♡')}
+
+${N('她舉起一對心形的紅色耳環，比在耳邊。')}
+    `,
+    choices: [
+      { text: '「很像。」真心說', next: 'week3_market_moment', aff: 10, obs: 10 },
+      { text: '「有點誇張。」開玩笑', next: 'week3_market_tease', aff: 8, obs: 8 },
+    ]
+  });
+};
+
+SCENES.week3_market_date = function() { SCENES.week3_soft(); };
+
+SCENES.week3_park_walk = function() {
+  scene({
+    day: 15, loc: '公園', mood: 'sweet',
+    portrait: '🌸',
+    text: `
+${N('夕陽把公園染成橙色，你們沿著小徑邊走邊吃可麗餅。')}
+
+愛子踩著石板路，偶爾踮起腳尖看遠處的事物，白色裙子在風裡輕輕搖擺。
+
+${A('${P()}${state.suffix}，你有沒有覺得……')}
+
+她說到一半停頓了，把最後一口可麗餅塞進嘴裡，讓奶油的甜味替代了那半句話。
+
+${A('……沒什麼。♡')}
+
+${N('你們走到噴水池邊，她突然回過頭，直直地看著你。')}
+
+${A('如果有一天我消失了，你會找我嗎？')}
+    `,
+    choices: [
+      { text: '「妳說什麼怪話。」輕描淡寫', next: 'week3_disappear_light', aff: 5, obs: 8 },
+      { text: '「……妳在說什麼？」認真問她', next: 'week3_disappear_serious', aff: 8, obs: 5, war: 5 },
+      { text: '「會。」簡單地回答', next: 'week3_disappear_yes', aff: 15, obs: 15 },
+    ]
+  });
+};
+
+SCENES.week3_disappear_light = function() {
+  scene({
+    day: 15, loc: '公園・噴水池邊', mood: 'sweet',
+    text: `
+她眨了眨眼，然後笑了。
+
+${A('是嗎♡ 說得好像我不可能消失一樣。')}
+
+${N('她轉過身，背對著噴水池，把手張開感受水霧。')}
+
+${A('……你知道嗎，我以前有一隻貓。它某天就不見了，也沒有留任何痕跡。')}
+${A('我等了很久很久。它再也沒有回來。')}
+
+${N('她說的語氣很平靜，像在說別人的故事。')}
+
+${A('所以我覺得，想消失的話，消失了就是消失了。♡')}
+    `,
+    choices: [
+      { text: '「妳不會消失的。」直接說', next: 'week4_closeness', aff: 10, obs: 12 },
+      { text: '把話題帶開，說點輕鬆的', next: 'week4_normal', aff: 5, obs: 5 },
+    ]
+  });
+};
+
+SCENES.week3_disappear_serious = function() {
+  scene({
+    day: 15, loc: '公園・噴水池邊', mood: 'dark',
+    text: `
+她愣了一下，然後把視線低下去，看著水池的反光。
+
+${A('沒什麼。只是有時候想，如果消失了……會不會有人注意到。')}
+
+${N('你說當然會有人注意到。')}
+${N('她沒有立刻回應，而是伸手輕輕撥了一下水面。')}
+
+${A('……你嗎？')}
+
+${N('她抬起頭，眼神是你從沒見過的樣子，不甜，不暗，只是很安靜地，等著你的答案。')}
+    `,
+    choices: [
+      { text: '「我會。」認真回答她', next: 'week4_closeness', aff: 12, obs: 15 },
+      { text: "「還有很多人。」迴避了'你'的部分", next: 'week4_normal', aff: 3, obs: 5 },
+      { text: '「愛子，妳還好嗎？」把問題轉回她身上', next: 'week3_open_up', aff: 8, obs: 8, flag: 'showed_concern' },
+    ]
+  });
+};
+
+SCENES.week3_disappear_yes = function() {
+  scene({
+    day: 15, loc: '公園・噴水池邊', mood: 'sweet',
+    text: `
+你只說了一個字：「會。」
+
+她沉默了兩秒。
+
+然後她笑了，不是平常那種表演式的笑，而是一個很小、很真實的微笑，讓她看起來像一個普通的女孩。
+
+${A('……謝謝你。')}
+
+${N('她把手從水池邊收回來，低頭擦乾。')}
+
+${A('你是第一個說「會」的人。♡')}
+
+${N('那個「♡」這次聽起來，有點像在努力維持什麼。')}
+    `,
+    choices: [
+      { text: '──進入第四週', next: 'week4_closeness', aff: 5, obs: 12 },
+    ]
+  });
+};
+
+SCENES.week3_open_up = function() {
+  scene({
+    day: 15, loc: '公園', mood: 'dark',
+    text: `
+她愣了一秒。
+
+然後她笑了，但這個笑比平常淺。
+
+${A('我還好啊。')}
+${A('只是有時候，腦子裡會有很多很吵的東西。')}
+${A('……對大部分人說這些，他們都會走掉的。')}
+
+${N('她把頭靠在噴水池邊緣，看著天空。')}
+
+${A('但你不一樣。${P()}${state.suffix}不一樣。♡')}
+
+${N('你不知道「不一樣」對她來說意味著什麼。')}
+${N('但你記住了她說的：「腦子裡很吵的東西。」')}
+    `,
+    choices: [
+      { text: '「如果你願意說，我可以聽。」', next: 'week4_closeness', aff: 10, obs: 10, flag: 'listened' },
+      { text: '「……好好照顧自己。」輕輕說', next: 'week4_normal', aff: 5, obs: 5 },
+    ]
+  });
+};
+
+SCENES.week3_reject_again = function() {
+  scene({
+    day: 15, loc: '公司附近', mood: 'dark',
+    text: `
+她把可麗餅遞過來之後，你接過，說了謝謝，告訴她你有事要走。
+
+她笑著說「好啊♡」，沒有挽留。
+
+你走了兩個路口後，手機震動。
+
+    `,
+    notifs: [
+      notif('line','💬','LINE','愛子🎀：你今天背影很好看'),
+      notif('line','💬','LINE','愛子🎀：我拍了一張，可以給你看嗎♡'),
+    ],
+    choices: [
+      { text: '「……好。」', next: 'week3_photo_sent', aff: 3, obs: 12, war: 8 },
+      { text: '「不用。」並認真考慮設立更明確的界線', next: 'week2_talk_boundary', aff: -5, obs: 5, war: 5 },
+    ]
+  });
+};
+
+SCENES.week3_photo_sent = function() {
+  scene({
+    day: 15, loc: '手機對話', mood: 'obsess',
+    text: `
+她傳了一張照片過來。
+
+你的背影，你走在路燈下，光打在你的肩膀上。
+構圖很好，像是刻意等待了某個角度。
+
+然後她傳了另一則：
+
+${MSG('愛子🎀：我有很多張你的照片♡')}
+${MSG('愛子🎀：你最好看的是下班背對路燈的時候')}
+${MSG('愛子🎀：我都有存♡')}
+
+${N('你說不出話來。')}
+    `,
+    choices: [
+      { text: '「……妳有我的照片要跟我說一聲。」', next: 'week3_uneasy', aff: -3, obs: 5, war: 12 },
+      { text: '沉默，把手機放下，想一想', next: 'week3_uneasy', aff: -3, obs: 8, war: 8 },
+    ]
+  });
+};
+
+// ─────────────────────────────────────────
+// CHAPTER 4: 深陷
+// ─────────────────────────────────────────
+SCENES.week4_closeness = function() {
+  render(chapterBanner(4, '深陷——你開始習慣她') + `<div style="height:8px"></div>`);
+  setTimeout(() => {
+  scene({
+    day: 22, loc: '第四週・某個週日', mood: 'sweet',
+    portrait: '💮',
+    text: `
+${N('第四週，你意識到了一件事：')}
+${N('你開始等她的早安訊息。')}
+
+不是恐懼，不是煩躁，而是某種接近習慣的東西。
+當她有一天晚傳了半小時，你看了三次手機。
+
+今天是週日，她說要帶你去一個地方。
+
+她帶你到了一條小巷，巷子裡開著一間老茶館，木頭牆壁，掛著風鈴。
+
+${A('這裡是我的秘密基地♡ 我一個人的時候都來這裡。')}
+
+${N('她推開門，老闆娘看到她，招呼說「小姐又來啦」，把她常坐的角落位置讓出來。')}
+${N('她把這個「秘密基地」帶給你看。')}
+    `,
+    choices: [
+      { text: '「謝謝你帶我來。」認真地說', next: 'ch4_tea_grateful', aff: 10, obs: 12 },
+      { text: '「這裡很適合你。」打量了一下說', next: 'ch4_tea_observe', aff: 8, obs: 10 },
+    ]
+  });
+  }, 100);
+};
+
+SCENES.week4_normal = function() {
+  scene({
+    day: 20, loc: '第四週', mood: 'normal',
+    text: `
+${N('第四週，你們維持著某種奇妙的平行線。')}
+${N('她接近，你退一步，她不強迫，但也不真的離開。')}
+
+某天下班，她在你公司附近的咖啡廳等你，說「剛好路過」，你已經不再問這個問題了。
+
+你們喝了咖啡，說了些無關緊要的話。
+她笑的時候眼睛彎起來，她說話的時候手會比比畫畫。
+
+你開始注意她的細節。
+    `,
+    choices: [
+      { text: '──繼續往前走', next: 'week4_closeness', aff: 5, obs: 5 },
+    ]
+  });
+};
+
+SCENES.week3_market_moment = function() {
+  scene({
+    day: 14, loc: '老宅市集', mood: 'sweet',
+    text: `
+${A('是吧是吧♡ 我就知道你有眼光。')}
+
+${N('她把耳環買下來，讓老闆幫她裝進小袋子，然後拉著你走到下一個攤位。')}
+
+${N('市集裡的光線很溫柔，舊木頭的氣息和花香混在一起。')}
+${N('她在你身邊，時不時回頭確認你還跟著，每次看到你就會微微地笑。')}
+
+${A('${P()}${state.suffix}，謝謝你今天陪我。')}
+
+${N('她在一個乾燥花的攤位停下，把一小束薰衣草遞給你。')}
+
+${A('送你的♡ 聞起來有我的味道對不對。')}
+
+${N('你聞了一下，確實是她常用的香水味。')}
+    `,
+    choices: [
+      { text: '──進入第四週', next: 'week4_closeness', aff: 10, obs: 10 },
+    ]
+  });
+};
+
+SCENES.week3_market_tease = function() {
+  scene({
+    day: 14, loc: '老宅市集', mood: 'sweet',
+    text: `
+${A('……誇張？！')}
+
+她把耳環比在耳邊，義憤填膺。
+
+${A('我的心也是紅色的好嗎！非常不誇張！')}
+
+${N('你笑了，她看到你笑，撇開臉，假裝在看旁邊的攤位，耳朵是紅的。')}
+
+然後她小聲說：
+
+${A('……笑起來有點好看。明明平常臭臭的。')}
+
+${N('你問她說什麼。')}
+${A('沒什麼！走了！♡')}
+    `,
+    choices: [
+      { text: '──進入第四週', next: 'week4_closeness', aff: 12, obs: 12 },
+    ]
+  });
+};
+
+SCENES.ch4_tea_grateful = function() {
+  scene({
+    day: 22, loc: '老茶館', mood: 'sweet',
+    text: `
+她愣了一下，然後把杯子捧在手心，低頭。
+
+${A('……你第一個說「謝謝」的。')}
+${A('其他人來這裡，都是我帶他們來，他們說「好」，然後就走了。')}
+
+${N('她說的語氣很平靜，但那個「走了」落在茶館的木頭地板上，有點重量。')}
+
+她抬起頭，認真地看你。
+
+${A('你不一樣。♡')}
+
+${N('這是她第幾次說你不一樣了。')}
+${N('你突然想，她說的「不一樣」，到底對她意味著什麼重量。')}
+    `,
+    choices: [
+      { text: '「妳是說……之前有別人嗎？」輕輕問', next: 'ch4_past_reveal', aff: 8, obs: 8, flag: 'knows_past' },
+      { text: '不說話，只是輕輕「嗯」了一聲', next: 'ch4_quiet_moment', aff: 5, obs: 10 },
+    ]
+  });
+};
+
+SCENES.ch4_tea_observe = function() {
+  scene({
+    day: 22, loc: '老茶館', mood: 'normal',
+    text: `
+她瞇著眼笑了。
+
+${A('什麼意思嘛，說得好像我是什麼古怪的人一樣。')}
+
+但她坐得更舒展了，把包包放在椅子下，雙手托腮看著窗外。
+
+${A('……我喜歡這裡，因為沒有人知道我在這裡。')}
+${A('大家都覺得我很快樂、很甜，但我在這裡的時候，不用那樣。')}
+
+${N('她說得很輕描淡寫。')}
+${N('但你聽出了那句話的重量。')}
+    `,
+    choices: [
+      { text: '「那妳真正的樣子是什麼？」', next: 'ch4_past_reveal', aff: 10, obs: 10, flag: 'knows_past' },
+      { text: '「這樣的妳也很好。」', next: 'ch4_quiet_moment', aff: 8, obs: 12 },
+    ]
+  });
+};
+
+SCENES.ch4_past_reveal = function() {
+  scene({
+    day: 22, loc: '老茶館', mood: 'dark',
+    text: `
+長長的沉默，茶館裡只有風鈴的聲音。
+
+${A('以前有一個人。')}
+
+她說得很平靜，手指繞著茶杯的杯緣轉圈。
+
+${A('他說我很可愛，說喜歡我。然後有一天，他說我太黏他了。說我很恐怖。')}
+${A('……我只是想靠近他一點。但他走了。')}
+
+${N('她的語氣沒有起伏，像是說一件早就消化完的事。')}
+
+${A('後來我想，如果我再快一點，再靠近一點，他就不會跑掉了。')}
+
+${N('她笑了，但眼睛沒有笑。')}
+
+${A('所以我現在不會讓喜歡的人跑掉的。♡')}
+    `,
+    choices: [
+      { text: '「……妳不需要那樣。」輕輕地說', next: 'ch4_comfort', aff: 10, obs: 8, flag: 'comforted' },
+      { text: '沉默，心裡有點什麼東西落定了', next: 'ch4_quiet_moment', aff: 5, obs: 5 },
+      { text: '「那個人是對的。妳應該讓別人有空間。」直說', next: 'ch4_truth_hard', aff: -5, obs: -5, war: -5 },
+    ]
+  });
+};
+
+SCENES.ch4_quiet_moment = function() {
+  scene({
+    day: 22, loc: '老茶館', mood: 'normal',
+    text: `
+${N('你們在茶館坐了很久，說話，也沉默。')}
+${N('有一種奇怪的安靜，不是尷尬的安靜，而是某種東西被放下的感覺。')}
+
+她的手在桌上，離你很近。
+
+你沒有伸手，她也沒有。
+
+但你們都沒有移開。
+
+${A('……${P()}${state.suffix}。')}
+
+${N('她叫了你的名字，沒有心型，沒有後綴，只是你的名字。')}
+
+${A('你是第一個讓我覺得可以不用那麼用力的人。')}
+    `,
+    choices: [
+      { text: '──進入第五週，事情開始改變', next: 'week5_turning', aff: 10, obs: 8 },
+    ]
+  });
+};
+
+SCENES.ch4_comfort = function() {
+  scene({
+    day: 22, loc: '老茶館', mood: 'dark',
+    text: `
+她的手指在茶杯邊緣停了下來。
+
+${A('……不需要嗎。')}
+
+她重複了你的話，好像在測試它的重量。
+
+${A('你真的這樣想嗎？')}
+
+${N('你點頭。')}
+
+${A('……')}
+
+${N('她低下頭，頭髮垂下來，遮住了她的表情。')}
+${N('很長的沉默。然後你聽到一聲，很輕：')}
+
+${A('謝謝你。')}
+
+${N('這次沒有心型符號。')}
+    `,
+    choices: [
+      { text: '──進入第五週', next: 'week5_turning', aff: 12, obs: -3 },
+    ]
+  });
+};
+
+SCENES.ch4_truth_hard = function() {
+  scene({
+    day: 22, loc: '老茶館', mood: 'obsess',
+    text: `
+她的臉色在一秒內變了。
+
+然後她笑了，很甜，讓你說不清楚她有沒有受傷。
+
+${A('……是嗎。')}
+
+她把茶杯放下，站起來，整理裙子。
+
+${A('那我以後注意一下。♡')}
+
+${N('她沒有哭，沒有崩潰，只是平靜地說「以後注意一下」。')}
+${N('那種平靜讓你比崩潰更不安。')}
+${N('你們各自回家。')}
+${N('當晚，她連「晚安」都沒有傳。')}
+    `,
+    choices: [
+      { text: '──三天後', next: 'ch4_three_day_silence', aff: -5, obs: 5, war: 5 },
+    ]
+  });
+};
+
+SCENES.ch4_three_day_silence = function() {
+  scene({
+    day: 25, loc: '三天後', mood: 'obsess',
+    text: `
+${N('三天過去，愛子沒有傳任何訊息。')}
+${N('你告訴自己這樣很好，她聽進去了。')}
+
+第四天，你下班走出公司，看到她站在門口。
+
+她今天沒有打扮，頭髮只是隨意綁起，穿著普通的白色連身裙，手上什麼都沒拿。
+
+她看到你，沉默了一秒，然後說：
+
+${A('我想通了。')}
+${A('你說得對，我應該給你更多空間。')}
+${A('……但我做不到。')}
+
+${n('她的眼神很直，不逃避。')}
+
+${A('所以我想問你，你願意讓我靠近你嗎。不是默認，是你真正願意。')}
+    `,
+    choices: [
+      { text: '「……願意。」', next: 'route_accept', aff: 15, obs: 8 },
+      { text: '「愛子，妳值得一段更健康的關係。」', next: 'route_gentle_end', aff: 5, obs: -5 },
+      { text: '「不，我沒辦法。」拒絕', next: 'route_refuse', aff: -15, obs: 10, war: 5 },
+    ]
+  });
+};
+
+// ─────────────────────────────────────────
+// CHAPTER 5: 轉折
+// ─────────────────────────────────────────
+SCENES.week5_turning = function() {
+  render(chapterBanner(5, '轉折——愛意與恐懼') + `<div style="height:8px"></div>`);
+  setTimeout(() => {
+  scene({
+    day: 30, loc: '第五週・深夜', mood: 'obsess',
+    portrait: '🌑',
+    text: `
+${N('第五週的某個深夜，凌晨一點多，你的手機亮起。')}
+
+${MSG('愛子🎀：${P()}${state.suffix}，你睡了嗎')}
+${MSG('愛子🎀：沒事')}
+${MSG('愛子🎀：你睡吧')}
+
+${N('你盯著「你睡吧」這三個字，說不上來為什麼，手指已經在打字了。')}
+    `,
+    choices: [
+      { text: '「還沒睡，怎麼了？」傳過去', next: 'night_talk', aff: 10, obs: 10, flag: 'late_night' },
+      { text: '放回去，繼續睡', next: 'night_ignore', aff: -3, obs: 8, war: 3 },
+    ]
+  });
+  }, 100);
+};
+
+SCENES.night_talk = function() {
+  scene({
+    day: 30, loc: '深夜・手機對話', mood: 'dark',
+    text: `
+她的回覆來得很快，像是一直拿著手機在等。
+
+${MSG('愛子🎀：……沒什麼')}
+${MSG('愛子🎀：就是想聽到有人回我')}
+${MSG('愛子🎀：謝謝你♡')}
+
+${N('然後，十分鐘的沉默。你想說「沒事」就好，但手指停在那裡。')}
+
+你傳了：「今天怎麼了？」
+
+${MSG('愛子🎀：你真的想知道嗎')}
+${MSG('愛子🎀：我不太確定我值不值得被問「怎麼了」')}
+
+${N('你盯著這句話，窗外是深夜的城市聲音。')}
+    `,
+    choices: [
+      { text: '「值得。說吧。」', next: 'night_deep_talk', aff: 12, obs: 8, flag: 'night_talked' },
+      { text: '「……愛子，妳現在安全嗎？」先確認', next: 'night_safety_check', aff: 8, obs: 5, flag: 'checked_safety' },
+    ]
+  });
+};
+
+SCENES.night_safety_check = function() {
+  scene({
+    day: 30, loc: '深夜・手機對話', mood: 'dark',
+    text: `
+${MSG('愛子🎀：……')}
+${MSG('愛子🎀：你問這個')}
+${MSG('愛子🎀：嗯。安全。')}
+${MSG('愛子🎀：謝謝你問。')}
+
+${N('這次沒有心型符號。')}
+
+${MSG('愛子🎀：只是腦子裡有點吵')}
+${MSG('愛子🎀：但是沒事♡ 你不用擔心')}
+    `,
+    choices: [
+      { text: '「那說說看，讓我聽。」', next: 'night_deep_talk', aff: 10, obs: 6 },
+      { text: '「如果以後腦子很吵，可以傳訊息給我。」', next: 'night_promise', aff: 12, obs: 10, flag: 'made_promise' },
+    ]
+  });
+};
+
+SCENES.night_deep_talk = function() {
+  scene({
+    day: 30, loc: '深夜・手機對話', mood: 'dark',
+    text: `
+${MSG('愛子🎀：我有時候覺得，我喜歡一個人喜歡得太用力，對方就會逃跑')}
+${MSG('愛子🎀：但我不知道怎麼喜歡一個人不那麼用力')}
+${MSG('愛子🎀：就好像，你越想抓住的東西，越容易碎')}
+
+${N('你打字，刪掉，再打字。')}
+
+${MSG('愛子🎀：對不起突然說這些')}
+${MSG('愛子🎀：我只是……想讓你知道，我知道我很奇怪')}
+${MSG('愛子🎀：但我沒有想傷害你♡')}
+    `,
+    choices: [
+      { text: '「我知道。我沒有覺得你奇怪。」', next: 'night_end_warm', aff: 12, obs: 5 },
+      { text: '「……妳有沒有考慮過找人聊聊，諮商之類的？」', next: 'night_therapy_suggest', aff: 5, obs: -3, flag: 'suggested_help' },
+    ]
+  });
+};
+
+SCENES.night_promise = function() {
+  scene({
+    day: 30, loc: '深夜・手機對話', mood: 'sweet',
+    text: `
+長長的停頓。
+
+${MSG('愛子🎀：……真的嗎')}
+${MSG('愛子🎀：不是因為你可憐我嗎')}
+
+你說不是。
+
+${MSG('愛子🎀：♡')}
+${MSG('愛子🎀：那我就不客氣了哦')}
+${MSG('愛子🎀：晚安，${P()}${state.suffix}。做個好夢。')}
+
+${N('你放下手機，窗外深夜的城市終於安靜了一點。')}
+${N('你不確定你剛才做了什麼，但感覺……不後悔。')}
+    `,
+    choices: [
+      { text: '──隔天早上', next: 'day31_morning', aff: 8, obs: 8 },
+    ]
+  });
+};
+
+SCENES.night_end_warm = function() {
+  scene({
+    day: 30, loc: '深夜・手機對話', mood: 'sweet',
+    text: `
+${MSG('愛子🎀：……')}
+${MSG('愛子🎀：謝謝你。')}
+${MSG('愛子🎀：你是……很重要的人。')}
+
+${N('沒有心型符號，沒有「♡」，只是很直接的四個字。')}
+
+${MSG('愛子🎀：晚安。')}
+
+${N('你放下手機，在黑暗裡坐了一會兒。')}
+${N('你第一次覺得，你真的看見了她的一小部分。')}
+    `,
+    choices: [
+      { text: '──隔天早上', next: 'day31_morning', aff: 10, obs: 5 },
+    ]
+  });
+};
+
+SCENES.night_therapy_suggest = function() {
+  scene({
+    day: 30, loc: '深夜・手機對話', mood: 'normal',
+    text: `
+${MSG('愛子🎀：……諮商')}
+${MSG('愛子🎀：我去過。')}
+${MSG('愛子🎀：老師說我有「依附焦慮」')}
+${MSG('愛子🎀：我說我知道了然後就沒去了♡')}
+${MSG('愛子🎀：但你說，我可以考慮再去看看')}
+
+${N('你說可以。')}
+
+${MSG('愛子🎀：如果你陪我去的話♡')}
+    `,
+    choices: [
+      { text: '「好，可以的話我可以陪。」', next: 'day31_morning', aff: 12, obs: 8, flag: 'promised_therapy' },
+      { text: '「這個你自己決定，不用等我。」', next: 'day31_morning', aff: 5, obs: 3 },
+    ]
+  });
+};
+
+SCENES.night_ignore = function() {
+  scene({
+    day: 30, loc: '深夜', mood: 'obsess',
+    text: `
+${N('你把手機放回去，強迫自己閉上眼睛。')}
+${N('你在黑暗裡，「你睡吧」這三個字一直在腦子裡轉。')}
+${N('你不知道她在深夜說「你睡吧」之後做了什麼。')}
+
+早上六點，你醒來，打開手機。
+
+${MSG('愛子🎀：早安♡', '')}
+${MSG('愛子🎀：昨晚你睡得好嗎', '')}
+
+${N('她傳得像什麼都沒有發生過。')}
+${N('但你留意到，她那則「你睡吧」之後，還有一則沒有任何文字的訊息，只有一個時間戳：凌晨三點十二分。')}
+    `,
+    choices: [
+      { text: '傳過去：「昨晚那則沒有字的訊息是什麼？」', next: 'day31_morning', aff: 5, obs: 5, war: 5 },
+      { text: '裝作沒有看到，回「早安」', next: 'day31_morning', aff: 3, obs: 5 },
+    ]
+  });
+};
+
+SCENES.day31_morning = function() {
+  scene({
+    day: 31, loc: '早上', mood: 'normal',
+    text: `
+${N('進入第五週後半段，你和愛子之間有什麼東西不一樣了。')}
+
+不是她不再執著。而是在執著之外，你看到了一點她真實的樣子。
+
+某天，你們在便利商店門口，她買了一個飯糰，撕開的時候海苔沒有對齊，她低頭，皺了很久的眉毛，然後說：
+
+${A('……我要重買一個。')}
+
+${N('就這樣，沒有解釋，她回去又買了一個，把第一個推給你。')}
+${N('你吃了，沒有說什麼。')}
+${N('她好像鬆了一口氣。')}
+
+後來你問她，她說：「海苔沒有對齊，感覺很不好。」
+停了一下，補充：「但如果是你吃，就沒關係。♡」
+    `,
+    choices: [
+      { text: '──繼續這段關係，向前走', next: 'month2_start', aff: 5, obs: 5 },
+    ]
+  });
+};
+
+// ─────────────────────────────────────────
+// CHAPTER 6: 第二個月
+// ─────────────────────────────────────────
+SCENES.month2_start = function() {
+  render(chapterBanner(6, '第二個月——她全部的重量') + `<div style="height:8px"></div>`);
+  setTimeout(() => {
+  scene({
+    day: 45, loc: '第六週・你的公寓', mood: 'obsess',
+    portrait: '🌸',
+    text: `
+${N('第六週末，她第一次進入你的公寓。')}
+
+你說可以來，她換了鞋進來，在門口站了整整五秒，四處打量。
+
+${A('……比我想的小一點。')}
+${A('但是有你的氣味。♡')}
+
+${N('她在你家的書架前蹲下來，從頭到尾翻閱書名，從廚房門口探頭確認你的餐具排列方式，在你的沙發上坐下，站起來，坐下，再站起來。')}
+
+${A('我可以拍照嗎？')}
+
+${N('你說，拍什麼。')}
+
+${A('你的房間。我想記住它長什麼樣子。♡')}
+    `,
+    choices: [
+      { text: '「……好，但不要傳到網路上。」', next: 'm2_let_photo', aff: 8, obs: 15 },
+      { text: '「不行，這裡是我的私人空間。」', next: 'm2_deny_photo', aff: -3, obs: 5, war: 5 },
+    ]
+  });
+  }, 100);
+};
+
+SCENES.m2_let_photo = function() {
+  scene({
+    day: 45, loc: '你的公寓', mood: 'sweet',
+    text: `
+她用手機認認真真地拍了你的書架、窗台、廚房裡的杯子，和沙發上的靠枕。
+
+然後她在沙發上坐下，把手機抱在胸前。
+
+${A('謝謝你讓我進來。♡')}
+
+${N('她說得很認真，不像平常那種加了很多語氣的甜膩，而是很直接、很安靜地說。')}
+
+${A('我知道我讓你緊張過。')}
+${A('但是……我真的很想讓你知道，你對我來說很重要。')}
+${A('不是因為你幫了我，是你這個人。')}
+    `,
+    choices: [
+      { text: '「我知道。妳對我也很重要。」說出口', next: 'm2_confession_moment', aff: 15, obs: 10 },
+      { text: '「……謝謝你告訴我。」輕輕地回', next: 'm2_quiet_accept', aff: 10, obs: 8 },
+    ]
+  });
+};
+
+SCENES.m2_deny_photo = function() {
+  scene({
+    day: 45, loc: '你的公寓', mood: 'dark',
+    text: `
+${A('……好。')}
+
+她把手機放回包包。
+
+她在沙發上坐了一個下午，看你的書，喝你泡的茶，說了一些沒有主題的話。
+
+臨走前，她在門口穿鞋，說：
+
+${A('謝謝你讓我進來。♡')}
+
+然後出去，門關上。
+
+你靠在門上，安靜了一會兒。
+
+然後看了一眼窗外——
+
+她站在對面的街上，對著你的窗戶，輕輕揮手。
+
+你猶豫了兩秒，然後也揮了一下。
+
+她轉身走了。
+    `,
+    choices: [
+      { text: '──進入第二個月', next: 'm2_confession_moment', aff: 5, obs: 10 },
+    ]
+  });
+};
+
+SCENES.m2_confession_moment = function() {
+  scene({
+    day: 55, loc: '第八週・傍晚', mood: 'sweet',
+    portrait: '💮',
+    text: `
+${N('第八週，某個傍晚。')}
+
+你們在公園的長椅上，天色從橙色變成藍色，街燈一盞一盞亮起來。
+
+愛子靠著椅背，頭微微傾向你的方向，眼睛看著遠處的路燈。
+
+${A('……${P()}${state.suffix}。')}
+
+${N('她叫了你的名字，這次連後綴都去掉了。')}
+
+${A('我喜歡你。')}
+
+${N('她說得很安靜，沒有心型符號，沒有她平常那些裝飾性的語言。')}
+${N('夜風吹過，她的頭髮輕輕飄起。')}
+
+${A('不是因為你救了我，不是因為你包容我。')}
+${A('是因為你……是你這個人。')}
+    `,
+    choices: [
+      { text: '「我也喜歡妳。」', next: 'ending_true', aff: 20, obs: 10 },
+      { text: '「……我需要時間想一想。」', next: 'ending_wait', aff: 5, obs: 5 },
+      { text: '「愛子，我喜歡你，但我們需要一些規則。」', next: 'ending_conditional', aff: 15, obs: -5 },
+    ]
+  });
+};
+
+SCENES.m2_quiet_accept = function() { SCENES.m2_confession_moment(); };
+
+// ─────────────────────────────────────────
+// ROUTES: 逃脫路線
+// ─────────────────────────────────────────
+SCENES.route_escape_early = function() {
+  render(chapterBanner(5, '逃離路線') + `<div style="height:8px"></div>`);
+  setTimeout(() => {
+  scene({
+    day: 20, loc: '逃離嘗試', mood: 'obsess',
+    portrait: '🌑',
+    text: `
+${N('你開始計畫切斷聯絡。')}
+
+封鎖她的LINE，封鎖Instagram，更改作息時間，換了一條不同的上班路線。
+
+第一週，有效。
+
+第二週，你的同事說有個女生打電話來，說是你的「家人」。
+
+第三週，你回家的時候，公寓信箱裡有一封信，沒有寄件人，是她的筆跡。
+
+${MSG('「你去哪裡了♡ 我找不到你。─ 愛子」')}
+
+然後你手機震動，一個你不認識的號碼。
+
+你接起來。
+
+${A('……找到了。♡')}
+    `,
+    choices: [
+      { text: '掛電話，考慮報警', next: 'ending_police', aff: -20, obs: 5, war: 15 },
+      { text: '「愛子……我們需要認真談談。」', next: 'week2_talk_boundary', aff: -5, obs: 5, war: 5 },
+    ]
+  });
+  }, 100);
+};
+
+SCENES.route_accept = function() {
+  scene({
+    day: 25, loc: '公司附近', mood: 'sweet',
+    text: `
+你說了「願意」。
+
+她沉默了兩秒，然後微微低下頭。
+
+${A('……謝謝你。')}
+
+她抬起臉，眼睛有點紅，但她沒有哭，只是認真地看著你。
+
+${A('我會努力的。♡ 不讓你後悔這個答案。')}
+
+${N('你知道「努力」對她來說意味著什麼，也許不是放鬆對你的執著，而是努力讓你不覺得那是執著。')}
+${N('但你說了願意。')}
+${N('你想看看，這條路能走到哪裡。')}
+    `,
+    choices: [
+      { text: '──進入交往後的生活', next: 'm2_confession_moment', aff: 10, obs: 5 },
+    ]
+  });
+};
+
+SCENES.route_gentle_end = function() {
+  render(chapterBanner('END', 'Ending B ─ 分開的溫柔') + `<div style="height:8px"></div>`);
+  setTimeout(() => {
+  ending('bad',
+    '溫柔的分離',
+    `你告訴她，她值得一段更健康的關係。
+
+你說得很認真，沒有躲避她的眼神。
+
+她聽完，沉默了很長一段時間。
+
+然後她說：「……你是第一個說我值得的人。」
+
+她走了，裙子旋轉著消失在街角。
+
+你以為這是結束。
+
+但三個月後的某個早上，你在咖啡廳，遠遠看到一個熟悉的身影，坐在窗邊，對面有一個陌生人，他們在說話。
+
+她笑了，不是表演，而是很真實的那種。
+
+你不確定她有沒有看到你。
+
+你付了帳，走了出去。
+
+──那個結局，也許對你們兩個都好。`,
+    '她需要的，也許不是你陪她，而是有人讓她知道她值得被好好對待。'
+  );
+  }, 100);
+};
+
+SCENES.route_refuse = function() {
+  render(chapterBanner('END', 'Ending C ─ 拒絕') + `<div style="height:8px"></div>`);
+  setTimeout(() => {
+  ending('bad',
+    '拒絕',
+    `你說：「不，我沒辦法。」
+
+她點頭，像是早就料到了。
+
+「……好。」
+
+她轉身就走，沒有哭，沒有崩潰，只是走得很快，裙子在風裡拍打著腿。
+
+那是你最後一次親眼看到她。
+
+但你手機裡的那個LINE帳號，始終沒有被她刪除。
+
+它就停在那裡，她的頭像還是那張對著鏡子的笑臉。
+
+她再也沒有傳訊息給你。
+
+但在某個深夜，你不知為何打開了對話框，盯著那個頭像看了很久。
+
+──有些人的離開，比存在更難承受。`,
+    '她消失了。你不知道她去哪了。'
+  );
+  }, 100);
+};
+
+// ─────────────────────────────────────────
+// ENDINGS
+// ─────────────────────────────────────────
+SCENES.ending_true = function() {
+  render(chapterBanner('TRUE END', '束縛中的愛') + `<div style="height:8px"></div>`);
+  setTimeout(() => {
+  ending('true-end',
+    'True End ─ 束縛中的愛',
+    `她愣了整整五秒。
+
+然後她笑了，是那種很小、很真實的笑，不是表演，不是甜美，只是她。
+
+她把頭靠上你的肩膀，輕輕地，好像怕你逃跑。
+
+「……我不會讓你消失的。」她說。「所以你也不可以讓我消失。」
+
+你說好。
+
+────
+
+那之後，她依然會每天傳早安，依然會出現在你意想不到的地方，依然把你的一切細節記得比你自己還清楚。
+
+但你開始了解，對她來說，這是她唯一知道的愛的語言。
+
+你沒有試圖改掉她，她也沒有試圖放開你。
+
+你們達成了某種只有你們兩個才能理解的默契。
+
+某天，你們在便利商店門口，夕陽打在她的頭髮上，她把草莓可麗餅的兔子耳朵咬掉，然後把下半截遞給你。
+
+「最好的部分，」她說，「留給你了。♡」
+
+──就這樣，一直走下去。`,
+    '好感度最高，走過了所有風浪的結局。'
+  );
+  }, 100);
+};
+
+SCENES.ending_wait = function() {
+  render(chapterBanner('END', 'Ending A ─ 等待') + `<div style="height:8px"></div>`);
+  setTimeout(() => {
+  ending('bad',
+    'Ending A ─ 緩慢的距離',
+    `你說需要時間。
+
+她沒有催你，只是點了點頭：「好♡ 我等你。」
+
+然後她站起來，整理了一下裙子，轉身走進夜色裡。
+
+你在長椅上坐了很久。
+
+之後的日子，她依然傳早安，依然出現，但多了一層說不出口的克制，好像她把那個告白收進了某個抽屜，鎖起來，但偶爾你能從她的眼神裡看到它。
+
+你需要的「時間」，其實你一直都知道答案。
+
+只是你沒有說出口。
+
+────
+
+三個月後，她問你：「想好了嗎？」
+
+你看著她，看著那件粉色蓬蓬裙，看著那雙眼裡的等待——
+
+──你沒有說話。
+
+她笑了：「沒關係，我還可以繼續等。♡」
+
+──你不知道這是幸運，還是悲劇。`,
+    '說不清楚是誰困住了誰。'
+  );
+  }, 100);
+};
+
+SCENES.ending_conditional = function() {
+  render(chapterBanner('GOOD END', '帶著規則的愛') + `<div style="height:8px"></div>`);
+  setTimeout(() => {
+  ending('good',
+    'Good End ─ 帶著規則的愛',
+    `她聽到「需要一些規則」沉默了一下，然後笑了。
+
+「……好。你說吧。」
+
+你說了。不能未經允許出現在你家附近，不能動你的手機，有話直接說，不用操控和眼淚。
+
+她一條一條聽完，用一種你從沒見過的認真表情。
+
+「好。我試試看。」
+
+她說「試試看」，不是「好的我一定做到」，而是很誠實的「試試看」。
+
+那句話讓你第一次覺得，她在嘗試說真話。
+
+────
+
+之後，她偶爾還是會踩線，你就提醒她，她會別開臉說「知道了」，然後安靜個十分鐘，再回來找你說話。
+
+不完美，但在前進。
+
+某天她給你看她諮商師說的話，截圖，上面有一行字被她用粉色標記筆劃了線：
+「你值得被人以健康的方式愛。」
+
+她在截圖底下加了一行字：「我要學。♡」
+
+──也許這是她能給你的，最好的答案。`,
+    '不容易，但這個結局值得。'
+  );
+  }, 100);
+};
+
+SCENES.ending_police = function() {
+  render(chapterBanner('END', 'Ending D ─ 法律邊界') + `<div style="height:8px"></div>`);
+  setTimeout(() => {
+  ending('bad',
+    'Ending D ─ 法律邊界',
+    `你掛了電話，坐了很久，然後去了警察局。
+
+警察說你可以先申請「保護令前置程序」，記錄騷擾事件，把她的LINE訊息和照片整理下來。
+
+那個過程很漫長，也很難受。
+
+你不是沒有想過，她並不是壞人，她只是用一種錯誤的方式去愛一個人。
+
+但你也知道，她的方式讓你失去了安全感。
+
+────
+
+後來聽說，她在處理程序進行到一半的時候，主動聯絡了一間諮商機構。
+
+你沒有打電話確認。
+
+但在那之後，你的信箱再也沒有出現過沒有寄件人的信。
+
+你的手機也安靜了。
+
+某天，你在便利商店，下意識地往台階那邊看了一眼。
+
+空的。
+
+──你不確定那是什麼感覺。`,
+    '每個人都需要為自己的安全負責。'
+  );
+  }, 100);
+};
+
+function ending(type, title, text, note) {
+  render(`
+    <div class="ending-card ${type}">
+      <div class="ending-label">── ENDING ──</div>
+      <h2>${title}</h2>
+      <div class="ending-text">${text.split('\n').join('<br>')}</div>
+      ${note ? `<p style="font-size:0.78rem;color:var(--text3);margin-bottom:20px;font-style:italic;">${note}</p>` : ''}
+      <button class="restart-btn" onclick="showTitle()">✦ 重新開始 ✦</button>
+    </div>
+  `);
+  $('status-bar').style.display = 'none';
+}
+
+// catch-all for broken routes
+const n = txt => `<span class="narr">${txt}</span>`;
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+makePetals();
+showTitle();
+</script>
+</body>
+</html>

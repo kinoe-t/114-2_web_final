@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✨ 今日穿搭拉霸機</title>
+
+<style>
+:root{
+    --bg1:#f8f9fb;
+    --bg2:#eef2f6;
+    --card:rgba(255,255,255,.55);
+    --border:rgba(255,255,255,.8);
+    --text:#2d3748;
+    --primary:#8fa7b3;
+    --shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Microsoft JhengHei",sans-serif;
+}
+
+body{
+    min-height:100vh;
+    background:
+        radial-gradient(circle at top left,#ffffff 0%,transparent 35%),
+        radial-gradient(circle at bottom right,#dfe7ec 0%,transparent 35%),
+        linear-gradient(135deg,var(--bg1),var(--bg2));
+    color:var(--text);
+    padding:30px 15px;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+}
+
+header{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+h1{
+    font-size:2.4rem;
+    margin-bottom:10px;
+}
+
+.subtitle{
+    opacity:.75;
+}
+
+.gender-wrap{
+    display:flex;
+    justify-content:center;
+    margin-bottom:30px;
+}
+
+.gender{
+    background:rgba(255,255,255,.5);
+    backdrop-filter:blur(12px);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:6px;
+    display:flex;
+    gap:6px;
+    box-shadow:var(--shadow);
+}
+
+.gender button{
+    border:none;
+    background:transparent;
+    padding:12px 24px;
+    border-radius:999px;
+    cursor:pointer;
+    font-size:15px;
+    transition:.25s;
+}
+
+.gender button.active{
+    background:white;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+.slot-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
+    margin-bottom:25px;
+}
+
+.slot-box{
+    background:var(--card);
+    backdrop-filter:blur(16px);
+    border:1px solid var(--border);
+    border-radius:22px;
+    padding:14px;
+    box-shadow:var(--shadow);
+}
+
+.slot-title{
+    text-align:center;
+    font-size:.9rem;
+    margin-bottom:10px;
+    font-weight:bold;
+}
+
+.slot{
+    height:120px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-size:1.1rem;
+    font-weight:bold;
+    border-radius:16px;
+    background:rgba(255,255,255,.5);
+    overflow:hidden;
+    padding:10px;
+}
+
+.controls{
+    display:flex;
+    justify-content:center;
+    gap:15px;
+    margin:30px 0;
+    flex-wrap:wrap;
+}
+
+.btn{
+    border:none;
+    cursor:pointer;
+    padding:15px 28px;
+    border-radius:999px;
+    font-size:16px;
+    font-weight:bold;
+    transition:.25s;
+}
+
+.btn-primary{
+    background:linear-gradient(135deg,#9eb0ba,#c7d2d9);
+    color:white;
+    box-shadow:0 10px 25px rgba(143,167,179,.35);
+}
+
+.btn-secondary{
+    background:white;
+    color:#444;
+}
+
+.btn:hover{
+    transform:translateY(-2px) scale(1.03);
+}
+
+.result{
+    display:none;
+    background:var(--card);
+    backdrop-filter:blur(18px);
+    border:1px solid var(--border);
+    border-radius:24px;
+    padding:25px;
+    box-shadow:var(--shadow);
+    animation:fadeIn .5s ease;
+}
+
+.result h2{
+    text-align:center;
+    margin-bottom:20px;
+}
+
+.result-item{
+    margin:12px 0;
+    font-size:18px;
+}
+
+.style-tag{
+    margin-top:20px;
+    text-align:center;
+    font-size:20px;
+    font-weight:bold;
+    color:#6b7280;
+}
+
+@keyframes fadeIn{
+    from{
+        opacity:0;
+        transform:translateY(15px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+@media(max-width:900px){
+    .slot-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+}
+
+@media(max-width:600px){
+    .slot-grid{
+        grid-template-columns:1fr;
+    }
+
+    h1{
+        font-size:1.8rem;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<header>
+    <h1>✨ 今日穿搭拉霸機</h1>
+    <p class="subtitle">不知道今天穿什麼？按下按鈕讓系統幫你決定吧！</p>
+</header>
+
+<div class="gender-wrap">
+    <div class="gender">
+        <button id="femaleBtn" class="active">👧 女生</button>
+        <button id="maleBtn">👦 男生</button>
+    </div>
+</div>
+
+<div class="slot-grid">
+
+<div class="slot-box">
+<div class="slot-title">衣服顏色</div>
+<div class="slot" id="topColor">?</div>
+</div>
+
+<div class="slot-box">
+<div class="slot-title">衣服款式</div>
+<div class="slot" id="topStyle">?</div>
+</div>
+
+<div class="slot-box">
+<div class="slot-title">褲子顏色</div>
+<div class="slot" id="bottomColor">?</div>
+</div>
+
+<div class="slot-box">
+<div class="slot-title">褲子款式</div>
+<div class="slot" id="bottomStyle">?</div>
+</div>
+
+<div class="slot-box">
+<div class="slot-title">鞋子顏色</div>
+<div class="slot" id="shoeColor">?</div>
+</div>
+
+<div class="slot-box">
+<div class="slot-title">鞋子款式</div>
+<div class="slot" id="shoeStyle">?</div>
+</div>
+
+<div class="slot-box">
+<div class="slot-title">襪子顏色</div>
+<div class="slot" id="sockColor">?</div>
+</div>
+
+<div class="slot-box">
+<div class="slot-title">襪子款式</div>
+<div class="slot" id="sockStyle">?</div>
+</div>
+
+</div>
+
+<div class="controls">
+    <button class="btn btn-primary" onclick="startSlot()">✨ 開始搭配</button>
+    <button class="btn btn-secondary" onclick="startSlot()">🔄 重新抽一次</button>
+</div>
+
+<div class="result" id="result">
+    <h2>✨ 今日推薦穿搭</h2>
+
+    <div class="result-item" id="resultTop"></div>
+    <div class="result-item" id="resultBottom"></div>
+    <div class="result-item" id="resultShoes"></div>
+    <div class="result-item" id="resultSocks"></div>
+
+    <div class="style-tag" id="styleTag"></div>
+</div>
+
+</div>
+
+<script>
+
+let gender="female";
+
+const femaleData={
+topColors:["白色","米白色","奶茶色","淺粉色","霧藍色","淺灰色","黑色","燕麥色"],
+topStyles:["寬鬆T恤","短版上衣","襯衫","針織上衣","連帽上衣","背心","一字領上衣","學院風襯衫","韓系上衣","法式上衣"],
+bottomColors:["白色","淺藍色","灰色","卡其色","黑色","奶茶色","深藍色"],
+bottomStyles:["牛仔褲","工裝褲","寬褲","短褲","百褶裙","長裙","A字裙","西裝褲"],
+shoeColors:["白色","黑色","灰色","米色","奶茶色"],
+shoeStyles:["小白鞋","帆布鞋","厚底鞋","樂福鞋","瑪莉珍鞋","短靴","運動鞋"],
+sockColors:["白色","灰色","黑色","奶茶色","米色"],
+sockStyles:["短襪","中筒襪","長襪","蕾絲襪","堆堆襪"]
+};
+
+const maleData={
+topColors:["白色","黑色","灰色","海軍藍","卡其色","軍綠色","奶茶色"],
+topStyles:["素T","襯衫","帽T","針織衫","工裝上衣","棒球外套","牛仔外套","POLO衫"],
+bottomColors:["黑色","灰色","卡其色","深藍色","軍綠色"],
+bottomStyles:["牛仔褲","工裝褲","西裝褲","運動褲","短褲","寬褲"],
+shoeColors:["白色","黑色","灰色","棕色"],
+shoeStyles:["小白鞋","運動鞋","帆布鞋","皮鞋","短靴"],
+sockColors:["白色","黑色","灰色"],
+sockStyles:["短襪","中筒襪","運動襪","長襪"]
+};
+
+femaleBtn.onclick=()=>{
+gender="female";
+femaleBtn.classList.add("active");
+maleBtn.classList.remove("active");
+};
+
+maleBtn.onclick=()=>{
+gender="male";
+maleBtn.classList.add("active");
+femaleBtn.classList.remove("active");
+};
+
+function random(arr){
+return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function getData(){
+return gender==="female"?femaleData:maleData;
+}
+
+function spin(element,data,duration){
+
+return new Promise(resolve=>{
+
+const interval=setInterval(()=>{
+element.textContent=random(data);
+},70);
+
+setTimeout(()=>{
+clearInterval(interval);
+
+const final=random(data);
+
+element.textContent=final;
+
+resolve(final);
+
+},duration);
+
+});
+}
+
+async function startSlot(){
+
+const data=getData();
+
+let colors;
+
+do{
+
+const topColor=await spin(topColorEl,data.topColors,1000);
+const topStyle=await spin(topStyleEl,data.topStyles,1300);
+
+const bottomColor=await spin(bottomColorEl,data.bottomColors,1600);
+const bottomStyle=await spin(bottomStyleEl,data.bottomStyles,1900);
+
+const shoeColor=await spin(shoeColorEl,data.shoeColors,2200);
+const shoeStyle=await spin(shoeStyleEl,data.shoeStyles,2500);
+
+const sockColor=await spin(sockColorEl,data.sockColors,2800);
+const sockStyle=await spin(sockStyleEl,data.sockStyles,3100);
+
+colors=[topColor,bottomColor,shoeColor,sockColor];
+
+if(new Set(colors).size===1){
+continue;
+}
+
+showResult(
+topColor,topStyle,
+bottomColor,bottomStyle,
+shoeColor,shoeStyle,
+sockColor,sockStyle
+);
+
+break;
+
+}while(true);
+
+}
+
+const topColorEl=document.getElementById("topColor");
+const topStyleEl=document.getElementById("topStyle");
+const bottomColorEl=document.getElementById("bottomColor");
+const bottomStyleEl=document.getElementById("bottomStyle");
+const shoeColorEl=document.getElementById("shoeColor");
+const shoeStyleEl=document.getElementById("shoeStyle");
+const sockColorEl=document.getElementById("sockColor");
+const sockStyleEl=document.getElementById("sockStyle");
+
+function showResult(
+topColor,topStyle,
+bottomColor,bottomStyle,
+shoeColor,shoeStyle,
+sockColor,sockStyle
+){
+
+document.getElementById("result").style.display="block";
+
+document.getElementById("resultTop").innerHTML=
+`👕 上衣：${topColor} ${topStyle}`;
+
+document.getElementById("resultBottom").innerHTML=
+`👖 下身：${bottomColor} ${bottomStyle}`;
+
+document.getElementById("resultShoes").innerHTML=
+`👟 鞋子：${shoeColor} ${shoeStyle}`;
+
+document.getElementById("resultSocks").innerHTML=
+`🧦 襪子：${sockColor} ${sockStyle}`;
+
+let style="";
+
+if(topStyle.includes("襯衫") || topStyle.includes("POLO"))
+style="📚 學院風";
+
+else if(topColor.includes("奶茶") || topColor.includes("燕麥"))
+style="🌿 森系休閒風";
+
+else if(topColor.includes("黑"))
+style="🖤 極簡高級感";
+
+else if(topColor.includes("粉"))
+style="🎀 韓系少女風";
+
+else
+style="☁️ 日系文青風";
+
+document.getElementById("styleTag").textContent=style;
+}
+
+</script>
+
+</body>
+</html>

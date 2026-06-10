@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>排球托球挑戰</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            font-family: "Microsoft JhengHei", sans-serif;
+            background: linear-gradient(#66c7ff, #dff6ff);
+        }
+
+        #game {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #score {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 34px;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, .3);
+        }
+
+        #best {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            font-size: 20px;
+            color: white;
+        }
+
+        #help {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            text-align: right;
+            color: white;
+            font-size: 18px;
+        }
+
+        #overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        #overlay h1 {
+            color: white;
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        #overlay p {
+            color: white;
+            font-size: 24px;
+        }
+
+        .player {
+            position: absolute;
+            width: 70px;
+            height: 120px;
+        }
+
+        .head {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #ffd8b5;
+            margin: auto;
+        }
+
+        .body {
+            width: 60px;
+            height: 70px;
+            background: #2962ff;
+            border-radius: 10px;
+            margin: 5px auto 0;
+        }
+
+        .ball {
+            position: absolute;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 30% 30%,
+                    white 0%,
+                    white 40%,
+                    #ffd54f 41%,
+                    #ffca28 100%);
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 120px;
+            background: #c79a55;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game">
+
+        <div id="score">分數：0</div>
+        <div id="best">最高分：0</div>
+
+        <div id="help">
+            ← → 移動<br>
+            Space 托球
+        </div>
+
+        <div id="overlay">
+            <h1>🏐 排球托球</h1>
+            <p>按 Space 開始遊戲</p>
+        </div>
+
+        <div class="player" id="player">
+            <div class="head"></div>
+            <div class="body"></div>
+        </div>
+
+        <div class="ball" id="ball"></div>
+
+        <div class="ground"></div>
+
+    </div>
+
+    <script>
+
+        const player = document.getElementById("player");
+        const ball = document.getElementById("ball");
+        const overlay = document.getElementById("overlay");
+        const scoreText = document.getElementById("score");
+        const bestText = document.getElementById("best");
+
+        const GROUND = 120;
+        const PLAYER_W = 70;
+        const BALL_SIZE = 42;
+        const GRAVITY = 0.35;
+
+        let best = Number(localStorage.getItem("bestScore") || 0);
+        bestText.textContent = "最高分：" + best;
+
+        let gameState = "start"; // start, play, gameover
+
+        let score = 0;
+
+        let playerX;
+        let ballX;
+        let ballY;
+        let ballVX;
+        let ballVY;
+
+        let left = false;
+        let right = false;
+
+        function resetGame() {
+
+            score = 0;
+            scoreText.textContent = "分數：0";
+
+            playerX = window.innerWidth / 2 - PLAYER_W / 2;
+
+            ballX = window.innerWidth / 2;
+            ballY = 150;
+
+            ballVX = Math.random() * 4 - 2;
+            ballVY = 0;
+        }
+
+        function startGame() {
+            resetGame();
+            gameState = "play";
+            overlay.style.display = "none";
+        }
+
+        function gameOver() {
+
+            gameState = "gameover";
+
+            if (score > best) {
+                best = score;
+                localStorage.setItem("bestScore", best);
+                bestText.textContent = "最高分：" + best;
+            }
+
+            overlay.innerHTML = `
+        <h1>遊戲結束</h1>
+        <p>得分：${score}</p>
+        <p style="margin-top:20px;">
+            按 Space 重新開始
+        </p>
+    `;
+
+            overlay.style.display = "flex";
+        }
+
+        document.addEventListener("keydown", (e) => {
+
+            if (e.code === "ArrowLeft") left = true;
+            if (e.code === "ArrowRight") right = true;
+
+            if (e.code === "Space") {
+
+                e.preventDefault();
+
+                if (gameState === "start") {
+                    startGame();
+                    return;
+                }
+
+                if (gameState === "gameover") {
+                    startGame();
+                    return;
+                }
+
+                const px = playerX + PLAYER_W / 2;
+                const py = window.innerHeight - GROUND - 90;
+
+                const bx = ballX + BALL_SIZE / 2;
+                const by = ballY + BALL_SIZE / 2;
+
+                const dx = bx - px;
+                const dy = by - py;
+
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 95) {
+
+                    score++;
+                    scoreText.textContent = "分數：" + score;
+
+                    ballVY = -11;
+
+                    ballVX += (Math.random() - 0.5) * 2;
+
+                    if (ballVX > 6) ballVX = 6;
+                    if (ballVX < -6) ballVX = -6;
+                }
+            }
+        });
+
+        document.addEventListener("keyup", (e) => {
+            if (e.code === "ArrowLeft") left = false;
+            if (e.code === "ArrowRight") right = false;
+        });
+
+        function update() {
+
+            if (gameState === "play") {
+
+                if (left) playerX -= 8;
+                if (right) playerX += 8;
+
+                playerX = Math.max(
+                    0,
+                    Math.min(window.innerWidth - PLAYER_W, playerX)
+                );
+
+                ballVY += GRAVITY;
+
+                ballX += ballVX;
+                ballY += ballVY;
+
+                if (ballX <= 0) {
+                    ballX = 0;
+                    ballVX *= -1;
+                }
+
+                if (ballX >= window.innerWidth - BALL_SIZE) {
+                    ballX = window.innerWidth - BALL_SIZE;
+                    ballVX *= -1;
+                }
+
+                if (ballY >= window.innerHeight - GROUND - BALL_SIZE) {
+                    gameOver();
+                }
+            }
+
+            player.style.left = playerX + "px";
+            player.style.top =
+                (window.innerHeight - GROUND - 120) + "px";
+
+            ball.style.left = ballX + "px";
+            ball.style.top = ballY + "px";
+
+            requestAnimationFrame(update);
+        }
+
+        resetGame();
+        update();
+
+    </script>
+
+</body>
+
+</html>

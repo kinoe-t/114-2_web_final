@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>王瑞杰隨機抽卡機</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft JhengHei";
+            background-color: #f7f9fc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            max-width: 550px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+
+        /* 紅色圓圈按鈕設計 */
+        .red-circle-btn {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #ff4d4d, #e60000);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(230, 0, 0, 0.35);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            outline: none;
+        }
+
+        .red-circle-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 10px 25px rgba(230, 0, 0, 0.45);
+            background: linear-gradient(135deg, #ff5c5c, #ff1a1a);
+        }
+
+        .red-circle-btn:active {
+            transform: scale(0.92);
+            box-shadow: 0 4px 10px rgba(230, 0, 0, 0.25);
+        }
+
+        /* 圖片與文字顯示容器 */
+        .display-area {
+            width: 100%;
+            min-height: 380px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 20px;
+            background-color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 320px;
+            object-fit: contain;
+            border-radius: 12px;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .caption {
+            margin-top: 20px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #1e293b;
+            min-height: 1.5em;
+            word-break: break-all;
+        }
+
+        .placeholder-text {
+            color: #94a3b8;
+            font-size: 1.05rem;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>王瑞杰隨機抽卡機</h1>
+        
+        <button class="red-circle-btn" id="randomBtn">抽一個</button>
+        
+        <div class="display-area">
+            <p class="placeholder-text" id="placeholder">按下上方紅色按鈕<br>隨機顯現瑞杰的真面目</p>
+            <img src="" alt="隨機圖片" class="image-preview" id="targetImg">
+            <div class="caption" id="targetText"></div>
+        </div>
+    </div>
+
+    <script>
+        // 完整的 31 張圖片與對應文字資料庫（機率均等 1/31）
+        const dataList = [
+            { img: "01.jpg", text: "大眼王瑞杰" },
+            { img: "02.jpg", text: "小熊瑞杰" },
+            { img: "03.jpg", text: "王瑞杰浩呆" },
+            { img: "04.jpg", text: "路邊的流浪漢" },
+            { img: "05.jpg", text: "哇！這裡有一個流浪漢" },
+            { img: "06.jpg", text: "累了就躺平吧" },
+            { img: "07.jpg", text: "欸嘿嘿欸嘿嘿嘿嘿嘿嘿" },
+            { img: "08.jpg", text: "哎呀嘿嘿欸哈哈哈讚" },
+            { img: "09.jpg", text: "紅蔥頭" },
+            { img: "10.jpg", text: "我乃森林之王" },
+            { img: "11.jpg", text: "哈哈哈哈我是主宰世界的王" },
+            { img: "12.jpg", text: "欸嘿嘿屈服於我吧" },
+            { img: "13.jpg", text: "人家可愛嗎" },
+            { img: "14.jpg", text: "肚子有點餓我找點東西吃" },
+            { img: "15.jpg", text: "好累喔" },
+            { img: "16.jpg", text: "嘻嘻" },
+            { img: "17.jpg", text: "美麗的小姐要不要和我喝一杯咖啡呢" },
+            { img: "18.jpg", text: "給你一個大拇指" },
+            { img: "19.jpg", text: "喵喵喵" },
+            { img: "20.jpg", text: "戰鬥吧！！！" },
+            { img: "21.jpg", text: "呵 小姐 喝一杯嗎" },
+            { img: "22.jpg", text: "聞聞我的腋下" },
+            { img: "23.jpg", text: "姊是最帥的" },
+            { img: "24.jpg", text: "沒有哥的地方叫寂寞" },
+            { img: "25.jpg", text: "哈哈皮岩" },
+            { img: "26.jpg", text: "我就是跩" },
+            { img: "27.jpg", text: "哈～～～～～～～～" },
+            { img: "28.jpg", text: "有沒有被我的大長腿迷住" },
+            { img: "29.jpg", text: "絕世大長腿 想不想被我踩" },
+            { img: "30.jpg", text: "今天的王瑞杰" },
+            { img: "31.jpg", text: "嘿欸嘿嘿我舔一口" }
+        ];
+
+        const randomBtn = document.getElementById('randomBtn');
+        const targetImg = document.getElementById('targetImg');
+        const targetText = document.getElementById('targetText');
+        const placeholder = document.getElementById('placeholder');
+
+        randomBtn.addEventListener('click', () => {
+            // 隨機生成 0 到 30 的整數索引
+            const randomIndex = Math.floor(Math.random() * dataList.length);
+            const selected = dataList[randomIndex];
+
+            // 隱藏預設提示字
+            placeholder.style.display = 'none';
+            
+            // 替換圖片路徑與文字內容
+            targetImg.src = selected.img;
+            targetImg.style.display = 'block';
+            targetText.textContent = selected.text;
+        });
+    </script>
+</body>
+</html>

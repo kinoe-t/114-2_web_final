@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>基德 VS 安室 — 王妃的瀏海</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0d0f14;
+    --surface: #13161d;
+    --paper: #e8ecf4;
+    --paper-dim: rgba(232,236,244,0.75);
+    --kid-blue: #4a9eff;
+    --kid-blue-light: #7dbfff;
+    --amuro-gold: #c9a84c;
+    --amuro-gold-light: #e2c47a;
+    --jewel: #9f5de2;
+    --jewel-light: #c08aff;
+    --danger: #c0392b;
+    --mist: #5a6175;
+    --border: rgba(232,236,244,0.1);
+  }
+
+  html { font-size: 16px; scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Noto Serif TC', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── 背景 ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 90% 50% at 20% 0%, #0a1628 0%, transparent 65%),
+      radial-gradient(ellipse 70% 50% at 85% 100%, #130a20 0%, transparent 60%),
+      radial-gradient(ellipse 50% 30% at 50% 50%, #0f1218 0%, transparent 70%);
+    z-index: 0;
+  }
+
+  /* ── 星點裝飾 ── */
+  .stars {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      radial-gradient(1px 1px at 15% 20%, rgba(74,158,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 10%, rgba(201,168,76,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 60%, rgba(159,93,226,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 40%, rgba(74,158,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 80%, rgba(201,168,76,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 85%, rgba(159,93,226,0.2) 0%, transparent 100%);
+  }
+
+  /* ── 頂部裝飾條 ── */
+  .top-bar {
+    position: fixed; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--kid-blue) 0%, var(--jewel) 50%, var(--amuro-gold) 100%);
+    z-index: 100;
+  }
+
+  /* ── 頁面容器 ── */
+  #app {
+    position: relative; z-index: 1;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  /* ── 標題區 ── */
+  .hero {
+    text-align: center;
+    padding: 72px 0 56px;
+    animation: fadeUp 1s ease both;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: rgba(74,158,255,0.08);
+    border: 1px solid rgba(74,158,255,0.2);
+    border-radius: 20px;
+    padding: 6px 18px;
+    margin-bottom: 24px;
+  }
+  .hero-badge-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--kid-blue);
+    animation: pulse 2s ease infinite;
+  }
+  .hero-badge-text {
+    font-size: 11px; letter-spacing: 0.25em; color: var(--kid-blue);
+    text-transform: uppercase;
+  }
+  .hero-vs {
+    display: flex; align-items: center; justify-content: center; gap: 20px;
+    margin-bottom: 16px;
+  }
+  .hero-name-kid {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    color: var(--kid-blue-light);
+  }
+  .hero-vs-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    font-style: italic;
+    color: var(--mist);
+  }
+  .hero-name-amuro {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    color: var(--amuro-gold-light);
+  }
+  .hero-subtitle-main {
+    font-size: clamp(1.1rem, 3.5vw, 1.8rem);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--paper);
+    margin-bottom: 8px;
+  }
+  .hero-subtitle-main span { color: var(--jewel-light); }
+  .hero-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 20px auto;
+    max-width: 300px;
+  }
+  .hero-divider::before, .hero-divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--jewel), transparent);
+  }
+  .hero-divider-icon {
+    font-size: 16px; color: var(--jewel-light);
+  }
+  .hero-ep {
+    font-size: 11px; letter-spacing: 0.2em; color: var(--mist);
+  }
+
+  /* ── 角色雙欄 ── */
+  .character-duo {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    margin-bottom: 32px;
+    animation: fadeUp 0.7s ease both 0.1s;
+  }
+  .char-card {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 20px;
+    position: relative; overflow: hidden;
+  }
+  .char-card.kid { border: 1px solid rgba(74,158,255,0.2); }
+  .char-card.amuro { border: 1px solid rgba(201,168,76,0.2); }
+  .char-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .char-card.kid::before { background: var(--kid-blue); }
+  .char-card.amuro::before { background: var(--amuro-gold); }
+  .char-name {
+    font-size: 15px; font-weight: 600; margin-bottom: 4px;
+  }
+  .char-card.kid .char-name { color: var(--kid-blue-light); }
+  .char-card.amuro .char-name { color: var(--amuro-gold-light); }
+  .char-alias {
+    font-size: 11px; color: var(--mist); margin-bottom: 10px;
+    letter-spacing: 0.1em;
+  }
+  .char-desc {
+    font-size: 13px; line-height: 1.7;
+    color: rgba(232,236,244,0.6);
+    font-weight: 300;
+  }
+
+  /* ── 場景卡 ── */
+  .scene-card {
+    background: rgba(232,236,244,0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 32px 36px;
+    margin-bottom: 28px;
+    animation: fadeUp 0.7s ease both;
+    position: relative;
+  }
+  .scene-card.kid-focus { border-left: 3px solid var(--kid-blue); }
+  .scene-card.amuro-focus { border-left: 3px solid var(--amuro-gold); }
+  .scene-card.jewel-focus { border-left: 3px solid var(--jewel); }
+
+  .scene-tag {
+    font-size: 10px; letter-spacing: 0.25em;
+    text-transform: uppercase; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .scene-tag.kid-tag { color: var(--kid-blue); }
+  .scene-tag.amuro-tag { color: var(--amuro-gold); }
+  .scene-tag.jewel-tag { color: var(--jewel-light); }
+  .scene-tag::after {
+    content: ''; flex: 1; height: 1px;
+    background: currentColor; opacity: 0.2;
+  }
+
+  .scene-text {
+    font-size: 15px; line-height: 2.1; font-weight: 300;
+    color: rgba(232,236,244,0.82);
+  }
+  .em-kid { color: var(--kid-blue-light); font-style: normal; }
+  .em-amuro { color: var(--amuro-gold-light); font-style: normal; }
+  .em-jewel { color: var(--jewel-light); font-style: normal; }
+  .underline-subtle {
+    border-bottom: 1px solid rgba(232,236,244,0.2);
+    padding-bottom: 1px;
+  }
+
+  /* ── 分隔線 ── */
+  .chapter-sep {
+    text-align: center; margin: 44px 0 36px;
+    position: relative;
+  }
+  .chapter-sep::before {
+    content: '';
+    position: absolute; top: 50%; left: 0; right: 0;
+    height: 1px; background: rgba(232,236,244,0.07);
+  }
+  .chapter-sep-inner {
+    display: inline-block;
+    background: var(--ink);
+    padding: 0 16px;
+    position: relative;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 14px;
+    letter-spacing: 0.15em;
+  }
+  .chapter-sep-inner.kid-color { color: var(--kid-blue); }
+  .chapter-sep-inner.amuro-color { color: var(--amuro-gold); }
+  .chapter-sep-inner.jewel-color { color: var(--jewel-light); }
+
+  /* ── 問題區塊 ── */
+  .question-block { margin-bottom: 28px; animation: fadeUp 0.7s ease both; }
+  .question-label {
+    font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase;
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .q-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; flex-shrink: 0;
+  }
+  .q-num.kid-num { background: var(--kid-blue); color: var(--ink); }
+  .q-num.amuro-num { background: var(--amuro-gold); color: var(--ink); }
+  .q-num.jewel-num { background: var(--jewel); color: #fff; }
+  .label-kid { color: var(--kid-blue); }
+  .label-amuro { color: var(--amuro-gold); }
+  .label-jewel { color: var(--jewel-light); }
+
+  .question-text {
+    font-size: 17px; font-weight: 400; line-height: 1.7;
+    color: var(--paper); margin-bottom: 22px;
+  }
+
+  /* ── 選項 ── */
+  .options-grid { display: flex; flex-direction: column; gap: 9px; margin-bottom: 14px; }
+
+  .option-btn {
+    background: transparent;
+    border: 1px solid rgba(232,236,244,0.1);
+    border-radius: 6px;
+    padding: 15px 18px;
+    color: rgba(232,236,244,0.65);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14px; font-weight: 300;
+    line-height: 1.6; text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: flex-start; gap: 14px;
+    position: relative; overflow: hidden;
+  }
+  .option-btn:hover {
+    border-color: rgba(232,236,244,0.25);
+    color: var(--paper);
+    transform: translateX(3px);
+  }
+
+  /* 三種顏色的 selected 狀態 */
+  .option-btn.selected.kid-option {
+    border-color: var(--kid-blue);
+    background: rgba(74,158,255,0.07);
+    color: var(--paper);
+  }
+  .option-btn.selected.amuro-option {
+    border-color: var(--amuro-gold);
+    background: rgba(201,168,76,0.07);
+    color: var(--paper);
+  }
+  .option-btn.selected.jewel-option {
+    border-color: var(--jewel);
+    background: rgba(159,93,226,0.07);
+    color: var(--paper);
+  }
+
+  .option-letter {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px; font-style: italic;
+    flex-shrink: 0; width: 18px;
+  }
+  .kid-option .option-letter { color: var(--kid-blue); }
+  .amuro-option .option-letter { color: var(--amuro-gold); }
+  .jewel-option .option-letter { color: var(--jewel-light); }
+
+  .option-title { font-weight: 400; margin-bottom: 2px; }
+  .option-desc { font-size: 12px; color: rgba(232,236,244,0.45); line-height: 1.5; }
+
+  /* ── 自由作答 ── */
+  .free-answer-block {
+    background: rgba(232,236,244,0.02);
+    border: 1px solid rgba(232,236,244,0.08);
+    border-radius: 6px;
+    padding: 18px;
+  }
+  .free-answer-label {
+    font-size: 11px; letter-spacing: 0.2em; color: var(--mist);
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  .free-answer-input {
+    width: 100%; background: transparent; border: none;
+    border-bottom: 1px solid rgba(232,236,244,0.15);
+    color: var(--paper);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14px; font-weight: 300; line-height: 1.9;
+    padding: 6px 0; resize: none; outline: none;
+    min-height: 72px;
+    transition: border-color 0.2s;
+  }
+  .free-answer-input::placeholder { color: rgba(232,236,244,0.2); }
+  .free-answer-input:focus { border-bottom-color: rgba(232,236,244,0.35); }
+
+  /* ── 錯誤提示 ── */
+  .error-hint {
+    font-size: 12px; color: var(--danger);
+    margin-top: 8px; display: none;
+  }
+  .error-hint.visible { display: block; }
+
+  /* ── 提交按鈕 ── */
+  .submit-wrap { display: flex; gap: 16px; margin-top: 36px; flex-wrap: wrap; }
+
+  .submit-btn {
+    display: flex; align-items: center; gap: 10px;
+    background: transparent;
+    border: 1px solid;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 13px; letter-spacing: 0.12em;
+    padding: 14px 28px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative; overflow: hidden;
+    border-radius: 4px;
+  }
+  .submit-btn .btn-inner { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; }
+  .submit-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.3s;
+  }
+  .submit-btn:hover::before { transform: scaleX(1); }
+
+  .submit-btn.primary {
+    border-color: var(--kid-blue);
+    color: var(--kid-blue);
+  }
+  .submit-btn.primary::before { background: var(--kid-blue); }
+  .submit-btn.primary:hover { color: var(--ink); }
+
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .submit-btn:disabled::before { display: none; }
+  .submit-btn:disabled:hover { color: var(--kid-blue); }
+
+  /* ── AI 回應 ── */
+  .ai-response { display: none; }
+  .ai-response.visible { display: block; animation: fadeUp 0.6s ease both; }
+
+  .response-duo {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 24px;
+  }
+  .responder-icon {
+    width: 46px; height: 46px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .responder-icon.kid-icon {
+    background: rgba(74,158,255,0.12);
+    border: 1px solid rgba(74,158,255,0.3);
+  }
+  .responder-name {
+    font-size: 14px; font-weight: 600; margin-bottom: 2px;
+  }
+  .responder-name.kid-color { color: var(--kid-blue-light); }
+  .responder-sub { font-size: 11px; color: var(--mist); letter-spacing: 0.1em; }
+
+  .response-card {
+    background: rgba(74,158,255,0.04);
+    border: 1px solid rgba(74,158,255,0.15);
+    border-left: 3px solid var(--kid-blue);
+    border-radius: 6px;
+    padding: 28px 32px;
+    margin-bottom: 36px;
+  }
+  .response-text {
+    font-size: 15px; line-height: 2.1; font-weight: 300;
+    color: rgba(232,236,244,0.88);
+  }
+  .response-text strong { color: var(--kid-blue-light); font-weight: 600; }
+
+  /* ── 載入動畫 ── */
+  .loading-dots { display: inline-flex; gap: 5px; align-items: center; }
+  .loading-dots span {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--kid-blue);
+    animation: dot-bounce 1.2s ease infinite;
+  }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  /* ── 動畫 ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes dot-bounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+
+  /* ── 底部 ── */
+  .footer-note {
+    text-align: center; font-size: 11px;
+    color: rgba(90,97,117,0.5);
+    letter-spacing: 0.15em;
+    margin-top: 72px; padding-top: 20px;
+    border-top: 1px solid rgba(232,236,244,0.06);
+  }
+
+  @media (max-width: 580px) {
+    .character-duo { grid-template-columns: 1fr; }
+    .scene-card, .response-card { padding: 22px 18px; }
+    .question-text { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar"></div>
+<div class="stars"></div>
+
+<div id="app">
+
+  <!-- ── 標題 ── -->
+  <header class="hero">
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      <span class="hero-badge-text">名偵探柯南 第 1163–1164 集</span>
+    </div>
+    <div class="hero-vs">
+      <span class="hero-name-kid">怪盜基德</span>
+      <span class="hero-vs-text">VS</span>
+      <span class="hero-name-amuro">安室透</span>
+    </div>
+    <p class="hero-subtitle-main">王妃的<span>瀏海</span></p>
+    <div class="hero-divider"><span class="hero-divider-icon">◆</span></div>
+    <p class="hero-ep">互動推理遊戲 · Case No.002</p>
+  </header>
+
+  <!-- ── 角色介紹 ── -->
+  <div class="character-duo delay-1">
+    <div class="char-card kid">
+      <div class="char-name">黑羽快斗 / 怪盜基德</div>
+      <div class="char-alias">KID · 白衣盜賊 · 二代基德</div>
+      <div class="char-desc">化身白衣的魔術師，總在最不可思議的瞬間現身。目標是盜取「王妃的瀏海」——一顆傳說級藍寶石，然而此行真正的目的，遠比外人所知更為複雜。</div>
+    </div>
+    <div class="char-card amuro">
+      <div class="char-name">安室透 / 降谷零</div>
+      <div class="char-alias">波本 · 公安警察 · 毛利偵探事務所助手</div>
+      <div class="char-desc">身份重疊如洋蔥，每一層都是謊言。他是第一個讓基德感到威脅的對手——因為他們曾在「漆黑的神秘列車」上，以槍相對。</div>
+    </div>
+  </div>
+
+  <!-- ── 序章背景 ── -->
+  <div class="scene-card jewel-focus delay-2">
+    <div class="scene-tag jewel-tag">序章 · 王妃的瀏海</div>
+    <p class="scene-text">
+      一顆名為「<span class="em-jewel">王妃的瀏海</span>」的稀世藍寶石，正在東京某博物館展出。傳說這顆寶石曾是某位王妃的額飾，在特定光線下會折射出如月光般的蒼藍光芒。<br><br>
+      怪盜基德如約寄出了預告函——<span class="underline-subtle">「今夜，我將取回那道藍色的月光。」</span><br><br>
+      然而這一夜，現場出現了一個意料之外的人物：<span class="em-amuro">安室透</span>。他並非以警察身份現身，而是以偵探助手的面貌悄然出現——帶著一雙洞悉一切的眼睛，還有對怪盜基德熟悉得令人不安的直覺。<br><br>
+      更令基德警惕的是：安室透認出了他。不是從面具，而是從<em>動作的細節</em>——那是只有曾在「漆黑的神秘列車」上親眼目睹的人，才能掌握的記憶。
+    </p>
+  </div>
+
+  <!-- ── 第一章：基德的詭計 ── -->
+  <div class="chapter-sep">
+    <span class="chapter-sep-inner kid-color">第一章 · 盒中謎局</span>
+  </div>
+
+  <div class="scene-card kid-focus">
+    <div class="scene-tag kid-tag">基德的詭計</div>
+    <p class="scene-text">
+      基德的計劃精密如鐘錶。他在展覽室預先安裝了<span class="em-jewel">特製噴霧裝置</span>——當裝置啟動時，霧氣會瞬間模糊所有人的視野；與此同時，他用一個設計精巧的<span class="em-kid">誤導盒</span>替換了展台上的保護罩，讓所有人以為寶石仍在原位。<br><br>
+      然而就在計劃執行的那一刻，安室透的身影出現了——他站在噴霧的盲點，手邊有一把手槍，眼神裡沒有半點慌亂。<br><br>
+      基德瞬間意識到：對方早就知道這個位置。
+    </p>
+  </div>
+
+  <!-- ── Q1 ── -->
+  <div class="question-block" id="q1-block">
+    <div class="question-label label-kid">
+      <span class="q-num kid-num">1</span>
+      基德的應對策略
+    </div>
+    <p class="question-text">安室透出現在噴霧盲點，手持武器，顯然早有準備。如果你是基德，你會如何應對這個突發狀況？</p>
+    <div class="options-grid" id="q1-options">
+      <button class="option-btn kid-option" data-q="1" data-val="A" onclick="selectOption(this)">
+        <span class="option-letter">A</span>
+        <div>
+          <div class="option-title">立即啟動備用逃脫路線，放棄寶石這次先退</div>
+          <div class="option-desc">以進退為能事，留得青山在，不怕沒柴燒</div>
+        </div>
+      </button>
+      <button class="option-btn kid-option" data-q="1" data-val="B" onclick="selectOption(this)">
+        <span class="option-letter">B</span>
+        <div>
+          <div class="option-title">用魔術製造分身幻象，趁安室透確認幻象時取走寶石</div>
+          <div class="option-desc">基德最擅長的：讓敵人的眼睛欺騙自己的大腦</div>
+        </div>
+      </button>
+      <button class="option-btn kid-option" data-q="1" data-val="C" onclick="selectOption(this)">
+        <span class="option-letter">C</span>
+        <div>
+          <div class="option-title">主動開口搭話，用對話拖延時間等待機會</div>
+          <div class="option-desc">基德從不怵場——反正他知道的比安室透更多</div>
+        </div>
+      </button>
+      <button class="option-btn kid-option" data-q="1" data-val="D" onclick="selectOption(this)">
+        <span class="option-letter">D</span>
+        <div>
+          <div class="option-title">將噴霧擴散範圍設到最大，在混亂中趁機行動</div>
+          <div class="option-desc">計劃趕不上變化，但混亂永遠是最好的掩護</div>
+        </div>
+      </button>
+    </div>
+    <div class="free-answer-block">
+      <div class="free-answer-label">✦ 你有其他想法？以基德的視角說說你的計劃</div>
+      <textarea class="free-answer-input" id="q1-free" placeholder="如果你是怪盜基德，面對安室透這樣的對手，你會怎麼做？…"></textarea>
+    </div>
+    <p class="error-hint" id="q1-error">請至少選擇一個選項，或填寫你的想法</p>
+  </div>
+
+  <!-- ── 第二章：安室透的盤算 ── -->
+  <div class="chapter-sep">
+    <span class="chapter-sep-inner amuro-color">第二章 · 列車篇的記憶</span>
+  </div>
+
+  <div class="scene-card amuro-focus">
+    <div class="scene-tag amuro-tag">安室透的視角</div>
+    <p class="scene-text">
+      安室透不是單純來阻止竊案的。<br><br>
+      「漆黑的神秘列車」事件一直盤踞在他腦海——那個偽裝成<span class="em-jewel">宮野志保（雪莉）</span>、以假死欺騙所有人的基德。那個動作細節和眼神，讓安室透無法忘懷。<br><br>
+      今夜，他想確認一件事：<span class="underline-subtle">怪盜基德，究竟知道多少關於黑衣組織的秘密？</span><br><br>
+      寶石，只是他今晚的藉口。
+    </p>
+  </div>
+
+  <!-- ── Q2 ── -->
+  <div class="question-block" id="q2-block">
+    <div class="question-label label-amuro">
+      <span class="q-num amuro-num">2</span>
+      安室透的真實目的
+    </div>
+    <p class="question-text">安室透今夜現身並非只為了寶石。他真正想從基德身上得到什麼？如果你是安室透，你會怎麼套話？</p>
+    <div class="options-grid" id="q2-options">
+      <button class="option-btn amuro-option" data-q="2" data-val="A" onclick="selectOption(this)">
+        <span class="option-letter">A</span>
+        <div>
+          <div class="option-title">直接問基德是否認識黑衣組織的成員</div>
+          <div class="option-desc">開門見山，觀察對方反應——基德的微表情不會說謊</div>
+        </div>
+      </button>
+      <button class="option-btn amuro-option" data-q="2" data-val="B" onclick="selectOption(this)">
+        <span class="option-letter">B</span>
+        <div>
+          <div class="option-title">假裝放水讓基德以為自己逃脫，暗中跟蹤</div>
+          <div class="option-desc">與其逼問，不如讓獵物自己走進陷阱</div>
+        </div>
+      </button>
+      <button class="option-btn amuro-option" data-q="2" data-val="C" onclick="selectOption(this)">
+        <span class="option-letter">C</span>
+        <div>
+          <div class="option-title">提起「漆黑的神秘列車」，直接點破他偽裝雪莉一事</div>
+          <div class="option-desc">讓基德知道自己的底，打亂他的節奏</div>
+        </div>
+      </button>
+      <button class="option-btn amuro-option" data-q="2" data-val="D" onclick="selectOption(this)">
+        <span class="option-letter">D</span>
+        <div>
+          <div class="option-title">提出交換條件：放基德走，換取一個情報</div>
+          <div class="option-desc">公安警察的本質是交換，而非逮捕</div>
+        </div>
+      </button>
+    </div>
+    <div class="free-answer-block">
+      <div class="free-answer-label">✦ 以安室透的角色，你會怎麼跟基德談？</div>
+      <textarea class="free-answer-input" id="q2-free" placeholder="如果你是安室透，面對基德你最想問的一句話是什麼？…"></textarea>
+    </div>
+    <p class="error-hint" id="q2-error">請至少選擇一個選項，或填寫你的想法</p>
+  </div>
+
+  <!-- ── 第三章：最終對決 ── -->
+  <div class="chapter-sep">
+    <span class="chapter-sep-inner jewel-color">第三章 · 王妃的選擇</span>
+  </div>
+
+  <div class="scene-card jewel-focus">
+    <div class="scene-tag jewel-tag">真相與結局</div>
+    <p class="scene-text">
+      夜深了，藍寶石依舊靜靜地在展台上閃爍。<br><br>
+      基德最終取走了寶石——但那只是一顆精密的<span class="em-kid">贗品</span>。真正的「王妃的瀏海」，早在三天前就被他藏在博物館的某個角落，等待時機歸還。<br><br>
+      安室透看著這一切，沒有出手阻止。因為他得到了他真正想要的答案：<span class="em-amuro">基德認出了他，也選擇了沉默。</span>這個沉默，比任何言語都更耐人尋味。<br><br>
+      兩個人各懷秘密，各自離去。而「王妃的瀏海」，在第二天早晨完好地出現在展台上，彷彿什麼都沒發生過。
+    </p>
+  </div>
+
+  <!-- ── Q3 ── -->
+  <div class="question-block" id="q3-block">
+    <div class="question-label label-jewel">
+      <span class="q-num jewel-num">3</span>
+      你的最終判斷
+    </div>
+    <p class="question-text">這場對決沒有真正的勝負——基德取走了寶石（雖然是贗品），安室透得到了情報（雖然是模糊的）。你認為今晚真正的「贏家」是誰？</p>
+    <div class="options-grid" id="q3-options">
+      <button class="option-btn jewel-option" data-q="3" data-val="A" onclick="selectOption(this)">
+        <span class="option-letter">A</span>
+        <div>
+          <div class="option-title">基德贏了——他完成了自己設定的目標，全身而退</div>
+          <div class="option-desc">怪盜從不輸，因為只有他知道自己真正的目的是什麼</div>
+        </div>
+      </button>
+      <button class="option-btn jewel-option" data-q="3" data-val="B" onclick="selectOption(this)">
+        <span class="option-letter">B</span>
+        <div>
+          <div class="option-title">安室透贏了——他確認了基德的秘密，比寶石更值錢</div>
+          <div class="option-desc">公安警察的情報遊戲，從來不在乎表面上的輸贏</div>
+        </div>
+      </button>
+      <button class="option-btn jewel-option" data-q="3" data-val="C" onclick="selectOption(this)">
+        <span class="option-letter">C</span>
+        <div>
+          <div class="option-title">平局——兩個人都得到了想要的，也都沒說出真相</div>
+          <div class="option-desc">這場對決的本質是沉默的默契，而非勝負</div>
+        </div>
+      </button>
+      <button class="option-btn jewel-option" data-q="3" data-val="D" onclick="selectOption(this)">
+        <span class="option-letter">D</span>
+        <div>
+          <div class="option-title">沒有贏家——他們都在守護各自的秘密，代價是彼此不信任</div>
+          <div class="option-desc">這場貓鼠遊戲，遲早會有一個裂縫</div>
+        </div>
+      </button>
+    </div>
+    <div class="free-answer-block">
+      <div class="free-answer-label">✦ 你對基德與安室透這段關係的看法？</div>
+      <textarea class="free-answer-input" id="q3-free" placeholder="這兩個人的對決，讓你想到了什麼？他們的關係將走向何方？…"></textarea>
+    </div>
+    <p class="error-hint" id="q3-error">請至少選擇一個選項，或填寫你的想法</p>
+  </div>
+
+  <!-- ── 提交 ── -->
+  <div class="submit-wrap">
+    <button class="submit-btn primary" id="submit-btn" onclick="submitAnswers()">
+      <span class="btn-inner">
+        <span>提交推理，請基德給出分析</span>
+        <span>→</span>
+      </span>
+    </button>
+  </div>
+
+  <!-- ── AI 回應 ── -->
+  <div class="ai-response" id="ai-response">
+    <div class="chapter-sep" style="margin-top:48px;">
+      <span class="chapter-sep-inner kid-color">怪盜基德的評語</span>
+    </div>
+    <div class="response-duo">
+      <div class="responder-icon kid-icon">🎩</div>
+      <div class="response-meta">
+        <div class="responder-name kid-color">怪盜基德（黑羽快斗）</div>
+        <div class="responder-sub">白衣盜賊 · 二代怪盜基德</div>
+      </div>
+    </div>
+    <div class="response-card">
+      <div class="response-text" id="response-text">
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer-note">
+    © 名偵探柯南 · 青山剛昌 · 小學館 &nbsp;｜&nbsp; 本遊戲為教育創作用途，非商業使用
+  </footer>
+</div>
+
+<script>
+  const answers = { 1: null, 2: null, 3: null };
+
+  const optionLabels = {
+    A: { 1: '立即啟動備用逃脫路線退場', 2: '直接問基德是否認識黑衣組織', 3: '基德贏了，全身而退' },
+    B: { 1: '用魔術幻象製造分身趁機行動', 2: '假裝放水暗中跟蹤', 3: '安室透贏了，得到情報' },
+    C: { 1: '主動搭話用對話拖延', 2: '提起列車篇直接點破身份', 3: '平局，各取所需' },
+    D: { 1: '擴散噴霧在混亂中行動', 2: '提出交換條件換取情報', 3: '沒有贏家，秘密都在守護中' },
+  };
+
+  function selectOption(btn) {
+    const q = btn.dataset.q;
+    document.querySelectorAll(`[data-q="${q}"]`).forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    answers[q] = btn.dataset.val;
+    document.getElementById(`q${q}-error`).classList.remove('visible');
+  }
+
+  function validate() {
+    let ok = true;
+    for (let i = 1; i <= 3; i++) {
+      const free = document.getElementById(`q${i}-free`).value.trim();
+      if (!answers[i] && !free) {
+        document.getElementById(`q${i}-error`).classList.add('visible');
+        ok = false;
+      }
+    }
+    return ok;
+  }
+
+  async function submitAnswers() {
+    if (!validate()) {
+      document.querySelector('.error-hint.visible')
+        ?.closest('.question-block')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const freeAnswers = {};
+    for (let i = 1; i <= 3; i++) {
+      freeAnswers[i] = document.getElementById(`q${i}-free`).value.trim();
+    }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.querySelector('span').textContent = '基德正在分析中…';
+
+    const responseBox = document.getElementById('ai-response');
+    const responseText = document.getElementById('response-text');
+    responseBox.classList.add('visible');
+    responseBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    responseText.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+
+    const q1label = answers[1] ? optionLabels[answers[1]][1] : '未選';
+    const q2label = answers[2] ? optionLabels[answers[2]][2] : '未選';
+    const q3label = answers[3] ? optionLabels[answers[3]][3] : '未選';
+
+    const prompt = `你是名偵探柯南中的怪盜基德（黑羽快斗）。玩家正在體驗「基德VS安室透 王妃的瀏海（第1163-1164集）」的互動推理遊戲。
+
+案件背景：怪盜基德前往博物館盜取藍寶石「王妃的瀏海」，安室透（降谷零/波本）意外現身對峙。兩人因「漆黑的神秘列車」事件而彼此認識。基德用盒子誤導詭計加噴霧裝置行動，安室透的真正目的是想確認基德對黑衣組織的了解。最終基德取走贗品，安室透得到了模糊的情報，兩人各自離去。
+
+玩家的三個選擇：
+【第一題：基德應對安室透的策略】${answers[1] ? `選項${answers[1]}——${q1label}` : '未選'}
+玩家自由作答：「${freeAnswers[1] || '（無）'}」
+
+【第二題：安室透套話的方式】${answers[2] ? `選項${answers[2]}——${q2label}` : '未選'}
+玩家自由作答：「${freeAnswers[2] || '（無）'}」
+
+【第三題：今晚的真正贏家】${answers[3] ? `選項${answers[3]}——${q3label}` : '未選'}
+玩家自由作答：「${freeAnswers[3] || '（無）'}」
+
+請你以怪盜基德的語氣和視角，針對玩家的選擇給予風趣又有深度的評語。要求：
+1. 用基德特有的瀟灑、神秘語氣，帶點魔術師的說話方式（可以用魔術比喻）
+2. 針對每一題分析玩家選擇的優缺點，若有自由作答則給予回應
+3. 透露一個今晚安室透真正在調查的事情的線索（他想確認基德對「漆黑的神秘列車」事件和黑衣組織的了解程度）
+4. 最後給出「觀眾推理評分」（滿分10分），附上一句基德風格的評語收尾
+5. 全文用繁體中文，約400～500字`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      const data = await res.json();
+      const text = data.content?.map(c => c.text || '').join('') || '（無法取得回應）';
+      const html = text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n/g, '<br>');
+      responseText.innerHTML = html;
+    } catch (e) {
+      responseText.innerHTML = '<strong style="color:#c0392b">網路連線失敗，請稍後再試。</strong>';
+    }
+
+    btn.disabled = false;
+    btn.querySelector('.btn-inner').innerHTML = '<span>重新提交</span><span>→</span>';
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>偵探遊戲：基德 VS 安室 王妃的瀏海</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #161f33;
+            --text-color: #e2e8f0;
+            --accent-gold: #c5a880;
+            --accent-blue: #3b82f6;
+            --accent-white: #ffffff;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(197, 168, 128, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-gold));
+        }
+
+        h1 {
+            color: var(--accent-gold);
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #8a99ad;
+            font-size: 1rem;
+            margin-bottom: 30px;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        .story-section {
+            display: none;
+            animation: fadeIn 0.6s ease;
+        }
+
+        .story-section.active {
+            display: block;
+        }
+
+        .bg-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 4px solid var(--accent-gold);
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .options-container {
+            margin: 20px 0;
+        }
+
+        .option-label {
+            display: block;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 18px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .option-label:hover {
+            background: rgba(197, 168, 128, 0.1);
+            border-color: var(--accent-gold);
+        }
+
+        input[type="radio"] {
+            margin-right: 12px;
+            accent-color: var(--accent-gold);
+        }
+
+        .free-response {
+            margin-top: 20px;
+        }
+
+        label.block-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+
+        textarea {
+            width: 100%;
+            height: 80px;
+            background: #0b0f19;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            color: var(--text-color);
+            padding: 10px;
+            box-sizing: border-box;
+            resize: none;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: var(--accent-gold);
+            border: 1px solid var(--accent-gold);
+            padding: 12px 24px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 25px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: var(--accent-gold);
+            color: var(--bg-color);
+            box-shadow: 0 0 15px rgba(197, 168, 128, 0.4);
+        }
+
+        .ai-feedback {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>基德 VS 安室：王妃的瀏海</h1>
+    <div class="subtitle">互動式偵探劇本推理遊戲</div>
+
+    <div id="intro" class="story-section active">
+        <div class="bg-box">
+            <h3>【案件背景前情提要】</h3>
+            <p>鈴木大博物館即將展出羅曼諾夫王朝的至寶——<strong>「王妃的瀏海」</strong>（裝飾於王冠頭飾上的珍貴寶石）。怪盜基德一如既往地發出了預告信。然而，這一次展覽會場除了柯南與中森警官外，還迎來了一位意想不到的稀客——公安警察兼黑衣組織成員波本（安室透）。</p>
+            <p>安室透自從在神秘列車篇（Bell Tree Express）與偽裝成雪莉的基德交手後，便對基德有一種異樣的熟悉感；而基德也認出了安室就是當初用槍指著他的危險男人。兩大天才的智力博弈，在裝有防盜噴霧與神祕盒子機關的展廳內正式拉開序幕！</p>
+        </div>
+        <p>你現在將代替柯南與安室透的視角，介入這場世紀對決。請點擊下方開始按鈕，進入第一章。</p>
+        <button class="btn" onclick="nextStage('intro', 'chapter-1')">開始調查案件</button>
+    </div>
+
+    <div id="chapter-1" class="story-section">
+        <div class="bg-box">
+            <h3>第一幕：消失的預告時間與防盜盲點</h3>
+            <p>展廳內戒備森嚴，寶石「王妃的瀏海」被安置在一個複雜的防盜展示盒中。一旦有人非正常觸碰，強力的有色防盜噴霧將會瞬間啟動，將嫌犯全身染成無法清洗的藍色。然而，就在燈光閃爍的短短數秒內，基德竟然好整以暇地在眾目睽睽下留下了空盒子與嘲弄的卡片，人卻消失無蹤。</p>
+        </div>
+        
+        <div class="options-container">
+            <label class="block-label">Q1: 作為名偵探，你認為基德是如何避開防盜噴霧並盜走寶石的？</label>
+            <label class="option-label"><input type="radio" name="q1" value="A"> A) 利用了鏡子反射與假牆的立體視覺誤導</label>
+            <label class="option-label"><input type="radio" name="q1" value="B"> B) 提前切斷了噴霧裝置的氣壓管線路</label>
+            <label class="option-label"><input type="radio" name="q1" value="C"> C) 使用了雙重假盒子詭計，根本沒有觸碰機關本體</label>
+            <label class="option-label"><input type="radio" name="q1" value="D"> D) 化裝成在場維護的技術人員

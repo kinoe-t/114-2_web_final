@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>棉花糖逃脫！</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --fire: #ff4500;
+    --ember: #ff8c00;
+    --cream: #fff5e6;
+    --wood: #6b3a2a;
+    --dark-wood: #3d1f10;
+    --wall: #c8a882;
+    --shadow: rgba(0,0,0,0.5);
+    --glow: rgba(255,100,0,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a0a00;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Noto Serif TC', serif;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ── HUD ── */
+  #hud {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background: rgba(20,6,0,0.85);
+    border-bottom: 2px solid var(--ember);
+    z-index: 100;
+  }
+  #timer {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 2rem;
+    color: var(--ember);
+    text-shadow: 0 0 12px var(--fire);
+    transition: color 0.3s;
+  }
+  #timer.danger { color: var(--fire); animation: pulse 0.5s infinite alternate; }
+  @keyframes pulse { from { opacity: 1; } to { opacity: 0.4; } }
+  #scene-label {
+    font-size: 0.85rem;
+    color: var(--wall);
+    letter-spacing: 0.1em;
+  }
+  #nav-btns { display: flex; gap: 8px; }
+  .nav-btn {
+    background: var(--dark-wood);
+    border: 1px solid var(--wood);
+    color: var(--cream);
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.8rem;
+    transition: background 0.2s;
+  }
+  .nav-btn:hover { background: var(--wood); }
+
+  /* ── GAME WRAPPER ── */
+  #game {
+    position: relative;
+    width: 800px;
+    height: 520px;
+    margin-top: 60px;
+    overflow: hidden;
+    border: 3px solid var(--dark-wood);
+    box-shadow: 0 0 60px var(--glow), 0 0 120px rgba(255,69,0,0.15);
+  }
+
+  /* ── SCENES ── */
+  .scene {
+    position: absolute;
+    inset: 0;
+    display: none;
+  }
+  .scene.active { display: block; }
+
+  /* SCENE: MAIN ROOM */
+  #scene-room {
+    background: linear-gradient(180deg, #b8926a 0%, #c8a882 40%, #a07850 100%);
+  }
+
+  /* Floor */
+  #room-floor {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 120px;
+    background: repeating-linear-gradient(
+      90deg,
+      #6b3a2a 0px, #6b3a2a 59px,
+      #5a2d1f 59px, #5a2d1f 60px
+    );
+    background-size: 60px 100%;
+  }
+
+  /* Wall texture */
+  #room-wall {
+    position: absolute;
+    inset: 0;
+    bottom: 120px;
+    background:
+      repeating-linear-gradient(0deg, transparent 0px, transparent 39px, rgba(0,0,0,0.06) 39px, rgba(0,0,0,0.06) 40px),
+      repeating-linear-gradient(90deg, transparent 0px, transparent 79px, rgba(0,0,0,0.06) 79px, rgba(0,0,0,0.06) 80px);
+  }
+
+  /* Fireplace glow at bottom */
+  #fire-glow {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 200px;
+    background: radial-gradient(ellipse at 50% 100%, rgba(255,100,0,0.35) 0%, transparent 70%);
+    pointer-events: none;
+    animation: flicker 1.5s infinite alternate;
+  }
+  @keyframes flicker {
+    0%   { opacity: 0.7; }
+    50%  { opacity: 1; }
+    100% { opacity: 0.5; }
+  }
+
+  /* ── CLOCK ── */
+  #clock {
+    position: absolute;
+    left: 30px;
+    bottom: 118px;
+    width: 55px;
+    height: 160px;
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+  #clock:hover { filter: brightness(1.3) drop-shadow(0 0 8px gold); }
+  .clock-body {
+    width: 55px;
+    height: 160px;
+    background: linear-gradient(135deg, #4a2810 0%, #7a4020 50%, #4a2810 100%);
+    border-radius: 6px 6px 4px 4px;
+    border: 2px solid #8b5a30;
+    position: relative;
+    box-shadow: 3px 3px 10px rgba(0,0,0,0.6);
+  }
+  .clock-face {
+    position: absolute;
+    top: 18px; left: 50%; transform: translateX(-50%);
+    width: 38px; height: 38px;
+    background: #f5e8d0;
+    border-radius: 50%;
+    border: 2px solid #8b5a30;
+  }
+  .clock-hand {
+    position: absolute;
+    bottom: 50%; left: 50%;
+    width: 2px;
+    transform-origin: bottom center;
+    background: #2a1a0a;
+    border-radius: 1px;
+  }
+  .clock-hand-hour  { height: 11px; transform: translateX(-50%) rotate(90deg); }
+  .clock-hand-min   { height: 14px; transform: translateX(-50%) rotate(0deg); }
+  .clock-pendulum {
+    position: absolute;
+    bottom: 10px; left: 50%; transform: translateX(-50%);
+    width: 8px; height: 8px;
+    background: #c8a020;
+    border-radius: 50%;
+    animation: swing 1.2s infinite ease-in-out;
+  }
+  @keyframes swing {
+    0%, 100% { transform: translateX(-50%) rotate(-20deg); }
+    50% { transform: translateX(-50%) rotate(20deg); }
+  }
+  .clock-label { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); width: 2px; height: 20px; background: #8b5a30; }
+
+  /* ── HALF-ROUND TABLE ── */
+  #table {
+    position: absolute;
+    right: 130px;
+    bottom: 118px;
+  }
+  .table-top {
+    width: 160px;
+    height: 80px;
+    background: linear-gradient(180deg, #7a4820 0%, #5a3010 100%);
+    border-radius: 80px 80px 0 0;
+    border: 2px solid #a06030;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    cursor: default;
+  }
+  .table-leg {
+    width: 12px;
+    height: 35px;
+    background: linear-gradient(180deg, #6a3818 0%, #4a2810 100%);
+    border-radius: 2px;
+    position: absolute;
+    bottom: -35px;
+  }
+  .table-leg.left  { left: 30px; }
+  .table-leg.right { right: 30px; }
+
+  /* Paper on table */
+  #paper {
+    position: absolute;
+    top: 12px; left: 50%; transform: translateX(-50%);
+    width: 48px; height: 48px;
+    cursor: pointer;
+    transition: filter 0.2s;
+    z-index: 10;
+  }
+  #paper:hover { filter: brightness(1.3) drop-shadow(0 0 6px gold); }
+  .paper-circle {
+    width: 48px; height: 48px;
+    background: radial-gradient(circle, #f5f0e8 60%, #e0d8c8 100%);
+    border-radius: 50%;
+    border: 2px solid #b0a080;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.55rem;
+    color: #6b5030;
+    text-align: center;
+    line-height: 1.2;
+    padding: 4px;
+  }
+
+  /* ── FLOATING CABINET ── */
+  #cabinet {
+    position: absolute;
+    right: 80px;
+    top: 40px;
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+  #cabinet:hover { filter: brightness(1.2) drop-shadow(0 0 8px gold); }
+  .cabinet-body {
+    width: 140px;
+    height: 100px;
+    background: linear-gradient(135deg, #5a3010 0%, #8a5030 50%, #5a3010 100%);
+    border: 2px solid #a06030;
+    border-radius: 4px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.1);
+    position: relative;
+  }
+  .cabinet-door {
+    position: absolute;
+    inset: 8px;
+    background: linear-gradient(135deg, #6a3818 0%, #9a6040 50%, #6a3818 100%);
+    border-radius: 2px;
+    border: 1px solid #b07848;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cabinet-handle {
+    width: 20px; height: 5px;
+    background: #c8a020;
+    border-radius: 3px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .cabinet-shadow {
+    position: absolute;
+    bottom: -12px; left: 10px; right: 10px;
+    height: 12px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 0 0 4px 4px;
+    filter: blur(4px);
+  }
+
+  /* ── WINDOW (back wall) ── */
+  .window-frame {
+    position: absolute;
+    top: 40px; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 100px;
+    background: linear-gradient(135deg, #ffcc66 0%, #ff9933 100%);
+    border: 5px solid #7a4820;
+    border-radius: 4px;
+    box-shadow: inset 0 0 20px rgba(255,80,0,0.4);
+    overflow: hidden;
+  }
+  .window-cross-h {
+    position: absolute; top: 50%; left: 0; right: 0;
+    height: 5px; background: #7a4820; transform: translateY(-50%);
+  }
+  .window-cross-v {
+    position: absolute; left: 50%; top: 0; bottom: 0;
+    width: 5px; background: #7a4820; transform: translateX(-50%);
+  }
+
+  /* SCENE: DOOR */
+  #scene-door {
+    background: linear-gradient(180deg, #b8926a 0%, #c8a882 40%, #a07850 100%);
+  }
+  #door-floor {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 120px;
+    background: repeating-linear-gradient(90deg, #6b3a2a 0px, #6b3a2a 59px, #5a2d1f 59px, #5a2d1f 60px);
+  }
+  #door-wall {
+    position: absolute;
+    inset: 0; bottom: 120px;
+    background:
+      repeating-linear-gradient(0deg, transparent 0px, transparent 39px, rgba(0,0,0,0.06) 39px, rgba(0,0,0,0.06) 40px),
+      repeating-linear-gradient(90deg, transparent 0px, transparent 79px, rgba(0,0,0,0.06) 79px, rgba(0,0,0,0.06) 80px);
+  }
+  #the-door {
+    position: absolute;
+    left: 50%; bottom: 118px;
+    transform: translateX(-50%);
+    width: 130px;
+    height: 220px;
+    background: linear-gradient(135deg, #4a2810 0%, #7a4020 50%, #4a2810 100%);
+    border: 4px solid #8b5a30;
+    border-radius: 6px 6px 0 0;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.5), -2px 0 8px rgba(0,0,0,0.3);
+  }
+  .door-panel {
+    position: absolute;
+    border: 2px solid #6a3818;
+    border-radius: 3px;
+    background: rgba(0,0,0,0.15);
+  }
+  .door-panel.top    { top: 15px; left: 12px; right: 12px; height: 70px; }
+  .door-panel.bottom { top: 100px; left: 12px; right: 12px; height: 90px; }
+  .door-knob {
+    position: absolute;
+    right: 14px; top: 50%;
+    width: 14px; height: 14px;
+    background: radial-gradient(circle at 35% 35%, #e0c060 0%, #c0a040 60%, #806020 100%);
+    border-radius: 50%;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+  }
+
+  /* Keypad */
+  #keypad {
+    position: absolute;
+    right: 160px; top: 160px;
+    width: 80px;
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+  #keypad:hover { filter: brightness(1.3) drop-shadow(0 0 6px #00ff88); }
+  .keypad-body {
+    width: 80px; height: 100px;
+    background: #1a1a2e;
+    border: 2px solid #00cc66;
+    border-radius: 6px;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 4px;
+    box-shadow: 0 0 12px rgba(0,200,100,0.3);
+  }
+  .keypad-display {
+    width: 60px; height: 20px;
+    background: #002200;
+    border: 1px solid #00aa44;
+    border-radius: 2px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    color: #00ff88;
+    display: flex; align-items: center; justify-content: center;
+    letter-spacing: 0.2em;
+  }
+  .keypad-dots {
+    display: flex; gap: 6px;
+  }
+  .keypad-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #005522;
+    border: 1px solid #00aa44;
+  }
+
+  /* ── MODALS / POPUPS ── */
+  #overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  #overlay.show { display: flex; }
+
+  .popup {
+    background: linear-gradient(135deg, #2d1508 0%, #3d2010 100%);
+    border: 2px solid var(--ember);
+    border-radius: 10px;
+    padding: 30px;
+    max-width: 420px;
+    width: 90%;
+    color: var(--cream);
+    position: relative;
+    box-shadow: 0 0 40px rgba(255,80,0,0.3);
+    text-align: center;
+    animation: popIn 0.3s ease;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.7); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .popup h2 { font-size: 1.3rem; color: var(--ember); margin-bottom: 14px; }
+  .popup p  { font-size: 0.95rem; line-height: 1.7; color: #e8d0b0; }
+  .popup-close {
+    position: absolute; top: 10px; right: 14px;
+    background: none; border: none;
+    color: var(--ember); font-size: 1.4rem; cursor: pointer;
+  }
+  .popup-btn {
+    margin-top: 18px;
+    background: var(--dark-wood);
+    border: 1px solid var(--ember);
+    color: var(--cream);
+    padding: 10px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+  }
+  .popup-btn:hover { background: var(--wood); }
+
+  /* Clock popup */
+  #popup-clock .big-clock-face {
+    width: 130px; height: 130px;
+    background: #f5e8d0;
+    border-radius: 50%;
+    border: 5px solid #8b5a30;
+    margin: 12px auto;
+    position: relative;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .big-hand {
+    position: absolute;
+    bottom: 50%; left: 50%;
+    transform-origin: bottom center;
+    border-radius: 2px;
+    background: #2a1a0a;
+  }
+  .big-hand-hour { width: 4px; height: 40px; transform: translateX(-50%) rotate(90deg); }
+  .big-hand-min  { width: 3px; height: 52px; transform: translateX(-50%) rotate(0deg); }
+  .clock-center {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 8px; height: 8px; background: #2a1a0a; border-radius: 50%;
+  }
+  /* Roman numerals hint */
+  .clock-hint-text { font-size: 0.8rem; color: #c8a070; margin-top: 8px; }
+
+  /* Paper popup */
+  #popup-paper .paper-visual {
+    width: 120px; height: 120px;
+    background: #f5f0e8;
+    border-radius: 50%;
+    border: 3px solid #b0a080;
+    margin: 14px auto;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; color: #5a4020; line-height: 1.5;
+    padding: 12px; text-align: center;
+  }
+
+  /* Cabinet popup */
+  #popup-cabinet .cabinet-visual {
+    width: 180px; height: 130px;
+    background: linear-gradient(135deg, #5a3010 0%, #8a5030 50%, #5a3010 100%);
+    border: 3px solid #a06030;
+    border-radius: 6px;
+    margin: 14px auto;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem; color: #c8a020;
+    position: relative;
+    overflow: hidden;
+  }
+  .cabinet-open-door {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 85px;
+    background: linear-gradient(135deg, #6a3818 0%, #9a6040 100%);
+    border-right: 2px solid #b07848;
+    transform-origin: left center;
+    transform: perspective(200px) rotateY(-70deg);
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 8px;
+  }
+  .cabinet-number {
+    position: absolute;
+    right: 30px;
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--fire);
+    text-shadow: 0 0 10px rgba(255,69,0,0.6);
+  }
+
+  /* Keypad popup */
+  #popup-keypad {
+    max-width: 340px;
+  }
+  #popup-keypad h2 { color: #00ff88; }
+  .keypad-input-display {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 2rem;
+    color: #00ff88;
+    background: #001800;
+    border: 2px solid #00aa44;
+    border-radius: 6px;
+    padding: 12px 20px;
+    letter-spacing: 0.4em;
+    min-width: 120px;
+    text-align: center;
+    margin: 12px auto;
+  }
+  .keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    max-width: 200px;
+    margin: 0 auto;
+  }
+  .key-btn {
+    background: #0a2a0a;
+    border: 1px solid #00aa44;
+    color: #00ff88;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.2rem;
+    padding: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .key-btn:hover { background: #0a4a0a; box-shadow: 0 0 8px rgba(0,255,100,0.4); }
+  .key-btn.del { color: #ff6644; border-color: #aa3322; }
+  .key-btn.enter { color: #88ffcc; border-color: #00ccaa; font-size: 0.8rem; }
+  #keypad-msg { font-size: 0.85rem; margin-top: 10px; height: 20px; color: #ff4444; }
+
+  /* ── GAME OVER / WIN screens ── */
+  #screen-end {
+    position: fixed; inset: 0;
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+  }
+  #screen-end.show { display: flex; }
+  #screen-end.lose {
+    background: #000;
+    animation: burnIn 1.5s ease forwards;
+  }
+  @keyframes burnIn { from { background: #ff4500; } to { background: #000; } }
+  #screen-end.win {
+    background: radial-gradient(ellipse at center, #0a3a1a 0%, #001008 100%);
+  }
+  #end-text {
+    font-size: 1.6rem;
+    color: var(--ember);
+    line-height: 1.8;
+    max-width: 500px;
+    padding: 20px;
+    animation: fadeIn 2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  #end-text.win-text { color: #88ffcc; }
+  #restart-btn {
+    margin-top: 24px;
+    padding: 12px 32px;
+    background: transparent;
+    border: 2px solid currentColor;
+    color: inherit;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  #restart-btn:hover { background: rgba(255,255,255,0.1); }
+
+  /* ── INTRO ── */
+  #intro {
+    position: fixed; inset: 0;
+    background: #0a0400;
+    z-index: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 30px;
+  }
+  #intro h1 {
+    font-size: 2.4rem;
+    color: var(--ember);
+    text-shadow: 0 0 20px var(--fire);
+    margin-bottom: 20px;
+  }
+  #intro .marshmallow-emoji { font-size: 4rem; margin-bottom: 10px; animation: bounce 1s infinite alternate; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+  #intro p {
+    color: #e0c090;
+    font-size: 1rem;
+    line-height: 1.9;
+    max-width: 500px;
+    margin-bottom: 24px;
+  }
+  #start-btn {
+    background: var(--fire);
+    border: none;
+    color: white;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 1.1rem;
+    padding: 14px 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(255,80,0,0.5);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  #start-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(255,80,0,0.8); }
+
+  /* ── Hint badge ── */
+  #hints-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(20,6,0,0.9);
+    border-top: 1px solid var(--dark-wood);
+    padding: 6px 16px;
+    font-size: 0.78rem;
+    color: #a08060;
+    display: flex; gap: 16px; align-items: center;
+    z-index: 90;
+    min-height: 32px;
+  }
+  .hint-item { display: flex; align-items: center; gap: 5px; }
+  .hint-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #333; border: 1px solid #666;
+    transition: background 0.5s;
+  }
+  .hint-dot.found { background: var(--ember); box-shadow: 0 0 5px var(--fire); }
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="intro">
+  <div class="marshmallow-emoji">🍬</div>
+  <h1>棉花糖大逃脫！</h1>
+  <p>
+    你是一塊柔軟的棉花糖，卻被困在一間神秘的房間裡。<br>
+    不知為何，室溫正在不斷升高……<br>
+    <strong style="color:var(--fire)">如果無法在3分鐘內逃出去，你將被熔化！</strong><br><br>
+    點擊畫面中的物品來尋找線索，找到密碼開門逃脫吧！<br>
+    左上角有倒數計時器。右上角可切換房間視角。
+  </p>
+  <button id="start-btn" onclick="startGame()">開始逃脫！</button>
+</div>
+
+<!-- HUD -->
+<div id="hud" style="display:none">
+  <div id="timer">03:00</div>
+  <div id="scene-label">📍 房間內部</div>
+  <div id="nav-btns">
+    <button class="nav-btn" onclick="switchScene('room')">🪑 房間</button>
+    <button class="nav-btn" onclick="switchScene('door')">🚪 門口</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game" style="display:none">
+
+  <!-- SCENE: ROOM -->
+  <div class="scene active" id="scene-room">
+    <div id="room-wall"></div>
+
+    <!-- Window -->
+    <div class="window-frame">
+      <div class="window-cross-h"></div>
+      <div class="window-cross-v"></div>
+    </div>
+
+    <!-- Clock -->
+    <div id="clock" onclick="showPopup('clock')" title="點擊查看時鐘">
+      <div class="clock-body">
+        <div class="clock-face">
+          <div class="clock-hand clock-hand-hour"></div>
+          <div class="clock-hand clock-hand-min"></div>
+        </div>
+        <div class="clock-label"></div>
+        <div class="clock-pendulum"></div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div id="table">
+      <div class="table-top">
+        <!-- Paper on table -->
+        <div id="paper" onclick="showPopup('paper')" title="點擊查看紙張">
+          <div class="paper-circle" id="paper-face">
+            圓形<br>圖案
+          </div>
+        </div>
+        <div class="table-leg left"></div>
+        <div class="table-leg right"></div>
+      </div>
+    </div>
+
+    <!-- Cabinet -->
+    <div id="cabinet" onclick="showPopup('cabinet')" title="點擊查看懸浮櫃子">
+      <div class="cabinet-body">
+        <div class="cabinet-door" id="cabinet-door-visual">
+          <div class="cabinet-handle"></div>
+        </div>
+      </div>
+      <div class="cabinet-shadow"></div>
+    </div>
+
+    <div id="room-floor"></div>
+    <div id="fire-glow"></div>
+  </div>
+
+  <!-- SCENE: DOOR -->
+  <div class="scene" id="scene-door">
+    <div id="door-wall"></div>
+    <div id="the-door">
+      <div class="door-panel top"></div>
+      <div class="door-panel bottom"></div>
+      <div class="door-knob"></div>
+    </div>
+    <!-- Keypad -->
+    <div id="keypad" onclick="showPopup('keypad')" title="點擊電子鎖">
+      <div class="keypad-body">
+        <div class="keypad-display">---</div>
+        <div class="keypad-dots">
+          <div class="keypad-dot"></div>
+          <div class="keypad-dot"></div>
+          <div class="keypad-dot"></div>
+        </div>
+      </div>
+    </div>
+    <div id="door-floor"></div>
+  </div>
+</div>
+
+<!-- HINTS BAR -->
+<div id="hints-bar" style="display:none">
+  <span style="color:#888">線索：</span>
+  <div class="hint-item"><div class="hint-dot" id="hint1"></div><span>時鐘</span></div>
+  <div class="hint-item"><div class="hint-dot" id="hint2"></div><span>紙張</span></div>
+  <div class="hint-item"><div class="hint-dot" id="hint3"></div><span>櫃子</span></div>
+</div>
+
+<!-- OVERLAY -->
+<div id="overlay" onclick="overlayClick(event)">
+
+  <!-- Clock popup -->
+  <div class="popup" id="popup-clock" style="display:none">
+    <button class="popup-close" onclick="closePopup()">✕</button>
+    <h2>🕰️ 老式時鐘</h2>
+    <div class="big-clock-face">
+      <div class="big-hand big-hand-hour"></div>
+      <div class="big-hand big-hand-min"></div>
+      <div class="clock-center"></div>
+    </div>
+    <p class="clock-hint-text">時針靜靜地停在某個方向……</p>
+    <p style="margin-top:8px;font-size:0.85rem;color:#a08060">這個位置似乎藏著什麼意義。</p>
+    <button class="popup-btn" onclick="closePopup(); markHint(1)">仔細看過了</button>
+  </div>
+
+  <!-- Paper popup -->
+  <div class="popup" id="popup-paper" style="display:none">
+    <button class="popup-close" onclick="closePopup()">✕</button>
+    <h2>📄 圓形紙張</h2>
+    <div id="paper-popup-content">
+      <div class="paper-visual" id="paper-front">
+        <span>神秘的圓形紙張<br><br><em style="font-size:0.7rem">（點擊翻面）</em></span>
+      </div>
+    </div>
+    <p id="paper-instruction" style="margin-top:8px;font-size:0.9rem;color:#d0b090">請翻到背面查看。</p>
+    <button class="popup-btn" id="paper-flip-btn" onclick="flipPaper()">翻面</button>
+  </div>
+
+  <!-- Cabinet popup -->
+  <div class="popup" id="popup-cabinet" style="display:none">
+    <button class="popup-close" onclick="closePopup()">✕</button>
+    <h2>🗄️ 懸浮櫃子</h2>
+    <div id="cabinet-popup-content">
+      <div class="cabinet-visual" id="cabinet-visual-closed" style="cursor:pointer" onclick="openCabinet()">
+        <div style="text-align:center;color:#c8a070;font-size:0.9rem">古老的木製小櫃<br><em style="font-size:0.75rem">（點擊打開）</em></div>
+      </div>
+    </div>
+    <p style="margin-top:8px;font-size:0.85rem;color:#a08060">裡面不知道放著什麼……</p>
+  </div>
+
+  <!-- Keypad popup -->
+  <div class="popup" id="popup-keypad" style="display:none">
+    <button class="popup-close" onclick="closePopup()">✕</button>
+    <h2>🔒 電子鎖</h2>
+    <p style="font-size:0.85rem;color:#88cc88">輸入3位數密碼</p>
+    <div class="keypad-input-display" id="keypad-display">___</div>
+    <div class="keypad-grid">
+      <button class="key-btn" onclick="pressKey('1')">1</button>
+      <button class="key-btn" onclick="pressKey('2')">2</button>
+      <button class="key-btn" onclick="pressKey('3')">3</button>
+      <button class="key-btn" onclick="pressKey('4')">4</button>
+      <button class="key-btn" onclick="pressKey('5')">5</button>
+      <button class="key-btn" onclick="pressKey('6')">6</button>
+      <button class="key-btn" onclick="pressKey('7')">7</button>
+      <button class="key-btn" onclick="pressKey('8')">8</button>
+      <button class="key-btn" onclick="pressKey('9')">9</button>
+      <button class="key-btn del" onclick="deleteKey()">⌫</button>
+      <button class="key-btn" onclick="pressKey('0')">0</button>
+      <button class="key-btn enter" onclick="submitCode()">確認</button>
+    </div>
+    <div id="keypad-msg"></div>
+  </div>
+
+</div>
+
+<!-- END SCREEN -->
+<div id="screen-end">
+  <div id="end-text"></div>
+  <button id="restart-btn" onclick="restartGame()">再玩一次</button>
+</div>
+
+<script>
+  // ── State ──
+  let timeLeft = 180;
+  let timerInterval = null;
+  let paperFlipped = false;
+  let cabinetOpened = false;
+  let keyInput = '';
+  let gameOver = false;
+  let hintsFound = [false, false, false];
+
+  const PASSWORD = '358';
+
+  // ── Start ──
+  function startGame() {
+    document.getElementById('intro').style.display = 'none';
+    document.getElementById('hud').style.display = 'flex';
+    document.getElementById('game').style.display = 'block';
+    document.getElementById('hints-bar').style.display = 'flex';
+    timerInterval = setInterval(tick, 1000);
+  }
+
+  function tick() {
+    if (gameOver) return;
+    timeLeft--;
+    updateTimer();
+    if (timeLeft <= 0) loseGame();
+  }
+
+  function updateTimer() {
+    const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    const s = (timeLeft % 60).toString().padStart(2, '0');
+    const el = document.getElementById('timer');
+    el.textContent = `${m}:${s}`;
+    el.className = timeLeft <= 30 ? 'danger' : '';
+  }
+
+  // ── Scene switch ──
+  function switchScene(name) {
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+    document.getElementById('scene-' + name).classList.add('active');
+    const labels = { room: '📍 房間內部', door: '🚪 門口' };
+    document.getElementById('scene-label').textContent = labels[name];
+  }
+
+  // ── Popups ──
+  function showPopup(name) {
+    if (gameOver) return;
+    document.querySelectorAll('.popup').forEach(p => p.style.display = 'none');
+    document.getElementById('popup-' + name).style.display = 'block';
+    document.getElementById('overlay').classList.add('show');
+  }
+
+  function closePopup() {
+    document.getElementById('overlay').classList.remove('show');
+    document.querySelectorAll('.popup').forEach(p => p.style.display = 'none');
+  }
+
+  function overlayClick(e) {
+    if (e.target === document.getElementById('overlay')) closePopup();
+  }
+
+  // ── Hints ──
+  function markHint(n) {
+    hintsFound[n - 1] = true;
+    document.getElementById('hint' + n).classList.add('found');
+  }
+
+  // ── Paper flip ──
+  function flipPaper() {
+    const front = document.getElementById('paper-front');
+    const btn   = document.getElementById('paper-flip-btn');
+    const instr = document.getElementById('paper-instruction');
+    if (!paperFlipped) {
+      front.innerHTML = '<span style="font-size:4rem;font-weight:900;color:#2a1a0a">5</span>';
+      instr.textContent = '紙張背面寫著一個數字……';
+      btn.textContent = '翻回正面';
+      paperFlipped = true;
+      markHint(2);
+    } else {
+      front.innerHTML = '<span>神秘的圓形紙張<br><br><em style="font-size:0.7rem">（點擊翻面）</em></span>';
+      instr.textContent = '請翻到背面查看。';
+      btn.textContent = '翻面';
+      paperFlipped = false;
+    }
+  }
+
+  // ── Cabinet ──
+  function openCabinet() {
+    if (cabinetOpened) return;
+    cabinetOpened = true;
+    const visual = document.getElementById('cabinet-visual-closed');
+    visual.innerHTML = `
+      <div class="cabinet-open-door"></div>
+      <div class="cabinet-number">8</div>
+    `;
+    visual.style.cursor = 'default';
+    markHint(3);
+    document.querySelector('#popup-cabinet p:last-of-type').textContent = '裡面貼著一張數字！';
+  }
+
+  // ── Keypad ──
+  function pressKey(k) {
+    if (keyInput.length >= 3) return;
+    keyInput += k;
+    updateDisplay();
+  }
+
+  function deleteKey() {
+    keyInput = keyInput.slice(0, -1);
+    updateDisplay();
+  }
+
+  function updateDisplay() {
+    const d = document.getElementById('keypad-display');
+    const shown = keyInput.padEnd(3, '_');
+    d.textContent = shown;
+    document.getElementById('keypad-msg').textContent = '';
+  }
+
+  function submitCode() {
+    if (keyInput.length < 3) {
+      document.getElementById('keypad-msg').textContent = '請輸入完整3位數！';
+      return;
+    }
+    if (keyInput === PASSWORD) {
+      winGame();
+    } else {
+      document.getElementById('keypad-msg').textContent = '❌ 密碼錯誤！再試試。';
+      keyInput = '';
+      updateDisplay();
+    }
+  }
+
+  // ── Win / Lose ──
+  function winGame() {
+    gameOver = true;
+    clearInterval(timerInterval);
+    closePopup();
+    const end = document.getElementById('screen-end');
+    end.className = 'show win';
+    document.getElementById('end-text').className = 'win-text';
+    document.getElementById('end-text').innerHTML = `
+      🎉 門開了！<br><br>
+      你迅速滾出了房間，<br>
+      在最後一刻躲過了熔化的命運。<br><br>
+      <span style="font-size:1.1rem">棉花糖萬歲！</span><br>
+      <span style="font-size:0.85rem;color:#88ffcc;margin-top:12px;display:block">剩餘時間：${formatTime(timeLeft)}</span>
+    `;
+  }
+
+  function loseGame() {
+    gameOver = true;
+    clearInterval(timerInterval);
+    closePopup();
+    const end = document.getElementById('screen-end');
+    end.className = 'show lose';
+    document.getElementById('end-text').className = '';
+    document.getElementById('end-text').innerHTML = `
+      你被燒到融化，<br>癱倒在地。<br><br>
+      <span style="font-size:0.85rem;color:#996644">那個房間從此再也沒人知道你的存在……</span>
+    `;
+  }
+
+  function restartGame() {
+    timeLeft = 180;
+    paperFlipped = false;
+    cabinetOpened = false;
+    keyInput = '';
+    gameOver = false;
+    hintsFound = [false, false, false];
+
+    document.getElementById('screen-end').className = '';
+    document.getElementById('hint1').classList.remove('found');
+    document.getElementById('hint2').classList.remove('found');
+    document.getElementById('hint3').classList.remove('found');
+
+    // Reset paper
+    document.getElementById('paper-front').innerHTML = '<span>神秘的圓形紙張<br><br><em style="font-size:0.7rem">（點擊翻面）</em></span>';
+    document.getElementById('paper-instruction').textContent = '請翻到背面查看。';
+    document.getElementById('paper-flip-btn').textContent = '翻面';
+
+    // Reset cabinet
+    const cv = document.getElementById('cabinet-visual-closed');
+    cv.innerHTML = '<div style="text-align:center;color:#c8a070;font-size:0.9rem">古老的木製小櫃<br><em style="font-size:0.75rem">（點擊打開）</em></div>';
+    cv.style.cursor = 'pointer';
+    cv.onclick = openCabinet;
+    document.querySelector('#popup-cabinet p:last-of-type').textContent = '裡面不知道放著什麼……';
+
+    // Reset keypad
+    updateDisplay();
+
+    updateTimer();
+    switchScene('room');
+    clearInterval(timerInterval);
+    timerInterval = setInterval(tick, 1000);
+  }
+
+  function formatTime(s) {
+    return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+  }
+</script>
+</body>
+</html>

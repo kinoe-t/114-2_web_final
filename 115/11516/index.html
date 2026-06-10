@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>今晚吃什麼？</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f7f7;          /* 調整為圖片中的清爽淺底色 */
+    --red: #e63946;
+    --red-dark: #c1121f;
+    --text: #2a2a2a;        /* 淺色背景搭配深色文字 */
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 16px 60px;
+    overflow-x: hidden;
+    
+    /* 完美複製附圖：極小、高留白、交錯排列的淡灰色小星星 */
+    background-image:
+      url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><polygon points='50,7 53,17 63,17 55,23 58,33 50,27 42,33 45,23 37,17 47,17' fill='rgba(0,0,0,0.15)'/></svg>"),
+      url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><polygon points='50,7 53,17 63,17 55,23 58,33 50,27 42,33 45,23 37,17 47,17' fill='rgba(0,0,0,0.15)'/></svg>");
+    background-size: 100px 100px, 100px 100px;
+    background-position: 0px 0px, 50px 50px; /* 精準交錯位移 */
+    background-repeat: repeat, repeat;
+    background-attachment: fixed;
+  }
+
+  h1 {
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-weight: 900;
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    letter-spacing: 0.04em;
+    color: #1a1a1a;
+    text-align: center;
+    margin-bottom: 4px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .subtitle {
+    font-size: 0.85rem;
+    color: #888;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+  .wheel-container {
+    position: relative;
+    width: min(90vw, 520px);
+    height: min(90vw, 520px);
+  }
+  .wheel-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  canvas#wheel {
+    border-radius: 50%;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08), 0 0 0 6px #fff, 0 0 0 8px #eee;
+    display: block;
+  }
+  .pointer {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-top: 36px solid var(--red);
+    filter: drop-shadow(0 4px 6px rgba(230,57,70,0.4));
+    z-index: 10;
+  }
+  .center-circle {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    background: #fff;
+    border: 4px solid #eee;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  #spin-btn {
+    margin-top: 36px;
+    padding: 16px 64px;
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    color: #fff;
+    background: var(--red);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 6px 24px rgba(230,57,70,0.3);
+  }
+  #spin-btn:hover { background: var(--red-dark); }
+  #spin-btn:active { transform: scale(0.97); }
+  #spin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #spin-btn.again {
+    background: #fff;
+    border: 2px solid #ddd;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    color: #555;
+  }
+  #spin-btn.again:hover { background: #f5f5f5; }
+
+  #result-section {
+    margin-top: 40px;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s, transform 0.5s;
+    width: min(90vw, 520px);
+  }
+  #result-section.show { opacity: 1; transform: translateY(0); }
+  .result-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    color: #888;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .result-name {
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-weight: 900;
+    font-size: clamp(2rem, 8vw, 3.5rem);
+    letter-spacing: 0.04em;
+    color: #1a1a1a;
+    margin-bottom: 28px;
+    line-height: 1.1;
+  }
+  .map-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 32px;
+    background: #fff;
+    border: 2px solid #eee;
+    border-radius: 6px;
+    color: #555;
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s, background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  }
+  .map-btn:hover { border-color: #ccc; color: #1a1a1a; background: #fafafa; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+  .map-icon { font-size: 1.2rem; }
+
+  .confetti-container {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 100;
+  }
+  @keyframes fall {
+    0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<h1>今晚吃什麼</h1>
+<p class="subtitle">Spin the Wheel of Fate · Let the Universe Decide</p>
+
+<div class="wheel-container">
+  <div class="wheel-wrapper">
+    <div class="pointer"></div>
+    <canvas id="wheel"></canvas>
+    <div class="center-circle">🍽️</div>
+  </div>
+</div>
+
+<button id="spin-btn">轉</button>
+
+<div id="result-section">
+  <p class="result-label">今晚就決定吃</p>
+  <div class="result-name" id="result-name"></div>
+  <a id="map-link" class="map-btn" target="_blank" rel="noopener">
+    <span class="map-icon">📍</span>
+    <span>尋找附近餐廳</span>
+  </a>
+</div>
+
+<div class="confetti-container" id="confetti"></div>
+
+<script>
+const foods = [
+  "牛肉麵","雞排飯","炒飯","拉麵","壽司","燒肉","火鍋","鹹水雞","蚵仔麵線","筒仔米糕",
+  "刈包","鹽水雞","臭豆腐","滷肉飯","排骨飯","虱目魚粥","蛤蜊湯","蔥爆牛肉","麻婆豆腐","宮保雞丁",
+  "紅燒肉","薑母鴨","羊肉爐","沙茶火鍋","咖哩飯","義大利麵","披薩","漢堡","炸雞","熱狗",
+  "韓式烤肉","部隊鍋","石鍋拌飯","泡菜鍋","冷麵","越南河粉","春捲","炸醬麵","北京烤鴨","宮廷蝦",
+  "蝦仁炒飯","三杯雞","紅燒獅子頭","清蒸魚","回鍋肉","夫妻肺片","水煮魚","酸菜魚","毛血旺","重慶小麵",
+  "担担麵","叉燒飯","腸粉","蛋撻","菠蘿包","雲吞麵","港式炒麵","蒸餃","鍋貼","小籠包",
+  "肉圓","碗粿","黑白切","烤香腸","炸蚵嗲","米粉炒","大腸麵線","蚵仔煎","擔仔麵","棺材板",
+  "鱔魚意麵","台南牛肉湯","虱目魚湯","豆花","芋頭米粉","鹹湯圓","麻辣燙","串燒","關東煮","天婦羅",
+  "烏龍麵","蕎麥麵","炸豬排","日式咖哩","親子丼","牛丼","海鮮丼","鮭魚握壽司","鮪魚手卷","章魚燒",
+  "大阪燒","味噌湯定食","鰻魚飯","唐揚炸雞","日式炒麵","豚骨拉麵","沾麵","泰式炒河粉","冬蔭功湯","打拋豬飯",
+  "泰式綠咖哩","椰汁雞湯","芒果糯米飯","炸魚薯條","印度咖哩","BBQ肋排","凱薩沙拉","墨西哥捲餅","法式洋蔥湯","牛排",
+  "費城牛肉三明治","蛤蜊巧達湯","起司牛肉漢堡","BLT三明治","烤雞腿排","鐵板燒","海南雞飯","肉骨茶","炒粿條","叻沙",
+  "印尼炒飯","沙嗲串燒","越式法包","廣式蒸排骨","港式燒臘","雞腿麵線","豬肝湯","麻油雞","紅豆湯","芋圓豆花",
+  "仙草蜜","燒麻糬","地瓜圓","奶油白醬義麵","茄汁肉醬麵","青醬雞肉麵","海鮮燉飯","蘑菇燉飯","南瓜濃湯","蔬食咖哩",
+  "客家小炒","梅菜扣肉","東坡肉","白斬雞","蔥油雞","炸排骨","薑絲大腸","炒米粉","起司蛋餅","蘿蔔糕"
+];
+
+const macaronColors = [
+  "#F4B8C1","#F9D5C8","#FDE9C4","#F9F0C8","#D4EED0",
+  "#C4E4EE","#C9D5F0","#D8C8EE","#F0C8E8","#EEC8D8",
+  "#F7C5A8","#F5E6A3","#B8E4D0","#A8D8EA","#C8B8EA",
+  "#F2B5D4","#B5EAD7","#FFDAC1","#E2F0CB","#C7CEEA"
+];
+
+const canvas = document.getElementById('wheel');
+const ctx = canvas.getContext('2d');
+let size = Math.min(window.innerWidth * 0.9, 520);
+canvas.width = size;
+canvas.height = size;
+
+let cx = size / 2, cy = size / 2, radius = size / 2 - 4;
+const total = foods.length;
+const arc = (2 * Math.PI) / total;
+let currentAngle = 0;
+let spinning = false;
+let spinVelocity = 0;
+let animFrame;
+
+function drawWheel(angle) {
+  ctx.clearRect(0, 0, size, size);
+  for (let i = 0; i < total; i++) {
+    const startAngle = angle + i * arc;
+    const endAngle = startAngle + arc;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, radius, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = macaronColors[i % macaronColors.length];
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(startAngle + arc / 2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#2a2a2a';
+    ctx.font = `bold ${Math.max(7, size * 0.022)}px 'M PLUS Rounded 1c', sans-serif`;
+    ctx.fillText(foods[i], radius - 6, 3);
+    ctx.restore();
+  }
+}
+
+drawWheel(currentAngle);
+
+function getWinner(angle) {
+  const normalized = (((-angle - Math.PI / 2) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  const idx = Math.floor(normalized / arc) % total;
+  return foods[idx];
+}
+
+const spinBtn = document.getElementById('spin-btn');
+const resultSection = document.getElementById('result-section');
+const resultName = document.getElementById('result-name');
+const mapLink = document.getElementById('map-link');
+
+spinBtn.addEventListener('click', () => {
+  if (spinning) return;
+  resultSection.classList.remove('show');
+  spinBtn.classList.remove('again');
+  spinBtn.textContent = '轉';
+  spinBtn.disabled = true;
+  spinning = true;
+  spinVelocity = (Math.random() * 15 + 20) * (Math.PI / 180);
+  cancelAnimationFrame(animFrame);
+  animate();
+});
+
+function animate() {
+  if (spinVelocity > 0.002) {
+    currentAngle += spinVelocity;
+    spinVelocity *= 0.985;
+    drawWheel(currentAngle);
+    animFrame = requestAnimationFrame(animate);
+  } else {
+    spinning = false;
+    drawWheel(currentAngle);
+    showResult();
+  }
+}
+
+function showResult() {
+  const winner = getWinner(currentAngle);
+  resultName.textContent = winner;
+  const query = encodeURIComponent(winner);
+  mapLink.href = `https://www.google.com/maps/search/?api=1&query=${query}`;
+  setTimeout(() => {
+    resultSection.classList.add('show');
+    launchConfetti();
+    spinBtn.textContent = '再來一次';
+    spinBtn.classList.add('again');
+    spinBtn.disabled = false;
+  }, 300);
+}
+
+function launchConfetti() {
+  const container = document.getElementById('confetti');
+  container.innerHTML = '';
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div');
+    const color = macaronColors[Math.floor(Math.random() * macaronColors.length)];
+    const s = Math.random() * 10 + 6;
+    el.style.cssText = `
+      position:absolute;
+      left:${Math.random()*100}%;top:0;
+      width:${s}px;height:${s*(Math.random()>0.5?1:2.5)}px;
+      background:${color};
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+      animation:fall ${Math.random()*0.8+0.5}s ease-in ${Math.random()*0.3}s forwards;
+    `;
+    container.appendChild(el);
+  }
+  setTimeout(() => container.innerHTML = '', 2000);
+}
+
+window.addEventListener('resize', () => {
+  size = Math.min(window.innerWidth * 0.9, 520);
+  canvas.width = size;
+  canvas.height = size;
+  cx = size / 2;
+  cy = size / 2;
+  radius = size / 2 - 4;
+  drawWheel(currentAngle);
+});
+</script>
+</body>
+</html>
