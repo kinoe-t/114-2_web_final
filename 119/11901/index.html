@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>紅顏史鑑・典藏豪華版</title>
+<style>
+:root{
+--gold:#c6a15b;--dark:#4a3525;--paper:#f8f1df;--paper2:#eadbb8;
+}
+*{box-sizing:border-box}
+body{
+margin:0;padding:20px;font-family:"Noto Serif TC","Microsoft JhengHei",serif;
+background:radial-gradient(circle at top,#fffdf7,#eadbb8);color:var(--dark);
+}
+.wrap{
+max-width:1100px;margin:auto;position:relative;padding:40px;
+background:linear-gradient(var(--paper),var(--paper2));
+border:10px solid rgba(198,161,91,.45);border-radius:30px;
+box-shadow:0 20px 60px rgba(0,0,0,.15);
+}
+.wrap:before{
+content:"";position:absolute;inset:15px;border:2px solid rgba(198,161,91,.4);
+border-radius:20px;pointer-events:none;
+}
+.wrap>*{position:relative;z-index:1}
+.fan{position:absolute;font-size:120px;opacity:.12}
+.left{left:-20px;top:120px;transform:rotate(-25deg)}
+.right{right:-20px;top:120px;transform:rotate(25deg)}
+h1{text-align:center;font-size:3.2rem;margin:0}
+.sub{text-align:center;line-height:1.8}
+.line{height:2px;width:260px;margin:20px auto;background:linear-gradient(to right,transparent,var(--gold),transparent)}
+.card{background:#fff8;padding:18px;border-radius:16px;margin:15px 0}
+label{display:block;padding:10px;border-radius:10px;cursor:pointer}
+label:hover{background:#c6a15b22}
+button{display:block;margin:25px auto;padding:16px 45px;border:none;border-radius:999px;background:linear-gradient(135deg,#d8b56b,#9f7630);color:#fff;font-size:18px;cursor:pointer}
+#result{display:none;margin-top:25px;padding:30px;border:2px solid var(--gold);border-radius:20px;text-align:center;background:#fffaf0}
+.portrait{width:min(320px,100%);border:4px solid var(--gold);border-radius:18px}
+.quote{margin-top:20px;font-weight:bold;color:#8d6a2e}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="fan left">🪭</div><div class="fan right">🪭</div>
+<h1>紅顏史鑑</h1>
+<p class="sub">穿越歷史長河，尋找與你靈魂共鳴的傳奇女性</p>
+<div class="line"></div>
+<form id="quiz"></form>
+<button type="button" onclick="calc()">揭曉命運</button>
+<div id="result"></div>
+</div>
+<script>
+const people=["wu","joan","night","curie","helen","li","athena","xishi","cixi","marie"];
+const results={
+wu:["武則天","empior.png","九天鳳主","你具有非凡的領導力與改革魄力。"],
+joan:["聖女貞德","san.png","信念之火","你願意為理想挺身而出。"],
+night:["南丁格爾","south.png","提燈天使","你的溫柔與責任感照亮他人。"],
+curie:["瑪麗居禮","g.png","真理探索者","你熱愛知識與探索未知。"],
+helen:["海倫凱勒","sea.png","希望之光","你擁有堅韌不拔的精神。"],
+li:["李清照","li.png","千古詞心","你感性細膩且富有詩意。"],
+athena:["雅典娜","god.png","智慧女神","你總能以理性與智慧解決問題。"],
+xishi:["西施","beautiful.png","傾城之美","你擅長理解人心與建立連結。"],
+cixi:["慈禧太后","si.png","掌局者","你善於觀察局勢與應變。"],
+marie:["瑪麗安東妮","queen.png","宮廷玫瑰","你重視美感與生活品質。"],
+you:["你自己","unnamed.png","歷史之外的人","你融合了眾多特質，無法被任何人物定義。"]
+};
+
+const qs=[
+["你最欣賞哪種特質？",["領導","智慧","勇氣","溫柔"],["wu","athena","joan","night"]],
+["理想生活？",["掌權","研究","追夢","助人"],["cixi","curie","helen","night"]],
+["遇到危機？",["統籌","分析","衝鋒","安撫"],["wu","athena","joan","xishi"]],
+["喜歡的場所？",["宮廷","圖書館","前線","花園"],["marie","curie","joan","li"]],
+["朋友形容你？",["有氣場","聰明","堅強","貼心"],["wu","athena","helen","night"]],
+["最看重？",["權力","知識","信念","情感"],["cixi","curie","joan","li"]],
+["喜歡的能力？",["號召力","洞察力","毅力","魅力"],["wu","athena","helen","xishi"]],
+["你相信？",["改變世界","探索世界","戰勝逆境","溫暖世界"],["wu","curie","helen","night"]],
+["最想留下？",["傳奇","發現","希望","美感"],["joan","curie","helen","marie"]],
+["最符合你？",["王者","智者","理想家","藝術家"],["wu","athena","joan","li"]]
+];
+
+const form=document.getElementById('quiz');
+qs.forEach((q,i)=>{
+let h=`<div class="card"><h3>${i+1}. ${q[0]}</h3>`;
+q[1].forEach((o,j)=>{
+h+=`<label><input type="radio" name="q${i}" value="${q[2][j]}"> ${o}</label>`;
+});
+h+='</div>'; form.innerHTML+=h;
+});
+
+function calc(){
+const checked=document.querySelectorAll('input[type=radio]:checked');
+if(checked.length!==10){alert('請完成全部10題');return;}
+let score={}; [...people].forEach(p=>score[p]=0);
+checked.forEach(x=>score[x.value]++);
+
+const diverse = Object.values(score).filter(v=>v>0).length>=6;
+let key;
+if(diverse) key="you";
+else key=Object.entries(score).sort((a,b)=>b[1]-a[1])[0][0];
+
+const r=results[key];
+const el=document.getElementById('result');
+el.style.display='block';
+el.innerHTML=`
+<img class="portrait" src="${r[1]}" onerror="this.src='unnamed.png'">
+<h2>${r[0]}</h2>
+<h3>${r[2]}</h3>
+<p>${r[3]}</p>
+<p>每位傳奇女性都映照出人格的一部分，而你的道路仍由自己書寫。</p>
+<div class="quote">✦ 你不是任何人的附屬品，你是閃閃發亮的你！ ✦</div>`;
+window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

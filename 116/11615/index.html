@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>稀有寶可夢卡牌（PTCG）收藏指南</title>
+    <style>
+        :root {
+            --bg-color: #0d0f12;
+            --card-bg: #1a1d24;
+            --text-color: #f0f3f8;
+            --text-muted: #8a96a8;
+            --primary: #ffd700;
+            
+            /* 稀有度顏色 */
+            --color-rr: #ff4757;
+            --color-ar: #2ed573;
+            --color-sr: #1e90ff;
+            --color-sar: #ffa502;
+            --color-mur: #eccc68;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding-bottom: 60px;
+        }
+
+        /* Header 樣式 */
+        header {
+            background: linear-gradient(135deg, #1e222b 0%, #0d0f12 100%);
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 2px solid #2a2f3b;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* 導覽標籤（篩選器） */
+        .filter-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 30px auto;
+            max-width: 1200px;
+            padding: 0 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background-color: #1e222b;
+            color: var(--text-color);
+            border: 1px solid #3a4150;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .filter-btn.active[data-target="all"] { border-color: var(--text-color); background: #3a4150; }
+        .filter-btn.active[data-target="RR"] { border-color: var(--color-rr); color: var(--color-rr); box-shadow: 0 0 10px rgba(255,71,87,0.2); }
+        .filter-btn.active[data-target="AR"] { border-color: var(--color-ar); color: var(--color-ar); box-shadow: 0 0 10px rgba(46,213,115,0.2); }
+        .filter-btn.active[data-target="SR"] { border-color: var(--color-sr); color: var(--color-sr); box-shadow: 0 0 10px rgba(30,144,255,0.2); }
+        .filter-btn.active[data-target="SAR"] { border-color: var(--color-sar); color: var(--color-sar); box-shadow: 0 0 10px rgba(255,165,2,0.2); }
+        .filter-btn.active[data-target="MUR"] { border-color: var(--color-mur); color: var(--color-mur); box-shadow: 0 0 10px rgba(236,204,104,0.2); }
+
+        /* 卡片展示網格 */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 35px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 3D 翻轉卡片容器 */
+        .card-box {
+            background-color: transparent;
+            height: 480px;
+            perspective: 1000px;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .card-box:hover .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        /* 正反面通用樣式 */
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #2a2f3b;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* 卡片正面 */
+        .card-front {
+            background-color: var(--card-bg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-img-wrapper {
+            position: relative;
+            width: 100%;
+            height: 72%;
+            background: #11141a;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        /* 模擬閃卡光澤線條 */
+        .card-img-wrapper::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(115deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.15) 45%, rgba(255,255,255,0.15) 55%, rgba(255,255,255,0) 70%);
+            transform: rotate(-15deg);
+            transition: all 0.6s ease;
+            opacity: 0;
+        }
+
+        .card-box:hover .card-img-wrapper::after {
+            opacity: 1;
+            transform: translate(20%, 20%) rotate(-15deg);
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+
+        .card-info {
+            padding: 15px 20px;
+            text-align: left;
+            background: linear-gradient(to bottom, #1a1d24, #15181e);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* 各稀有度 Badge 顏色 */
+        .badge-rr { background-color: rgba(255, 71, 87, 0.2); color: var(--color-rr); border: 1px solid var(--color-rr); }
+        .badge-ar { background-color: rgba(46, 213, 115, 0.2); color: var(--color-ar); border: 1px solid var(--color-ar); }
+        .badge-sr { background-color: rgba(30, 144, 255, 0.2); color: var(--color-sr); border: 1px solid var(--color-sr); }
+        .badge-sar { background-color: rgba(255, 165, 2, 0.2); color: var(--color-sar); border: 1px solid var(--color-sar); }
+        .badge-mur { background-color: rgba(236, 204, 104, 0.2); color: var(--color-mur); border: 1px solid var(--color-mur); }
+
+        .hint-text {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: right;
+            font-style: italic;
+        }
+
+        /* 卡片背面 */
+        .card-back {
+            background: linear-gradient(145deg, #1e222b, #11141a);
+            color: var(--text-color);
+            transform: rotateY(180deg);
+            padding: 30px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-align: left;
+        }
+
+        .back-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-bottom: 2px solid #3a4150;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .back-desc {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            flex-grow: 1;
+        }
+
+        .feature-list {
+            margin-top: 15px;
+            list-style: none;
+        }
+
+        .feature-list li {
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+        }
+
+        .feature-list li::before {
+            content: "✦";
+            color: var(--primary);
+            margin-right: 8px;
+        }
+
+        /* ==================== 彈出視窗 (Modal) 樣式 ==================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(5, 7, 10, 0.88);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: #1a1d24;
+            border: 2px solid #3a4150;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 720px;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(30px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+            z-index: 10;
+        }
+
+        .modal-close-btn:hover { background: #ff4757; }
+
+        .modal-body {
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 30px;
+        }
+
+        .modal-left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #11141a;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .modal-preview-img {
+            width: 100%;
+            max-height: 340px;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+
+        .modal-right h2 {
+            font-size: 1.6rem;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+
+        .modal-detail-section {
+            margin-top: 20px;
+            border-top: 1px solid #2a2f3b;
+            padding-top: 15px;
+        }
+
+        .modal-detail-section h4 {
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .modal-detail-section p {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+        }
+
+        /* 頁尾 */
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* 響應式調整 */
+        @media (max-width: 700px) {
+            .modal-body { grid-template-columns: 1fr; padding: 30px 20px; }
+            .modal-preview-img { max-height: 250px; }
+            header h1 { font-size: 1.8rem; }
+            .filter-container { gap: 8px; }
+            .filter-btn { padding: 8px 14px; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Pokémon TCG 稀有卡牌圖鑑</h1>
+        <p>探索寶可夢卡牌中極具收藏價值的五大稀有度等級（點擊卡片看詳細介紹）</p>
+    </header>
+
+    <div class="filter-container">
+        <button class="filter-btn active" data-target="all">全部級別</button>
+        <button class="filter-btn" data-target="ALL_MUR">MUR (Master Ball Ultra Rare)</button>
+        <button class="filter-btn" data-target="RR">RR (Double Rare)</button>
+        <button class="filter-btn" data-target="AR">AR (Art Rare)</button>
+        <button class="filter-btn" data-target="SR">SR (Super Rare)</button>
+        <button class="filter-btn" data-target="SAR">SAR (Special Art Rare)</button>
+    </div>
+
+    <main class="grid-container" id="cardGrid">
+        </main>
+
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-content">
+            <button class="modal-close-btn" id="closeModal">✕</button>
+            <div class="modal-body">
+                <div class="modal-left">
+                    <img src="" id="modalImg" class="modal-preview-img" alt="卡片預覽">
+                </div>
+                <div class="modal-right">
+                    <span class="badge" id="modalBadge">RARITY</span>
+                    <h2 id="modalTitle">卡片名稱</h2>
+                    
+                    <div class="modal-detail-section">
+                        <h4>級別定位說明</h4>
+                        <p id="modalDesc">詳細介紹...</p>
+                    </div>
+
+                    <div class="modal-detail-section">
+                        <h4>市場與收藏價值</h4>
+                        <p id="modalValue">價值分析...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 寶可夢卡牌稀有度介紹誌．請確保圖片檔案與本 HTML 放於同一資料夾下</p>
+    </footer>
+
+    <script>
+        // 已依照指定要求，將 MUR 兩張卡片修正為超級快龍與超級噴火龍金卡
+        const cardData = [
+            {
+                id: "RR_1",
+                rarity: "RR",
+                name: "寶可夢 ex 基礎強卡",
+                badgeClass: "badge-rr",
+                colorVar: "--color-rr",
+                imgUrl: "RR CARD.jpg",
+                desc: "RR (Double Rare) 是高階實戰卡牌的基石。在當前的朱紫 (SV) 世代中，基礎的『寶可夢ex』基本都是以 RR 級別登場。這類卡片擁有強大的血量與核心招式特性，是所有實戰玩家牌組裡不可或缺的核心戰力。",
+                value: "市場價值主要受到『賽事環境強度』影響。熱門的主流賽事牌組 RR 卡往往供不應求，是兼具實用性與基本收藏價值的入門首選。",
+                features: ["卡面覆蓋反光雙閃膜層", "血量（HP）與招式比一般卡更強大", "寶可夢圖案會略微超出框線（俗稱露骨卡）"]
+            },
+            {
+                id: "AR_1",
+                rarity: "AR",
+                name: "寶可夢 滿版全幅插畫",
+                badgeClass: "badge-ar",
+                colorVar: "--color-ar",
+                imgUrl: "AR CARD.jpg",
+                desc: "AR (Art Rare) 俗稱『插畫滿版卡』。卡片完全移除了傳統賽事卡的死板框線，改由知名繪師打造極具故事感的插畫。它將寶可夢置身於真實世界或生態環境中，如同將一張藝術畫作收進卡冊。",
+                value: "這類卡片在實戰中與一般普通卡效果相同，但其驚人的視覺美感，讓它成為純收藏型玩家的熱門選擇。一些高人氣角色的 AR 卡，升值潛力有時非常驚人。",
+                features: ["整張卡片是一幅完整的全幅插畫", "通常描繪寶可夢與環境的互動與日常生態", "不具備浮雕刻紋，但顏色層次非常細膩豐富"]
+            },
+            {
+                id: "SR_1",
+                rarity: "SR",
+                name: "高級全幅鏡面卡 (N的謀劃)",
+                badgeClass: "badge-sr",
+                colorVar: "--color-sr",
+                imgUrl: "SR CARD N.jpg",
+                desc: "SR (Super Rare) 是正統高級罕貴卡的起點。卡面特色是極具質感的「全幅銀色邊框」，且背景會根據寶可夢屬性呈現高對比色彩。最重要的是，卡面上帶有細緻的物理微浮雕顆粒線條。",
+                value: "在一盒（30包）擴充包中，通常只會保底封入 1~2 張 SR 以上的卡片。除了強大的寶可夢外，擴充包中登場的「全幅人物訓練家卡」也屬於 SR 級別。",
+                features: ["帶有細緻的物理刻紋（3D 浮雕顆粒感）", "閃爍效果通常呈放射狀或特定幾何格紋", "開盒時最期待能開出的保底高級獎項"]
+            },
+            {
+                id: "SR_2",
+                rarity: "SR",
+                name: "高級全幅鏡面卡",
+                badgeClass: "badge-sr",
+                colorVar: "--color-sr",
+                imgUrl: "SR CARD.jpg",
+                desc: "SR (Super Rare) 級別的另一款經典收藏。同樣擁有美麗的銀色邊框與紋理。不論是寶可夢還是人物，SR 版本的卡面設計總能凸顯角色的非凡氣勢。",
+                value: "作為經典高級卡，熱門角色（如女性訓練家或人氣神獸）的 SR 版本在市場上極具流通性，往往是重度收藏迷與投資者的首選標的。",
+                features: ["經典全幅銀邊設計", "配合屬性的特殊幾何背景折射", "極高的觸覺阻尼質感"]
+            },
+            {
+                id: "SAR_1",
+                rarity: "SAR",
+                name: "特別藝術珍藏卡",
+                badgeClass: "badge-sar",
+                colorVar: "--color-sar",
+                imgUrl: "SAR CARD.jpg",
+                desc: "SAR (Special Art Rare) 是目前常規擴充包中的『頂級夢幻大獎』。它完美結合了 AR 卡的頂級滿版插畫美學，以及 SR 卡的精緻立體浮雕刻紋。卡面上的光影會隨著刻紋呈現如彩虹般的折射效果，藝術水準登峰造極。",
+                value: "由於配率極低（多盒才可能出現一張），加之兼具無與倫比的畫面美感與實戰強度，熱門角色的 SAR 卡通常一出世即封神，是市場上價值最高、最具保值效應的傳奇卡牌。",
+                features: ["極度稀有，一箱中配率極低", "由頂尖畫師執筆，具備極強的故事張力", "卡面兼具高級立體刻紋與斑斕的彩虹光澤"]
+            },
+            {
+                id: "SAR_2",
+                rarity: "SAR",
+                name: "特別藝術珍藏卡 (鳴依的勉勵)",
+                badgeClass: "badge-sar",
+                colorVar: "--color-sar",
+                imgUrl: "SAR CARD M.jpg",
+                desc: "SAR 級別的另一款藝術殿堂級作品（鳴依的勉勵）。將寶可夢的世界觀與震撼的作畫技巧發揮到淋漓盡致，每一張都帶有極其厚重的收藏分量感。",
+                value: "由於極難抽中，此版本的稀缺性帶來了極高的市場溢價，被廣大 PTCG 玩家視為卡冊中最耀眼的終極收藏品。",
+                features: ["多盒難求的超低配率", "結合頂級浮雕刻紋與極致光折射", "藝術品等級的畫面呈現"]
+            },
+            {
+                id: "MUR_1",
+                rarity: "MUR",
+                name: "超級快龍金卡",
+                badgeClass: "badge-mur",
+                colorVar: "--color-mur",
+                imgUrl: "MUR CARD.jpg",
+                desc: "MUR（Master Ultra Rare）級別代表著收藏界金字塔頂端的「黃金閃卡」。整張卡牌披上了極具奢華質感的金色外衣，卡面布滿細膩入微的金屬浮雕線條，視覺效果震撼。",
+                value: "做為快龍的頂級金卡型態，不論是開盒配率還是玩家間的交易熱度都是頂天級別。其閃耀的金色邊框與高昂的身價，是所有核心收藏家卡冊中最醒目的核心 C 位。",
+                features: ["極其奢華的滿版黃金箔膜覆蓋", "高精密度的物理金屬線條微雕刻印", "卡面散發出極具辨識度的耀眼金色光芒"]
+            },
+            {
+                id: "MUR_2",
+                rarity: "MUR",
+                name: "超級噴火龍金卡",
+                badgeClass: "badge-mur",
+                colorVar: "--color-mur",
+                imgUrl: "MUR.jpg",
+                desc: "這是 MUR 等級中引發全球玩家瘋狂爭奪的究極重磅收藏——超級噴火龍金卡。結合了噴火龍無可撼動的超人氣王者地位，以及最高階金色卡面的工藝，將卡牌工藝提升至藝術品範疇。",
+                value: "噴火龍的高級卡牌向來是 TCG 界增值與抗跌的指標。此張金卡由於出卡率低且極具視覺張力，在國際收藏市場上具備極高的溢價空間與無可估量的長遠投資價值。",
+                features: ["極致稀有的傳奇寶可夢金卡工藝", "具備大師球質感級別的防偽亮面反光", "收藏市場上公認的夢幻逸品與頂級大獎"]
+            }
+        ];
+
+        const cardGrid = document.getElementById('cardGrid');
+        const modalOverlay = document.getElementById('detailModal');
+        const closeModalBtn = document.getElementById('closeModal');
+
+        // 渲染卡牌列表 HTML
+        function renderCards(filter = 'all') {
+            cardGrid.innerHTML = '';
+            
+            let filteredData;
+            if (filter === 'all') {
+                filteredData = cardData;
+            } else if (filter === 'ALL_MUR') {
+                filteredData = cardData.filter(card => card.rarity === 'MUR');
+            } else {
+                filteredData = cardData.filter(card => card.rarity === filter);
+            }
+
+            filteredData.forEach((card) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card-box';
+                
+                cardElement.innerHTML = `
+                    <div class="card-inner" onclick="openCardDetail('${card.id}')">
+                        <div class="card-front">
+                            <div class="card-img-wrapper">
+                                <img src="${card.imgUrl}" alt="${card.name}" class="card-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'200\\' height=\\'280\\' viewBox=\\'0 0 200 280\\'><rect width=\\'100%\\' height=\\'100%\\' fill=\\'%23222\\'/><text x=\\'50%\\' y=\\'50%\\' font-size=\\'14\\' fill=\\'%23666\\' text-anchor=\\'middle\\'>圖片缺失\\n(${card.imgUrl})</text></svg>'">
+                            </div>
+                            <div class="card-info">
+                                <div>
+                                    <span class="badge ${card.badgeClass}">${card.rarity}</span>
+                                    <h3 class="card-title" style="margin-top: 8px;">${card.name}</h3>
+                                </div>
+                                <div class="hint-text">點擊看完整圖鑑 ➔</div>
+                            </div>
+                        </div>
+                        <div class="card-back">
+                            <div>
+                                <div class="back-title" style="color: var(${card.colorVar});">${card.rarity} 簡介</div>
+                                <p class="back-desc" style="font-size:0.85rem; opacity:0.8;">${card.desc.substring(0, 65)}...</p>
+                                <ul class="feature-list" style="margin-top: 10px;">
+                                    <li>${card.features[0]}</li>
+                                    <li>${card.features[1]}</li>
+                                </ul>
+                            </div>
+                            <div class="hint-text" style="color: var(${card.colorVar}); font-weight:bold;">點擊開啟 ➔</div>
+                        </div>
+                    </div>
+                `;
+                cardGrid.appendChild(cardElement);
+            });
+        }
+
+        // 開啟詳細視窗功能
+        function openCardDetail(id) {
+            const card = cardData.find(c => c.id === id);
+            if (!card) return;
+
+            // 注入 Modal 資料
+            document.getElementById('modalImg').src = card.imgUrl;
+            document.getElementById('modalTitle').innerText = card.name;
+            document.getElementById('modalDesc').innerText = card.desc;
+            document.getElementById('modalValue').innerText = card.value;
+            
+            // 處理 Badge 樣式
+            const badge = document.getElementById('modalBadge');
+            badge.innerText = card.rarity;
+            badge.className = `badge ${card.badgeClass}`;
+
+            // 顯示 Modal
+            modalOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        // 關閉詳細視窗功能
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+            document.body.style.overflow = ''; 
+        }
+
+        // 監聽關閉事件
+        closeModalBtn.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+
+        // 篩選按鈕點擊事件
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const targetRarity = btn.getAttribute('data-target');
+                renderCards(targetRarity);
+            });
+        });
+
+        // 首次加載預設渲染全部
+        renderCards();
+    </script>
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Minesweeper - Tiffany Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --tiffany-main: #0ABAB5;
+            --tiffany-light: #E0F7F6;
+            --tiffany-dark: #07807B;
+            --pixel-black: #222222;
+            --pixel-white: #FFFFFF;
+            --cell-unrevealed: #A3E7E4;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Press Start 2P', cursive, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--tiffany-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: var(--pixel-black);
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--tiffany-dark);
+            text-shadow: 3px 3px 0px var(--pixel-white), 5px 5px 0px rgba(0,0,0,0.1);
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        /* 8-bit 像素外框樣式 */
+        .pixel-box {
+            background: var(--pixel-white);
+            border: 4px solid var(--pixel-black);
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.15);
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* 控制面板 */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn {
+            background-color: var(--tiffany-main);
+            color: white;
+            border: 3px solid var(--pixel-black);
+            padding: 8px 12px;
+            font-size: 10px;
+            cursor: pointer;
+            image-rendering: pixelated;
+            box-shadow: inset -2px -2px 0px var(--tiffany-dark);
+        }
+
+        .btn:active {
+            box-shadow: inset 2px 2px 0px var(--tiffany-dark);
+            transform: translate(1px, 1px);
+        }
+
+        .btn.active {
+            background-color: var(--tiffany-dark);
+            box-shadow: inset 2px 2px 0px #044d4a;
+        }
+
+        /* 遊戲狀態資訊 */
+        .status-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            background: var(--pixel-black);
+            color: var(--tiffany-main);
+            padding: 10px;
+            border: 3px solid var(--tiffany-dark);
+        }
+
+        .face-btn {
+            font-size: 16px;
+            background: var(--tiffany-main);
+            border: 2px solid var(--pixel-white);
+            outline: 2px solid var(--pixel-black);
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+
+        /* 遊戲棋盤外框 */
+        .grid-container {
+            overflow: auto;
+            max-width: 100%;
+            background: var(--pixel-black);
+            padding: 6px;
+            border: 4px solid var(--pixel-black);
+        }
+
+        /* 踩地雷棋盤本體 */
+        #minesweeper-grid {
+            display: grid;
+            gap: 2px;
+            background: var(--pixel-black);
+        }
+
+        /* 格子樣式 */
+        .cell {
+            width: 30px;
+            height: 30px;
+            background-color: var(--cell-unrevealed);
+            border: 3px solid var(--pixel-white);
+            border-right-color: var(--tiffany-dark);
+            border-bottom-color: var(--tiffany-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        /* 已翻開的格子 */
+        .cell.revealed {
+            background-color: var(--tiffany-light);
+            border: 1px solid #c8eded;
+            cursor: default;
+        }
+
+        /* 旗幟與地雷 */
+        .cell.flagged::before {
+            content: "⚑";
+            color: #FF4136;
+            font-size: 14px;
+        }
+
+        .cell.mine {
+            background-color: #FF725C !important;
+        }
+        .cell.mine::before {
+            content: "✹";
+            color: var(--pixel-black);
+            font-size: 16px;
+        }
+
+        /* 數字顏色 */
+        .cell[data-count="1"] { color: #005F73; }
+        .cell[data-count="2"] { color: #0A9396; }
+        .cell[data-count="3"] { color: #94D2BD; }
+        .cell[data-count="4"] { color: #EE9B00; }
+        .cell[data-count="5"] { color: #CA6702; }
+        .cell[data-count="6"] { color: #BB3E03; }
+        .cell[data-count="7"] { color: #AE2012; }
+        .cell[data-count="8"] { color: #9B2226; }
+
+        /* 說明文字 */
+        .instructions {
+            font-size: 8px;
+            color: var(--tiffany-dark);
+            margin-top: 15px;
+            text-align: center;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>PIXEL<br>MINESWEEPER</h1>
+
+    <div class="pixel-box controls">
+        <button class="btn active" onclick="changeDifficulty('easy', this)">EASY (9x9)</button>
+        <button class="btn" onclick="changeDifficulty('medium', this)">MEDIUM (16x8)</button>
+        <button class="btn" onclick="changeDifficulty('hard', this)">HARD (20x10)</button>
+    </div>
+
+    <div class="status-panel">
+        <div>MINES:<span id="mine-count">00</span></div>
+        <button class="face-btn" id="face-reset" onclick="initGame()">🙂</button>
+        <div>TIME:<span id="timer">000</span></div>
+    </div>
+
+    <div class="grid-container">
+        <div id="minesweeper-grid"></div>
+    </div>
+
+    <div class="instructions">
+        [LEFT CLICK]: REVEAL CELL / [RIGHT CLICK]: PLACE FLAG
+    </div>
+
+    <script>
+        // 難度設定（修正：rows 代表高度，cols 代表寬度）
+        const configs = {
+            easy: { rows: 9, cols: 9, mines: 10 },
+            medium: { rows: 8, cols: 16, mines: 20 }, // 16*8 (寬16, 高8)
+            hard: { rows: 10, cols: 20, mines: 30 }   // 20*10 (寬20, 高10)
+        };
+
+        let currentDifficulty = 'easy';
+        let rows, cols, mineCount;
+        let grid = [];
+        let revealedCount = 0;
+        let flagsPlaced = 0;
+        let gameOver = false;
+        let firstClick = true;
+        let timerInterval = null;
+        let timeElapsed = 0;
+
+        const gridElement = document.getElementById('minesweeper-grid');
+        const mineCountElement = document.getElementById('mine-count');
+        const timerElement = document.getElementById('timer');
+        const faceReset = document.getElementById('face-reset');
+
+        function changeDifficulty(difficulty, buttonElement) {
+            currentDifficulty = difficulty;
+            document.querySelectorAll('.controls .btn').forEach(btn => btn.classList.remove('active'));
+            buttonElement.classList.add('active');
+            initGame();
+        }
+
+        function initGame() {
+            rows = configs[currentDifficulty].rows;
+            cols = configs[currentDifficulty].cols;
+            mineCount = configs[currentDifficulty].mines;
+
+            grid = [];
+            revealedCount = 0;
+            flagsPlaced = 0;
+            gameOver = false;
+            firstClick = true;
+            faceReset.textContent = '🙂';
+            
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timeElapsed = 0;
+            timerElement.textContent = '000';
+            updateMineCountDisplay();
+
+            // 修正：動態更新 Grid 的欄與列
+            gridElement.style.gridTemplateColumns = `repeat(${cols}, 30px)`;
+            gridElement.style.gridTemplateRows = `repeat(${rows}, 30px)`;
+            gridElement.innerHTML = '';
+
+            for (let r = 0; r < rows; r++) {
+                grid[r] = [];
+                for (let c = 0; c < cols; c++) {
+                    const cellElement = document.createElement('div');
+                    cellElement.classList.add('cell');
+                    
+                    // 利用閉包（Closure）鎖定當前的 r 與 c，避免點擊事件對應錯亂
+                    cellElement.addEventListener('click', () => handleCellClick(r, c));
+                    cellElement.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        handleCellRightClick(r, c);
+                    });
+
+                    gridElement.appendChild(cellElement);
+
+                    grid[r][c] = {
+                        isMine: false,
+                        isRevealed: false,
+                        isFlagged: false,
+                        neighborMines: 0,
+                        element: cellElement
+                    };
+                }
+            }
+        }
+
+        function plantMines(startRow, startCol) {
+            let planted = 0;
+            while (planted < mineCount) {
+                const r = Math.floor(Math.random() * rows);
+                const c = Math.floor(Math.random() * cols);
+
+                if (!grid[r][c].isMine && !(Math.abs(r - startRow) <= 1 && Math.abs(c - startCol) <= 1)) {
+                    grid[r][c].isMine = true;
+                    planted++;
+                }
+            }
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (!grid[r][c].isMine) {
+                        grid[r][c].neighborMines = countNeighborMines(r, c);
+                    }
+                }
+            }
+        }
+
+        function countNeighborMines(row, col) {
+            let count = 0;
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    const nr = row + dr;
+                    const nc = col + dc;
+                    if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && grid[nr][nc].isMine) {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeElapsed++;
+                if (timeElapsed > 999) timeElapsed = 999;
+                timerElement.textContent = String(timeElapsed).padStart(3, '0');
+            }, 1000);
+        }
+
+        function updateMineCountDisplay() {
+            const displayCount = mineCount - flagsPlaced;
+            mineCountElement.textContent = String(Math.max(0, displayCount)).padStart(2, '0');
+        }
+
+        function handleCellClick(row, col) {
+            if (gameOver) return;
+            const cell = grid[row][col];
+            if (cell.isRevealed || cell.isFlagged) return;
+
+            if (firstClick) {
+                firstClick = false;
+                plantMines(row, col);
+                startTimer();
+            }
+
+            if (cell.isMine) {
+                endGame(false);
+                cell.element.classList.add('mine');
+                return;
+            }
+
+            revealCell(row, col);
+
+            if (revealedCount === (rows * cols) - mineCount) {
+                endGame(true);
+            }
+        }
+
+        function revealCell(row, col) {
+            const cell = grid[row][col];
+            if (cell.isRevealed || cell.isFlagged) return;
+
+            cell.isRevealed = true;
+            revealedCount++;
+            
+            cell.element.classList.add('revealed');
+
+            if (cell.neighborMines > 0) {
+                cell.element.textContent = cell.neighborMines;
+                cell.element.setAttribute('data-count', cell.neighborMines);
+            } else {
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        const nr = row + dr;
+                        const nc = col + dc;
+                        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                            revealCell(nr, nc);
+                        }
+                    }
+                }
+            }
+        }
+
+        function handleCellRightClick(row, col) {
+            if (gameOver || firstClick) return;
+            const cell = grid[row][col];
+            if (cell.isRevealed) return;
+
+            if (!cell.isFlagged) {
+                cell.isFlagged = true;
+                cell.element.classList.add('flagged');
+                flagsPlaced++;
+            } else {
+                cell.isFlagged = false;
+                cell.element.classList.remove('flagged');
+                flagsPlaced--;
+            }
+            updateMineCountDisplay();
+        }
+
+        function endGame(isWin) {
+            gameOver = true;
+            clearInterval(timerInterval);
+
+            if (isWin) {
+                faceReset.textContent = '😎';
+                alert('CONGRATULATIONS! YOU WIN! 🎉');
+            } else {
+                faceReset.textContent = '😵';
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        if (grid[r][c].isMine) {
+                            grid[r][c].element.classList.add('mine');
+                        }
+                    }
+                }
+                alert('GAME OVER! 💥');
+            }
+        }
+
+        // 啟動遊戲
+        initGame();
+    </script>
+</body>
+</html>

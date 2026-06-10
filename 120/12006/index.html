@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星星糖彈跳 ⭐</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Noto+Sans+TC:wght@700;900&display=swap');
+
+  :root {
+    --bg: #C48888;
+    --c1: #F0F7EE;
+    --c2: #C4D7F2;
+    --c3: #AFDEDC;
+    --c4: #91A8A4;
+    --text: #fff;
+    --shadow: rgba(0,0,0,0.18);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Nunito', 'Noto Sans TC', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* floating bg decoration */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 30%, rgba(255,255,255,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 70%, rgba(180,130,130,0.3) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  #game-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    z-index: 1;
+  }
+
+  #hud {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    background: rgba(255,255,255,0.22);
+    border-radius: 50px;
+    padding: 10px 32px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 20px var(--shadow);
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    letter-spacing: 1px;
+  }
+
+  .hud-item { display: flex; align-items: center; gap: 8px; }
+  .hud-icon { font-size: 26px; }
+
+  #canvas-container {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.15);
+    border: 4px solid rgba(255,255,255,0.35);
+  }
+
+  canvas {
+    display: block;
+    background: transparent;
+  }
+
+  /* Overlay screens */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(196,136,136,0.88);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+    gap: 22px;
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+  }
+
+  .overlay.hidden { display: none; }
+
+  .overlay h1 {
+    font-size: 52px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 3px 12px rgba(0,0,0,0.25);
+    line-height: 1.1;
+  }
+
+  .overlay h2 {
+    font-size: 34px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.92);
+  }
+
+  .overlay p {
+    font-size: 22px;
+    color: rgba(255,255,255,0.88);
+    font-weight: 700;
+  }
+
+  .btn {
+    background: linear-gradient(135deg, #F0F7EE, #C4D7F2);
+    color: #6a7c8a;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 44px;
+    font-size: 24px;
+    font-weight: 900;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 1px;
+  }
+
+  .btn:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 8px 28px rgba(0,0,0,0.22); }
+  .btn:active { transform: translateY(0) scale(0.98); }
+
+  .btn-line {
+    background: linear-gradient(135deg, #06C755, #04a844);
+    color: #fff;
+    font-size: 22px;
+    padding: 14px 36px;
+  }
+
+  .life-icons { font-size: 28px; letter-spacing: 4px; }
+
+  #score-final {
+    font-size: 60px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+
+  /* floating deco stars */
+  .deco-star {
+    position: fixed;
+    font-size: 28px;
+    animation: floatStar 6s ease-in-out infinite;
+    pointer-events: none;
+    opacity: 0.4;
+  }
+  @keyframes floatStar {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(20deg); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Decorative stars -->
+<div class="deco-star" style="left:5%;top:10%;animation-delay:0s;">⭐</div>
+<div class="deco-star" style="left:90%;top:15%;animation-delay:1s;font-size:20px;">✨</div>
+<div class="deco-star" style="left:3%;top:70%;animation-delay:2s;font-size:22px;">⭐</div>
+<div class="deco-star" style="left:93%;top:75%;animation-delay:0.5s;">✨</div>
+<div class="deco-star" style="left:50%;top:3%;animation-delay:1.5s;font-size:18px;">⭐</div>
+
+<div id="game-wrapper">
+  <div id="hud">
+    <div class="hud-item"><span class="hud-icon">🏆</span><span>分數：<span id="score-display">0</span></span></div>
+    <div class="hud-item"><span class="hud-icon">🎮</span><span>第 <span id="level-display">1</span> 關</span></div>
+    <div class="hud-item"><span class="hud-icon">💔</span><span>剩餘：<span id="life-display">❤️❤️❤️</span></span></div>
+    <div class="hud-item"><span class="hud-icon">⚡</span><span>球：<span id="ball-display">1</span></span></div>
+  </div>
+
+  <div id="canvas-container">
+    <canvas id="canvas" width="600" height="700"></canvas>
+
+    <!-- Start Screen -->
+    <div class="overlay" id="start-screen">
+      <h1>⭐ 星星糖彈跳 ⭐</h1>
+      <p>用雲朵板子彈飛星星糖<br>打破所有磚塊！</p>
+      <p>💡 特殊磚塊：多一顆球 或 速度變化</p>
+      <div class="life-icons">❤️❤️❤️</div>
+      <button class="btn" onclick="startGame()">開始遊戲 🚀</button>
+    </div>
+
+    <!-- Level Clear Screen -->
+    <div class="overlay hidden" id="level-clear-screen">
+      <h1>🎉 過關！</h1>
+      <h2 id="level-clear-text">第 1 關完成</h2>
+      <p>目前分數：<span id="level-score" style="font-size:32px;color:#fff;">0</span></p>
+      <button class="btn" onclick="nextLevel()">下一關 ➡️</button>
+    </div>
+
+    <!-- Ball Lost Screen -->
+    <div class="overlay hidden" id="ball-lost-screen">
+      <h1>😢 掉球了！</h1>
+      <p id="lives-left-text"></p>
+      <button class="btn" onclick="resumeAfterLoss()">繼續 ▶️</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div class="overlay hidden" id="gameover-screen">
+      <h1>💫 遊戲結束</h1>
+      <p>最終分數</p>
+      <div id="score-final">0</div>
+      <button class="btn-line btn" onclick="shareToLine()">分享到 LINE 📲</button>
+      <button class="btn" onclick="startGame()">再玩一次 🔄</button>
+    </div>
+
+    <!-- All Clear Screen -->
+    <div class="overlay hidden" id="allclear-screen">
+      <h1>🏆 全部通關！</h1>
+      <p>你打破了所有關卡！</p>
+      <p>最終分數</p>
+      <div id="score-final-clear">0</div>
+      <button class="btn-line btn" onclick="shareToLine()">分享到 LINE 📲</button>
+      <button class="btn" onclick="startGame()">再玩一次 🔄</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+// ─── Color palette ─────────────────────────────────────────────
+const BRICK_COLORS = ['#F0F7EE','#C4D7F2','#AFDEDC','#91A8A4'];
+
+// ─── Game state ─────────────────────────────────────────────────
+let score = 0, lives = 3, currentLevel = 1, balls = [], bricks = [];
+let paddle = {}, gameState = 'idle'; // idle, playing, paused
+let animId = null;
+let pendingBallLost = false;
+
+// ─── Paddle (Cloud) ──────────────────────────────────────────────
+function initPaddle() {
+  paddle = { x: W/2 - 55, y: H - 60, w: 110, h: 28, speed: 0 };
+}
+
+// ─── Ball ────────────────────────────────────────────────────────
+function createBall(x, y, vx, vy) {
+  return { x: x || W/2, y: y || H - 95, vx: vx || 0, vy: vy || -9, r: 13, active: true };
+}
+
+function initBalls() {
+  balls = [createBall()];
+}
+
+// ─── Brick layouts ───────────────────────────────────────────────
+const brickW = 56, brickH = 22, brickGap = 5;
+
+function randomColor() {
+  return BRICK_COLORS[Math.floor(Math.random() * BRICK_COLORS.length)];
+}
+
+function makeBrick(col, row, special) {
+  const totalW = 9 * (brickW + brickGap) - brickGap;
+  const startX = (W - totalW) / 2;
+  return {
+    x: startX + col * (brickW + brickGap),
+    y: 60 + row * (brickH + brickGap),
+    w: brickW, h: brickH,
+    color: randomColor(),
+    special: special || false,
+    points: special ? 20 : 10,
+    alive: true
+  };
+}
+
+function buildLevel1() {
+  bricks = [];
+  // 5 rows × 9 cols
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 9; c++) {
+      const special = Math.random() < 0.15;
+      bricks.push(makeBrick(c, r, special));
+    }
+  }
+}
+
+function buildLevel2() {
+  bricks = [];
+  // Circular arrangement
+  const cx = W / 2, cy = 230;
+  const rings = [
+    { radius: 0, count: 1 },
+    { radius: 65, count: 7 },
+    { radius: 128, count: 13 },
+    { radius: 192, count: 18 },
+  ];
+  rings.forEach(ring => {
+    if (ring.count === 1) {
+      bricks.push({ x: cx - brickW/2, y: cy - brickH/2, w: brickW, h: brickH, color: randomColor(), special: true, points: 20, alive: true });
+      return;
+    }
+    for (let i = 0; i < ring.count; i++) {
+      const angle = (2 * Math.PI * i) / ring.count - Math.PI / 2;
+      const bx = cx + ring.radius * Math.cos(angle) - brickW / 2;
+      const by = cy + ring.radius * Math.sin(angle) - brickH / 2;
+      if (by < 30 || by > H - 160) continue;
+      const special = Math.random() < 0.15;
+      bricks.push({ x: bx, y: by, w: brickW, h: brickH, color: randomColor(), special, points: special ? 20 : 10, alive: true });
+    }
+  });
+}
+
+function buildLevel3() {
+  bricks = [];
+  // Diamond / rhombus pattern
+  const cx = W/2;
+  const rows = [2,4,6,8,7,6,5,4,3];
+  let startRow = 0;
+  rows.forEach((cols, ri) => {
+    const totalW2 = cols * (brickW + brickGap) - brickGap;
+    const startX2 = cx - totalW2/2;
+    for (let c = 0; c < cols; c++) {
+      const special = Math.random() < 0.18;
+      bricks.push({
+        x: startX2 + c * (brickW + brickGap),
+        y: 50 + (startRow + ri) * (brickH + brickGap),
+        w: brickW, h: brickH, color: randomColor(), special, points: special ? 20 : 10, alive: true
+      });
+    }
+  });
+}
+
+function buildLevel(n) {
+  if (n === 1) buildLevel1();
+  else if (n === 2) buildLevel2();
+  else buildLevel3();
+}
+
+// ─── Mouse / Touch control ───────────────────────────────────────
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (W / rect.width);
+  paddle.x = Math.max(0, Math.min(W - paddle.w, mx - paddle.w / 2));
+});
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.touches[0].clientX - rect.left) * (W / rect.width);
+  paddle.x = Math.max(0, Math.min(W - paddle.w, mx - paddle.w / 2));
+}, { passive: false });
+
+// ─── Drawing ─────────────────────────────────────────────────────
+
+function drawBackground() {
+  // Soft gradient wash
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#d9a0a0');
+  grad.addColorStop(1, '#b87070');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle polka dots
+  ctx.save();
+  ctx.globalAlpha = 0.06;
+  ctx.fillStyle = '#fff';
+  for (let x = 20; x < W; x += 40) {
+    for (let y = 20; y < H; y += 40) {
+      ctx.beginPath();
+      ctx.arc(x, y, 6, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function drawCloud(x, y, w, h) {
+  ctx.save();
+  // Shadow
+  ctx.shadowColor = 'rgba(0,0,0,0.18)';
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetY = 4;
+
+  const r = h / 2;
+  const cx2 = x + w / 2, cy2 = y + h / 2;
+
+  // Main cloud body
+  ctx.beginPath();
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  // bottom rect
+  ctx.roundRect(x + 8, cy2 - 4, w - 16, h/2 + 4, [0, 0, r, r]);
+  ctx.fill();
+
+  // Puffs
+  const puffs = [
+    { ox: 0, oy: -10, r: 16 },
+    { ox: -20, oy: -4, r: 12 },
+    { ox: 20, oy: -4, r: 12 },
+    { ox: -38, oy: 2, r: 10 },
+    { ox: 38, oy: 2, r: 10 },
+  ];
+  puffs.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(cx2 + p.ox, cy2 + p.oy, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.fill();
+  });
+
+  // Shine
+  ctx.shadowColor = 'transparent';
+  ctx.beginPath();
+  ctx.arc(cx2 - 14, cy2 - 12, 5, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawStarCandy(ball) {
+  ctx.save();
+  ctx.shadowColor = 'rgba(255,200,100,0.5)';
+  ctx.shadowBlur = 12;
+
+  const x = ball.x, y = ball.y, r = ball.r;
+  const spikes = 5;
+  const outerR = r, innerR = r * 0.45;
+
+  // Star body
+  ctx.beginPath();
+  for (let i = 0; i < spikes * 2; i++) {
+    const angle = (i * Math.PI) / spikes - Math.PI / 2;
+    const rad = i % 2 === 0 ? outerR : innerR;
+    const px = x + Math.cos(angle) * rad;
+    const py = y + Math.sin(angle) * rad;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+
+  // Candy gradient fill
+  const grad = ctx.createRadialGradient(x - 3, y - 3, 1, x, y, r);
+  grad.addColorStop(0, '#ffe4b0');
+  grad.addColorStop(0.4, '#ffb347');
+  grad.addColorStop(1, '#ff7e5f');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Outline
+  ctx.strokeStyle = 'rgba(200,100,50,0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Shine
+  ctx.beginPath();
+  ctx.arc(x - 3, y - 4, 3, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,0.65)';
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawBrick(b) {
+  if (!b.alive) return;
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.12)';
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetY = 2;
+
+  ctx.fillStyle = b.color;
+  ctx.beginPath();
+  ctx.roundRect(b.x, b.y, b.w, b.h, 6);
+  ctx.fill();
+
+  if (b.special) {
+    // Special brick — shiny border + icon
+    ctx.strokeStyle = 'rgba(255,220,80,0.9)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.roundRect(b.x, b.y, b.w, b.h, 6);
+    ctx.stroke();
+
+    ctx.shadowColor = 'transparent';
+    ctx.font = '12px Nunito';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(100,70,20,0.85)';
+    ctx.fillText('✨20', b.x + b.w/2, b.y + b.h/2);
+  } else {
+    // Normal brick — subtle inner shine
+    const shine = ctx.createLinearGradient(b.x, b.y, b.x, b.y + b.h);
+    shine.addColorStop(0, 'rgba(255,255,255,0.35)');
+    shine.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = shine;
+    ctx.beginPath();
+    ctx.roundRect(b.x, b.y, b.w, b.h, 6);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+// ─── Collision ───────────────────────────────────────────────────
+function collideRect(ball, rect) {
+  const closestX = Math.max(rect.x, Math.min(ball.x, rect.x + rect.w));
+  const closestY = Math.max(rect.y, Math.min(ball.y, rect.y + rect.h));
+  const dx = ball.x - closestX, dy = ball.y - closestY;
+  return dx*dx + dy*dy < ball.r * ball.r;
+}
+
+function reflectBall(ball, rect) {
+  // Determine which face was hit
+  const fromLeft  = ball.x < rect.x;
+  const fromRight = ball.x > rect.x + rect.w;
+  const fromTop   = ball.y < rect.y;
+  const fromBot   = ball.y > rect.y + rect.h;
+
+  const overlapLeft  = (ball.x + ball.r) - rect.x;
+  const overlapRight = (rect.x + rect.w) - (ball.x - ball.r);
+  const overlapTop   = (ball.y + ball.r) - rect.y;
+  const overlapBot   = (rect.y + rect.h) - (ball.y - ball.r);
+
+  const minH = Math.min(overlapLeft, overlapRight);
+  const minV = Math.min(overlapTop, overlapBot);
+
+  if (minH < minV) {
+    ball.vx = -ball.vx;
+    ball.x += fromLeft ? -overlapLeft - 1 : overlapRight + 1;
+  } else {
+    ball.vy = -ball.vy;
+    ball.y += fromTop ? -overlapTop - 1 : overlapBot + 1;
+  }
+}
+
+// ─── Special effect ──────────────────────────────────────────────
+function applySpecial(ball) {
+  const roll = Math.random();
+  if (roll < 0.5) {
+    // Extra ball
+    const nb = createBall(ball.x, ball.y, -ball.vx * 0.9 + (Math.random()-0.5)*2, ball.vy);
+    balls.push(nb);
+    showEffect('➕ 多一顆球！');
+  } else if (roll < 0.75) {
+    // Slow down all balls
+    balls.forEach(b => { b.vx *= 0.7; b.vy *= 0.7; if (Math.abs(b.vy) < 4) b.vy = b.vy < 0 ? -4 : 4; });
+    showEffect('🐢 減速！');
+  } else {
+    // Speed up all balls
+    balls.forEach(b => { b.vx *= 1.35; b.vy *= 1.35; });
+    showEffect('⚡ 加速！');
+  }
+}
+
+let effectMsg = '', effectTimer = 0;
+function showEffect(msg) {
+  effectMsg = msg;
+  effectTimer = 120;
+}
+
+// ─── Update ──────────────────────────────────────────────────────
+function update() {
+  if (gameState !== 'playing') return;
+
+  let allLost = true;
+
+  balls.forEach(ball => {
+    if (!ball.active) return;
+    allLost = false;
+
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+
+    // Wall bounces
+    if (ball.x - ball.r < 0) { ball.x = ball.r; ball.vx = Math.abs(ball.vx); }
+    if (ball.x + ball.r > W) { ball.x = W - ball.r; ball.vx = -Math.abs(ball.vx); }
+    if (ball.y - ball.r < 0) { ball.y = ball.r; ball.vy = Math.abs(ball.vy); }
+
+    // Paddle collision
+    if (collideRect(ball, { x: paddle.x, y: paddle.y, w: paddle.w, h: paddle.h })) {
+      ball.vy = -Math.abs(ball.vy);
+      const hitPos = (ball.x - paddle.x) / paddle.w - 0.5;
+      ball.vx = hitPos * 10;
+      ball.y = paddle.y - ball.r - 1;
+    }
+
+    // Brick collisions (limit hits per frame to avoid tunneling through multiple bricks)
+    let hitCount = 0;
+    for (let i = 0; i < bricks.length; i++) {
+      const b = bricks[i];
+      if (!b.alive) continue;
+      if (hitCount >= 1) break; // only 1 brick per ball per frame
+      if (collideRect(ball, b)) {
+        reflectBall(ball, b);
+        b.alive = false;
+        score += b.points;
+        if (b.special) applySpecial(ball);
+        hitCount++;
+      }
+    }
+
+    // Ball lost
+    if (ball.y - ball.r > H) {
+      ball.active = false;
+    }
+  });
+
+  // Remove dead balls
+  const activeBalls = balls.filter(b => b.active);
+
+  if (activeBalls.length === 0 && !pendingBallLost) {
+    pendingBallLost = true;
+    lives--;
+    gameState = 'paused';
+    if (lives <= 0) {
+      setTimeout(showGameOver, 200);
+    } else {
+      setTimeout(showBallLost, 200);
+    }
+  }
+
+  // Effect timer
+  if (effectTimer > 0) effectTimer--;
+
+  // Check level clear
+  const alive = bricks.filter(b => b.alive);
+  if (alive.length === 0) {
+    gameState = 'paused';
+    setTimeout(() => {
+      if (currentLevel >= 3) showAllClear();
+      else showLevelClear();
+    }, 400);
+  }
+
+  updateHUD();
+}
+
+// ─── Draw ─────────────────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  drawBackground();
+
+  bricks.forEach(drawBrick);
+  drawCloud(paddle.x, paddle.y, paddle.w, paddle.h);
+  balls.forEach(b => { if (b.active) drawStarCandy(b); });
+
+  // Effect message
+  if (effectTimer > 0) {
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, effectTimer / 30);
+    ctx.font = 'bold 28px Nunito';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+    ctx.shadowBlur = 8;
+    ctx.fillText(effectMsg, W/2, H/2);
+    ctx.restore();
+  }
+}
+
+// ─── Loop ─────────────────────────────────────────────────────────
+function loop() {
+  update();
+  draw();
+  animId = requestAnimationFrame(loop);
+}
+
+// ─── HUD ──────────────────────────────────────────────────────────
+function updateHUD() {
+  document.getElementById('score-display').textContent = score;
+  document.getElementById('level-display').textContent = currentLevel;
+  document.getElementById('ball-display').textContent = balls.filter(b=>b.active).length;
+  const hearts = ['❤️'.repeat(lives), '🖤'.repeat(3-lives)].join('');
+  document.getElementById('life-display').textContent = hearts || '💔';
+}
+
+// ─── Screens ──────────────────────────────────────────────────────
+function hideAll() {
+  ['start-screen','level-clear-screen','ball-lost-screen','gameover-screen','allclear-screen']
+    .forEach(id => document.getElementById(id).classList.add('hidden'));
+}
+
+function showBallLost() {
+  const el = document.getElementById('ball-lost-screen');
+  el.classList.remove('hidden');
+  const lText = document.getElementById('lives-left-text');
+  lText.textContent = `剩餘 ${lives} 條命 ${'❤️'.repeat(lives)}`;
+}
+
+function showGameOver() {
+  hideAll();
+  document.getElementById('gameover-screen').classList.remove('hidden');
+  document.getElementById('score-final').textContent = score;
+}
+
+function showLevelClear() {
+  hideAll();
+  const el = document.getElementById('level-clear-screen');
+  el.classList.remove('hidden');
+  document.getElementById('level-clear-text').textContent = `第 ${currentLevel} 關完成！`;
+  document.getElementById('level-score').textContent = score;
+}
+
+function showAllClear() {
+  hideAll();
+  document.getElementById('allclear-screen').classList.remove('hidden');
+  document.getElementById('score-final-clear').textContent = score;
+}
+
+// ─── Controls ─────────────────────────────────────────────────────
+function startGame() {
+  hideAll();
+  score = 0;
+  lives = 3;
+  currentLevel = 1;
+  pendingBallLost = false;
+  initPaddle();
+  initBalls();
+  buildLevel(1);
+  updateHUD();
+  gameState = 'playing';
+  if (animId) cancelAnimationFrame(animId);
+  loop();
+}
+
+function resumeAfterLoss() {
+  hideAll();
+  pendingBallLost = false;
+  initBalls();
+  initPaddle();
+  gameState = 'playing';
+}
+
+function nextLevel() {
+  hideAll();
+  currentLevel++;
+  pendingBallLost = false;
+  initPaddle();
+  initBalls();
+  buildLevel(currentLevel);
+  updateHUD();
+  gameState = 'playing';
+}
+
+function shareToLine() {
+  const text = encodeURIComponent(`⭐ 我在「星星糖彈跳」拿到了 ${score} 分！快來挑戰看看！`);
+  window.open(`https://social-plugins.line.me/lineit/share?url=https://game.example.com&text=${text}`, '_blank');
+}
+</script>
+</body>
+</html>

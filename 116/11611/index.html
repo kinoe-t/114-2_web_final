@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模聯大會主席台終極工作站 (雙模版)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background-color: #eef2f5;
+            font-family: 'Times New Roman', "Microsoft JhengHei", serif;
+            font-size: 13px;
+        }
+        .mun-header {
+            background: linear-gradient(135deg, #009cde 0%, #005a9c 100%);
+            color: white;
+            padding: 12px 20px;
+            border-bottom: 4px solid #004477;
+        }
+        .card-mun {
+            border: none;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 15px;
+            background: white;
+        }
+        .card-mun .card-header {
+            background-color: #2c3e50;
+            color: white;
+            font-weight: bold;
+            padding: 8px 12px;
+        }
+        .timer-display {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 52px;
+            font-weight: bold;
+            color: #1a252f;
+            margin: 2px 0;
+        }
+        .placard {
+            border: 2px solid #009cde;
+            background: #fff;
+            color: #009cde;
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            padding: 4px;
+            border-radius: 4px;
+        }
+        .gsl-list-group {
+            max-height: 180px;
+            overflow-y: auto;
+        }
+        .gsl-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 8px;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            margin-bottom: 3px;
+            border-radius: 4px;
+        }
+        .gsl-item.speaking {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            font-weight: bold;
+        }
+        .scroll-box {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .ticker-bar {
+            background-color: #34495e;
+            color: #f1c40f;
+            font-weight: bold;
+            padding: 5px 20px;
+        }
+        /* 點名與快捷按鈕樣式 */
+        .region-title {
+            background-color: #eaedd0;
+            color: #2c3e50;
+            font-weight: bold;
+            padding: 2px 8px;
+            font-size: 11px;
+            border-radius: 3px;
+            margin-top: 6px;
+        }
+        .quick-badge-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 5px 0;
+        }
+        .quick-country-badge {
+            font-size: 11px;
+            cursor: pointer;
+            padding: 4px 6px;
+            background-color: #e9ecef;
+            color: #495057;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+            transition: all 0.1s;
+        }
+        .quick-country-badge:hover {
+            background-color: #009cde;
+            color: white;
+        }
+        .country-btn-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+            padding: 4px 0;
+        }
+        .c-btn {
+            font-size: 11px;
+            font-weight: bold;
+            text-align: left;
+            padding: 4px 6px;
+            border: 1px solid #ced4da;
+            background-color: #fff;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .c-btn.state-absent { border-left: 4px solid #6c757d; }
+        .c-btn.state-present { border-left: 4px solid #28a745; background-color: #e8f5e9; }
+        .c-btn.state-voting { border-left: 4px solid #007bff; background-color: #e3f2fd; }
+    </style>
+</head>
+<body>
+
+    <div class="mun-header d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="m-0 font-weight-bold"><i class="fas fa-globe-americas"></i> MUN DIAS EXECUTIVE STATION (雙模進階版)</h5>
+        </div>
+        <div class="text-right">
+            <span class="badge badge-light p-2 font-weight-bold" style="font-size: 12px;">
+                Quorum：<span id="quorum-display" class="text-success">0</span> 國在場 / 
+                表決基數：<span id="voting-base-display" class="text-primary">0</span> 國
+            </span>
+        </div>
+    </div>
+
+    <div class="ticker-bar">
+        <i class="fas fa-bullhorn text-warning"></i> 大會通告：<span id="ticker-text" contenteditable="true">點擊此處可自由修改投影幕公告。Roll Call 與 GSL 皆支援「按鈕快選」與「手動打字輸入」。</span>
+    </div>
+
+    <div class="container-fluid my-3">
+        <div class="row">
+            
+            <div class="col-lg-4">
+                <div class="card card-mun text-center p-3">
+                    <h6 class="text-muted text-uppercase font-weight-bold mb-0" id="timer-title">General Speakers' List (90s)</h6>
+                    <div class="timer-display" id="mun-timer">01:30</div>
+                    
+                    <div class="progress mb-3" style="height: 6px;">
+                        <div id="mun-progress-bar" class="progress-bar bg-info" role="progressbar" style="width: 100%"></div>
+                    </div>
+
+                    <div class="d-flex justify-content-center mb-2">
+                        <button class="btn btn-success btn-sm mx-1 px-3" id="btn-start" onclick="startTimer()"><i class="fas fa-play"></i> 開始</button>
+                        <button class="btn btn-warning btn-sm mx-1 px-3 text-white" id="btn-pause" onclick="pauseTimer()" disabled><i class="fas fa-pause"></i> 暫停</button>
+                        <button class="btn btn-danger btn-sm mx-1 px-3" id="btn-reset" onclick="resetTimer()"><i class="fas fa-redo"></i> 重設</button>
+                    </div>
+                    
+                    <div class="d-flex justify-content-center">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="playBeep()"><i class="fas fa-gavel"></i> 鳴槌</button>
+                        <button class="btn btn-outline-info btn-sm ml-2" onclick="yieldTime()"><i class="fas fa-reply"></i> Yield 讓渡</button>
+                    </div>
+                </div>
+
+                <div class="card card-mun">
+                    <div class="card-header py-1"><i class="fas fa-cog"></i> 進程模式</div>
+                    <div class="card-body p-2">
+                        <button class="btn btn-xs btn-outline-primary btn-block text-left mb-1 py-1" onclick="setSessionMode('主發言名單 (GSL)', 90, 'GSL')">🎵 General Speakers' List (90s)</button>
+                        <button class="btn btn-xs btn-outline-primary btn-block text-left mb-1 py-1" onclick="setSessionMode('有組織磋商 (Mod)', 60, 'Mod')">🎙️ Moderated Caucus (60s)</button>
+                        <button class="btn btn-xs btn-outline-warning btn-block text-left mb-1 py-1 text-dark" onclick="setSessionMode('自由磋商 (Unmod)', 300, 'Unmod')">🤝 Unmoderated Caucus (5m)</button>
+                    </div>
+                </div>
+
+                <div class="card card-mun p-2">
+                    <div class="placard mb-2" id="delegate-placard">N/A (請指名代表)</div>
+                    <textarea class="form-control form-control-sm" id="speech-text" rows="2" oninput="calculateSpeechSpeed()" placeholder="貼上講稿自動預測是否超時..."></textarea>
+                    <div id="speed-alert" class="small text-muted text-center mt-1">💡 語速提示模組</div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card card-mun">
+                    <div class="card-header py-1 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-list-ol"></i> GSL 發言序列</span>
+                        <span class="badge badge-light" id="gsl-count">0 國</span>
+                    </div>
+                    <div class="card-body p-2">
+                        
+                        <div class="input-group input-group-sm mb-2">
+                            <input type="text" class="form-control" id="gsl-input-country" placeholder="👉 自由打字輸入國名 / NGO" onkeypress="if(event.key==='Enter') addCountryToGSL(this.value)">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" onclick="addCountryToGSL(document.getElementById('gsl-input-country').value)">加入</button>
+                            </div>
+                        </div>
+
+                        <div class="border rounded p-2 mb-2 bg-light">
+                            <div class="text-muted font-weight-bold mb-1" style="font-size:11px;"><i class="fas fa-mouse-pointer"></i> 點選常見國直接排入 GSL：</div>
+                            <div class="quick-badge-container" id="gsl-quick-picks">
+                                </div>
+                        </div>
+
+                        <div class="gsl-list-group mb-2" id="gsl-container"></div>
+                        <button class="btn btn-xs btn-success btn-block btn-sm" onclick="nextSpeaker()"><i class="fas fa-forward"></i> 輪替下一位代表</button>
+                    </div>
+                </div>
+
+                <div class="card card-mun">
+                    <div class="card-header py-1"><i class="fas fa-layer-group"></i> 動議優先權排序艙</div>
+                    <div class="card-body p-2">
+                        <div class="form-row align-items-center mb-2">
+                            <div class="col-4">
+                                <input type="text" id="motion-country" class="form-control form-control-sm" placeholder="國家">
+                            </div>
+                            <div class="col-5">
+                                <select id="motion-type" class="form-control form-control-sm">
+                                    <option value="1">1. 暫停會議 (Unmod)</option>
+                                    <option value="2">2. 有組織磋商 (Mod)</option>
+                                    <option value="3">3. 意事程序問題</option>
+                                </select>
+                            </div>
+                            <div class="col-3">
+                                <button class="btn btn-sm btn-info btn-block" onclick="pushMotion()">提交</button>
+                            </div>
+                        </div>
+                        <div class="scroll-box border rounded p-1 bg-light" style="max-height:75px;" id="motion-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card card-mun">
+                    <div class="card-header py-1 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-user-check"></i> 大會出席點名名冊 (Roll Call)</span>
+                        <button class="btn btn-xs btn-outline-light py-0 px-1" style="font-size:10px" onclick="resetAllAttendance()">全清空</button>
+                    </div>
+                    <div class="card-body p-2">
+                        
+                        <div class="input-group input-group-sm mb-2">
+                            <input type="text" class="form-control" id="rollcall-custom-input" placeholder="👉 手動打入特殊追加國..." onkeypress="if(event.key==='Enter') addCustomCountryToRollCall()">
+                            <div class="input-group-append">
+                                <button class="btn btn-secondary" onclick="addCustomCountryToRollCall()">追加</button>
+                            </div>
+                        </div>
+
+                        <p class="text-muted m-0" style="font-size:11px;">單擊切換：<b>灰 (缺席)</b> ➜ <b>綠 (Present)</b> ➜ <b>藍 (Present & Voting)</b></p>
+                        
+                        <div class="scroll-box border rounded p-1 bg-white" style="max-height: 220px;" id="rollcall-zone-container">
+                            </div>
+                    </div>
+                </div>
+
+                <div class="card card-mun">
+                    <div class="card-header py-1"><i class="fas fa-vote-yea"></i> 大會核心表決器 (Voting Block)</div>
+                    <div class="card-body p-2">
+                        <div class="row text-center mb-1">
+                            <div class="col-4">
+                                <label class="small font-weight-bold text-success mb-0">贊成 (Yes)</label>
+                                <input type="number" id="vote-yes" class="form-control form-control-sm text-center bg-light text-success font-weight-bold" value="0" oninput="calculateVote()">
+                            </div>
+                            <div class="col-4">
+                                <label class="small font-weight-bold text-danger mb-0">反對 (No)</label>
+                                <input type="number" id="vote-no" class="form-control form-control-sm text-center bg-light text-danger font-weight-bold" value="0" oninput="calculateVote()">
+                            </div>
+                            <div class="col-4">
+                                <label class="small font-weight-bold text-muted mb-0">棄權 (Abs)</label>
+                                <input type="number" id="vote-abstain" class="form-control form-control-sm text-center bg-light text-muted" value="0" oninput="calculateVote()">
+                            </div>
+                        </div>
+                        <div class="form-group mb-1">
+                            <select id="vote-threshold" class="form-control form-control-sm" style="font-size:11px;" onchange="calculateVote()">
+                                <option value="simple">過半數通過 (Simple Majority) - 常規動議</option>
+                                <option value="twothirds">2/3 多數通過 (2/3 Majority) - 決議案</option>
+                            </select>
+                        </div>
+                        <div id="vote-result-box" class="alert alert-secondary text-center p-1 m-0 font-weight-bold" style="font-size:12px;">等待票數...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // 內建的 30 個精選常見常客國家名單（用於點擊生成）
+        const coreCountries = {
+            "安理會五常 (P5)": ["USA", "CHINA", "UK", "FRANCE", "RUSSIA"],
+            "亞太地區": ["JAPAN", "SOUTH KOREA", "INDIA", "AUSTRALIA", "SINGAPORE", "SAUDI ARABIA"],
+            "歐洲地區": ["GERMANY", "ITALY", "SPAIN", "NETHERLANDS", "SWITZERLAND", "TURKEY"],
+            "美洲地區": ["CANADA", "BRAZIL", "MEXICO", "ARGENTINA", "CUBA"],
+            "非洲與中東": ["EGYPT", "SOUTH AFRICA", "NIGERIA", "IRAN", "ISRAEL", "QATAR"]
+        };
+
+        // 平鋪版的扁平名單，用來快速生成 GSL 快捷按鈕
+        const flatCommonCountries = ["USA", "CHINA", "UK", "FRANCE", "RUSSIA", "JAPAN", "SOUTH KOREA", "INDIA", "GERMANY", "BRAZIL", "CANADA", "EGYPT", "SAUDI ARABIA", "SOUTH AFRICA"];
+
+        let attendanceDB = {};
+        let gslList = [];
+        let currentSpeakerIndex = -1;
+        let motionsStack = [];
+        let initialSeconds = 90;
+        let remainingSeconds = 90;
+        let timerId = null;
+        let currentModeType = 'GSL';
+
+        window.onload = function() {
+            // 1. 初始化資料庫
+            Object.keys(coreCountries).forEach(region => {
+                coreCountries[region].forEach(c => {
+                    attendanceDB[c] = 'Absent';
+                });
+            });
+            
+            // 2. 渲染點名區 (Roll Call) UI
+            buildRollCallUI();
+            
+            // 3. 渲染 GSL 快捷點選區
+            buildGSLQuickPicksUI();
+            
+            updateQuorumCount();
+            renderGSL();
+        };
+
+        // ================= ROLL CALL (點名) 控制中心 =================
+        function buildRollCallUI() {
+            const container = document.getElementById('rollcall-zone-container');
+            container.innerHTML = "";
+
+            Object.keys(coreCountries).forEach(region => {
+                let titleDiv = document.createElement('div');
+                titleDiv.className = "region-title";
+                titleDiv.innerText = region;
+                container.appendChild(titleDiv);
+
+                let gridDiv = document.createElement('div');
+                gridDiv.className = "country-btn-grid";
+
+                coreCountries[region].forEach(c => {
+                    gridDiv.appendChild(createCountryButtonElement(c));
+                });
+                container.appendChild(gridDiv);
+            });
+        }
+
+        // 建立單個國家按鈕元素
+        function createCountryButtonElement(c) {
+            let btn = document.createElement('div');
+            btn.id = `btn-country-${c}`;
+            let currentStatus = attendanceDB[c] || 'Absent';
+            
+            let classStyle = 'c-btn state-absent';
+            let tagText = 'Abs';
+            if(currentStatus === 'Present') { classStyle = 'c-btn state-present'; tagText = 'P'; }
+            if(currentStatus === 'Voting') { classStyle = 'c-btn state-voting'; tagText = 'P&V'; }
+
+            btn.className = classStyle;
+            btn.innerHTML = `<span>${c}</span> <span class="badge badge-light status-tag" style="font-size:9px">${tagText}</span>`;
+            btn.onclick = function() { toggleCountryStatus(c); };
+            return btn;
+        }
+
+        // 手動追加自訂國家到 Roll Call 列表
+        function addCustomCountryToRollCall() {
+            let input = document.getElementById('rollcall-custom-input');
+            let name = input.value.trim().toUpperCase();
+            if(!name) return;
+
+            if(attendanceDB[name] !== undefined) {
+                alert("該國家已在名冊中！");
+                return;
+            }
+
+            // 加入資料庫，預設為 Present
+            attendanceDB[name] = 'Present';
+            input.value = "";
+
+            // 動態塞入一個獨立的追加專區，或直接塞在最上方
+            const container = document.getElementById('rollcall-zone-container');
+            
+            // 如果還沒有自訂區標題則建一個
+            if(!document.getElementById('custom-region-title')) {
+                let customTitle = document.createElement('div');
+                customTitle.id = 'custom-region-title';
+                customTitle.className = "region-title text-danger";
+                customTitle.innerText = "追加/自訂代表國 (Custom)";
+                container.insertBefore(customTitle, container.firstChild);
+                
+                let customGrid = document.createElement('div');
+                customGrid.id = 'custom-country-grid';
+                customGrid.className = "country-btn-grid";
+                container.insertBefore(customGrid, customTitle.nextSibling);
+            }
+
+            let grid = document.getElementById('custom-country-grid');
+            grid.appendChild(createCountryButtonElement(name));
+
+            updateQuorumCount();
+        }
+
+        function toggleCountryStatus(country) {
+            let current = attendanceDB[country] || 'Absent';
+            let nextStatus = 'Absent';
+            let tagText = 'Abs';
+            let classStyle = 'c-btn state-absent';
+
+            if (current === 'Absent') { nextStatus = 'Present'; tagText = 'P'; classStyle = 'c-btn state-present'; } 
+            else if (current === 'Present') { nextStatus = 'Voting'; tagText = 'P&V'; classStyle = 'c-btn state-voting'; }
+
+            attendanceDB[country] = nextStatus;
+            
+            let btn = document.getElementById(`btn-country-${country}`);
+            if(btn) {
+                btn.className = classStyle;
+                btn.querySelector('.status-tag').innerText = tagText;
+            }
+            updateQuorumCount();
+        }
+
+        function resetAllAttendance() {
+            Object.keys(attendanceDB).forEach(c => {
+                attendanceDB[c] = 'Absent';
+                let btn = document.getElementById(`btn-country-${c}`);
+                if(btn) {
+                    btn.className = 'c-btn state-absent';
+                    btn.querySelector('.status-tag').innerText = 'Abs';
+                }
+            });
+            // 移除額外追加的 DOM 節點
+            let ct = document.getElementById('custom-region-title');
+            let cg = document.getElementById('custom-country-grid');
+            if(ct) ct.remove();
+            if(cg) cg.remove();
+
+            // 清理資料庫中不在常客名單裡的國家
+            let standardCountries = [];
+            Object.values(coreCountries).forEach(arr => standardCountries.push(...arr));
+            Object.keys(attendanceDB).forEach(k => {
+                if(!standardCountries.includes(k)) delete attendanceDB[k];
+            });
+
+            updateQuorumCount();
+        }
+
+        function updateQuorumCount() {
+            let presentCount = Object.values(attendanceDB).filter(v => v === 'Present' || v === 'Voting').length;
+            let votingBaseCount = Object.values(attendanceDB).filter(v => v === 'Voting').length;
+            document.getElementById('quorum-display').innerText = presentCount;
+            document.getElementById('voting-base-display').innerText = votingBaseCount;
+        }
+
+
+        // ================= GSL (發言名單) 控制中心 =================
+        function buildGSLQuickPicksUI() {
+            const container = document.getElementById('gsl-quick-picks');
+            container.innerHTML = "";
+            flatCommonCountries.forEach(c => {
+                let badge = document.createElement('span');
+                badge.className = "quick-country-badge";
+                badge.innerHTML = `<i class="fas fa-plus-circle small"></i> ${c}`;
+                badge.onclick = function() { addCountryToGSL(c); };
+                container.appendChild(badge);
+            });
+        }
+
+        function addCountryToGSL(countryName) {
+            let name = countryName.trim().toUpperCase();
+            if (!name) return;
+            
+            gslList.push(name);
+            // 清空手動打字的輸入框
+            document.getElementById('gsl-input-country').value = "";
+            
+            renderGSL();
+            if (currentSpeakerIndex === -1) selectSpeaker(0);
+        }
+
+        function renderGSL() {
+            const container = document.getElementById('gsl-container');
+            document.getElementById('gsl-count').innerText = `${gslList.length} 國`;
+            if (gslList.length === 0) {
+                container.innerHTML = `<div class="text-center text-muted py-3 small">目前無 GSL 候補國家。</div>`;
+                document.getElementById('delegate-placard').innerText = "N/A (請指名代表)";
+                currentSpeakerIndex = -1;
+                return;
+            }
+            container.innerHTML = "";
+            gslList.forEach((country, index) => {
+                let item = document.createElement('div');
+                item.className = `gsl-item ${index === currentSpeakerIndex ? 'speaking' : ''}`;
+                item.innerHTML = `
+                    <span>${index + 1}. <strong>${country}</strong></span>
+                    <div>
+                        <button class="btn btn-xs btn-link p-0 text-success mr-2" onclick="selectSpeaker(${index})"><i class="fas fa-microphone"></i></button>
+                        <button class="btn btn-xs btn-link p-0 text-danger" onclick="removeCountry(${index})"><i class="fas fa-times"></i></button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function removeCountry(index) {
+            gslList.splice(index, 1);
+            if (currentSpeakerIndex === index) { currentSpeakerIndex = -1; resetTimer(); }
+            else if (currentSpeakerIndex > index) { currentSpeakerIndex--; }
+            renderGSL();
+        }
+
+        function selectSpeaker(index) {
+            pauseTimer();
+            currentSpeakerIndex = index;
+            document.getElementById('delegate-placard').innerText = `DELEGATE OF ${gslList[index]}`;
+            resetTimer();
+            renderGSL();
+        }
+
+        function nextSpeaker() {
+            if (gslList.length === 0) return;
+            if (currentSpeakerIndex + 1 < gslList.length) selectSpeaker(currentSpeakerIndex + 1);
+            else alert("GSL 名單已到末尾！");
+        }
+
+        function yieldTime() {
+            if (currentSpeakerIndex === -1) return;
+            playBeep(); pauseTimer();
+            alert(`代表已選擇 Yield 讓渡。`);
+            nextSpeaker();
+        }
+
+        // ================= 其餘計時、動議與投票核心 =================
+        function pushMotion() {
+            let country = document.getElementById('motion-country').value.trim().toUpperCase();
+            let typeSelect = document.getElementById('motion-type');
+            let typeVal = parseInt(typeSelect.value);
+            let typeText = typeSelect.options[typeSelect.selectedIndex].text;
+            if(!country) { alert("請輸入提交動議的國家！"); return; }
+            motionsStack.push({ country, priority: typeVal, desc: typeText });
+            motionsStack.sort((a, b) => a.priority - b.priority);
+            document.getElementById('motion-country').value = "";
+            renderMotionsStack();
+        }
+
+        function renderMotionsStack() {
+            const container = document.getElementById('motion-container');
+            container.innerHTML = "";
+            if(motionsStack.length === 0) {
+                container.innerHTML = `<div class="text-center text-muted small py-2">目前無懸掛動議。</div>`;
+                return;
+            }
+            motionsStack.forEach((m, idx) => {
+                let div = document.createElement('div');
+                div.className = "d-flex justify-content-between align-items-center bg-white border p-1 mb-1 rounded small shadow-sm";
+                div.innerHTML = `<span><span class="badge badge-secondary" style="font-size:9px">先 ${idx+1}</span> <strong>${m.country}</strong>: ${m.desc}</span>
+                                 <button class="btn btn-xs btn-link p-0 text-danger" onclick="popMotion(${idx})"><i class="fas fa-times"></i></button>`;
+                container.appendChild(div);
+            });
+        }
+
+        function popMotion(idx) { motionsStack.splice(idx, 1); renderMotionsStack(); }
+
+        function calculateVote() {
+            let yes = parseInt(document.getElementById('vote-yes').value) || 0;
+            let no = parseInt(document.getElementById('vote-no').value) || 0;
+            let threshold = document.getElementById('vote-threshold').value;
+            let resultBox = document.getElementById('vote-result-box');
+            let activeVotes = yes + no; 
+            if(activeVotes === 0) { resultBox.className = "alert alert-secondary text-center p-1 m-0"; resultBox.innerText = "等待票數..."; return; }
+            if(threshold === 'simple') {
+                if(yes > no) { resultBox.className = "alert alert-success text-center p-1 m-0"; resultBox.innerHTML = `✅ 通過！(簡單多數決)`; } 
+                else { resultBox.className = "alert alert-danger text-center p-1 m-0"; resultBox.innerHTML = `❌ 否決！`; }
+            } else {
+                if(yes / activeVotes >= (2/3)) { resultBox.className = "alert alert-success text-center p-1 m-0"; resultBox.innerHTML = `🎉 決議案通過！(2/3 多數)`; } 
+                else { resultBox.className = "alert alert-danger text-center p-1 m-0"; resultBox.innerHTML = `❌ 未達 2/3 門檻否決！`; }
+            }
+        }
+
+        function setSessionMode(modeName, defaultSeconds, modeType) {
+            pauseTimer(); currentModeType = modeType; initialSeconds = defaultSeconds; remainingSeconds = defaultSeconds;
+            document.getElementById('timer-title').innerText = modeName;
+            document.getElementById('mun-timer').innerText = formatTime(remainingSeconds);
+            document.getElementById('mun-progress-bar').style.width = "100%";
+            calculateSpeechSpeed();
+        }
+
+        function startTimer() {
+            if (timerId !== null) return;
+            document.getElementById('btn-start').disabled = true;
+            document.getElementById('btn-pause').disabled = false;
+            timerId = setInterval(() => {
+                if (remainingSeconds > 0) {
+                    remainingSeconds--;
+                    document.getElementById('mun-timer').innerText = formatTime(remainingSeconds);
+                    document.getElementById('mun-progress-bar').style.width = `${(remainingSeconds / initialSeconds) * 100}%`;
+                    calculateSpeechSpeed();
+                } else { playBeep(); pauseTimer(); nextSpeaker(); }
+            }, 1000);
+        }
+
+        function pauseTimer() { clearInterval(timerId); timerId = null; document.getElementById('btn-start').disabled = false; document.getElementById('btn-pause').disabled = true; }
+        function resetTimer() { pauseTimer(); remainingSeconds = initialSeconds; document.getElementById('mun-timer').innerText = formatTime(remainingSeconds); document.getElementById('mun-progress-bar').style.width = "100%"; calculateSpeechSpeed(); }
+        function formatTime(secs) { return `${Math.floor(secs / 60).toString().padStart(2, '0')}:${(secs % 60).toString().padStart(2, '0')}`; }
+        
+        function playBeep() {
+            try {
+                let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+            } catch (e) {}
+        }
+
+        function calculateSpeechSpeed() {
+            let text = document.getElementById('speech-text').value;
+            let englishWords = text.replace(/[\u4e00-\u9fa5]/g, " ").match(/\b\w+\b/g);
+            let englishCount = englishWords ? englishWords.length : 0;
+            let chineseCount = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+            let totalWords = englishCount + chineseCount;
+            let alertBox = document.getElementById('speed-alert');
+            if (totalWords === 0) { alertBox.className = "small text-muted text-center mt-1"; alertBox.innerText = "💡 語速提示模組"; return; }
+            let estimatedSec = (chineseCount * (60/220)) + (englishCount * (60/130));
+            let timeDiff = remainingSeconds - estimatedSec;
+            if (timeDiff < -4) { alertBox.className = "small text-danger text-center font-weight-bold mt-1"; alertBox.innerText = `🚨 超時預警（差 ${Math.abs(Math.floor(timeDiff))} 秒）`; } 
+            else { alertBox.className = "small text-success text-center font-weight-bold mt-1"; alertBox.innerText = `✅ 長度適中。`; }
+        }
+    </script>
+</body>
+</html>

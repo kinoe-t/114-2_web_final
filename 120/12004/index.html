@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>貓咪掃桌大師</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Courier New', monospace;
+    color: #222;
+  }
+  h1 { font-size: 22px; letter-spacing: 4px; margin-bottom: 4px; color: #111; }
+  #subtitle { font-size: 11px; color: #888; margin-bottom: 14px; letter-spacing: 3px; }
+  canvas {
+    display: block;
+    image-rendering: pixelated;
+    border-top: 2px solid #555;
+    border-bottom: 2px solid #555;
+  }
+  #ui-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    width: 700px; margin-top: 8px; font-size: 13px; letter-spacing: 1px; color: #555;
+  }
+  #controls-hint { margin-top: 8px; font-size: 11px; color: #aaa; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<h1>CAT DESK SWEEP</h1>
+<div id="subtitle">貓咪掃桌大師</div>
+<canvas id="gameCanvas" width="700" height="200"></canvas>
+<div id="ui-bar">
+  <span>HI <span id="hi">000000</span></span>
+  <span><span id="score">000000</span></span>
+  <span>SPD <span id="spd">1.0</span>x</span>
+</div>
+<div id="controls-hint">SPACE / CLICK — 揮爪掃物</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+const W = 700, H = 200;
+const TABLE_Y = 150;
+const TABLE_H = 8;
+const FLOOR_Y = 185;
+const CAT_X = 10; // left anchor of cat sprite on canvas
+
+// ── BW palette (objects / UI) ──
+const C = { BLACK:'#111', DARK:'#444', MID:'#999', LIGHT:'#ccc', WHITE:'#fff' };
+
+// ══════════════════════════════════════════════════════════
+//  CAT SPRITE  —  pixel-perfect trace of the uploaded image
+//  Each pixel = PS×PS canvas pixels
+//  Grid is 24 cols × 19 rows (0-indexed, col 0 = left)
+//  Colours sampled directly from the jpg
+// ══════════════════════════════════════════════════════════
+const PS = 5; // pixel size on canvas
+
+const _ = null;           // transparent
+const A = '#3d1a00';      // darkest: eyes, nostrils, deep shadow
+const B = '#7a3410';      // dark brown-orange: outlines, legs, ear inner
+const C2= '#c05c1a';      // medium-dark orange: body shadow, back
+const D = '#d97828';      // main body orange
+const E = '#e89030';      // mid-highlight orange
+const F = '#f0a83a';      // bright orange
+const G = '#e8960c';      // yellow-orange: belly upper
+const H2= '#f5be14';      // bright yellow: belly center
+
+//  Column index →  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
+const SPRITE = [
+// row 0  — tail tip far right
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,F,E,_,_],
+// row 1  — tail upper
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,D,E,F,E,_],
+// row 2  — ear tips + tail
+  [_,_,B,C2,_,_,_,_,B,C2,_,_,_,_,_,_,_,_,_,D,D,E,_,_],
+// row 3  — ear bodies
+  [_,_,B,D,D,_,_,B,C2,A,C2,_,_,_,_,_,_,_,_,C2,D,D,C2,_],
+// row 4  — ear base / head top
+  [_,_,B,D,D,D,D,D,C2,A,C2,D,_,_,_,_,_,_,_,D,D,D,B,_],
+// row 5  — forehead
+  [_,_,_,C2,D,D,D,D,D,C2,C2,C2,B,_,_,_,_,_,D,D,D,D,B,_],
+// row 6  — brow / stripe row
+  [_,_,_,B,D,D,E,D,D,D,D,B,B,B,B,_,_,D,D,D,D,D,B,_],
+// row 7  — eyes row
+  [A,D,D,D,A,_,E,D,D,A,_,D,D,B,B,D,D,D,D,D,D,C2,_,_],
+// row 8  — cheek / body top
+  [A,D,D,D,D,D,E,E,D,D,D,D,B,B,D,D,D,D,D,D,B,_,_,_],
+// row 9  — nose / back stripe
+  [_,C2,D,D,B,A,E,D,D,D,D,D,D,B,D,D,D,D,D,B,_,_,_,_],
+// row 10 — body upper
+  [_,G,D,D,D,D,D,D,D,D,D,D,B,D,D,D,D,D,D,B,_,_,_,_],
+// row 11 — belly bright
+  [_,_,G,D,D,H2,H2,D,D,D,D,D,D,D,D,D,D,D,B,_,_,_,_],
+// row 12 — belly center
+  [_,_,_,D,H2,H2,H2,H2,D,D,D,D,D,D,D,D,D,D,B,_,_,_,_],
+// row 13 — belly lower
+  [_,_,_,B,H2,H2,H2,H2,G,D,D,D,D,D,D,D,D,D,D,B,_,_,_,_],
+// row 14 — belly bottom edge
+  [_,_,_,B,B,G,G,G,G,D,D,D,D,D,D,D,D,D,D,B,_,_,_,_],
+// row 15 — legs top
+  [_,_,_,_,D,B,B,B,D,D,D,B,B,B,B,B,D,D,D,B,_,_,_,_],
+// row 16 — legs mid
+  [_,_,_,_,D,D,B,B,B,D,D,B,B,B,B,B,B,D,D,B,_,_,_,_],
+// row 17 — feet
+  [_,_,_,_,D,B,B,_,B,D,B,_,_,_,B,B,B,D,D,B,_,_,_,_],
+// row 18 — foot bottoms
+  [_,_,_,_,B,B,_,_,B,B,_,_,_,_,B,B,_,B,B,_,_,_,_,_],
+];
+
+const SPRITE_COLS = 24;
+const SPRITE_ROWS = 19;
+
+// Swipe variant: replace rows 7-8 arm area with extended paw
+// arm is at right side cols 14-22, rows 7-8
+function drawCat(swipePhase) {
+  const bob = Math.round(Math.sin(catBob) * 0.8);
+  const ox = CAT_X;
+  const oy = TABLE_Y - SPRITE_ROWS * PS + bob;
+
+  const ext = swipePhase > 0 ? Math.sin(swipePhase * Math.PI) : 0;
+
+  // Draw base sprite
+  for (let gy = 0; gy < SPRITE_ROWS; gy++) {
+    for (let gx = 0; gx < SPRITE_COLS; gx++) {
+      const col = SPRITE[gy][gx];
+      if (!col) continue;
+      // During swipe, skip arm area (rows 7-8, cols 14+) — redraw extended
+      if (ext > 0.05 && gy >= 7 && gy <= 8 && gx >= 14) continue;
+      ctx.fillStyle = col;
+      ctx.fillRect(ox + gx*PS, oy + gy*PS, PS, PS);
+    }
+  }
+
+  // Extended swipe arm
+  if (ext > 0.05) {
+    const armLen = Math.round(ext * 7 * PS); // up to 7 extra pixels
+    const armY   = oy + 7*PS;
+    const armX0  = ox + 14*PS;
+
+    // arm shaft (2 rows thick)
+    ctx.fillStyle = D;
+    ctx.fillRect(armX0, armY,      armLen + PS*2, PS);
+    ctx.fillStyle = C2;
+    ctx.fillRect(armX0, armY + PS, armLen + PS*2, PS);
+
+    // paw tip
+    const px2 = armX0 + armLen + PS*2;
+    ctx.fillStyle = E;
+    ctx.fillRect(px2,      armY - PS,   PS*2, PS);   // top of paw
+    ctx.fillStyle = D;
+    ctx.fillRect(px2,      armY,        PS*2, PS*2); // paw body
+    ctx.fillStyle = C2;
+    ctx.fillRect(px2,      armY + PS*2, PS*2, PS);   // bottom shadow
+
+    // claws (when fully extended)
+    if (ext > 0.35) {
+      ctx.fillStyle = '#ffeedd';
+      ctx.fillRect(px2,      armY - PS*2, PS,   PS);
+      ctx.fillRect(px2 + PS, armY - PS*2, PS,   PS);
+    }
+
+    // excited eyes during swipe
+    // row 7 eyes at cols 4 and 9 — redraw as wide
+    ctx.fillStyle = A;
+    ctx.fillRect(ox + 4*PS, oy + 7*PS, PS*2, PS*2);
+    ctx.fillRect(ox + 9*PS, oy + 7*PS, PS*2, PS*2);
+    ctx.fillStyle = '#fff8f0';
+    ctx.fillRect(ox + 4*PS, oy + 7*PS, PS,   PS);
+    ctx.fillRect(ox + 9*PS, oy + 7*PS, PS,   PS);
+  }
+}
+
+// ── r() helper ──
+function r(x, y, w, h, c) { ctx.fillStyle=c; ctx.fillRect(Math.round(x),Math.round(y),w,h); }
+
+// ── Game variables ──
+let score=0, hiScore=0, gameRunning=false, gameOver=false;
+let frameCount=0, speed=3.5;
+let obstacles=[], particles=[], tableDecor=[];
+let swipeActive=false, swipeFrame=0, catBob=0;
+for (let i=0;i<20;i++) tableDecor.push({x:i*36+Math.random()*20});
+
+// ── Obstacle types ──
+const OBJ = [
+  { name:'cup',   w:16, h:24, draw: drawCup   },
+  { name:'key',   w:22, h:12, draw: drawKey   },
+  { name:'watch', w:18, h:22, draw: drawWatch },
+];
+function spawnObstacle() {
+  const t = OBJ[Math.floor(Math.random()*OBJ.length)];
+  const stack = Math.random()<0.18?2:1;
+  const totalH = t.h*stack+(stack>1?3:0);
+  obstacles.push({x:W+20,type:t,w:t.w,h:totalH,stack,
+    falling:false,y:0,vy:0,vx:0,rot:0,rotV:0,opacity:1,
+    baseY:TABLE_Y-totalH});
+}
+
+function drawCup(x,y) {
+  r(x+1,y+5, 10,16,C.BLACK); r(x+2,y+6,  8,12,C.WHITE);
+  r(x,  y+3, 12, 3,C.BLACK);
+  r(x+11,y+7, 2, 2,C.BLACK); r(x+12,y+6, 1, 6,C.BLACK); r(x+11,y+11,2,2,C.BLACK);
+  r(x+2,y+11, 8, 2,C.LIGHT);
+  r(x+2,y,    2, 2,C.MID); r(x+6,y-2,2,2,C.MID); r(x+10,y,2,2,C.MID);
+}
+function drawKey(x,y) {
+  r(x,  y,  8,8,C.BLACK); r(x+1,y+1,6,6,C.WHITE); r(x+2,y+2,4,4,C.BLACK);
+  r(x+8,y+3,12,3,C.BLACK); r(x+9,y+4,9,1,C.WHITE);
+  r(x+12,y+6,2,3,C.BLACK); r(x+17,y+6,2,4,C.BLACK);
+}
+function drawWatch(x,y) {
+  r(x+5,y,   6, 4,C.DARK); r(x+5,y+18,6,4,C.DARK);
+  r(x+2,y+4,14,14,C.BLACK); r(x+3,y+5,12,12,C.WHITE);
+  r(x+8,y+5, 2, 2,C.BLACK); r(x+8,y+15,2,2,C.BLACK);
+  r(x+3,y+10,2, 2,C.BLACK); r(x+13,y+10,2,2,C.BLACK);
+  r(x+8,y+8, 2, 4,C.BLACK); r(x+8,y+10,4,2,C.BLACK);
+}
+
+function drawObstacle(ob) {
+  if (ob.falling) {
+    ctx.save(); ctx.globalAlpha=ob.opacity;
+    ctx.translate(ob.x+ob.w/2,ob.y+ob.h/2); ctx.rotate(ob.rot);
+    ctx.translate(-ob.w/2,-ob.h/2);
+    ob.type.draw(0,0); if(ob.stack===2) ob.type.draw(0,ob.type.h+3);
+    ctx.restore();
+  } else {
+    ob.type.draw(ob.x,ob.baseY); if(ob.stack===2) ob.type.draw(ob.x,ob.baseY-ob.type.h-3);
+  }
+}
+
+function spawnParticle(x,y) {
+  const cols=[C.BLACK,C.DARK,C.MID,C.LIGHT];
+  for(let i=0;i<10;i++){
+    const a=(Math.PI*2*i/10)+Math.random()*0.4, spd=1.5+Math.random()*2.5;
+    particles.push({x,y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-1.5,
+      c:cols[Math.floor(Math.random()*cols.length)],life:1,sz:2+Math.floor(Math.random()*2)*2});
+  }
+  particles.push({text:true,x,y:y-8,vy:-1,life:1,label:'+10'});
+}
+function drawParticles() {
+  for(const p of particles){
+    ctx.globalAlpha=p.life;
+    if(p.text){ ctx.fillStyle=C.BLACK; ctx.font='bold 12px Courier New'; ctx.fillText(p.label,p.x,p.y); }
+    else { ctx.fillStyle=p.c; ctx.fillRect(p.x,p.y,p.sz,p.sz); }
+    ctx.globalAlpha=1;
+  }
+}
+
+function drawBackground() {
+  ctx.fillStyle=C.WHITE; ctx.fillRect(0,0,W,TABLE_Y);
+}
+function drawTable() {
+  r(0,TABLE_Y,    W,2,C.BLACK);
+  r(0,TABLE_Y+2,  W,TABLE_H-2,C.LIGHT);
+  ctx.fillStyle=C.MID;
+  for(let i=0;i<W;i+=20) ctx.fillRect(i,TABLE_Y+3,1,TABLE_H-4);
+  r(0,TABLE_Y+TABLE_H,W,H-(TABLE_Y+TABLE_H),C.WHITE);
+  r(0,FLOOR_Y,W,1,C.LIGHT);
+  ctx.fillStyle=C.LIGHT;
+  for(const t of tableDecor) ctx.fillRect(t.x,FLOOR_Y+4,2,2);
+}
+function drawHUD() {
+  ctx.fillStyle=C.BLACK; ctx.font='bold 14px Courier New'; ctx.textAlign='right';
+  ctx.fillText('HI '+String(hiScore).padStart(5,'0')+'  '+String(score).padStart(5,'0'),W-10,18);
+  ctx.textAlign='left';
+}
+function drawOverlay() {
+  if(!gameRunning&&!gameOver){
+    ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle=C.BLACK; ctx.font='bold 20px Courier New'; ctx.textAlign='center';
+    ctx.fillText('按 SPACE 或點擊開始',W/2,H/2-8);
+    ctx.fillStyle=C.MID; ctx.font='12px Courier New';
+    ctx.fillText('幫貓咪把桌上的東西全掃掉！',W/2,H/2+14);
+    ctx.textAlign='left';
+  } else if(gameOver){
+    ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle=C.BLACK; ctx.font='bold 22px Courier New'; ctx.textAlign='center';
+    ctx.fillText('GAME OVER',W/2,H/2-14);
+    ctx.font='14px Courier New'; ctx.fillText('SCORE  '+score,W/2,H/2+8);
+    ctx.fillStyle=C.MID; ctx.font='11px Courier New';
+    ctx.fillText('按 SPACE 或點擊重新開始',W/2,H/2+28);
+    ctx.textAlign='left';
+  }
+}
+
+let lastSpawn=0, nextSpawnInterval=88;
+function resetGame(){
+  score=0;speed=3.5;frameCount=0;obstacles=[];particles=[];
+  swipeActive=false;swipeFrame=0;lastSpawn=0;nextSpawnInterval=88;
+  gameOver=false;gameRunning=true;catBob=0;
+  document.getElementById('score').textContent='000000';
+}
+function triggerSwipe(){
+  if(!gameRunning||gameOver){resetGame();return;}
+  if(!swipeActive){swipeActive=true;swipeFrame=0;}
+}
+
+function loop(){
+  ctx.clearRect(0,0,W,H);
+  drawBackground();
+  drawTable();
+
+  if(gameRunning&&!gameOver){
+    frameCount++; catBob+=0.07;
+    speed=3.5+Math.floor(score/50)*0.4;
+    document.getElementById('spd').textContent=(speed/3.5).toFixed(1);
+    for(const t of tableDecor){t.x-=speed*0.6;if(t.x<-10)t.x+=W+20;}
+
+    if(frameCount-lastSpawn>nextSpawnInterval){
+      spawnObstacle(); lastSpawn=frameCount;
+      nextSpawnInterval=68+Math.floor(Math.random()*78)-Math.min(28,Math.floor(score/30));
+    }
+
+    let swipePhase=0;
+    if(swipeActive){
+      swipeFrame++;
+      const DUR=22; swipePhase=swipeFrame/DUR;
+      if(swipeFrame>=DUR){swipeActive=false;swipePhase=0;}
+    }
+
+    // Cat sprite occupies roughly ox+4*PS .. ox+22*PS horizontally
+    // Paw reach extends from col 14 rightward during swipe
+    const ox = CAT_X;
+    const catBodyLeft  = ox + 1*PS;
+    const catBodyRight = ox + 13*PS;
+    const pawBaseX     = ox + 14*PS;
+    const pawTip = pawBaseX + (swipePhase>0 ? Math.sin(swipePhase*Math.PI)*7*PS : 0);
+
+    for(let i=obstacles.length-1;i>=0;i--){
+      const ob=obstacles[i];
+      ob.x-=speed;
+      if(!ob.falling){
+        // paw hit
+        if(swipePhase>0.28&&swipePhase<0.88){
+          if(ob.x<pawTip+PS&&ob.x+ob.w>pawBaseX-PS){
+            ob.falling=true;ob.y=ob.baseY;
+            ob.vy=-2-Math.random()*2;ob.vx=3+Math.random()*3.5;
+            ob.rotV=(Math.random()-0.5)*0.28;
+            score+=10;if(score>hiScore)hiScore=score;
+            document.getElementById('score').textContent=String(score).padStart(6,'0');
+            document.getElementById('hi').textContent=String(hiScore).padStart(6,'0');
+            spawnParticle(ob.x+ob.w/2,ob.baseY);
+          }
+        }
+        // missed
+        if(ob.x+ob.w<catBodyLeft&&!ob.falling){gameOver=true;gameRunning=false;}
+        // body collision
+        if(ob.x<catBodyRight&&ob.x+ob.w>catBodyLeft&&!ob.falling){
+          if(!swipeActive||swipePhase<0.22){gameOver=true;gameRunning=false;}
+        }
+      } else {
+        ob.vy+=0.38;ob.y+=ob.vy;ob.x+=ob.vx;ob.rot+=ob.rotV;
+        if(ob.y>FLOOR_Y+25)ob.opacity-=0.055;
+      }
+    }
+    obstacles=obstacles.filter(o=>o.opacity>0&&o.x>-60);
+    for(const p of particles){
+      if(!p.text){p.x+=p.vx;p.y+=p.vy;p.vy+=0.14;}else{p.y+=p.vy;}
+      p.life-=0.032;
+    }
+    particles=particles.filter(p=>p.life>0);
+
+    for(const ob of obstacles) drawObstacle(ob);
+    drawCat(swipeActive?swipePhase:0);
+    drawParticles();
+    drawHUD();
+  } else {
+    catBob+=0.025;
+    for(const ob of obstacles) drawObstacle(ob);
+    drawCat(0);
+    drawHUD();
+    drawOverlay();
+  }
+  requestAnimationFrame(loop);
+}
+
+window.addEventListener('keydown',e=>{
+  if(e.code==='Space'||e.key===' '){e.preventDefault();triggerSwipe();}
+});
+canvas.addEventListener('click',()=>triggerSwipe());
+canvas.addEventListener('touchstart',e=>{e.preventDefault();triggerSwipe();},{passive:false});
+
+loop();
+</script>
+</body>
+</html>

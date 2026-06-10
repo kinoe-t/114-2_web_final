@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蛤蛤蛤你真的是人嗎</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            align-items: center;
+            background-image: url('16.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: #333;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.92);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+        }
+
+        h2.web-title {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+            line-height: 1.4;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        button {
+            padding: 0.8rem 2rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            min-width: 120px;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .image-container {
+            margin-top: 1.5rem;
+        }
+
+        .result-img {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .praise-text {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 網站名稱固定顯示 -->
+        <h2 class="web-title">蛤蛤蛤你真的是人嗎</h2>
+
+        <!-- 問題 1 -->
+        <div id="q1" class="question-step">
+            <h1>你是人類嗎？</h1>
+            <div class="btn-group">
+                <button class="btn-primary" onclick="nextStep('q2')">是</button>
+                <button class="btn-danger" onclick="showRandomImg()">不是</button>
+            </div>
+        </div>
+
+        <!-- 問題 2 -->
+        <div id="q2" class="question-step hidden">
+            <h1>真的是嗎？</h1>
+            <div class="btn-group">
+                <button class="btn-primary" onclick="nextStep('q3')">真的</button>
+                <button class="btn-danger" onclick="showRandomImg()">假的</button>
+            </div>
+        </div>
+
+        <!-- 問題 3 -->
+        <div id="q3" class="question-step hidden">
+            <h1>確定？</h1>
+            <div class="btn-group">
+                <button class="btn-primary" onclick="showHumanImg()">確定</button>
+                <button class="btn-danger" onclick="showRandomImg()">不確定</button>
+            </div>
+        </div>
+
+        <!-- 結果顯示：隨機圖片 (01-14.jpg) -->
+        <div id="result-random" class="hidden">
+            <h1>發現巨人！</h1>
+            <div id="random-img-container" class="image-container"></div>
+            <div class="btn-group">
+                <button class="btn-primary" onclick="restart()">再試一次</button>
+            </div>
+        </div>
+
+        <!-- 結果顯示：人類圖片 (隨機抽出 15, 17, 18, 19, 20.jpg) -->
+        <div id="result-human" class="hidden">
+            <div class="praise-text">好吧</div>
+            <h1 style="font-size: 1.3rem; color: #27ae60; margin-bottom: 1rem;">你真的是人類。</h1>
+            <div id="human-img-container" class="image-container"></div>
+            <div class="btn-group">
+                <button class="btn-primary" onclick="restart()">再試一次</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 隨機圖片陣列 (01.jpg - 14.jpg)
+        const randomImages = [
+            '01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg',
+            '06.jpg', '07.jpg', '08.jpg', '09.jpg', '10.jpg',
+            '11.jpg', '12.jpg', '13.jpg', '14.jpg'
+        ];
+
+        // 人類圖片陣列 (15.jpg, 17.jpg - 20.jpg)
+        const humanImages = [
+            '15.jpg', '17.jpg', '18.jpg', '19.jpg', '20.jpg'
+        ];
+
+        // 前進到下一個問題
+        function nextStep(stepId) {
+            hideAllSteps();
+            document.getElementById(stepId).classList.remove('hidden');
+        }
+
+        // 觸發並隨機顯示一張非人類圖片
+        function showRandomImg() {
+            hideAllSteps();
+            const randomIndex = Math.floor(Math.random() * randomImages.length);
+            const selectedImg = randomImages[randomIndex];
+            
+            const container = document.getElementById('random-img-container');
+            container.innerHTML = `<img src="${selectedImg}" alt="隨機圖片" class="result-img">`;
+            
+            document.getElementById('result-random').classList.remove('hidden');
+        }
+
+        // 成功通關，顯示「好吧」並隨機顯示一張人類圖片
+        function showHumanImg() {
+            hideAllSteps();
+            const randomIndex = Math.floor(Math.random() * humanImages.length);
+            const selectedImg = humanImages[randomIndex];
+
+            const container = document.getElementById('human-img-container');
+            container.innerHTML = `<img src="${selectedImg}" alt="人類圖片" class="result-img">`;
+
+            document.getElementById('result-human').classList.remove('hidden');
+        }
+
+        // 隱藏所有關卡與結果的輔助功能
+        function hideAllSteps() {
+            const steps = document.querySelectorAll('.question-step, #result-random, #result-human');
+            steps.forEach(step => step.classList.add('hidden'));
+        }
+
+        // 重置回到第一題
+        function restart() {
+            hideAllSteps();
+            document.getElementById('q1').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

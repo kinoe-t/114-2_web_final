@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>現代人拖延症指數大檢測 - 春季文青版</title>
+    <style>
+        /* CSS 視覺設計：溫和莫蘭迪粉與暖陽光影 */
+        :root {
+            --bg-color: #F0E2DC;       /* 溫暖文青莫蘭迪藕粉 */
+            --card-bg: rgba(249, 245, 243, 0.88); /* 半透明燕麥白，融入背景 */
+            --text-main: #5C524F;     /* 莫蘭迪深棕 */
+            --text-muted: #8C807C;    /* 輔助灰棕 */
+            --accent-color: #C09F9A;  /* 乾燥玫瑰粉 */
+            --border-color: #DCD0CB;  /* 柔和邊框 */
+            --petal-color: #F3C6C0;   /* 有感卻不刺眼的櫻花粉 */
+            --sun-color: rgba(253, 244, 212, 0.4); /* 暖陽光暈色 */
+            --tip-bg: #EAE0DC;        /* 改善小撇步背景色 */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden; 
+        }
+
+        /* ── 春天暖陽光影背景效果 ── */
+        .sun-ray {
+            position: absolute;
+            top: -20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(255,249,225,0.6) 0%, rgba(240,226,220,0) 70%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 暖陽閃爍微粒子 */
+        .sun-particle {
+            position: absolute;
+            background-color: var(--sun-color);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+            animation: pulseLight 4s ease-in-out infinite;
+        }
+
+        @keyframes pulseLight {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        /* ── 豐富的櫻花瓣飄落效果 ── */
+        .petal {
+            position: absolute;
+            background-color: var(--petal-color);
+            border-radius: 15px 2px 15px 2px; /* 經典花瓣形狀 */
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0.8;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                top: -50px;
+                transform: translateX(0) rotate(0deg);
+            }
+            100% {
+                top: 105vh;
+                transform: translateX(120px) rotate(450deg);
+            }
+        }
+
+        /* ── 極簡文青網頁容器 ── */
+        .container {
+            background-color: var(--card-bg);
+            backdrop-filter: blur(6px); /* 唯美毛玻璃效果 */
+            border-radius: 16px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            position: relative;
+            z-index: 5; 
+            box-shadow: 0 10px 30px rgba(92, 82, 79, 0.08);
+            margin: 20px 0;
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 35px;
+        }
+
+        /* 文青感簡約按鈕 */
+        .btn {
+            background-color: var(--accent-color);
+            color: #ffffff;
+            border: none;
+            padding: 12px 32px;
+            font-size: 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            letter-spacing: 2px;
+        }
+
+        #start-btn {
+            position: relative;
+            z-index: 10;
+        }
+
+        .hint-text {
+            height: 20px;
+            color: var(--accent-color);
+            font-size: 13px;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* 簡約進度條 */
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background-color: #E2D6D2;
+            border-radius: 2px;
+            margin-bottom: 35px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--accent-color);
+            width: 0%;
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+
+        /* 題目與選項排版 */
+        .question-text {
+            font-size: 17px;
+            font-weight: 500;
+            margin-bottom: 30px;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background-color: rgba(255, 255, 255, 0.5);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.5;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            background-color: #EDE4E0;
+            border-color: var(--text-main);
+        }
+
+        /* ── 結果畫面與 Q 版大頭貼 ── */
+        .avatar-container {
+            width: 130px;
+            height: 130px;
+            margin: 0 auto 20px auto;
+            background-color: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 2px solid var(--border-color);
+        }
+
+        .result-title {
+            font-size: 20px;
+            color: var(--accent-color);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .tag-box {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+
+        .tag {
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .result-desc {
+            font-size: 14px;
+            line-height: 1.7;
+            text-align: left;
+            color: var(--text-main);
+            margin-bottom: 25px;
+            padding: 20px;
+            background-color: rgba(237, 228, 224, 0.6);
+            border-radius: 6px;
+        }
+
+        /* 改善小撇步區塊 */
+        .tips-container {
+            background-color: var(--tip-bg);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: left;
+            margin-bottom: 35px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .tips-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: var(--text-main);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .tips-list {
+            font-size: 13px;
+            line-height: 1.6;
+            padding-left: 18px;
+            color: var(--text-main);
+        }
+
+        .tips-list li {
+            margin-bottom: 8px;
+        }
+        
+        .tips-list li strong {
+            color: #A06D65;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 暖陽光芒 -->
+    <div class="sun-ray"></div>
+
+    <!-- ── 網頁主容器 ── -->
+    <div class="container">
+        
+        <!-- 1. 開始首頁 -->
+        <div id="page-start" class="page active">
+            <h1>現代人拖延症指數</h1>
+            <p class="subtitle">高中生校園日常篇！看看你的靈魂躺平到什麼程度？</p>
+            <button id="start-btn" class="btn" onclick="realStart()">開始測驗</button>
+            <div id="hint" class="hint-text"></div>
+        </div>
+
+        <!-- 2. 測驗主頁 -->
+        <div id="page-quiz" class="page">
+            <div class="progress-container">
+                <div id="progress" class="progress-bar"></div>
+            </div>
+            <div id="question" class="question-text">載入中...</div>
+            <div id="options" class="options-list"></div>
+        </div>
+
+        <!-- 3. 結果尾頁 -->
+        <div id="page-result" class="page">
+            <div id="result-avatar" class="avatar-container">
+                <!-- SVG 頭像會在這裡根據結果動態載入 -->
+            </div>
+            <h1 id="result-name" class="result-title">-</h1>
+            <div id="result-tags" class="tag-box"></div>
+            <div id="result-desc" class="result-desc">-</div>
+            
+            <!-- 改善拖延症小撇步區塊 -->
+            <div class="tips-container">
+                <div class="tips-title">💡 給你的無痛擺脫拖延小訣竅：</div>
+                <ul id="result-tips" class="tips-list">
+                    <!-- 小撇步內容會動態嵌入 -->
+                </ul>
+            </div>
+
+            <button class="btn" onclick="restart()">再測一次（雖然明天也是會拖延）</button>
+        </div>
+
+    </div>
+
+    <script>
+        // ── 1. 背景效果：動態生成豐富花瓣與暖陽光斑 ──
+        function createDeco() {
+            // 生成花瓣
+            const petalCount = 25; 
+            for (let i = 0; i < petalCount; i++) {
+                const petal = document.createElement('div');
+                petal.className = 'petal';
+                petal.style.left = Math.random() * 100 + 'vw';
+                petal.style.width = Math.random() * 12 + 8 + 'px';
+                petal.style.height = Math.random() * 12 + 8 + 'px';
+                petal.style.animationDuration = Math.random() * 4 + 5 + 's'; // 5~9秒飄落
+                petal.style.animationDelay = Math.random() * 5 + 's';
+                document.body.appendChild(petal);
+            }
+
+            // 生成暖陽微粒子
+            const particleCount = 10;
+            for (let i = 0; i < particleCount; i++) {
+                const p = document.createElement('div');
+                p.className = 'sun-particle';
+                p.style.top = Math.random() * 80 + 'vh';
+                p.style.left = Math.random() * 100 + 'vw';
+                const size = Math.random() * 30 + 15 + 'px';
+                p.style.width = size;
+                p.style.height = size;
+                p.style.animationDelay = Math.random() * 4 + 's';
+                document.body.appendChild(p);
+            }
+        }
+        window.onload = createDeco;
+
+        // ── 2. 題目數據 ──
+        const quizData = [
+            {
+                q: "Q1. 班導規定今天早自習前一定要交出昨天的作業，此時你通常是？",
+                options: [
+                    { text: "昨天晚上早就寫完了，一到教室馬上好整以暇地交上去。", score: 1 },
+                    { text: "早自習鐘聲響起才狂奔進教室，拿著原子筆用光速抄同學的。", score: 2 },
+                    { text: "假裝沒帶，等學藝股長催了三次才雙手一攤說：『老師，我明天再交。』", score: 3 }
+                ]
+            },
+            {
+                q: "Q2. 肚子很餓想點外送，打開 App 挑選晚餐時你的行為是？",
+                options: [
+                    { text: "精準點餐，10 分鐘內迅速送出訂單。", score: 1 },
+                    { text: "在兩家店之間猶豫不決，不自覺滑了半小時還沒決定。", score: 2 },
+                    { text: "瘋狂滑了 1 個小時評論，最後因為太累決定改去睡覺不吃了。", score: 3 }
+                ]
+            },
+            {
+                q: "Q3. 距離最後截止日期（Deadline）只剩 24 小時，此時你的狀態是？",
+                options: [
+                    { text: "早就寫完，正在慢條斯理地檢查錯字。", score: 1 },
+                    { text: "開始感到心悸焦慮，一邊瘋狂碎念一邊光速趕工。", score: 2 },
+                    { text: "突然覺得房間太髒，決定先來個年末大掃除，順便排好書架。", score: 3 }
+                ]
+            },
+            {
+                q: "Q4. 原本計劃今晚要回重要信件，這時網路跳出一部「水豚吃西瓜 10 小時無斷訊直播」...",
+                options: [
+                    { text: "關掉通知，默默打開工作視窗。", score: 1 },
+                    { text: "心想「我就看 5 分鐘」，回過神來已經看了 2 小時。", score: 2 },
+                    { text: "「水豚吃西瓜太重要了！」一邊吃零食一邊看，信件明天再說。", score: 3 }
+                ]
+            },
+            {
+                q: "Q5. 這個測驗一共 5 題，你現在點到最後一題的心情是？",
+                options: [
+                    { text: "太好了，趕快寫完看結果！", score: 1 },
+                    { text: "字有點多，我剛剛中間差點想先去滑個 IG 或 Threads...", score: 2 },
+                    { text: "（根本沒看題目，閉著眼睛隨便亂點一個選項）", score: 3 }
+                ]
+            }
+        ];
+
+        // ── 3. 人格結果、頭像與專屬改善小撇步 ──
+        const resultData = {
+            low: {
+                name: "積極到令人害怕的行動異形",
+                tags: ["#自律狂魔", "#Deadline是什麼"],
+                desc: "你不是人類吧？你是不是在鬧鐘響前 1 分鐘就會自己醒來的那種人？拖延症這個詞在你的字典裡根本不存在。請離我們遠一點，你的積極讓身邊躺平的朋友壓力很大。",
+                avatar: `<svg viewBox="0 0 100 100" width="90" height="90">
+                    <circle cx="50" cy="50" r="40" fill="#E6EEF8"/>
+                    <circle cx="50" cy="53" r="22" fill="#FAD3CF"/>
+                    <path d="M28 45 Q50 20 72 45 Q50 35 28 45" fill="#4A3F35"/>
+                    <circle cx="42" cy="52" r="3" fill="#4A3F35"/>
+                    <circle cx="58" cy="52" r="3" fill="#4A3F35"/>
+                    <path d="M 46 59 Q 50 62 54 59" stroke="#4A3F35" stroke-width="2" fill="none"/>
+                    <circle cx="36" cy="56" r="3" fill="#F3A399" opacity="0.6"/>
+                    <circle cx="64" cy="56" r="3" fill="#F3A399" opacity="0.6"/>
+                    <polygon points="50,15 54,23 62,23 56,29 58,37 50,32 42,37 44,29 38,23 46,23" fill="#FCD875"/>
+                </svg>`,
+                tips: [
+                    "<strong>偶爾允許自己發呆：</strong> 你的自律已經是天花板級別了！有時候緊繃太久容易彈性疲乏，試著每天安排 15 分鐘『完全合法地浪費時間』。",
+                    "<strong>別對旁人太嚴苛：</strong> 看到同學在最後一刻才抄作業時，請吸一口氣，他們只是在享受極限生存的快感，默默在心裡關懷他們就好。"
+                ]
+            },
+            mid: {
+                name: "Deadline 邊緣的極限衝浪手",
+                tags: ["#不到最後關頭絕不動手", "#腎上腺素爆發"],
+                desc: "你的大腦只有在距離 Deadline 剩 3 小時的時候才會清醒。你常常安慰自己「我是在沉澱靈感」，其實你只是在發呆。雖然每次都險象寒生，但你總能奇蹟似地壓線交件。",
+                avatar: `<svg viewBox="0 0 100 100" width="90" height="90">
+                    <circle cx="50" cy="50" r="40" fill="#FFF6E9"/>
+                    <circle cx="50" cy="53" r="22" fill="#FAD3CF"/>
+                    <path d="M26 48 Q50 25 74 48" stroke="#4A3F35" stroke-width="8" fill="none" stroke-linecap="round"/>
+                    <ellipse cx="40" cy="52" rx="2.5" ry="4" fill="#4A3F35"/>
+                    <ellipse cx="60" cy="52" rx="2.5" ry="4" fill="#4A3F35"/>
+                    <circle cx="50" cy="61" r="3" fill="#4A3F35"/>
+                    <path d="M28 53 Q25 45 28 38" stroke="#74B9FF" stroke-width="2" fill="none"/>
+                    <path d="M33 56 Q30 48 33 41" stroke="#74B9FF" stroke-width="2" fill="none"/>
+                </svg>`,
+                tips: [
+                    "<strong>微調你的 Deadline：</strong> 既然你只聽從死線的召喚，試著在行事曆上把交作業時間『人為往前寫 1 天』。這樣就算你拖延，也剛好是在真正的截止日寫完！",
+                    "<strong>使用「5分鐘啟動法」：</strong> 不想讀書時，告訴自己：『我只讀 5 分鐘，時間到立刻合上書。』通常只要熬過前 5 分鐘，大腦的衝浪引擎就會默默發動了。"
+                ]
+            },
+            high: {
+                name: "放棄掙扎的末期躺平化石",
+                tags: ["#明天再說", "#爛命一條"],
+                desc: "恭喜你，你已經跟床融為一體了。對你來說，「今天的事明天做，明天的事明年做」才是人生真諦。如果世界末日要來了，你大概會說：『那我先睡個午覺，末日晚點再說。』",
+                avatar: `<svg viewBox="0 0 100 100" width="90" height="90">
+                    <circle cx="50" cy="50" r="40" fill="#E8E8E8"/>
+                    <circle cx="50" cy="55" r="22" fill="#FAD3CF"/>
+                    <path d="M25 50 Q50 30 75 50" stroke="#666" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <line x1="36" y1="54" x2="44" y2="54" stroke="#666" stroke-width="3" stroke-linecap="round"/>
+                    <line x1="56" y1="54" x2="64" y2="54" stroke="#666" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M 45 63 Q 50 60 55 63" stroke="#666" stroke-width="2" fill="none"/>
+                    <circle cx="70" cy="40" r="6" fill="#74B9FF" opacity="0.3"/>
+                    <text x="67" y="43" font-size="8" fill="#555" font-family="Arial">z</text>
+                </svg>`,
+                tips: [
+                    "<strong>把目標切成「碎屑」：</strong> 不要想著『我今天要寫完一整份報告』，那會讓你直接選擇躺平。改成『我今天只要打開 Word，打上名字和學號』就好。只要動起來，化石也能慢慢活化！",
+                    "<strong>物理隔離誘惑源：</strong> 讀書時把手機放到另一個房間，或是交給爸媽、認真的同學保管。相信我，只要拿手機變得很麻煩，你就會因為『懶得去拿手機』而順便開始讀書了。"
+                ]
+            }
+        };
+
+        let currentVol = 0;
+        let totalScore = 0;
+        let escapeCount = 0;
+        const maxEscape = 3; 
+
+        const startBtn = document.getElementById('start-btn');
+        const hintDiv = document.getElementById('hint');
+
+        // 首頁按鈕逃跑惡搞
+        startBtn.addEventListener('mouseenter', function() {
+            if (escapeCount < maxEscape) {
+                const randomX = (Math.random() - 0.5) * 160;
+                const randomY = (Math.random() - 0.5) * 80;
+                
+                startBtn.style.transform = `translate(${randomX}px, ${randomY}px)`;
+                escapeCount++;
+
+                if (escapeCount === 1) hintDiv.innerText = "連測驗按鈕都在拖延！快抓住它！";
+                if (escapeCount === 2) hintDiv.innerText = "哎呀，它又不想面對了～";
+                if (escapeCount === 3) hintDiv.innerText = "好啦，最後一次，點它！";
+            }
+        });
+
+        function realStart() {
+            startBtn.style.transform = 'none';
+            switchPage('page-start', 'page-quiz');
+            showQuestion();
+        }
+
+        function switchPage(fromId, toId) {
+            document.getElementById(fromId).classList.remove('active');
+            document.getElementById(toId).classList.add('active');
+        }
+
+        function showQuestion() {
+            const currentQuiz = quizData[currentVol];
+            
+            const progressPercent = (currentVol / quizData.length) * 100;
+            document.getElementById('progress').style.width = `${progressPercent}%`;
+
+            document.getElementById('question').innerText = currentQuiz.q;
+
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+
+            currentQuiz.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt.text;
+                btn.onclick = () => selectOption(opt.score);
+                optionsDiv.appendChild(btn);
+            });
+        }
+
+        function selectOption(score) {
+            totalScore += score;
+            currentVol++;
+
+            if (currentVol < quizData.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            switchPage('page-quiz', 'page-result');
+            
+            let result;
+            if (totalScore <= 8) {
+                result = resultData.low;
+            } else if (totalScore <= 12) {
+                result = resultData.mid;
+            } else {
+                result = resultData.high;
+            }
+
+            // 渲染圖片、名稱與描述
+            document.getElementById('result-avatar').innerHTML = result.avatar;
+            document.getElementById('result-name').innerText = result.name;
+            document.getElementById('result-desc').innerText = result.desc;
+
+            // 渲染標籤
+            const tagsDiv = document.getElementById('result-tags');
+            tagsDiv.innerHTML = '';
+            result.tags.forEach(t => {
+                const span = document.createElement('span');
+                span.className = 'tag';
+                span.innerText = t;
+                tagsDiv.appendChild(span);
+            });
+
+            // 動態嵌入專屬改善小撇步
+            const tipsList = document.getElementById('result-tips');
+            tipsList.innerHTML = '';
+            result.tips.forEach(tip => {
+                const li = document.createElement('li');
+                li.innerHTML = tip;
+                tipsList.appendChild(li);
+            });
+        }
+
+        function restart() {
+            currentVol = 0;
+            totalScore = 0;
+            escapeCount = 0;
+            hintDiv.innerText = "";
+            switchPage('page-result', 'page-start');
+        }
+    </script>
+</body>
+</html>

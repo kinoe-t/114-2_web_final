@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔮 測出你體內的潛在魔法</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+TC:wght@300;400;600&display=swap');
+
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #f0d080;
+    --dark: #0d0a1a;
+    --cream: #f5efe0;
+    --accent: #7b4fa8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Serif TC', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    writing-mode: horizontal-tb;
+    direction: ltr;
+  }
+
+  /* ── HOME ── */
+  #home {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: url('森林.jpg') center/cover no-repeat;
+    z-index: 100;
+    transition: opacity 0.8s ease, visibility 0.8s;
+  }
+  #home.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+  .home-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, rgba(10,5,30,0.72) 0%, rgba(40,15,70,0.55) 60%, rgba(10,5,30,0.8) 100%);
+  }
+
+  .home-content {
+    position: relative;
+    text-align: center;
+    padding: 2.5rem 3rem;
+    border: 1px solid rgba(201,168,76,0.4);
+    background: rgba(13,10,26,0.55);
+    backdrop-filter: blur(6px);
+    border-radius: 2px;
+    max-width: 560px;
+    width: 90%;
+  }
+  .home-content::before, .home-content::after {
+    content: '';
+    position: absolute;
+    width: 28px; height: 28px;
+    border-color: var(--gold);
+    border-style: solid;
+  }
+  .home-content::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+  .home-content::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+  .orb {
+    font-size: 3.8rem;
+    display: block;
+    margin-bottom: 1rem;
+    animation: float 4s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100%{ transform: translateY(0) rotate(-3deg); }
+    50%    { transform: translateY(-10px) rotate(3deg); }
+  }
+
+  .home-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1rem, 3.5vw, 1.5rem);
+    color: var(--gold-light);
+    letter-spacing: 0.12em;
+    text-shadow: 0 0 20px rgba(201,168,76,0.6);
+    margin-bottom: 0.5rem;
+  }
+  .home-sub {
+    font-size: 0.88rem;
+    color: rgba(245,239,224,0.65);
+    letter-spacing: 0.08em;
+    margin-bottom: 2rem;
+    line-height: 1.8;
+  }
+
+  .btn-start {
+    display: inline-block;
+    padding: 0.75rem 2.6rem;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold-light);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 1rem;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: color 0.3s;
+  }
+  .btn-start::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s ease;
+    z-index: -1;
+  }
+  .btn-start:hover { color: var(--dark); }
+  .btn-start:hover::before { transform: scaleX(1); }
+
+  /* ── QUIZ ── */
+  #quiz {
+    display: none;
+    min-height: 100vh;
+    background: #ffffff;
+    padding: 0;
+  }
+  #quiz.active { display: block; }
+
+  .quiz-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 4rem 2rem 6rem;
+  }
+
+  .progress-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 3.5rem;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 3px;
+    background: #e8e0d0;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    transition: width 0.5s ease;
+    border-radius: 2px;
+  }
+  .progress-label {
+    font-size: 0.78rem;
+    color: #999;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+  }
+
+  .question-block {
+    animation: fadeUp 0.5s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(18px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  .q-number {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 0.72rem;
+    color: var(--accent);
+    letter-spacing: 0.25em;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+  }
+
+  .q-text {
+    font-size: clamp(1rem, 2.5vw, 1.18rem);
+    color: #1a1220;
+    line-height: 1.85;
+    margin-bottom: 2.4rem;
+    font-weight: 400;
+  }
+
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .option-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 1.1rem 1.5rem;
+    background: #faf8f4;
+    border: 1px solid #e0d8cc;
+    border-radius: 2px;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.95rem;
+    color: #2a2030;
+    line-height: 1.7;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.25s, background 0.25s, color 0.25s, transform 0.15s;
+  }
+  .option-btn .opt-label {
+    font-weight: 600;
+    color: var(--accent);
+    margin-right: 0.6em;
+  }
+  .option-btn:hover {
+    border-color: var(--accent);
+    background: #f3eeff;
+    transform: translateX(4px);
+  }
+  .option-btn.selected {
+    border-color: var(--gold);
+    background: linear-gradient(90deg, #fdf5e0, #faf8f4);
+    color: #1a1220;
+  }
+  .option-btn.selected .opt-label { color: var(--gold); }
+
+  /* ── RESULT ── */
+  #result {
+    display: none;
+    min-height: 100vh;
+    background: #fff;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 3rem 2rem;
+  }
+  #result.active { display: flex; }
+
+  .result-glow {
+    animation: resultIn 0.8s cubic-bezier(.23,1.2,.46,.98) both;
+  }
+  @keyframes resultIn {
+    from { opacity:0; transform: scale(0.85); }
+    to   { opacity:1; transform: scale(1); }
+  }
+
+  .result-label {
+    font-size: 0.8rem;
+    letter-spacing: 0.3em;
+    color: #aaa;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .result-emoji { font-size: 4.5rem; display: block; margin-bottom: 1.2rem; }
+
+  .result-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.4rem, 5vw, 2rem);
+    color: var(--dark);
+    margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+
+  .result-subtitle {
+    font-size: 1rem;
+    color: #555;
+    line-height: 1.9;
+    max-width: 480px;
+    margin: 0 auto 2.5rem;
+  }
+
+  .result-badge {
+    display: inline-block;
+    padding: 0.5rem 2rem;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-size: 0.82rem;
+    letter-spacing: 0.22em;
+    margin-bottom: 2.5rem;
+  }
+
+  .btn-retry {
+    padding: 0.7rem 2.2rem;
+    background: var(--dark);
+    border: none;
+    color: var(--gold-light);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: background 0.25s;
+    border-radius: 1px;
+  }
+  .btn-retry:hover { background: var(--accent); }
+
+  .divider {
+    width: 60px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 1.5rem auto;
+  }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<section id="home">
+  <div class="home-overlay"></div>
+  <div class="home-content">
+    <span class="orb">🔮</span>
+    <h1 class="home-title">探索內心的魔法...</h1>
+    <p class="home-sub">五道直覺之問<br>揭示你靈魂深處蘊藏的元素力量</p>
+    <button class="btn-start" onclick="startQuiz()">✦ 開始測驗 ✦</button>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section id="quiz">
+  <div class="quiz-inner">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <span class="progress-label" id="progressLabel">0 / 5</span>
+    </div>
+    <div id="questionArea"></div>
+  </div>
+</section>
+
+<!-- RESULT -->
+<section id="result">
+  <div class="result-glow" id="resultContent"></div>
+</section>
+
+<script>
+const questions = [
+  {
+    text: "剛搬進新家，你發現客廳牆角有一扇「打不開也沒鑰匙孔」的迷你裝飾木門。某天半夜，你隱約聽到門後傳來聲音，此時你會？",
+    options: [
+      { label: "A", text: "拿手電筒貼著門縫猛照，甚至試圖用瑞士刀把門撬開。", element: "火/雷" },
+      { label: "B", text: "假裝沒聽到繼續睡，但隔天默默在門前放一塊餅乾當作「保護費」。", element: "土/植物" },
+      { label: "C", text: "搬張椅子坐在門前，試圖敲敲看有沒有特定的節奏，想跟對方對話。", element: "風/時空" },
+      { label: "D", text: "突然覺得一陣莫名心安，覺得那是在守護你的靈魂，微笑著入睡。", element: "水/冰" },
+    ]
+  },
+  {
+    text: "你去一間復古選物店，老闆說有一件「被詛咒的古董」想免費送給有緣人，你直覺那是下面哪一個畫面？",
+    options: [
+      { label: "A", text: "一面無論照誰，鏡子裡的人永遠在微笑的黃銅手鏡。", element: "水/冰" },
+      { label: "B", text: "一只指標會隨著你的情緒波動，瘋狂旋轉的古老懷錶。", element: "風/時空" },
+      { label: "C", text: "一把摸起來異常燙手，據說曾屬於某個暴君的黑曜石拆信刀。", element: "火/雷" },
+      { label: "D", text: "一個裝滿泥土的花瓶，不管多久沒澆水，裡面的植物都長得異常茂盛。", element: "土/植物" },
+    ]
+  },
+  {
+    text: "碰上極度糟糕的暴雨天，你沒帶傘被困在捷運站出口，眼看就要遲到了，你內心的第一反應是？",
+    options: [
+      { label: "A", text: "「可惡，直接衝了啦！」把包包頂在頭上，準備使出百米衝刺。", element: "火/雷" },
+      { label: "B", text: "開始觀察雨滴落下的規律，甚至幻想自己能像摩西分海一樣把雨劈開。", element: "風/時空" },
+      { label: "C", text: "默默退回站內找間咖啡廳坐下，傳訊息請假，享受難得的雨天氛圍。", element: "水/冰" },
+      { label: "D", text: "冷靜地打開外送或地圖 App，開始計算搭計程車和改搭其他交通工具的成本。", element: "土/植物" },
+    ]
+  },
+  {
+    text: "你在森林裡迷路了，走到盡頭發現有四個「大自然奇景」，直覺告訴你哪一個才是出口？",
+    options: [
+      { label: "A", text: "一棵空心的大巨木，樹洞裡隱約看得到對面的微光。", element: "土/植物" },
+      { label: "B", text: "一道由下往上流、違反地心引力的奇特瀑布。", element: "水/冰" },
+      { label: "C", text: "一圈由螢火蟲圍繞、不斷旋轉的落葉風捲。", element: "風/時空" },
+      { label: "D", text: "一面寸草不生、只要有人靠近就會冒出淡淡白煙的紅色岩壁。", element: "火/雷" },
+    ]
+  },
+  {
+    text: "睡醒後，你發現自己突然聽得懂「某一種非人類」的語言，你希望是誰在說話？",
+    options: [
+      { label: "A", text: "牆壁上那隻正在冷眼旁觀的壁虎（想聽聽牠對人類生活的吐槽）。", element: "風/時空" },
+      { label: "B", text: "家裡那台最近常常無故重啟的除濕機或電腦（想知道電器們在抱怨什麼）。", element: "火/雷" },
+      { label: "C", text: "陽台那盆快被你養死的仙人掌（想知道牠到底口不口渴、在想什麼）。", element: "土/植物" },
+      { label: "D", text: "昨晚夢裡出現的那隻神秘白貓（想知道牠是不是帶來了某個預言）。", element: "水/冰" },
+    ]
+  }
+];
+
+const results = {
+  "火/雷": {
+    emoji: "⚡",
+    title: "烈焰雷鳴魔法師",
+    badge: "Fire & Thunder",
+    desc: "你的靈魂燃燒著永不熄滅的火焰，內心住著一頭衝勁十足的雷獸。你天生直覺敏銳、行動果敢，面對未知毫無畏懼，甚至帶著一點點「先打再說」的瀟灑。你的魔法爆發力驚人，能在瞬間撕裂黑暗，但記得——真正的火，懂得何時燃燒，何時收斂。"
+  },
+  "土/植物": {
+    emoji: "🌿",
+    title: "大地生命魔法師",
+    badge: "Earth & Flora",
+    desc: "你與土地有著深厚的羈絆，根系延伸進每一寸泥土，感受著世界緩慢而真實的脈動。你冷靜、務實，懂得在混亂中找到最穩妥的路徑，也對生命抱有溫柔的尊重。你的魔法是滋養而非征服，能讓荒蕪之地重新長出希望——那是一種最深沉的力量。"
+  },
+  "風/時空": {
+    emoji: "🌀",
+    title: "時空流風魔法師",
+    badge: "Wind & Chrono",
+    desc: "你的思緒如風般自由穿梭，永遠比別人多想了幾步，甚至幾個次元。你對規律、節奏與隱藏邏輯有著近乎本能的感知，總是在別人看不見的地方找到裂縫與入口。你的魔法橫跨時間與空間，能折疊現實、重寫因果——只要你願意相信自己看到的那些「不可能」。"
+  },
+  "水/冰": {
+    emoji: "🫧",
+    title: "深淵水晶魔法師",
+    badge: "Water & Ice",
+    desc: "你有著深不見底的內心世界，平靜的表面下流動著強大的感知與情感。你對氛圍、情緒與靈魂的流動極度敏感，能感受到別人察覺不到的細微漣漪。你的魔法如水，無孔不入卻又溫柔包容；如冰，在關鍵時刻凝固一切、守護你所愛的人。"
+  }
+};
+
+let current = 0;
+let scores = { "火/雷": 0, "土/植物": 0, "風/時空": 0, "水/冰": 0 };
+
+function startQuiz() {
+  document.getElementById('home').classList.add('hidden');
+  document.getElementById('quiz').classList.add('active');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  const area = document.getElementById('questionArea');
+  const pct = (current / questions.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = current + ' / ' + questions.length;
+
+  area.innerHTML = `
+    <div class="question-block">
+      <div class="q-number">Question ${String(current + 1).padStart(2,'0')}</div>
+      <p class="q-text">${q.text}</p>
+      <div class="options-list">
+        ${q.options.map((opt, i) => `
+          <button class="option-btn" onclick="choose(${i})">
+            <span class="opt-label">${opt.label}．</span>${opt.text}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function choose(idx) {
+  const opt = questions[current].options[idx];
+  scores[opt.element]++;
+
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach(b => b.style.pointerEvents = 'none');
+  btns[idx].classList.add('selected');
+
+  setTimeout(() => {
+    current++;
+    if (current < questions.length) {
+      renderQuestion();
+    } else {
+      showResult();
+    }
+  }, 520);
+}
+
+function showResult() {
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('progressLabel').textContent = '5 / 5';
+
+  document.getElementById('quiz').classList.remove('active');
+
+  const top = Object.entries(scores).sort((a,b) => b[1]-a[1])[0][0];
+  const r = results[top];
+
+  document.getElementById('resultContent').innerHTML = `
+    <p class="result-label">✦ 測驗結果 ✦</p>
+    <span class="result-emoji">${r.emoji}</span>
+    <h2 class="result-title">測驗結果為：${r.title}</h2>
+    <div class="divider"></div>
+    <span class="result-badge">${r.badge}</span>
+    <p class="result-subtitle">${r.desc}</p>
+    <button class="btn-retry" onclick="retryQuiz()">↺ 重新測驗</button>
+  `;
+
+  const resultEl = document.getElementById('result');
+  resultEl.classList.add('active');
+}
+
+function retryQuiz() {
+  current = 0;
+  scores = { "火/雷": 0, "土/植物": 0, "風/時空": 0, "水/冰": 0 };
+  document.getElementById('result').classList.remove('active');
+  document.getElementById('quiz').classList.add('active');
+  renderQuestion();
+}
+</script>
+</body>
+</html>

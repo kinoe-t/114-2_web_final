@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>靈魂交響樂：尋找你的本命樂器</title>
+    <style>
+        :root {
+            --primary-color: #4a3b32;
+            --secondary-color: #8c6d58;
+            --accent-color: #d9a05b;
+            --bg-gradient: linear-gradient(135deg, #f5efe6 0%, #e8d8c8 100%);
+            --text-color: #333333;
+            --card-bg: rgba(255, 255, 255, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft JhengHei";
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: var(--secondary-color);
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        /* 進度條 */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+            transition: width 0.3s ease;
+        }
+
+        /* 題目區塊 */
+        .question-box {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .question-box.active {
+            display: block;
+        }
+
+        .question-text {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            min-height: 60px;
+        }
+
+        /* 按鈕樣式 */
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background-color: #ffffff;
+            border: 2px solid var(--secondary-color);
+            color: var(--primary-color);
+            padding: 15px 20px;
+            font-size: 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            outline: none;
+        }
+
+        .option-btn:hover {
+            background-color: var(--secondary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(140, 109, 88, 0.3);
+        }
+
+        /* 結果區塊 */
+        .result-box {
+            display: none;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .instrument-name {
+            font-size: 32px;
+            color: var(--accent-color);
+            margin: 20px 0;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .instrument-img {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instrument-desc {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555;
+            margin: 20px 0 30px 0;
+            text-align: left;
+            padding: 20px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 10px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="quiz-section">
+            <h1 id="main-title">靈魂交響樂</h1>
+            <p class="subtitle" id="sub-title">解答 10 個核心特質，測出最適合你的本命樂器</p>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progress"></div>
+            </div>
+
+            <div id="questions-container">
+                </div>
+        </div>
+
+        <div id="result-section" class="result-box">
+            <h1>測驗結果</h1>
+            <p class="subtitle">你內心的旋律與這款樂器產生了共鳴：</p>
+            <div class="instrument-name" id="res-name"></div>
+            <div class="instrument-img" id="res-img"></div>
+            <div class="instrument-desc" id="res-desc"></div>
+            <button class="restart-btn" onclick="restartQuiz()">重新測驗</button>
+        </div>
+    </div>
+
+    <script>
+        // 10題心理測驗題目設計 (A/B 分別導向不同的性格權重)
+        const questions = [
+            { q: "1. 當你心情低落時，你通常會選擇？", a: "獨自關在房間沉澱思緒", b: "找朋友聚會發洩或出門走走", weightA: ["二胡", "曲笛", "大提琴", "鋼琴"], weightB: ["中笙", "高笙", "嗩吶", "電吉他", "爵士鼓", "薩克斯風"] },
+            { q: "2. 在團隊合作中，你比較希望扮演什麼角色？", a: "掌握全局的核心主導者或聚光燈焦點", b: "穩固後方、不可或缺的堅實後盾", weightA: ["嗩吶", "電吉他", "鋼琴", "高笙"], weightB: ["中笙", "大提琴", "爵士鼓", "二胡", "曲笛", "薩克斯風"] },
+            { q: "3. 你比較喜歡哪一種生活步調？", a: "充滿未知與刺激，每天都有新挑戰", b: "節奏穩定，能按部就班地掌控一切", weightA: ["電吉他", "爵士鼓", "嗩吶", "薩克斯風"], weightB: ["鋼琴", "大提琴", "二胡", "曲笛", "中笙", "高笙"] },
+            { q: "4. 朋友通常怎麼形容你的聲音或表達方式？", a: "情感細膩深刻，有時帶點多愁善感", b: "熱情宏亮、直截了當，很有渲染力", weightA: ["二胡", "大提琴", "曲笛"], weightB: ["婩吶", "高笙", "電吉他", "爵士鼓", "中笙", "薩克斯風", "鋼琴"] },
+            { q: "5. 想像一場完美的旅行，你更嚮往哪裡？", a: "充滿歷史底蘊的古鎮或煙雨江南", b: "繁華現代的紐約爵士酒吧或搖滾音樂祭", weightA: ["二胡", "曲笛", "中笙", "高笙", "嗩吶"], weightB: ["鋼琴", "大提琴", "電吉他", "爵士鼓", "薩克斯風"] },
+            { q: "6. 當你面對壓力時，你最直覺的反應是？", a: "尋找規律與邏輯，冷靜理智地分析處理", b: "順從直覺與情緒，用爆發力直接突破", weightA: ["鋼琴", "大提琴", "中笙", "曲笛"], weightB: ["電吉他", "爵士鼓", "嗩吶", "二胡", "高笙", "薩克斯風"] },
+            { q: "7. 下列哪種色彩美學最吸引你？", a: "墨綠、深棕或古典的水墨淡彩", b: "霓虹、金屬光澤或強烈對比的摩登色彩", weightA: ["二胡", "中笙", "曲笛", "高笙", "大提琴"], weightB: ["婩吶", "鋼琴", "電吉他", "爵士鼓", "薩克斯風"] },
+            { q: "8. 你在人際關係中，更傾向於？", a: "維持少數但極度深刻的知心知己", b: "遊走在不同圈子，與大家打成一片", weightA: ["二胡", "大提琴", "曲笛", "鋼琴"], weightB: ["中笙", "高笙", "嗩吶", "電吉他", "爵士鼓", "薩克斯風"] },
+            { q: "9. 欣賞一首音樂時，最先吸引你注意力的通常是？", a: "優美流暢、如泣如訴的主旋律線", b: "強烈帶感的重低音、節奏或和聲堆疊", weightA: ["二胡", "曲笛", "高笙", "嗩吶", "鋼琴"], weightB: ["中笙", "大提琴", "電吉他", "爵士鼓", "薩克斯風"] },
+            { q: "10. 如果用一種自然現象形容自己，你覺得是？", a: "山間流動的清泉或林間吹過的微風", b: "夏夜掠過的閃電或震撼大地的雷鳴", weightA: ["曲笛", "二胡", "中笙", "大提琴", "鋼琴"], weightB: ["婩吶", "高笙", "電吉他", "爵士鼓", "薩克斯風"] }
+        ];
+
+        // 樂器資料庫（描述與內建 SVG 圖形）
+        const instrumentsData = {
+            "二胡": {
+                desc: "你擁有極其細膩的心靈與豐富的情感。二胡那獨特、帶有一絲憂傷卻又無比深邃的琴音，正如同你善於觀察與內省的性格。你不隨波逐流，能在孤獨中孕育出極具渲染力的美麗能量。",
+                svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><path d="M45,10 L45,85 M45,20 L55,20 M45,28 L55,28" stroke="#4a3b32" stroke-width="3" stroke-linecap="round"/><rect x="38" y="75" width="14" height="15" rx="2" fill="#4a3b32"/><path d="M30,15 L70,80" stroke="#8c6d58" stroke-width="1.5" stroke-linecap="round"/><circle cx="45" cy="82" r="2" fill="#d9a05b"/></svg>`
+            },
+            "中笙": {
+                desc: "你是團隊中不可或缺的和聲基石。中笙在傳統樂團中扮演著融合與平衡的重要角色。你個性沉穩、包容力強，擅長協調衝突，你的存在總能讓身邊的人感到安心與和諧。",
+                svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><rect x="42" y="65" width="16" height="15" rx="3" fill="#8c6d58"/><path d="M44,25 L44,65 M48,20 L48,65 M52,20 L52,65 M56,25 L56,65" stroke="#4a3b32" stroke-width="2.5"/><path d="M40,72 L35,72 C32,72 32,77 35,77 L42,77" fill="none" stroke="#8c6d58" stroke-width="3"/></svg>`
+            },
+            "曲笛": {
+                desc: "你像一陣山林間的清風，崇尚自由、生性豁達。曲笛的聲音清脆悠揚、飄逸超塵，完美契合你靈巧、不受拘束的靈魂。你總能用最純粹、簡單的方式，為周遭帶來清新與活力。",
+                svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><rect x="15" y="47" width="70" height="6" rx="2" fill="#8c6d58"/><circle cx="25" cy="50" r="1.5" fill="#f5efe6"/><circle cx="35" cy="50" r="1.5" fill="#f5efe6"/><circle cx="45" cy="50" r="1.5" fill="#f5efe6"/><circle cx="55" cy="50" r="1.5" fill="#f5efe6"/><circle cx="65" cy="50" r="1.5" fill="#f5efe6"/><circle cx="75" cy="50" r="1.5" fill="#f5efe6"/><line x1="20" y1="47" x2="20" y2="53" stroke="#4a3b32" stroke-width="1"/></svg>`
+            },
+            "高笙": {
+                desc: "你活潑、亮眼，且富有創造力。高笙的音色清脆明亮，在樂團中負責跳躍的高音與豐富的和弦。你思維敏捷、反應快，總是群體中那個能點亮氣氛、帶來新點子的耀眼存在。",
+                svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><rect x="42" y="65" width="16" height="15" rx="3" fill="#d9a05b"/><path d="M44,15 L44,65 M48,22 L48,65 M52,22 L52,65 M56,15 L56,65" stroke="#4a3b32" stroke-width="2.5"/><path d="M40,72 L35,72 C32,72 32,77 35,77 L42,77" fill="none" stroke="#d9a05b" stroke-width="3"/></svg>`
+            },
+            "嗩吶": {
+                desc: "你是天生的焦點，擁有無與倫比的爆發力與渲染力！嗩吶一出，誰與爭鋒。你個性直爽、敢愛敢恨，不畏懼他人眼光。只要你一登場，就能瞬間掌控全場氣氛，是極具領袖魅力的存在。",
+                svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><path d="M50,15 L50,65" stroke="#4a3b32" stroke-width="3"/><path d="M48,15 L52,15 M49,25 L51,25" stroke="#d9a05b" stroke-width="2"/><path d="M50,65 L35,85 L65,85 Z" fill="#d9a05b" stroke="#8c6d58" stroke-width="2" stroke-linejoin="round"/></svg>`
+            },
+            "鋼琴": {
+                desc: "你追求完美、優雅且具備強大的內在邏輯。鋼琴被譽為樂器之王，既能演奏宏大的和弦，又能流露細致的單音。你獨立、理智，能隻身一人面對風雨，將複雜的人生彈奏得有條不紊。",
+                svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><path d="M20,30 L80,30 L80,70 L20,70 Z" fill="#4a3b32"/><rect x="25" y="50" width="50" height="15" fill="#ffffff"/><rect x="30" y="50" width="3" height="10" fill="#000000"/><rect x="37" y="50" width="3" height="10" fill="#000000"/><rect x="44" y="50" width="3" height="10" fill="#000000"/><rect x="55" y="50" width="3" height="10" fill="#000000"/><rect x="62" y="50" width="3" height="10" fill="#000000"/><path d="M20,30 Q50,15 80,30" fill="none" stroke="#d9a05b" stroke-width="2"/></svg>`
+            },
+            "大提琴": {
+                desc: "你溫暖、敦厚、重感情，是朋友眼中最棒的傾聽者。大提琴低沉而醇厚的音色，猶如長者的低語，撫慰人心。你不愛出風頭，但只要身邊的人需要，你永遠能給予最穩固、溫柔的陪伴。",
+                svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><path d="M40,30 C30,35 30,45 40,50 C30,55 30,65 40,75 L60,75 C70,65 70,55 60,50 C70,45 70,35 60,30 Z" fill="#8c6d58" stroke="#4a3b32" stroke-width="2"/><path d="M50,15 L50,30 M50,75 L50,85" stroke="#4a3b32" stroke-width="2"/><path d="M45,42 Q50,50 45,58 M55,42 Q50,50 55,58" fill="none" stroke="#4a3b32" stroke-width="2"/></svg>`
+            },
+            "電吉他": {
+                desc: "你血液中流淌著反叛與創新的因子！電吉他代表著自由、激進與強烈的自我表達。你充滿熱情、點子不斷，敢於打破傳統規則。生活對你而言，就是要痛快、精彩、大聲地彈奏出來！",
+                svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><path d="M50,45 L35,80 C32,85 45,90 50,85 L65,80 Z" fill="#4a3b32"/><line x1="50" y1="15" x2="50" y2="50" stroke="#d9a05b" stroke-width="4"/><path d="M47,15 L53,15 L53,25 L47,25 Z" fill="#8c6d58"/><line x1="49" y1="25" x2="49" y2="80" stroke="#ffffff" stroke-width="0.8"/></svg>`
+            },
+            "爵士鼓": {
+                desc: "你是掌控一切節奏的靈魂人物。爵士鼓是音樂中的心臟，沒有你，整個音樂便會失去前進的動力。你充滿行動力、活力四射、極具節奏感，總能用你的熱情與幹勁，帶動身邊所有人前進。",
+                svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><ellipse cx="50" cy="40" rx="25" ry="8" fill="#e8d8c8" stroke="#4a3b32" stroke-width="3"/><path d="M25,40 L25,65 C25,75 75,75 75,65 L75,40" fill="#8c6d58" stroke="#4a3b32" stroke-width="3"/><ellipse cx="50" cy="65" rx="25" ry="8" fill="#8c6d58" stroke="#4a3b32" stroke-width="1.5"/><line x1="20" y1="30" x2="45" y2="38" stroke="#d9a05b" stroke-width="3" stroke-linecap="round"/><line x1="80" y1="30" x2="55" y2="38" stroke="#d9a05b" stroke-width="3" stroke-linecap="round"/></svg>`
+            },
+            "薩克斯風": {
+                desc: "你自帶一種迷人、浪漫且微醺的優雅氣質。薩克斯風音色兼具木管的細膩與銅管的奔放，感性與理性在你不身上完美融合。你懂得享受生活，舉手投足間都散發著獨特的個人品味與都會魅力。",
+                svg: `<svg viewBox="0 0 100 100" width="100%" height="100%"><path d="M45,20 L45,65 C45,80 65,80 65,65 L65,55" fill="none" stroke="#d9a05b" stroke-width="6" stroke-linecap="round"/><path d="M65,55 L60,50 L75,50 L70,55 Z" fill="#d9a05b"/><circle cx="45" cy="22" r="4" fill="#8c6d58"/><circle cx="45" cy="35" r="2" fill="#ffffff"/><circle cx="45" cy="45" r="2" fill="#ffffff"/><circle cx="45" cy="55" r="2" fill="#ffffff"/></svg>`
+            }
+        };
+
+        // 計分狀態
+        let currentQuestionIdx = 0;
+        let scores = {
+            "二胡": 0, "中笙": 0, "曲笛": 0, "高笙": 0, "嗩吶": 0,
+            "鋼琴": 0, "大提琴": 0, "電吉他": 0, "爵士鼓": 0, "薩克斯風": 0
+        };
+
+        // 初始化測驗
+        function initQuiz() {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+            
+            questions.forEach((qData, index) => {
+                const qBox = document.createElement('div');
+                qBox.className = `question-box ${index === 0 ? 'active' : ''}`;
+                qBox.id = `q-${index}`;
+
+                qBox.innerHTML = `
+                    <div class="question-text">${qData.q}</div>
+                    <div class="btn-container">
+                        <button class="option-btn" onclick="selectOption('A')">${qData.a}</button>
+                        <button class="option-btn" onclick="selectOption('B')">${qData.b}</button>
+                    </div>
+                `;
+                container.appendChild(qBox);
+            });
+            updateProgressBar();
+        }
+
+        // 更新進度條
+        function updateProgressBar() {
+            const progress = document.getElementById('progress');
+            const percentage = (currentQuestionIdx / questions.length) * 100;
+            progress.style.width = `${percentage}%`;
+        }
+
+        // 選擇答案
+        function selectOption(choice) {
+            const currentQuestion = questions[currentQuestionIdx];
+            const targets = choice === 'A' ? currentQuestion.weightA : currentQuestion.weightB;
+            
+            // 權重加分
+            targets.forEach(instrument => {
+                if (scores[instrument] !== undefined) {
+                    scores[instrument]++;
+                }
+            });
+
+            // 切換下一題或結算
+            document.getElementById(`q-${currentQuestionIdx}`).classList.remove('active');
+            currentQuestionIdx++;
+
+            if (currentQuestionIdx < questions.length) {
+                document.getElementById(`q-${currentQuestionIdx}`).classList.add('active');
+                updateProgressBar();
+            } else {
+                showResult();
+            }
+        }
+
+        // 結算並顯示結果
+        function showResult() {
+            document.getElementById('quiz-section').style.display = 'none';
+            const resultSection = document.getElementById('result-section');
+            resultSection.style.display = 'block';
+
+            // 尋找最高分的樂器
+            let maxScore = -1;
+            let finalInstrument = "鋼琴"; // 預設
+
+            for (const [instrument, score] of Object.entries(scores)) {
+                if (score > maxScore) {
+                    maxScore = score;
+                    finalInstrument = instrument;
+                }
+            }
+
+            // 渲染結果內容
+            document.getElementById('res-name').innerText = finalInstrument;
+            document.getElementById('res-img').innerHTML = instrumentsData[finalInstrument].svg;
+            document.getElementById('res-desc').innerText = instrumentsData[finalInstrument].desc;
+        }
+
+        // 重新測驗
+        function restartQuiz() {
+            currentQuestionIdx = 0;
+            scores = {
+                "二胡": 0, "中笙": 0, "曲笛": 0, "高笙": 0, "嗩吶": 0,
+                "鋼琴": 0, "大提琴": 0, "電吉他": 0, "爵士鼓": 0, "薩克斯風": 0
+            };
+            document.getElementById('result-section').style.display = 'none';
+            document.getElementById('quiz-section').style.display = 'block';
+            initQuiz();
+        }
+
+        // 網頁載入時啟動
+        window.onload = initQuiz;
+    </script>
+</body>
+</html>

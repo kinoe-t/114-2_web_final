@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猜杯子生死鬥 (自訂色彩永恆彈幕版)</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --p1-color: #e63946;
+            --p2-color: #3a86ff;
+            --bg-color: #1a1a2e;
+            --panel-bg: #16213e;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: #fff;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden; 
+            position: relative;
+        }
+
+        /* 彈幕畫布容器 */
+        #danmaku-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 45%;
+            z-index: 99;
+            pointer-events: none; 
+            overflow: hidden;
+        }
+
+        /* 彈幕本體樣式：無限在畫面上橫越飄移 */
+        .danmaku {
+            position: absolute;
+            white-space: nowrap;
+            font-size: 2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.9);
+            left: 100%; 
+            animation: moveDanmakuLoop 6s linear infinite;
+        }
+
+        /* 永無止境的左右無限飄移軌道 */
+        @keyframes moveDanmakuLoop {
+            0% { left: 100%; transform: translateX(0); }
+            100% { left: -100%; transform: translateX(0); }
+        }
+
+        .container {
+            text-align: center;
+            background: var(--panel-bg);
+            padding: 1.8rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 650px;
+            width: 90%;
+            z-index: 10;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
+            font-size: 1.8rem;
+        }
+
+        .scoreboard {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 1rem;
+            background: rgba(255,255,255,0.05);
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+        }
+
+        .p1-score { color: var(--p1-color); font-weight: bold; }
+        .p2-score { color: var(--p2-color); font-weight: bold; }
+
+        .game-area {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 220px;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .cup-container {
+            position: absolute;
+            width: 100px;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            cursor: pointer;
+            transition: left 0.18s ease-in-out;
+        }
+
+        .cup {
+            width: 90px;
+            height: 120px;
+            background: linear-gradient(135deg, #f39c12, #d35400);
+            border-radius: 10px 10px 40px 40px;
+            position: relative;
+            z-index: 2;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-origin: bottom center;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+        }
+
+        .cup::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 5%;
+            width: 90%;
+            height: 15px;
+            background: #a04000;
+            border-radius: 50%;
+        }
+
+        .cup-design {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+        }
+
+        .player-tag {
+            position: absolute;
+            top: -35px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: none;
+            z-index: 3;
+        }
+        .tag-p1 { background-color: var(--p1-color); color: white; }
+        .tag-p2 { background-color: var(--p2-color); color: white; }
+
+        .ball {
+            width: 35px;
+            height: 35px;
+            background: radial-gradient(circle at 30% 30%, #ffbe0b, #fb5607);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 5px;
+            z-index: 1;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            display: none;
+        }
+
+        .cup-container.lifted .cup {
+            transform: translateY(-85px) rotate(-5deg);
+        }
+
+        .status-msg {
+            font-size: 1.2rem;
+            min-height: 2rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+            color: #e0e0e0;
+            padding: 0.5rem;
+            border-radius: 5px;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+            font-weight: bold;
+        }
+
+        .btn:hover { background-color: #357abd; transform: translateY(-2px); }
+        .btn:disabled { background-color: #555; box-shadow: none; cursor: not-allowed; transform: none; }
+
+        /* 彈幕發射面板 */
+        .danmaku-panel {
+            margin-top: 1.5rem;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 1.2rem;
+            border-radius: 10px;
+            border: 2px solid var(--success-color);
+            display: none; 
+        }
+
+        .danmaku-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 0.8rem;
+        }
+
+        .danmaku-panel input[type="text"] {
+            padding: 0.6rem;
+            width: 50%;
+            border-radius: 20px;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        /* 顏色選擇器樣式優化 */
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 15px;
+        }
+
+        .color-picker-wrapper input[type="color"] {
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            background: none;
+            padding: 0;
+        }
+
+        /* 預設左右位置 */
+        [data-index="0"] { left: calc(50% - 160px); }
+        [data-index="1"] { left: calc(50% - 50px); }
+        [data-index="2"] { left: calc(50% + 60px); }
+    </style>
+</head>
+<body>
+
+<div id="danmaku-container"></div>
+
+<div class="container">
+    <h1 id="game-title">⚔️ 猜杯子生死鬥 (每局 5 回合)</h1>
+    
+    <div class="scoreboard">
+        <div>P1 (紅): <span id="p1-score" class="p1-score">0</span> 勝</div>
+        <div>P2 (藍): <span id="p2-score" class="p2-score">0</span> 勝</div>
+        <div>進度: <span id="round" style="font-weight:bold; color:#ffbe0b;">0</span> / 5 回合</div>
+    </div>
+
+    <div class="status-msg" id="status">點擊「開始對決」展開挑戰！</div>
+
+    <div class="game-area" id="game-area">
+        <div class="cup-container" data-index="0" onclick="clickCup(0)">
+            <div class="player-tag tag-p1" id="tag-p1-0">P1 選這</div>
+            <div class="player-tag tag-p2" id="tag-p2-0">P2 選這</div>
+            <div class="cup"><div class="cup-design"></div></div>
+            <div class="ball" id="ball-0"></div>
+        </div>
+        <div class="cup-container" data-index="1" onclick="clickCup(1)">
+            <div class="player-tag tag-p1" id="tag-p1-1">P1 選這</div>
+            <div class="player-tag tag-p2" id="tag-p2-1">P2 選這</div>
+            <div class="cup"><div class="cup-design"></div></div>
+            <div class="ball" id="ball-1"></div>
+        </div>
+        <div class="cup-container" data-index="2" onclick="clickCup(2)">
+            <div class="player-tag tag-p1" id="tag-p1-2">P1 選這</div>
+            <div class="player-tag tag-p2" id="tag-p2-2">P2 選這</div>
+            <div class="cup"><div class="cup-design"></div></div>
+            <div class="ball" id="ball-2"></div>
+        </div>
+    </div>
+
+    <button class="btn" id="start-btn" onclick="startGame()">開始對決</button>
+
+    <div class="danmaku-panel" id="danmaku-panel">
+        <h3 id="danmaku-title" style="margin-top:0; margin-bottom: 0.5rem;">恭喜贏家！</h3>
+        <p id="danmaku-count-msg" style="margin: 0.5rem 0;">輸入一句話，將會複製爆發！</p>
+        
+        <div class="danmaku-controls">
+            <input type="text" id="danmaku-input" placeholder="留下一句話狠狠嘲諷對手..." maxlength="30">
+            
+            <div class="color-picker-wrapper">
+                <label for="danmaku-color">彈幕顏色:</label>
+                <input type="color" id="danmaku-color" value="#ff0000">
+            </div>
+
+            <button class="btn" id="danmaku-btn" style="padding:0.5rem 1.5rem; font-size:1rem;" onclick="sendBatchDanmaku()">一鍵刷屏</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let p1Score = 0; 
+    let p2Score = 0; 
+    let round = 0;   
+    
+    let ballPosition = 0; 
+    let isShuffling = false;
+    let gameState = 'none'; 
+    let p1Choice = null;
+    let p2Choice = null;
+    let currentPositions = [0, 1, 2];
+
+    let activeDanmakuPlayer = null; 
+    let allowedDanmakuCount = 0;
+
+    const statusEl = document.getElementById('status');
+    const p1ScoreEl = document.getElementById('p1-score');
+    const p2ScoreEl = document.getElementById('p2-score');
+    const roundEl = document.getElementById('round');
+    const startBtn = document.getElementById('start-btn');
+    const cupContainers = document.querySelectorAll('.cup-container');
+    const danmakuPanel = document.getElementById('danmaku-panel');
+    const danmakuTitle = document.getElementById('danmaku-title');
+    const danmakuCountMsg = document.getElementById('danmaku-count-msg');
+    const danmakuInput = document.getElementById('danmaku-input');
+    const danmakuColor = document.getElementById('danmaku-color');
+    const danmakuBtn = document.getElementById('danmaku-btn');
+    const danmakuContainer = document.getElementById('danmaku-container');
+
+    function updateCupPositions() {
+        const positionsX = ['calc(50% - 160px)', 'calc(50% - 50px)', 'calc(50% + 60px)'];
+        currentPositions.forEach((pos, index) => {
+            cupContainers[index].style.left = positionsX[pos];
+        });
+    }
+
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    async function startGame() {
+        if (isShuffling) return;
+
+        // 開展新局時，保留彈幕，只重置計分與隱藏彈幕發射面板
+        if (round >= 5) {
+            round = 0; p1Score = 0; p2Score = 0;
+            p1ScoreEl.innerText = '0'; p2ScoreEl.innerText = '0'; roundEl.innerText = '0';
+            danmakuPanel.style.display = 'none'; 
+        }
+        
+        isShuffling = true;
+        gameState = 'none';
+        p1Choice = null; p2Choice = null;
+        startBtn.disabled = true;
+        statusEl.style.backgroundColor = 'transparent';
+        statusEl.style.color = '#e0e0e0';
+
+        cupContainers.forEach(cup => cup.classList.remove('lifted'));
+        document.querySelectorAll('.player-tag').forEach(tag => tag.style.display = 'none');
+        await sleep(300);
+
+        statusEl.innerText = '看好囉！球在這邊...';
+        ballPosition = Math.floor(Math.random() * 3);
+        
+        document.querySelectorAll('.ball').forEach(b => b.style.display = 'none');
+        document.getElementById(`ball-${ballPosition}`).style.display = 'block';
+
+        cupContainers[ballPosition].classList.add('lifted');
+        await sleep(900);
+        cupContainers[ballPosition].classList.remove('lifted');
+        await sleep(400);
+
+        statusEl.innerText = '⚡ 高速洗牌中！跟上速度！ ⚡';
+        
+        for (let i = 0; i < 10; i++) {
+            let idx1 = Math.floor(Math.random() * 3);
+            let idx2 = Math.floor(Math.random() * 3);
+            while (idx1 === idx2) idx2 = Math.floor(Math.random() * 3);
+
+            let temp = currentPositions[idx1];
+            currentPositions[idx1] = currentPositions[idx2];
+            currentPositions[idx2] = temp;
+
+            updateCupPositions();
+            await sleep(180); 
+        }
+
+        isShuffling = false;
+        gameState = 'p1_turn';
+        statusEl.innerText = '🔴 輪到【玩家 1】選擇！';
+        statusEl.style.color = 'var(--p1-color)';
+    }
+
+    function clickCup(cupIndex) {
+        if (gameState === 'p1_turn') {
+            p1Choice = cupIndex;
+            document.getElementById(`tag-p1-${cupIndex}`).style.display = 'block';
+            gameState = 'p2_turn';
+            statusEl.innerText = '🔵 輪到【玩家 2】選擇！';
+            statusEl.style.color = 'var(--p2-color)';
+        } 
+        else if (gameState === 'p2_turn') {
+            p2Choice = cupIndex;
+            document.getElementById(`tag-p2-${cupIndex}`).style.display = 'block';
+            gameState = 'revealed';
+            revealResult();
+        }
+    }
+
+    function revealResult() {
+        round++;
+        roundEl.innerText = round;
+
+        cupContainers.forEach(cup => cup.classList.add('lifted'));
+
+        let p1Correct = (p1Choice === ballPosition);
+        let p2Correct = (p2Choice === ballPosition);
+
+        if (p1Correct && p2Correct) {
+            p1Score++; p2Score++;
+            statusEl.innerText = '🎉 雙贏！這回合平手！';
+            statusEl.style.color = 'var(--success-color)';
+        } else if (p1Correct && !p2Correct) {
+            p1Score++;
+            statusEl.innerText = '👑 玩家 1 拿下這回合！';
+            statusEl.style.color = 'var(--p1-color)';
+        } else if (!p1Correct && p2Correct) {
+            p2Score++;
+            statusEl.innerText = '👑 玩家 2 拿下這回合！';
+            statusEl.style.color = 'var(--p2-color)';
+        } else {
+            statusEl.innerText = '❌ 雙輸！全都被騙過去了！';
+            statusEl.style.color = 'var(--danger-color)';
+        }
+
+        p1ScoreEl.innerText = p1Score;
+        p2ScoreEl.innerText = p2Score;
+
+        if (round >= 5) {
+            endOfGameMatch();
+        } else {
+            startBtn.disabled = false;
+            startBtn.innerText = '下一回合';
+        }
+    }
+
+    function endOfGameMatch() {
+        startBtn.disabled = false;
+        startBtn.innerText = '開始全新一局';
+
+        if (p1Score > p2Score) {
+            statusEl.innerText = '🏆 大對決結束：【玩家 1】贏得最終大冠軍！';
+            statusEl.style.color = 'var(--p1-color)';
+            setupDanmakuPrivilege('P1', p1Score);
+        } else if (p2Score > p1Score) {
+            statusEl.innerText = '🏆 大對決結束：【玩家 2】贏得最終大冠軍！';
+            statusEl.style.color = 'var(--p2-color)';
+            setupDanmakuPrivilege('P2', p2Score);
+        } else {
+            statusEl.innerText = '🤝 5回合戰罷... 最終大平手！沒有人可以刷彈幕！';
+            statusEl.style.color = '#ffbe0b';
+        }
+    }
+
+    function setupDanmakuPrivilege(player, score) {
+        activeDanmakuPlayer = player;
+        allowedDanmakuCount = score; 
+
+        danmakuPanel.style.display = 'block';
+        danmakuInput.disabled = false;
+        danmakuColor.disabled = false; // 啟用顏色選擇器
+        danmakuBtn.disabled = false;
+        
+        if (player === 'P1') {
+            danmakuTitle.innerText = '👑 玩家 1 (紅) 勝出！獲得彈幕爆發特權！';
+            danmakuTitle.style.color = 'var(--p1-color)';
+            danmakuPanel.style.borderColor = 'var(--p1-color)';
+            danmakuColor.value = '#e63946'; // 預設帶入 P1 紅色
+        } else {
+            danmakuTitle.innerText = '👑 玩家 2 (藍) 勝出！獲得彈幕爆發特權！';
+            danmakuTitle.style.color = 'var(--p2-color)';
+            danmakuPanel.style.borderColor = 'var(--p2-color)';
+            danmakuColor.value = '#3a86ff'; // 預設帶入 P2 藍色
+        }
+        danmakuCountMsg.innerText = `你在本局總共贏了 ${score} 個回合。輸入文字並選好顏色後，一鍵召喚出 ${score} 條永恆不滅彈幕！`;
+        danmakuInput.value = '';
+    }
+
+    function sendBatchDanmaku() {
+        const text = danmakuInput.value.trim();
+        if (text === '') return;
+
+        // 讀取玩家在 Color Picker 中挑選的自訂顏色
+        const chosenColor = danmakuColor.value;
+
+        for (let i = 0; i < allowedDanmakuCount; i++) {
+            const danmaku = document.createElement('div');
+            danmaku.innerText = text;
+            danmaku.classList.add('danmaku');
+
+            // 套用自訂顏色
+            danmaku.style.color = chosenColor;
+
+            // 隨機分佈垂直高度 (5% ~ 85%)
+            const randomTop = Math.floor(Math.random() * 80) + 5;
+            danmaku.style.top = `${randomTop}%`;
+
+            // 隨機的「發射延遲」，並無限循環動畫 (infinite)
+            const randomDelay = (Math.random() * 1.5).toFixed(2);
+            danmaku.style.animationDelay = `${randomDelay}s`;
+
+            danmakuContainer.appendChild(danmaku);
+        }
+
+        danmakuInput.disabled = true;
+        danmakuColor.disabled = true; // 發射後停用選色
+        danmakuBtn.disabled = true;
+        danmakuCountMsg.innerText = '✨ 自訂色彩彈幕已全面轟炸！點擊上方「開始全新一局」繼續對決！';
+    }
+</script>
+
+</body>
+</html>

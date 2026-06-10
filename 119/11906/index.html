@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>單身即地獄：韓娛戀綜模擬器</title>
+    <style>
+        :root {
+            --bg-dark: #0f0c1b;
+            --panel-dark: #1d1830;
+            --primary-pink: #ff4a7d;
+            --heaven-blue: #4da6ff;
+            --inferno-orange: #ff6a00;
+            --text-light: #f5f5fa;
+            --text-muted: #a09cb0;
+            --kkt-yellow: #fef01b;
+            --kkt-brown: #3a1d1d;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #251c3d 100%);
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--panel-dark);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            padding: 30px;
+            border: 1px solid rgba(255, 74, 125, 0.2);
+        }
+
+        h1, h2, h3 {
+            text-align: center;
+            color: var(--primary-pink);
+            text-shadow: 0 0 10px rgba(255, 74, 125, 0.3);
+        }
+
+        h1 { margin-top: 0; font-size: 2.2rem; }
+
+        .hidden { display: none !important; }
+
+        /* 表單樣式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--text-light);
+        }
+
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 12px;
+            background: #2a2445;
+            border: 1px solid #443b68;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-pink);
+            box-shadow: 0 0 8px rgba(255, 74, 125, 0.4);
+        }
+
+        button {
+            display: inline-block;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, var(--primary-pink) 0%, #e03260 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 74, 125, 0.4);
+        }
+
+        button.secondary {
+            background: linear-gradient(90deg, #4b4467 0%, #373051 100%);
+            border: 1px solid #5a527e;
+        }
+
+        /* 頂部狀態欄 */
+        .status-bar {
+            background: #151026;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--primary-pink);
+            font-size: 0.95rem;
+        }
+
+        .status-item span {
+            color: var(--primary-pink);
+            font-weight: bold;
+        }
+
+        /* 核心內容區 */
+        .game-card {
+            background: #231c3a;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #342c54;
+        }
+
+        .event-text {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin-bottom: 25px;
+            white-space: pre-line;
+        }
+
+        .option-btn {
+            background: #2d254d;
+            border: 1px solid #4c3f7a;
+            text-align: left;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+            color: var(--text-light);
+        }
+
+        .option-btn:hover {
+            background: #392f61;
+            border-color: var(--primary-pink);
+            padding-left: 20px;
+        }
+
+        /* KKT聊天室 樣式 */
+        .kkt-container {
+            background: #b2c7da;
+            color: #000;
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        .kkt-msg {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        .kkt-msg.system {
+            align-items: center;
+            text-align: center;
+        }
+
+        .kkt-msg.system .body {
+            background: rgba(0,0,0,0.1);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .kkt-msg.other { align-items: flex-start; }
+        .kkt-msg.me { align-items: flex-end; }
+
+        .kkt-name {
+            font-size: 0.8rem;
+            color: #444;
+            margin-bottom: 3px;
+            padding: 0 5px;
+        }
+
+        .kkt-body {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-break: break-all;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .kkt-msg.other .kkt-body { background: white; border-top-left-radius: 2px; }
+        .kkt-msg.me .kkt-body { background: var(--kkt-yellow); border-top-right-radius: 2px; }
+
+        /* 儀表板與屬性面板 */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .guest-stat-card {
+            background: #1a142e;
+            border: 1px solid #34295c;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .stat-name { font-weight: bold; color: var(--heaven-blue); margin-bottom: 8px; }
+        .stat-line { font-size: 0.85rem; margin-bottom: 4px; display: flex; justify-content: space-between;}
+        .stat-val { font-weight: bold; color: var(--text-light); }
+
+        /* 標籤/網頁元素 */
+        .badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .badge.heaven { background: var(--heaven-blue); color: white; }
+        .badge.inferno { background: var(--inferno-orange); color: white; }
+
+        /* 輿論系統樣式 */
+        .sns-post {
+            background: #25203c;
+            border: 1px solid #3d355e;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+        .sns-meta { font-size: 0.85rem; color: var(--primary-pink); margin-bottom: 5px; font-weight: bold;}
+        .sns-content { font-size: 0.95rem; line-height: 1.5; }
+
+        hr { border: 0; border-top: 1px solid #3d355e; margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🔥 單身即地獄：韓娛戀綜模擬器 🔥</h1>
+    
+    <!-- 頂部狀態欄 -->
+    <div id="top-status-bar" class="status-bar hidden">
+        <div class="status-item">當前日程：<span id="current-day-tag">第 1 天</span> - <span id="current-period-tag">基礎數據</span></div>
+        <div class="status-item">目前所在地：<span id="current-location-tag" class="badge inferno">地獄島</span></div>
+        <div class="status-item">公司盯防：<span id="company-risk-tag">0%</span></div>
+    </div>
+
+    <!-- 步驟 1: 玩家資料填寫 -->
+    <div id="player-setup-panel">
+        <h2>一、建立您的嘉賓資料（玩家）</h2>
+        <div class="form-group">
+            <label>姓名（中文/英文均可）：</label>
+            <input type="text" id="p-name" value="韓向晚">
+        </div>
+        <div class="form-group">
+            <label>年齡（20-30）：</label>
+            <input type="text" id="p-age" value="24">
+        </div>
+        <div class="form-group">
+            <label>性別：</label>
+            <select id="p-gender">
+                <option value="女">女</option>
+                <option value="男">男</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>職業（對外隱藏）：</label>
+            <select id="p-job">
+                <option value="素人（自由插畫師）">素人（自由插畫師）</option>
+                <option value="半公開藝人（練習生/模特）">半公開藝人（練習生/模特）</option>
+                <option value="公司工作人員（宣傳PD）">公司工作人員（宣傳PD）</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>MBTI：</label>
+            <input type="text" id="p-mbti" value="ENFP">
+        </div>
+        <div class="form-group">
+            <label>外貌關鍵詞（1-2個詞）：</label>
+            <input type="text" id="p-look" value="貓系神顏、高挑">
+        </div>
+        <div class="form-group">
+            <label>性格關鍵詞（2-3個詞）：</label>
+            <input type="text" id="p-trait" value="直球、幽默、微傲嬌">
+        </div>
+        <div class="form-group">
+            <label>戀愛觀（一句話）：</label>
+            <input type="text" id="p-love-view" value="追求勢均力敵的極致浪漫。">
+        </div>
+        <button id="btn-submit-player">下一步：設定其他嘉賓</button>
+    </div>
+
+    <!-- 步驟 2: 選擇自訂或隨機生成其他嘉賓 -->
+    <div id="guest-choice-panel" class="hidden">
+        <h2>二、設定其餘 7 位核心嘉賓</h2>
+        <p style="text-align: center; color: var(--text-muted);">本節目共 8 人錄製（您 + 7 位核心嘉賓）。您可以選擇手動填寫他們的資料，或是交由系統一鍵隨機生成。</p>
+        <button id="btn-go-custom" class="secondary">手動填寫嘉賓資料</button>
+        <button id="btn-go-random" style="margin-top: 15px;">全體隨機生成，直接開始節目</button>
+    </div>
+
+    <!-- 步驟 3: 自訂嘉賓表單（循環產生，上限7人） -->
+    <div id="guest-custom-panel" class="hidden">
+        <h2 id="custom-title">建立第 1 位自訂嘉賓 (剩餘 7 名)</h2>
+        <div class="form-group">
+            <label>姓名：</label>
+            <input type="text" id="g-name" value="姜大賢">
+        </div>
+        <div class="form-group">
+            <label>年齡（20-30）：</label>
+            <input type="text" id="g-age" value="26">
+        </div>
+        <div class="form-group">
+            <label>性別：</label>
+            <select id="g-gender">
+                <option value="男">男</option>
+                <option value="女">女</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>職業（對外隱藏）：</label>
+            <select id="g-job">
+                <option value="素人（知名咖啡師）">素人（知名咖啡師）</option>
+                <option value="半公開藝人（地下Rapper）">半公開藝人（地下Rapper）</option>
+                <option value="公司工作人員（編舞老師）">公司工作人員（編舞老師）</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>MBTI：</label>
+            <input type="text" id="g-mbti" value="INFJ">
+        </div>
+        <div class="form-group">
+            <label>外貌關鍵詞：</label>
+            <input type="text" id="g-look" value="犬系、寬肩">
+        </div>
+        <div class="form-group">
+            <label>性格關鍵詞：</label>
+            <input type="text" id="g-trait" value="溫柔體貼、內斂">
+        </div>
+        <button id="btn-save-custom-guest">儲存此嘉賓並繼續</button>
+        <button id="btn-stop-custom" class="secondary" style="margin-top: 10px;">其餘人數交由隨機生成並開始</button>
+    </div>
+
+    <!-- 步驟 4: 主遊戲舞台 -->
+    <div id="game-stage-panel" class="hidden">
+        <div id="event-display-card" class="game-card">
+            <h3 id="period-title">第0天：入住前採訪</h3>
+            <div id="event-main-text" class="event-text">
+                節目組的鏡頭對準了你。黑色的鏡頭背後是無數未知的觀眾。
+                PD遞上麥克風：「歡迎來到《單身即地獄》。在出發前往地獄島之前，請告訴我們，你隱藏的真實身份與野心是什麼？」
+            </div>
+            <div id="options-container">
+                <!-- 動態注入選項按鈕 -->
+            </div>
+        </div>
+
+        <!-- 屬性儀表板 -->
+        <hr>
+        <h3>📊 即時嘉賓關係與動態屬性</h3>
+        <div id="dashboard-view" class="dashboard">
+            <!-- 動態產生各嘉賓狀態 -->
+        </div>
+    </div>
+</div>
+
+<script>
+// --- 全域資料定義 ---
+const PRESET_NAMES_M = ["崔時宇", "朴珉宇", "李賢宇", "鄭俊赫", "韓載民", "車恩成"];
+const PRESET_NAMES_F = ["柳智雅", "金恩詩", "宋智賢", "裴秀敏", "尹瑞雅", "崔詩恩"];
+const PRESET_JOBS = ["半公開藝人（小眾樂團主唱）", "素人（服裝品牌總裁）", "半公開藝人（前網球運動員）", "公司工作人員（知名經紀人）", "素人（普拉提教練）"];
+const PRESET_LOOKS = ["狐狸相、冷豔", "陽光健美", "初戀清純系", "雕刻美男", "高冷痞帥"];
+const PRESET_TRAITS = ["成熟穩重、佔有慾強", "純真、活潑開勞", "心思細膩、容易吃醋", "傲嬌、外冷內熱", "雙商高、擅長曖昧"];
+const PRESET_MBTIS = ["ENTJ", "INFP", "ESTP", "ISFJ", "ENFJ", "ISTJ"];
+
+// --- 遊戲狀態變數 ---
+let player = {};
+let guests = []; // 包含7位NPC
+let currentDay = 0; // 0~7
+let currentPeriod = 1; // 1~10 個時段
+let currentPartner = null; // 當前配對對象
+let isAtHeaven = false; // 是否在天堂島
+let companyRisk = 0; // 公司監管風險 0-100
+let publicPressure = 0; // 輿論壓力 0-100
+let smsHistory = []; // 心動短信紀錄
+
+// 7天詳細日程架構 (完全不重複的文本與特定選項)
+const scheduleData = {
+    0: {
+        name: "入住前採訪",
+        periods: {
+            1: {
+                title: "第0天 - 核心採訪",
+                text: "PD遞上麥克風：「在出發前往地獄島之前，請告訴我們，你隱藏的真實身份與野心是什麼？」",
+                options: [
+                    { text: "「我是來找真愛的，身份不重要，心動才是唯一的答案。」", risk: 0, effect: { allTrust: 10 } },
+                    { text: "「想當最後的大贏家，不管是人氣還是愛情，我全都要。」", risk: 15, effect: { allHeart: 5 } },
+                    { text: "（保持神祕微笑）「等大家自己來揭開我這層神祕面紗吧。」", risk: 5, effect: { allHeart: 10, allTrust: -5 } }
+                ]
+            }
+        }
+    },
+    1: {
+        name: "初見面 + 首輪配對",
+        periods: {
+            1: {
+                title: "第1天 - 破冰早餐輪值",
+                text: "清晨，地獄島的海風有些涼。你被抽中與【隨機嘉賓】一起負責全體清晨的破冰煎蛋與咖啡。廚房設備簡陋，柴火甚至需要現劈。",
+                options: [
+                    { text: "主動包攬劈柴重活，展現強大可靠的一面。", effect: { partnerTrust: 15, partnerHeart: 10 } },
+                    { text: "在一旁細心遞調料，趁機與對方聊起彼此的第一印象。", effect: { partnerHeart: 15, partnerTrust: 10 } },
+                    { text: "有些笨手笨腳，頻頻出錯，求助似地看著對方。", effect: { partnerHeart: 10, partnerTrust: -5 } }
+                ]
+            },
+            2: {
+                title: "第1天 - 白天沙灘搶灘遊戲",
+                text: "全體在烈日下進行「沙灘奪旗戰」，勝出者將獲得今晚天堂島首輪配對的『絕對優先選擇權』！你決定怎麼做？",
+                options: [
+                    { text: "拼盡全力！不顧形象地在沙灘上狂奔搶奪。", effect: { winGame: true, allHeart: 10 }, risk: 10 },
+                    { text: "點到為止，主要在場邊幫心儀的【隨機嘉賓】大聲應援加油。", effect: { winGame: false, partnerHeart: 20 } },
+                    { text: "保存體力，優雅地參與，觀察其他人的身體素質與競爭心。", effect: { winGame: false, allTrust: 5 } }
+                ]
+            },
+            4: {
+                title: "第1天 - 地獄島自由活動時間",
+                text: "第一輪配對結果揭曉前，大家在帳篷區休息。你發現【隨機嘉賓】正獨自坐在海邊礁石上吹風，似乎有點落寞。",
+                options: [
+                    { text: "拿著兩瓶冰水走過去，貼心地坐在身旁陪對方看海聊天。", effect: { partnerHeart: 15, partnerTrust: 15 } },
+                    { text: "遠遠地看著，不去打擾，給對方留出神祕感與個人空間。", effect: { allTrust: 5 } },
+                    { text: "走過去開玩笑打破僵局：「怎麼啦？是不是被這裡的蚊子嚇到了？」", effect: { partnerHeart: 10 } }
+                ]
+            },
+            7: {
+                title: "第1天 - 匿名KKT群聊破冰",
+                text: "深夜21:00，節目組發放平板。KKT匿名群聊《地獄島後遺症》正式開啟。群內一片「???」的匿名暱稱，氣氛微妙。",
+                isKKT: true,
+                kktTemplate: "first_night"
+            },
+            8: {
+                title: "第1天 - 首輪心動短信",
+                text: "夜深了。請選擇一位你今晚想匿名發送心動短信的嘉賓。這將決定明天是去奢華天堂島還是留守苦難地獄島！",
+                isSMS: true
+            }
+        }
+    },
+    2: {
+        name: "天堂/地獄島兩極體驗",
+        periods: {
+            3: {
+                title: "第2天 - 午餐的分歧",
+                text: "根據昨晚的配對結果。如果是天堂島，你們正享受頂級和牛與無邊際泳池；如果是地獄島，你們必須自己生火煮生魚片。此時【當前對象】不小心燙到了手！",
+                options: [
+                    { text: "立刻抓起對方的冰水或冰塊幫忙冷敷，眼神裡滿是心疼。", effect: { partnerHeart: 20, partnerTrust: 15 } },
+                    { text: "冷靜地去找隨行醫療組拿燙傷膏，展現情緒穩定的一面。", effect: { partnerTrust: 25 } },
+                    { text: "調侃一句：「看來沒有我你真的不行啊。」隨後溫柔地幫忙吹吹。", effect: { partnerHeart: 25, partnerTrust: 5 }, risk: 10 }
+                ]
+            },
+            5: {
+                title: "第2天 - 營地真心話大冒險",
+                text: "傍晚，全員在營地篝火旁集合。酒過三巡，指針指向了你。【隨機嘉賓】辛辣提問：「現場有沒有任何一個人的外貌，是完全踩在你的審美點上的？」",
+                options: [
+                    { text: "直勾勾地看著【心儀對象】：「有啊，而且她/他現在就坐在我正對面。」", effect: { targetHeart: 25, othersHeart: -5 }, risk: 15 },
+                    { text: "安全牌路線：「大家都很好看，各有各的獨特魅力，很難只選一個。」", effect: { allTrust: 10, allHeart: -5 } },
+                    { text: "語出驚人：「其實有兩位，但我現在還在糾結，今晚看誰表現好囉。」", effect: { allHeart: 15, allTrust: -15 }, risk: 25 }
+                ]
+            },
+            9: {
+                title: "第2天 - 秘密視頻日記（首次播出效應）",
+                text: "深夜，第一期節目在外部正式上線播出！你走進小黑屋錄製視頻日記，此時平板上跳出了各平台的即時輿論反饋。你在節目中的一舉一動引發了熱議！",
+                isSNSReview: true
+            }
+        }
+    },
+    3: {
+        name: "團體遊戲：默契挑戰",
+        periods: {
+            2: {
+                title: "第3天 - 默契挑戰小遊戲",
+                text: "今天進行搭檔默契大考驗！考題是『當對方累了的時候，最想收到的安慰方式』。你必須猜測【當前對象】的心思。",
+                options: [
+                    { text: "選擇『什麼都別說，給一個安靜的擁抱』。", effect: { checkMatch: "擁抱" } },
+                    { text: "選擇『帶我去吃好吃的，用美食治癒一切』。", effect: { checkMatch: "美食" } },
+                    { text: "選擇『陪我瘋狂吐槽，站在我這邊一起罵』。", effect: { checkMatch: "吐槽" } }
+                ]
+            },
+            6: {
+                title: "第3天 - 地獄島晚餐修羅場",
+                text: "做晚餐時，【隨機嘉賓A】主動過來幫你繫圍裙，動作極其曖昧。而此時【隨機嘉賓B】（對你好感度最高者）正端著菜刀冷冷地看著你們。",
+                options: [
+                    { text: "微微退後一步，禮貌致謝並自己重繫，與A拉開距離。", effect: { guestATrust: 5, guestBHeart: 15 } },
+                    { text: "落落大方接受，並回頭對B挑眉一笑，試探對方的佔有慾。", effect: { guestAHeart: 20, guestBHeart: 20, guestBTrust: -15 }, risk: 15 },
+                    { text: "假裝沒看見，趕緊把B拉過來：「快幫我看看這個湯是不是淡了？」", effect: { guestBHeart: 15, guestBTrust: 10 } }
+                ]
+            },
+            7: {
+                title: "第3天 - KKT匿名吐槽大會",
+                text: "今晚的KKT聊天室允許匿名發起投票。有人發起了『誰是目前島上最讓人捉摸不透的海王/海后？』，風向似乎隱隱指向你。",
+                isKKT: true,
+                kktTemplate: "vote_night"
+            }
+        }
+    },
+    4: {
+        name: "強制互換搭檔日",
+        periods: {
+            2: {
+                title: "第4天 - 節目組強制互換指令",
+                text: "命運弄人！今日官方宣布：所有既定組合強制拆散，由昨晚好感度最低的方向重新指派【全新搭檔】。你被迫與之前極少互動的【隨機嘉賓】前往天台進行限時約會。",
+                options: [
+                    { text: "「既來之則安之，其實我一直都很想找機會跟你單獨聊聊。」", effect: { partnerHeart: 20, partnerTrust: 15 } },
+                    { text: "全程顯得有些心不在焉，眼神不斷飄向遠處的前搭檔。", effect: { partnerHeart: -10, exPartnerHeart: 20 } },
+                    { text: "開啟專業社交模式，大聊特聊彼此的興趣嗜好，保持安全社交距離。", effect: { partnerTrust: 20 } }
+                ]
+            },
+            10: {
+                title: "第4天 - 自由夜聊：天台的微醺私語",
+                text: "凌晨的露天沙發區放著幾瓶紅酒。你和【隨機嘉賓】在微醺的晚風中並肩坐著。對方突然靠得很近，呼吸間帶著一絲酒氣，低聲問：「你...真的沒有對我有過一點心動嗎？」",
+                options: [
+                    { text: "順勢對視，伸出手幫對方理了理被風吹亂的頭髮：「你猜呢？」", effect: { partnerHeart: 25 }, risk: 15 },
+                    { text: "有些慌亂地拿起酒杯喝酒，避開眼神：「你喝多了，我們回房間吧。」", effect: { partnerTrust: 10, partnerHeart: -5 } },
+                    { text: "直球回應：「有過。但我不確定你的心是不是也在我這裡。」", effect: { partnerHeart: 30, partnerTrust: 20 } }
+                ]
+            }
+        }
+    },
+    5: {
+        name: "職業與年齡公開夜",
+        periods: {
+            5: {
+                title: "第5天 - 終極職業公開盛宴",
+                text: "巨大的真相揭曉夜！眾人圍坐。輪到你公開身份。當你宣布真實職業是【玩家職業】，且年齡是【玩家年齡】時，大家神色各異。與此同時，公司經紀人發來了警告短信，提醒你注意人設！",
+                options: [
+                    { text: "「這就是真實的我，不管我有什麼標籤，在島上的情感都是真的。」", effect: { allTrust: 15 }, risk: -10 },
+                    { text: "「希望我的職業不會成為我們之間的阻礙。」（深情望向某人）", effect: { targetHeart: 20 } },
+                    { text: "「驚不驚喜？意不意外？接下來才是真正的我。」（自信狂放）", effect: { allHeart: 15 }, risk: 20 }
+                ]
+            },
+            8: {
+                title: "第5天 - 公開夜後的心動短信",
+                text: "知道了彼此的真實年齡與社會身份後，韓娛階級與現實壓力排山倒海而來。今晚這封匿名的心動短信，分量遠比之前沉重得多...",
+                isSMS: true
+            }
+        }
+    },
+    6: {
+        name: "最終選擇前夜",
+        periods: {
+            6: {
+                title: "第6天 - 15分鐘單獨密談時光",
+                text: "這是大結局前的最後機會。節目組允許每人提出一次「15分鐘無攝影機單獨密談」。你決定將這個珍貴的權利跨海用在誰身上？",
+                options: [
+                    { text: "找【目前最高好感者】：將積壓的所有底牌與底線全部坦白，毫無保留。", effect: { targetHeart: 25, targetTrust: 30 } },
+                    { text: "找【第二順位/備胎】：做最後的道別與情商拉扯，確保給自己留一條退路。", effect: { backupHeart: 15 }, risk: 20 },
+                    { text: "誰也不找，獨自留在房間整理思緒，給所有人留下不可捉摸的孤高背影。", effect: { allHeart: 5, companyRisk: -15 } }
+                ]
+            },
+            7: {
+                title: "第6天 - KKT終局狂歡群聊",
+                text: "最後一夜的群聊不再匿名！所有人的頭像與名字真實亮出。群裡的信息飛速滾動，充斥著試探、祝福與未熄的火藥味。",
+                isKKT: true,
+                kktTemplate: "final_night"
+            }
+        }
+    },
+    7: {
+        name: "最終選擇日",
+        periods: {
+            7: {
+                title: "第7天 - 終局之日：地獄島的直升機",
+                text: "直升機的轟鳴聲在海灘上空迴盪。男嘉賓/女嘉賓站在各自的告白點上。現在，是決定你在《單身即地獄》最終命運的時刻。請走向你最終選擇的那個人。",
+                isFinalChoice: true
+            }
+        }
+    }
+};
+
+// --- 初始化 DOM 元素 ---
+const pNameInput = document.getElementById('p-name');
+const pAgeInput = document.getElementById('p-age');
+const pGenderSelect = document.getElementById('p-gender');
+const pJobSelect = document.getElementById('p-job');
+const pMbtiInput = document.getElementById('p-mbti');
+const pLookInput = document.getElementById('p-look');
+const pTraitInput = document.getElementById('p-trait');
+const pLoveViewInput = document.getElementById('p-love-view');
+
+const playerSetupPanel = document.getElementById('player-setup-panel');
+const guestChoicePanel = document.getElementById('guest-choice-panel');
+const guestCustomPanel = document.getElementById('guest-custom-panel');
+const gameStagePanel = document.getElementById('game-stage-panel');
+const topStatusBar = document.getElementById('top-status-bar');
+
+const customTitle = document.getElementById('custom-title');
+const gNameInput = document.getElementById('g-name');
+const gAgeInput = document.getElementById('g-age');
+const gGenderSelect = document.getElementById('g-gender');
+const gJobSelect = document.getElementById('g-job');
+const gMbtiInput = document.getElementById('g-mbti');
+const gLookInput = document.getElementById('g-look');
+const gTraitInput = document.getElementById('g-trait');
+
+// --- 事件綁定 ---
+document.getElementById('btn-submit-player').addEventListener('click', () => {
+    player = {
+        name: pNameInput.value,
+        age: parseInt(pAgeInput.value) || 24,
+        gender: pGenderSelect.value,
+        job: pJobSelect.value,
+        mbti: pMbtiInput.value,
+        look: pLookInput.value,
+        trait: pTraitInput.value,
+        loveView: pLoveViewInput.value,
+        heart: {},
+        trust: {}
+    };
+    playerSetupPanel.classList.add('hidden');
+    guestChoicePanel.classList.remove('hidden');
+});
+
+document.getElementById('btn-go-random').addEventListener('click', () => {
+    generateRandomGuests(7);
+    guestChoicePanel.classList.add('hidden');
+    startGame();
+});
+
+let customCount = 0;
+document.getElementById('btn-go-custom').addEventListener('click', () => {
+    guestChoicePanel.classList.add('hidden');
+    guestCustomPanel.classList.remove('hidden');
+    updateCustomFormTitle();
+});
+
+document.getElementById('btn-save-custom-guest').addEventListener('click', () => {
+    let g = {
+        id: customCount,
+        name: gNameInput.value,
+        age: parseInt(gAgeInput.value) || 25,
+        gender: gGenderSelect.value,
+        job: gJobSelect.value,
+        mbti: gMbtiInput.value,
+        look: gLookInput.value,
+        trait: gTraitInput.value,
+        heartToPlayer: Math.floor(Math.random() * 21) + 10, // 10-30初始
+        trustToPlayer: Math.floor(Math.random() * 21) + 10,
+        publicPressure: 0
+    };
+    guests.push(g);
+    customCount++;
+
+    if (customCount >= 7) {
+        guestCustomPanel.classList.add('hidden');
+        startGame();
+    } else {
+        // 重設下一位預填
+        setupNextPresetCustom();
+        updateCustomFormTitle();
+    }
+});
+
+document.getElementById('btn-stop-custom').addEventListener('click', () => {
+    let need = 7 - guests.length;
+    if (need > 0) {
+        generateRandomGuests(need);
+    }
+    guestCustomPanel.classList.add('hidden');
+    startGame();
+});
+
+// --- 輔助函式組 ---
+function updateCustomFormTitle() {
+    customTitle.innerText = `建立第 ${customCount + 1} 位自訂嘉賓 (目前已有 ${guests.length} 名)`;
+}
+
+function setupNextPresetCustom() {
+    const isMale = Math.random() > 0.5;
+    gNameInput.value = isMale ? PRESET_NAMES_M[customCount % PRESET_NAMES_M.length] : PRESET_NAMES_F[customCount % PRESET_NAMES_F.length];
+    gGenderSelect.value = isMale ? "男" : "女";
+    gAgeInput.value = Math.floor(Math.random() * 11) + 20;
+    gJobSelect.value = PRESET_JOBS[Math.floor(Math.random() * PRESET_JOBS.length)];
+    gMbtiInput.value = PRESET_MBTIS[Math.floor(Math.random() * PRESET_MBTIS.length)];
+    gLookInput.value = PRESET_LOOKS[Math.floor(Math.random() * PRESET_LOOKS.length)];
+    gTraitInput.value = PRESET_TRAITS[Math.floor(Math.random() * PRESET_TRAITS.length)];
+}
+
+function generateRandomGuests(count) {
+    let currentLen = guests.length;
+    for(let i=0; i<count; i++) {
+        let actualIndex = currentLen + i;
+        // 儘量平衡性別，如果玩家是女，NPC多塞點男，反之亦然
+        let targetGender = "男";
+        if (player.gender === "女") {
+            targetGender = (actualIndex % 3 === 0) ? "女" : "男";
+        } else {
+            targetGender = (actualIndex % 3 === 0) ? "男" : "女";
+        }
+
+        let name = targetGender === "男" ? 
+            PRESET_NAMES_M[Math.floor(Math.random()*PRESET_NAMES_M.length)] + "_" + actualIndex: 
+            PRESET_NAMES_F[Math.floor(Math.random()*PRESET_NAMES_F.length)] + "_" + actualIndex;
+
+        guests.push({
+            id: actualIndex,
+            name: name,
+            age: Math.floor(Math.random() * 11) + 20,
+            gender: targetGender,
+            job: PRESET_JOBS[Math.floor(Math.random() * PRESET_JOBS.length)],
+            mbti: PRESET_MBTIS[Math.floor(Math.random() * PRESET_MBTIS.length)],
+            look: PRESET_LOOKS[Math.floor(Math.random() * PRESET_LOOKS.length)],
+            trait: PRESET_TRAITS[Math.floor(Math.random() * PRESET_TRAITS.length)],
+            heartToPlayer: Math.floor(Math.random() * 21) + 10,
+            trustToPlayer: Math.floor(Math.random() * 21) + 10,
+            publicPressure: 0
+        });
+    }
+}
+
+// 啟動遊戲主迴圈
+function startGame() {
+    topStatusBar.classList.remove('hidden');
+    gameStagePanel.classList.remove('hidden');
+    currentDay = 1;
+    currentPeriod = 1;
+    renderState();
+}
+
+function updateStatusBar() {
+    document.getElementById('current-day-tag').innerText = `第 ${currentDay} 天`;
+    document.getElementById('current-location-tag').innerText = isAtHeaven ? "天堂島" : "地獄島";
+    document.getElementById('current-location-tag').className = isAtHeaven ? "badge heaven" : "badge inferno";
+    document.getElementById('company-risk-tag').innerText = `${companyRisk}%`;
+}
+
+// 核心渲染引擎：根據當天、當前時間段推算事件
+function renderState() {
+    updateStatusBar();
+    renderDashboard();
+
+    const dayConfig = scheduleData[currentDay];
+    if (!dayConfig) return;
+
+    // 尋找當前或下一個有效的時間段事件
+    let periodEvent = dayConfig.periods[currentPeriod];
+    
+    // 如果當前時段沒事件，自動步進尋找下一個有事件的時段
+    if (!periodEvent) {
+        let keys = Object.keys(dayConfig.periods).map(Number).sort((a,b)=>a-b);
+        let nextKey = keys.find(k => k > currentPeriod);
+        if (nextKey) {
+            currentPeriod = nextKey;
+            periodEvent = dayConfig.periods[currentPeriod];
+        } else {
+            // 這天過完了，跨日
+            currentDay++;
+            currentPeriod = 1;
+            if (currentDay > 7) {
+                triggerEnding();
+                return;
+            }
+            renderState();
+            return;
+        }
+    }
+
+    // 渲染特定事件
+    document.getElementById('period-title').innerText = `${periodEvent.title}`;
+    
+    let randomGuest = guests[Math.floor(Math.random() * guests.length)];
+    let highestHeartGuest = [...guests].sort((a,b) => b.heartToPlayer - a.heartToPlayer)[0];
+    let secondHeartGuest = [...guests].sort((a,b) => b.heartToPlayer - a.heartToPlayer)[1] || randomGuest;
+
+    let processedText = periodEvent.text
+        .replace(/【隨機嘉賓】/g, randomGuest.name)
+        .replace(/【當前對象】/g, currentPartner ? currentPartner.name : "自己")
+        .replace(/【心儀對象】/g, highestHeartGuest.name)
+        .replace(/【隨機嘉賓A】/g, randomGuest.name)
+        .replace(/【隨機嘉賓B】/g, highestHeartGuest.name)
+        .replace(/【玩家職業】/g, player.job)
+        .replace(/【玩家年齡】/g, player.age);
+
+    document.getElementById('event-main-text').innerText = processedText;
+
+    const optContainer = document.getElementById('options-container');
+    optContainer.innerHTML = "";
+
+    // 判斷特殊子系統
+    if (periodEvent.isKKT) {
+        renderKKTSystem(periodEvent.kktTemplate);
+        return;
+    }
+    if (periodEvent.isSMS) {
+        renderSMSSystem();
+        return;
+    }
+    if (periodEvent.isSNSReview) {
+        renderSNSSystem();
+        return;
+    }
+    if (periodEvent.isFinalChoice) {
+        renderFinalChoiceSystem();
+        return;
+    }
+
+    // 標準選項渲染
+    periodEvent.options.forEach((opt) => {
+        let btn = document.createElement('div');
+        btn.className = "option-btn";
+        btn.innerText = opt.text;
+        btn.addEventListener('click', () => {
+            // 套用屬性變更
+            if (opt.risk) companyRisk = Math.min(100, Math.max(0, companyRisk + opt.risk));
+            
+            if (opt.effect) {
+                if (opt.effect.allTrust) guests.forEach(g => g.trustToPlayer = Math.min(100, Math.max(0, g.trustToPlayer + opt.effect.allTrust)));
+                if (opt.effect.allHeart) guests.forEach(g => g.heartToPlayer = Math.min(100, Math.max(0, g.heartToPlayer + opt.effect.allHeart)));
+                if (opt.effect.partnerHeart && currentPartner) currentPartner.heartToPlayer = Math.min(100, currentPartner.heartToPlayer + opt.effect.partnerHeart);
+                if (opt.effect.partnerTrust && currentPartner) currentPartner.trustToPlayer = Math.min(100, currentPartner.trustToPlayer + opt.effect.partnerTrust);
+                if (opt.effect.targetHeart) highestHeartGuest.heartToPlayer = Math.min(100, highestHeartGuest.heartToPlayer + opt.effect.targetHeart);
+                if (opt.effect.targetTrust) highestHeartGuest.trustToPlayer = Math.min(100, highestHeartGuest.trustToPlayer + opt.effect.targetTrust);
+                if (opt.effect.backupHeart) secondHeartGuest.heartToPlayer = Math.min(100, secondHeartGuest.heartToPlayer + opt.effect.backupHeart);
+                
+                if (opt.effect.guestATrust) randomGuest.trustToPlayer = Math.min(100, randomGuest.trustToPlayer + opt.effect.guestATrust);
+                if (opt.effect.guestAHeart) randomGuest.heartToPlayer = Math.min(100, randomGuest.heartToPlayer + opt.effect.guestAHeart);
+                if (opt.effect.guestBHeart) highestHeartGuest.heartToPlayer = Math.min(100, highestHeartGuest.heartToPlayer + opt.effect.guestBHeart);
+                if (opt.effect.guestBTrust) highestHeartGuest.trustToPlayer = Math.min(100, highestHeartGuest.trustToPlayer + opt.effect.guestBTrust);
+
+                if (opt.effect.checkMatch) {
+                    // 隨機判定默契
+                    let isMatched = Math.random() > 0.4;
+                    alert(isMatched ? `🎉 默契大成功！對方恰好也最希望得到「${opt.effect.checkMatch}」，好感度大幅飆升！` : `💔 默契棋差一著...對方其實更希望得到另一種安慰方式。`);
+                    if (isMatched && currentPartner) {
+                        currentPartner.heartToPlayer = Math.min(100, currentPartner.heartToPlayer + 25);
+                    }
+                }
+            }
+
+            // 前進下一個時段
+            currentPeriod++;
+            renderState();
+        });
+        optContainer.appendChild(btn);
+    });
+}
+
+// 渲染關係儀表板
+function renderDashboard() {
+    const view = document.getElementById('dashboard-view');
+    view.innerHTML = "";
+    guests.forEach(g => {
+        let card = document.createElement('div');
+        card.className = "guest-stat-card";
+        
+        let thresholdText = "陌生";
+        if (g.heartToPlayer >= 80) thresholdText = "🔥 深度吸引(會衝動)";
+        else if (g.heartToPlayer >= 60) thresholdText = "💖 主動關注(易吃醋)";
+        else if (g.heartToPlayer >= 40) thresholdText = "模稜兩可";
+
+        card.innerHTML = `
+            <div class="stat-name">${g.name} (${g.mbti})</div>
+            <div class="stat-line"><span>悸動指數:</span><span class="stat-val">${g.heartToPlayer}/100</span></div>
+            <div class="stat-line"><span>信任值:</span><span class="stat-val">${g.trustToPlayer}/100</span></div>
+            <div class="stat-line"><span style="color:var(--text-muted); font-size:0.75rem;">${thresholdText}</span></div>
+        `;
+        view.appendChild(card);
+    });
+}
+
+// --- 子系統一：KKT聊天室 ---
+function renderKKTSystem(template) {
+    const optContainer = document.getElementById('options-container');
+    optContainer.innerHTML = `
+        <div class="kkt-container" id="kkt-box"></div>
+        <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">請選擇您在匿名群組中的發言策略：</div>
+    `;
+    
+    const kktBox = document.getElementById('kkt-box');
+    
+    // 預設對話模組
+    let dialogues = [];
+    if (template === "first_night") {
+        dialogues = [
+            { type: "system", body: "??? 建立了群組《地獄島後遺症》" },
+            { type: "other", name: "???", body: "哈囉大家好～今天第一天大家過得怎麼樣？地獄島的風真的好大。" },
+            { type: "other", name: "???", body: "某人做早餐劈柴的樣子真的讓人印象深刻KKK" },
+            { type: "other", name: "???", body: "今晚有人要去天堂島嗎？羨慕能去豪華酒店的人。" }
+        ];
+    } else if (template === "vote_night") {
+        dialogues = [
+            { type: "system", body: "??? 發起了一項匿名投票：【誰是目前島上最讓人捉摸不透的海王/海后？】" },
+            { type: "other", name: "???", body: "哇，這個投票太犀利了吧！" },
+            { type: "other", name: "???", body: "感覺某位今天兩邊送水的人嫌疑很大喔～" }
+        ];
+    } else {
+        dialogues = [
+            { type: "system", body: "群組已解除匿名模式" },
+            { type: "other", name: guests[0].name, body: "最後一夜了，時間過得真快。無論明天結果如何，大家都辛苦了。" },
+            { type: "other", name: guests[1].name, body: "我今晚心動短信的方向已經確定了，絕不後悔。" }
+        ];
+    }
+
+    dialogues.forEach(d => {
+        let m = document.createElement('div');
+        m.className = `kkt-msg ${d.type}`;
+        if (d.type === "system") {
+            m.innerHTML = `<div class="body">${d.body}</div>`;
+        } else {
+            m.innerHTML = `<div class="kkt-name">${d.name}</div><div class="kkt-body">${d.body}</div>`;
+        }
+        kktBox.appendChild(m);
+    });
+
+    // 玩家三個選項
+    const strategies = [
+        { text: "【極限潛水】默默觀察，一句話也不說，收集情報。", risk: -5, allHeart: -2, allTrust: 5 },
+        { text: "【高調插話】發個搞怪表情包：「抓到囉！剛才說風大的是不是你！」", risk: 10, allHeart: 12, allTrust: 0 },
+        { text: "【精準刺探】@所有人：「大家難道不好奇某人的MBTI為什麼跟行為不符嗎？」", risk: 15, allHeart: 15, allTrust: -5 }
+    ];
+
+    strategies.forEach(s => {
+        let btn = document.createElement('div');
+        btn.className = "option-btn";
+        btn.innerText = s.text;
+        btn.addEventListener('click', () => {
+            companyRisk = Math.min(100, Math.max(0, companyRisk + s.risk));
+            guests.forEach(g => {
+                g.heartToPlayer = Math.min(100, Math.max(0, g.heartToPlayer + s.allHeart));
+                g.trustToPlayer = Math.min(100, Math.max(0, g.trustToPlayer + s.allTrust));
+            });
+            currentPeriod++;
+            renderState();
+        });
+        optContainer.appendChild(btn);
+    });
+    kktBox.scrollTop = kktBox.scrollHeight;
+}
+
+// --- 子系統二：心動短信 ---
+function renderSMSSystem() {
+    const optContainer = document.getElementById('options-container');
+    optContainer.innerHTML = `
+        <div class="form-group">
+            <label>請輸入你想發送的匿名短信內容：</label>
+            <input type="text" id="sms-text-content" value="今晚的海風很冷，但因為有你的咖啡，變得很溫暖。">
+        </div>
+        <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">請選擇你要發送的目標嘉賓：</div>
+    `;
+
+    guests.forEach(g => {
+        let btn = document.createElement('div');
+        btn.className = "option-btn";
+        btn.innerText = `🎯 發送給：${g.name} (好感度:${g.heartToPlayer})`;
+        btn.addEventListener('click', () => {
+            let content = document.getElementById('sms-text-content').value;
+            // 短信邏輯：若對方好感大於40，必然引發對方的強烈回應
+            g.heartToPlayer = Math.min(100, g.heartToPlayer + 15);
+            g.trustToPlayer = Math.min(100, g.trustToPlayer + 10);
+            
+            // 隨機判定明天的配對成功率 (若好感度>60則必成功去天堂島)
+            if (g.heartToPlayer >= 60 || Math.random() > 0.5) {
+                isAtHeaven = true;
+                currentPartner = g;
+                alert(`💌 配對成功！【${g.name}】也將短信發給了你！明天你們將攜手前往「天堂島」享受頂級奢華約會！`);
+            } else {
+                isAtHeaven = false;
+                currentPartner = null;
+                alert(`⛺ 配對失敗...很遺憾，明天的你必須留在「地獄島」劈柴挑水。`);
+            }
+
+            currentPeriod++;
+            renderState();
+        });
+        optContainer.appendChild(btn);
+    });
+}
+
+// --- 子系統三：韓網輿論更新 ---
+function renderSNSSystem() {
+    const optContainer = document.getElementById('options-container');
+    optContainer.innerHTML = "<h3>🌐 韓國各大社交平台實時熱搜與風向</h3>";
+
+    // 隨機生成帶有真實飯圈與網民風格的言論
+    let highest = [...guests].sort((a,b) => b.heartToPlayer - a.heartToPlayer)[0];
+    
+    let posts = [
+        { platform: "Instiz 熱帖", content: `【即時】單身即地獄那個叫 ${player.name} 的女/男嘉賓，眼神也太會拉絲了吧！！跟 ${highest.name} 的化學反應簡直絕了，求求你們原地結婚！！[圖片.jpg]` },
+        { platform: "X (Twitter) 趨勢", content: `大發... 剛剛看有人爆料說 ${player.name} 其實是某經紀公司的隱藏工作人員？難怪綜藝感這麼強，這算是欺騙觀眾嗎？TT #單身即地獄 #爆料` },
+        { platform: "豆瓣 韓綜專區", content: `理性討論，這一季的 ${player.name} 是不是段位有點太高了？KKT聊天室那波操作直接把所有人玩弄在股掌之間，妥妥的頂級海王/海后人設啊，不過我好喜歡哈哈。` }
+    ];
+
+    posts.forEach(p => {
+        let d = document.createElement('div');
+        d.className = "sns-post";
+        d.innerHTML = `<div class="sns-meta">[${p.platform}]</div><div class="sns-content">${p.content}</div>`;
+        optContainer.appendChild(d);
+    });
+
+    let nextBtn = document.createElement('button');
+    nextBtn.innerText = "看完輿論，進入下一天錄製";
+    nextBtn.addEventListener('click', () => {
+        // 增加因輿論產生的公司壓力
+        publicPressure = Math.floor(Math.random() * 30) + 20;
+        if (companyRisk > 50) {
+            alert(`⚠️ 警告：由於你在節目中的行為引發爭議，所屬公司召開緊急會議，對你下達了「避嫌令」！`);
+        }
+        currentPeriod = 1;
+        currentDay++;
+        renderState();
+    });
+    optContainer.appendChild(nextBtn);
+}
+
+// --- 子系統四：最終選擇 ---
+function renderFinalChoiceSystem() {
+    const optContainer = document.getElementById('options-container');
+    optContainer.innerHTML = `<p style="font-size:1.1rem; margin-bottom:20px;">直升機已經發動。海灘上，那些與你共度了7天日夜、為你吃醋、為你心動的人正看著你。請做出你此生不悔的最終告白：</p>`;
+
+    guests.forEach(g => {
+        let btn = document.createElement('div');
+        btn.className = "option-btn";
+        btn.innerText = `🌹 走向 【${g.name}】（信任值:${g.trustToPlayer} | 悸動值:${g.heartToPlayer}）`;
+        btn.addEventListener('click', () => {
+            evaluateEnding(g);
+        });
+        optContainer.appendChild(btn);
+    });
+
+    // 孤狼結局選項
+    let loneBtn = document.createElement('div');
+    loneBtn.className = "option-btn";
+    loneBtn.style.borderColor = "var(--inferno-orange)";
+    loneBtn.innerText = `🚶 誰也不選，獨自登上直升機離開（獨自美麗線）`;
+    loneBtn.addEventListener('click', () => {
+        evaluateEnding(null);
+    });
+    optContainer.appendChild(loneBtn);
+}
+
+// --- 終局結局判定邏輯 ---
+function evaluateEnding(target) {
+    const optContainer = document.getElementById('options-container');
+    document.getElementById('period-title').innerText = "👑 最終大結局揭曉 👑";
+    
+    if (!target) {
+        document.getElementById('event-main-text').innerText = `【OE 開放結局：獨自美麗的傳奇】\n\n你誰也沒有選擇，優雅地轉身登上了離開地獄島的直升機。節目播出後，你因為獨立、清醒、絕不將就的「大女主/大男主」人設在 Instagram 與 Threads 上瘋狂漲粉百萬，各大時尚資源拿到手軟。你成為了這一季《單身即地獄》唯一的、不可複製的頂流。`;
+        optContainer.innerHTML = "";
+        return;
+    }
+
+    let text = "";
+    if (target.heartToPlayer >= 80 && target.trustToPlayer >= 70 && companyRisk < 60) {
+        text = `【HE 終極公開戀愛：全網祝福的神仙眷侶】\n\n你走向了 ${target.name}，而她/他早已紅了眼眶，緊緊將你擁入懷中！\n你們牽手成功離開了地獄島。節目收官後，兩人在 WVS 與 Instagram 上同步公開了高甜的拍立得合照，大方承認戀情。韓網輿論全面癱瘓，網民紛紛直呼「內娛戀綜天花板」，各大品牌紛紛邀約情侶代言，你們實現了愛情與事業的雙重暴擊！`;
+    } else if (target.heartToPlayer >= 60 && companyRisk >= 60) {
+        text = `【BE 避嫌分手：被閃光燈扼殺的愛意】\n\n雖然在最後關頭你與 ${target.name} 牽手成功，但由於你在錄製期間觸發了過高的公司監管與輿論壓力（公司風險：${companyRisk}%），節目播出期間，雙方經紀公司下達了嚴格的禁言令。在巨大的私生飯騷擾與輿論惡評下，你們不得不發表「只是關係很好的前後輩」聲明，最終漸行漸遠，相忘於江湖。`;
+    } else if (target.heartToPlayer < 60) {
+        text = `【BE 告白失敗：錯位的單相思】\n\n你滿懷期待地走向 ${target.name}，並遞出了代表心意的玫瑰。然而，對方眼中閃過一絲歉意，微微鞠躬拒絕了你。原來在最後關頭，對方的悸動指數並未達到臨界點，她/他選擇了與另一位更有默契的嘉賓牽手。你只能落寞地看著他們的直升機遠去，留下了地獄島海灘上最令人心疼的背影。`;
+    } else {
+        text = `【Hidden Ending 隱藏結局：合約情侶的地下遊戲】\n\n你們表面上牽手成功，但彼此的心動與信任各懷鬼胎。回到現實世界後，你們在公司的安排下成為了「限定營業CP」，定期在 SNS 上發布工業糖水互動來收割粉絲與後續資源。但在無人的深夜，你們各自在 KKT 裡尋找著真正的下一任獵物。這是一場屬於韓娛高玩的極致權謀遊戲。`;
+    }
+
+    document.getElementById('event-main-text').innerText = text;
+    optContainer.innerHTML = `<button onclick="window.location.reload();">🔄 重新開啟新一輪地獄挑戰</button>`;
+}
+
+function triggerEnding() {
+    evaluateEnding(null);
+}
+</script>
+
+</body>
+</html>

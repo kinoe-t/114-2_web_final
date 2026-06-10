@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>嘻嘻音遊</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Microsoft JhengHei', sans-serif;
+            background-color: #111;
+        }
+
+        /* 共通按鈕樣式 */
+        .btn {
+            background-color: white;
+            color: black;
+            border: none;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        .btn:hover {
+            background-color: #f0f0f0;
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 頁面管理 */
+        .page {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .page.active {
+            display: flex;
+        }
+
+        /* 1. 初始頁面 */
+        #start-page {
+            background-color: #CCBBFF;
+        }
+        #start-page h1 {
+            font-size: 64px;
+            color: #333;
+            margin-bottom: 80px;
+            letter-spacing: 4px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* 2. 遊戲頁面 */
+        #game-page {
+            background-color: #1a1a1a;
+            position: relative;
+        }
+        #score-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            z-index: 10;
+            line-height: 1.5;
+        }
+        #speed-display {
+            font-size: 18px;
+            color: #FF5252; /* 改用醒目的紅色提示速度加快 */
+            font-weight: bold;
+        }
+        
+        /* 遊戲主要舞台 (包含4條軌道) */
+        #game-stage {
+            width: 400px;
+            height: 100%;
+            background-color: #222;
+            position: relative;
+            display: flex;
+            border-left: 3px solid #444;
+            border-right: 3px solid #444;
+        }
+        
+        /* 單一軌道 */
+        .lane {
+            flex: 1;
+            height: 100%;
+            position: relative;
+            border-right: 1px solid #333;
+        }
+        .lane:last-child {
+            border-right: none;
+        }
+
+        /* 提示按鍵名稱 */
+        .lane-hint {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: #555;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* 判定線 */
+        #judgment-line {
+            position: absolute;
+            bottom: 120px; 
+            width: 100%;
+            height: 40px;  
+            background-color: rgba(255, 255, 255, 0.15);
+            border-top: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* 音鍵 (Note) */
+        .note {
+            position: absolute;
+            width: 100%;
+            height: 60px; 
+            background: linear-gradient(180deg, #00E5FF, #00A3FF);
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        /* 3. 結束頁面 */
+        #end-page {
+            background-color: #D2E9FF;
+        }
+        #end-page h2 {
+            font-size: 48px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        #final-score {
+            font-size: 72px;
+            color: #ff4757;
+            font-weight: bold;
+            margin-bottom: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-page" class="page active">
+        <h1>嘻嘻音遊</h1>
+        <button class="btn" onclick="startGame()">開始遊戲</button>
+    </div>
+
+    <div id="game-page" class="page">
+        <div id="score-display">
+            <div>得分: <span id="current-score">0</span></div>
+            <div id="speed-display">速度: 1.0x</div>
+        </div>
+        <div id="game-stage">
+            <div class="lane" id="lane-0"><div class="lane-hint">←</div></div>
+            <div class="lane" id="lane-1"><div class="lane-hint">↑</div></div>
+            <div class="lane" id="lane-2"><div class="lane-hint">↓</div></div>
+            <div class="lane" id="lane-3"><div class="lane-hint">→</div></div>
+            <div id="judgment-line"></div>
+        </div>
+    </div>
+
+    <div id="end-page" class="page">
+        <h2>遊戲結束</h2>
+        <div id="final-score">得分: 0</div>
+        <button class="btn" onclick="backToLobby()">回到大廳</button>
+    </div>
+
+    <script>
+        const cMajorFrequencies = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+        
+        const keyMap = {
+            "ArrowLeft": 0,
+            "ArrowUp": 1,
+            "ArrowDown": 2,
+            "ArrowRight": 3
+        };
+
+        let audioCtx = null;
+        let score = 0;
+        let gameActive = false;
+        let animationFrameId = null;
+        let lastNoteTime = 0;
+        
+        // 遊戲核心參數
+        const baseSpeed = 4.0;          // 基礎下落速度
+        let currentSpeed = baseSpeed;   // 當前實際下落速度
+        const noteSpawnInterval = 900;  // 初始生成新音鍵的間隔時間 (毫秒)
+        const noteHeight = 60;          
+        const judgmentLineBottom = 120; 
+        const judgmentLineHeight = 40;  
+        const toleranceRange = noteHeight * 1.5; // 1.5倍寬容度
+
+        const gameStage = document.getElementById('game-stage');
+        const currentScoreDoc = document.getElementById('current-score');
+        const speedDisplayDoc = document.getElementById('speed-display');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const lanes = [
+            document.getElementById('lane-0'),
+            document.getElementById('lane-1'),
+            document.getElementById('lane-2'),
+            document.getElementById('lane-3')
+        ];
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playRandomNote() {
+            if (!audioCtx) return;
+            const frequency = cMajorFrequencies[Math.floor(Math.random() * cMajorFrequencies.length)];
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.type = 'sine'; 
+            oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.35);
+        }
+
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        // 更新得分與速度倍率顯示 (每 10 分增加 0.5 倍)
+        function updateScoreAndSpeed() {
+            currentScoreDoc.innerText = score;
+            
+            // 修改處：每多 10 分，加 0.5 倍速度
+            const speedMultiplier = 1 + Math.floor(score / 10) * 0.5;
+            currentSpeed = baseSpeed * speedMultiplier;
+            
+            // 顯示目前倍率
+            speedDisplayDoc.innerText = `速度: ${speedMultiplier.toFixed(1)}x`;
+        }
+
+        function startGame() {
+            initAudio();
+            score = 0;
+            currentSpeed = baseSpeed;
+            updateScoreAndSpeed();
+            
+            gameActive = true;
+            document.querySelectorAll('.note').forEach(note => note.remove());
+            switchPage('game-page');
+            lastNoteTime = Date.now();
+            spawnNote(); 
+            gameLoop();
+        }
+
+        function gameOver() {
+            gameActive = false;
+            cancelAnimationFrame(animationFrameId);
+            finalScoreDisplay.innerText = `${score} 分`;
+            switchPage('end-page');
+        }
+
+        function backToLobby() {
+            switchPage('start-page');
+        }
+
+        function spawnNote() {
+            if (!gameActive) return;
+            const randomLaneIndex = Math.floor(Math.random() * 4);
+            const targetLane = lanes[randomLaneIndex];
+
+            const note = document.createElement('div');
+            note.classList.add('note');
+            note.style.top = `-${noteHeight}px`; 
+            
+            note.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                checkJudgment(randomLaneIndex);
+            });
+            note.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                checkJudgment(randomLaneIndex);
+            });
+
+            targetLane.appendChild(note);
+        }
+
+        function checkJudgment(laneIndex) {
+            if (!gameActive) return;
+
+            const lane = lanes[laneIndex];
+            const notes = lane.querySelectorAll('.note');
+            if (notes.length === 0) {
+                gameOver();
+                return;
+            }
+
+            const targetNote = notes[0]; 
+            const stageHeight = gameStage.clientHeight;
+            
+            const noteTop = parseFloat(targetNote.style.top);
+            const noteCenterY = noteTop + (noteHeight / 2);
+
+            const lineTop = stageHeight - judgmentLineBottom - judgmentLineHeight;
+            const lineCenterY = lineTop + (judgmentLineHeight / 2);
+
+            const distance = Math.abs(noteCenterY - lineCenterY);
+
+            if (distance <= (toleranceRange / 2)) {
+                score++;
+                updateScoreAndSpeed(); 
+                playRandomNote(); 
+                targetNote.remove();
+            } else {
+                gameOver();
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
+            if (e.key in keyMap) {
+                e.preventDefault();
+                const targetLaneIndex = keyMap[e.key];
+                checkJudgment(targetLaneIndex);
+            }
+        });
+
+        function gameLoop() {
+            if (!gameActive) return;
+
+            const now = Date.now();
+            const stageHeight = gameStage.clientHeight;
+            
+            const lineTop = stageHeight - judgmentLineBottom - judgmentLineHeight;
+            const lineCenterY = lineTop + (judgmentLineHeight / 2);
+
+            // 音鍵生成間隔同步隨著「0.5倍速的成長」大幅縮短，確保高流速時方塊密度合理
+            const speedMultiplier = 1 + Math.floor(score / 10) * 0.5;
+            const adjustedSpawnInterval = noteSpawnInterval / speedMultiplier;
+
+            if (now - lastNoteTime > adjustedSpawnInterval) {
+                spawnNote();
+                lastNoteTime = now;
+            }
+
+            const allNotes = document.querySelectorAll('.note');
+            allNotes.forEach(note => {
+                let currentTop = parseFloat(note.style.top);
+                let newTop = currentTop + currentSpeed; 
+                note.style.top = `${newTop}px`;
+
+                let noteCenterY = newTop + (noteHeight / 2);
+                if (noteCenterY > (lineCenterY + (toleranceRange / 2))) {
+                    gameOver();
+                }
+
+                if (newTop > stageHeight) {
+                    note.remove();
+                }
+            });
+
+            if (gameActive) {
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+        }
+    </script>
+</body>
+</html>

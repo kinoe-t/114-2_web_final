@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歌詞填空大挑戰</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --bg-color: #F3F4F6;
+            --text-color: #1F2937;
+            --card-bg: #FFFFFF;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, 'Microsoft JhengHei';
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .subtitle {
+            color: #6B7280;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .song-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: #EEF2FF;
+            border-radius: 8px;
+            color: #3730A3;
+        }
+
+        .lyric-box {
+            font-size: 1.2rem;
+            line-height: 2;
+            margin-bottom: 1.5rem;
+        }
+
+        input[type="text"] {
+            font-size: 1.1rem;
+            padding: 0.5rem;
+            width: 120px;
+            text-align: center;
+            border: 2px solid #D1D5DB;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 1rem;
+        }
+
+        button:hover {
+            background-color: #4338CA;
+        }
+
+        /* Video Screen Setup (影片已被移除，但保留作為全螢幕提示的樣式) */
+        .video-screen {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            padding: 1rem;
+        }
+
+        .video-screen h2 {
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .video-screen button {
+            background-color: #EF4444;
+        }
+        
+        .video-screen button:hover {
+            background-color: #DC2626;
+        }
+
+        #game-screen, #end-screen {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="start-screen">
+        <h1>🎵 歌詞填空大挑戰</h1>
+        <p class="subtitle">從題庫中隨機抽出 5 首歌，你能全對嗎？</p>
+        <button onclick="startGame()">開始遊戲</button>
+    </div>
+
+    <div class="container" id="game-screen">
+        <h1 id="question-counter">第 1 / 5 題</h1>
+        <div class="song-title" id="song-title">歌曲：</div>
+        
+        <div class="lyric-box">
+            <span id="lyric-prefix"></span>
+            <input type="text" id="answer-input" placeholder="填入歌詞" autocomplete="off" onkeypress="handleEnter(event)">
+            <span id="lyric-suffix"></span>
+        </div>
+        
+        <button onclick="checkAnswer()">送出答案</button>
+    </div>
+
+    <div class="video-screen" id="rickroll-screen">
+        <h2>🎉 答對了！</h2>
+        <button onclick="closeRickroll()">繼續下一題 ⏭️</button>
+    </div>
+
+    <div class="video-screen" id="end-screen">
+        <h2 id="final-score" style="font-size: 2rem; color: #10B981;">戰績結算：0 / 共5題</h2>
+        <button onclick="location.reload()" style="background-color: var(--primary);">再玩一次 🔄</button>
+    </div>
+
+    <script>
+        // 題庫 
+        const songsBank = [
+            { title: "告白氣球 - 周杰倫", prefix: "親愛的 愛上你 從那天起 / ", answer: "甜蜜", suffix: " 的很輕易" },
+            { title: "晴天 - 周杰倫", prefix: "颳風這天 我試過握著妳手 / 但 ", answer: "偏偏", suffix: " 雨漸漸 大到我看妳不見" },
+            { title: "修煉愛情 - 林俊傑", prefix: "修煉愛情的悲歡 我們這些 ", answer: "努力", suffix: " 不簡單" },
+            { title: "光年之外 - 鄧紫棋", prefix: "我沒想到 為了你 我能瘋狂到 / 山崩海嘯 沒有你 ", answer: "根本不想逃", suffix: "" },
+            { title: "披星戴月的想你 - 告五人", prefix: "我會 ", answer: "披星戴月", suffix: " 的想你 我會奮不顧身的前進" },
+            { title: "愛人錯過 - 告五人", prefix: "我肯定在幾百年前就說過 ", answer: "愛你", suffix: "" },
+            { title: "歲月神偷 - 金玟岐", prefix: "時間是讓人猝不及防的東西 晴時有風  ", answer: "陰", suffix: "有時雨" },
+            { title: "終究還是因為愛 - TRASH", prefix: "終究還是 ", answer: "因為愛", suffix: "" },
+            { title: "幾分之幾 - 盧廣仲", prefix: "留下每天都在 ", answer: "變老的我", suffix: "請記得我曾經愛過" },
+            { title: "愛愛愛 - 方大同", prefix: "你喊出來 ", answer: "我靜下來", suffix: "都為了愛愛愛" },
+            { title: "普通朋友 - 陶喆", prefix: "我不能只是普通 ", answer: "朋友", suffix: "" },
+            { title: "不是因為天氣晴朗才愛你 - 理想混蛋", prefix: "不是因為天氣晴朗才 ", answer: "愛你", suffix: "" },
+            { title: "起風了 - 買辣椒也用券", prefix: "我曾難自拔於世界之大 也沉溺於其中 ", answer: "夢話", suffix: "" },
+            { title: "要不要跟我出去走一走 - 公館青少年", prefix: "要不要跟我出去 ", answer: "走一走", suffix: "" },
+            { title: "我也曾經想過這樣殺了我自己 - 南西肯恩", prefix: "我也曾經想過這樣 ", answer: "殺了", suffix: " 我自己" },
+            { title: "我喜歡你 - 芒果醬", prefix: "Oh, now I just want ", answer: "hold you tight,", suffix: "oh baby don't cry" },
+            { title: "失戀無罪 - A-Lin", prefix: "孤獨萬歲 失戀 ", answer: "無罪", suffix: "" },
+            { title: "最後一頁 - 江語晨", prefix: "想把你抱進 ", answer: "身體裡面", suffix: "" },
+            { title: "11 - 隊長/黃禮格", prefix: "cause you know 愛意就像", answer: "大雨", suffix: "落下" },
+            { title: "Infinity - shu yamino sonny brisko", prefix: "I bring the ", answer: "heat", suffix: "I bring the spead" }
+        ];
+
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        const totalQuestions = 5;
+
+        // 隨機洗牌演算法
+        function shuffleArray(array) {
+            let newArr = [...array];
+            for (let i = newArr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+            }
+            return newArr;
+        }
+
+        function startGame() {
+            // 洗牌並抽出前 5 題
+            currentQuestions = shuffleArray(songsBank).slice(0, totalQuestions);
+            currentIndex = 0;
+            score = 0;
+            
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentIndex >= totalQuestions) {
+                showEndScreen();
+                return;
+            }
+
+            const q = currentQuestions[currentIndex];
+            document.getElementById('question-counter').innerText = `第 ${currentIndex + 1} / ${totalQuestions} 題`;
+            document.getElementById('song-title').innerText = `歌曲：${q.title}`;
+            document.getElementById('lyric-prefix').innerText = q.prefix;
+            document.getElementById('lyric-suffix').innerText = q.suffix;
+            document.getElementById('answer-input').value = '';
+            document.getElementById('answer-input').focus();
+        }
+
+        // 支援按 Enter 鍵送出
+        function handleEnter(e) {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        }
+
+        function checkAnswer() {
+            const userInput = document.getElementById('answer-input').value.trim();
+            const correctAnswer = currentQuestions[currentIndex].answer;
+
+            // 比對答案 (轉小寫處理英文歌曲)
+            if (userInput.toLowerCase() === correctAnswer.toLowerCase()) {
+                score++;
+                triggerRickroll();
+            } else {
+                let left = totalQuestions - 1 - currentIndex;
+                alert(`oh oh 你答錯了,還有 ${left} 題`);
+                currentIndex++;
+                loadQuestion();
+            }
+        }
+
+        function triggerRickroll() {
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('rickroll-screen').style.display = 'flex';
+            // 影片網址嵌入已移除
+        }
+
+        function closeRickroll() {
+            document.getElementById('rickroll-screen').style.display = 'none';
+            
+            currentIndex++;
+            document.getElementById('game-screen').style.display = 'block';
+            loadQuestion();
+        }
+
+        function showEndScreen() {
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('end-screen').style.display = 'flex';
+            
+            document.getElementById('final-score').innerText = `戰績結算：答對 ${score} 題 / 共 5 題`;
+            // 結算影片網址嵌入已移除
+        }
+    </script>
+</body>
+</html>
+
+```

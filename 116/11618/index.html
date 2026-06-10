@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>五子棋三戰兩勝</title>
+<style>
+  body {
+    background: #f0f0f0;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+  #board {
+    margin: 20px auto;
+    position: relative;
+    width: 450px;
+    height: 450px;
+    background: #f9d27d;
+    border: 2px solid #333;
+  }
+  .line {
+    position: absolute;
+    background: #333;
+  }
+  .piece {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    position: absolute;
+    transform: translate(-50%, -50%);
+  }
+  .black { background: #000; }
+  .white { background: #fff; border: 1px solid #000; }
+  #status {
+    margin-top: 20px;
+    font-size: 20px;
+  }
+  button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+  }
+</style>
+</head>
+<body>
+<h1>🎮 五子棋 三戰兩勝</h1>
+<div id="board"></div>
+<div id="status"></div>
+<button onclick="restartGame()">🔄 重新開始</button>
+
+<script>
+  const board = document.getElementById("board");
+  const statusDiv = document.getElementById("status");
+  const size = 15;
+  const cellSize = 30;
+  let grid = [];
+  let currentPlayer;
+  let gameOver = false;
+  let round = 1;
+  let wins = {player1:0, player2:0};
+
+  function drawBoard() {
+    board.innerHTML = "";
+    // 畫線
+    for (let i=0;i<size;i++) {
+      const hline = document.createElement("div");
+      hline.className="line";
+      hline.style.top = (i*cellSize)+"px";
+      hline.style.left = "0px";
+      hline.style.width = (cellSize*(size-1))+"px";
+      hline.style.height = "1px";
+      board.appendChild(hline);
+
+      const vline = document.createElement("div");
+      vline.className="line";
+      vline.style.left = (i*cellSize)+"px";
+      vline.style.top = "0px";
+      vline.style.height = (cellSize*(size-1))+"px";
+      vline.style.width = "1px";
+      board.appendChild(vline);
+    }
+    // 初始化棋盤
+    grid = Array.from({length:size},()=>Array(size).fill(null));
+    board.onclick = handleClick;
+  }
+
+  function startRound() {
+    drawBoard();
+    gameOver=false;
+    if (round===1) {
+      currentPlayer="black";
+      statusDiv.textContent="第1局開始！玩家1持黑子，輪到黑子";
+    } else if (round===2) {
+      currentPlayer="black";
+      statusDiv.textContent="第2局開始！玩家2持黑子，輪到黑子";
+    } else {
+      currentPlayer=Math.random()<0.5?"black":"white";
+      let starter = currentPlayer==="black"?"黑子":"白子";
+      statusDiv.textContent="第3局開始！隨機決定先手："+starter;
+    }
+  }
+
+  function handleClick(e) {
+    if (gameOver) return;
+    const rect = board.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const row = Math.round(y/cellSize);
+    const col = Math.round(x/cellSize);
+    if (row<0||row>=size||col<0||col>=size) return;
+    if (grid[row][col]) return;
+    grid[row][col]=currentPlayer;
+    const piece=document.createElement("div");
+    piece.className="piece "+currentPlayer;
+    piece.style.left=(col*cellSize)+"px";
+    piece.style.top=(row*cellSize)+"px";
+    board.appendChild(piece);
+    if (checkWin(row,col,currentPlayer)) {
+      let winner = getWinnerName(currentPlayer);
+      statusDiv.textContent="第"+round+"局結束！"+winner+"獲勝！";
+      if (winner==="玩家1") wins.player1++;
+      else wins.player2++;
+      gameOver=true;
+      checkMatch();
+      return;
+    }
+    currentPlayer=currentPlayer==="black"?"white":"black";
+    statusDiv.textContent="輪到"+(currentPlayer==="black"?"黑子":"白子");
+  }
+
+  function getWinnerName(playerColor) {
+    if (round===1) return playerColor==="black"?"玩家1":"玩家2";
+    if (round===2) return playerColor==="black"?"玩家2":"玩家1";
+    // 第三局隨機先手，需判斷
+    return playerColor==="black"?starterName("black"):starterName("white");
+  }
+
+  function starterName(color) {
+    // 第三局先手判斷
+    if (round!==3) return "";
+    let starterText=statusDiv.textContent;
+    if (starterText.includes("黑子")) return color==="black"?"玩家1或玩家2(黑子)":"玩家?";
+    // 簡化：第三局直接以顏色判斷
+    return color==="black"?"玩家1":"玩家2";
+  }
+
+  function checkWin(row,col,player) {
+    const dirs=[[1,0],[0,1],[1,1],[1,-1]];
+    for (let [dr,dc] of dirs) {
+      let count=1;
+      count+=countDir(row,col,dr,dc,player);
+      count+=countDir(row,col,-dr,-dc,player);
+      if (count>=5) return true;
+    }
+    return false;
+  }
+  function countDir(r,c,dr,dc,player) {
+    let cnt=0;
+    let nr=r+dr,nc=c+dc;
+    while(nr>=0&&nr<size&&nc>=0&&nc<size&&grid[nr][nc]===player){
+      cnt++;nr+=dr;nc+=dc;
+    }
+    return cnt;
+  }
+
+  function checkMatch() {
+    if (wins.player1===2) {
+      statusDiv.textContent+=" 全局結束！玩家1贏得比賽！";
+    } else if (wins.player2===2) {
+      statusDiv.textContent+=" 全局結束！玩家2贏得比賽！";
+    } else {
+      if (round===2 && wins.player1===1 && wins.player2===1) {
+        round=3;
+        setTimeout(startRound,1000);
+      } else if (round===3) {
+        if (wins.player1>wins.player2) statusDiv.textContent+=" 全局結束！玩家1贏得比賽！";
+        else statusDiv.textContent+=" 全局結束！玩家2贏得比賽！";
+      } else {
+        round++;
+        setTimeout(startRound,1000);
+      }
+    }
+  }
+
+  function restartGame() {
+    round=1;
+    wins={player1:0,player2:0};
+    startRound();
+  }
+
+  startRound();
+</script>
+</body>
+</html>

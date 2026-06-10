@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>終極雞雞性格心理測驗 - 10大靈魂雞雞解密 (完美清晰宋體版)</title>
+    <style>
+        /* 引入 Google 的 Noto Serif TC (思源宋體) */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap');
+
+        :root {
+            --primary-color: #2c3d30;      /* 深森林綠 */
+            --secondary-color: #3d5a45;    /* 墨綠色 */
+            --accent-color: #27ae60;       /* 翡翠綠 */
+            --bg-gradient-start: #1e3525;  /* 背景深綠 */
+            --bg-gradient-end: #2e5339;    /* 背景明亮綠 */
+            --card-bg: #ffffff;
+            --text-color: #2f3531;         /* 深灰綠 */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Georgia, "Noto Serif TC", "PMingLiU", "Songti TC", "Apple LiSung", serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            padding: 45px 35px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .welcome-title {
+            font-size: 2.4rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .welcome-desc {
+            font-size: 1.1rem;
+            font-weight: 700; 
+            color: #55635a;   
+            margin-bottom: 35px;
+            line-height: 1.9;
+            letter-spacing: 0.5px;
+        }
+
+        .start-btn {
+            font-family: inherit;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 16px 50px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            background-color: #219653;
+            box-shadow: 0 8px 20px rgba(39, 174, 96, 0.6);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e2ebd5;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #2ecc71, #a3cb38);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.95rem;
+            font-weight: 700; 
+            color: #55635a;
+            margin-top: 8px;
+            text-align: right;
+        }
+
+        .question-text {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-align: left;
+            line-height: 1.7;
+            color: var(--primary-color);
+        }
+
+        .options-group {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .option-btn {
+            font-family: inherit;
+            background-color: #fafdfa;
+            border: 2px solid #d3e2c2; 
+            padding: 16px 22px;
+            border-radius: 12px;
+            text-align: left;
+            font-size: 1.05rem;
+            font-weight: 700; 
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #2d3730;
+            line-height: 1.5;
+            letter-spacing: 0.3px;
+        }
+
+        .option-btn:hover {
+            background-color: #f0f7f1;
+            border-color: var(--accent-color);
+            transform: translateX(5px);
+            color: var(--secondary-color);
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700; 
+            color: #55635a;
+            margin-bottom: 10px;
+        }
+
+        .bird-name {
+            font-size: 2.6rem;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-weight: 700;
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 15px;
+            display: inline-block;
+        }
+
+        .bird-image {
+            width: 100%;
+            max-height: 280px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+
+        .bird-explain {
+            text-align: left;
+            background-color: #f7faf8;
+            padding: 25px;
+            border-radius: 12px;
+            line-height: 1.9;
+            font-size: 1.1rem;
+            font-weight: 700; 
+            margin-bottom: 35px;
+            border-left: 6px solid var(--accent-color);
+            color: #3b4540;   
+            letter-spacing: 0.5px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. 初始歡迎畫面 -->
+    <div id="welcome-pane" class="card fade-in">
+        <h1 class="welcome-title">解密你的內在飛羽</h1>
+        <p class="welcome-desc">每個人心中都潛伏著一種雞雞的靈魂。<br>透過 10 個核心情境問答，發掘你最真實的雞雞特質吧！</p>
+        <button class="start-btn" onclick="goToQuiz()">進入測驗</button>
+    </div>
+
+    <!-- 2. 測驗問題畫面 -->
+    <div id="quiz-pane" class="card hidden fade-in">
+        <div class="progress-container">
+            <div id="progress" class="progress-bar"></div>
+        </div>
+        <div id="progress-count" class="progress-text">第 1 / 10 題</div>
+        <div id="question-text" class="question-text">題目讀取中...</div>
+        <div id="options-box" class="options-group">
+            <!-- 由 JavaScript 產生選項 -->
+        </div>
+    </div>
+
+    <!-- 3. 結果測驗畫面 -->
+    <div id="result-pane" class="card hidden fade-in">
+        <div class="result-title">探索完畢！你的靈魂雞雞是</div>
+        <div id="bird-name" class="bird-name">雞雞名稱</div>
+        
+        <div id="image-container"></div>
+        
+        <div id="bird-explain" class="bird-explain">性格描述載入中...</div>
+        <button class="start-btn" style="font-size:1.1rem; padding:12px 40px;" onclick="restartQuiz()">重新測驗</button>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "1. 收到一個需要耗時一個月完成的超大型任務時，你的第一步會怎麼做？",
+                options: [
+                    { text: "召集大家開會，果斷分配好每個人負責的疆域與底線。", types: ["eagle"] },
+                    { text: "獨自關在房間，把整體的邏輯架構與潛在風險梳理得一清二楚。", types: ["owl"] },
+                    { text: "興奮地拋出許多有趣的點子，迫不及待想嘗試各種新花樣。", types: ["hummingbird"] },
+                    { text: "與熟悉的夥伴分配好工作，確保每個人都能安穩推進。", types: ["penguin"] }
+                ]
+            },
+            {
+                question: "2. 當你走進一個完全陌生的社交派對，你通常會停留在哪裡？",
+                options: [
+                    { text: "站在視野最好的地方，觀察誰是這個場子的核心人物。", types: ["swan"] },
+                    { text: "穿著最亮眼的衣服，游走在人群中，迅速成為注目焦點。", types: ["peacock"] },
+                    { text: "角落、吧檯邊或昏暗處，安靜地喝酒，非必要不主動搭訕。", types: ["nightingale"] },
+                    { text: "找看起來最和善、人數不多的小圈圈，聊些日常溫馨的話題。", types: ["sparrow"] }
+                ]
+            },
+            {
+                question: "3. 如果必須選擇一項興趣或技能來精進，你最傾向哪一類？",
+                options: [
+                    { text: "極具策略性且需要高智商思維的棋類、寫程式或偵探推理。", types: ["crow"] },
+                    { text: "極限運動、自助背包客、沖浪等充滿速度與自由感的挑戰。", types: ["seagull"] },
+                    { text: "能展現個人極致美感與優雅的藝術，如高級花藝或芭蕾。", types: ["swan"] },
+                    { text: "手作、烹飪、園藝等能帶來生活溫暖的小確幸。", types: ["sparrow"] }
+                ]
+            },
+            {
+                question: "4. 在網路上看到一件非常有爭議的社會新聞時，你的直覺反應是？",
+                options: [
+                    { text: "「事出必有因」，不急著表態，默默收集資訊看背後有沒有反轉。", types: ["nightingale"] },
+                    { text: "直接點出問題的核心矛盾，發表具備批判性與掌控全局的觀點。", types: ["eagle"] },
+                    { text: "在留言區跟網友幽默互動、轉發給朋友，純粹當作聊天話題。", types: ["seagull"] },
+                    { text: "感到痛心或擔憂，希望社會能多點溫暖與包容，少點對立。", types: ["penguin"] }
+                ]
+            },
+            {
+                question: "5. 如果生活或工作壓力大到快要崩潰，你最好的解壓方式是？",
+                options: [
+                    { text: "買一張機票或開著車，漫無目的地往海邊或大自然衝過去。", types: ["hummingbird"] },
+                    { text: "把自己關在沒有光的房間裡，睡到自然醒，隔絕所有人際聯絡。", types: ["owl"] },
+                    { text: "去健身房瘋狂流汗、做高強度運動，用肉體挑戰來找回自信。", types: ["peacock"] },
+                    { text: "找尋高人指點，或是運用謀略在暗中把壓力源頭徹底排除。", types: ["crow"] }
+                ]
+            },
+            {
+                question: "6. 當團隊中有人不小心犯了嚴重的錯誤導致進度落後，你會？",
+                options: [
+                    { text: "雖然生氣，但會冷靜運用奇招或智謀，想辦法在暗中幫團隊補救。", types: ["crow"] },
+                    { text: "不留情面地指出錯誤，以高標準要求對方立刻拿出解決方案。", types: ["eagle"] },
+                    { text: "安慰對方不要太自責，並號召大家一起分擔，共同度過難關。", types: ["penguin"] },
+                    { text: "試著用幽默或貼心的方式化解尷尬氛圍，重新激勵士氣。", types: ["peacock"] }
+                ]
+            },
+            {
+                question: "7. 去旅行時，你最無法忍受哪一種突發狀況？",
+                options: [
+                    { text: "行程被嚴格限制，完全沒有隨性探險、臨時起意的自由度。", types: ["seagull"] },
+                    { text: "住宿環境骯髒混亂、毫無美感可言，破壞了出遊的優雅心情。", types: ["swan"] },
+                    { text: "遇到了危險或混亂，卻找不到任何理性邏輯與配套計畫來依賴。", types: ["owl"] },
+                    { text: "同行旅伴各走各的、缺乏互動與靈活火花，變得毫無樂趣。", types: ["hummingbird"] }
+                ]
+            },
+            {
+                question: "8. 朋友常開玩笑說，你在群體中扮演著什麼樣的特殊存在？",
+                options: [
+                    { text: "自帶強大氣場，說話很有份量，讓人不由自主想聽你指揮的決策者。", types: ["eagle"] },
+                    { text: "行蹤飄忽不定，只有特定時刻或夜晚才會出沒的神祕感性文青。", types: ["nightingale"] },
+                    { text: "雖然平常話不多，但一開口往往一針見血、邏輯極強的定心丸。", types: ["owl"] },
+                    { text: "最接地氣、最不可或缺的日常溫暖陪伴者與傾聽者。", types: ["sparrow"] }
+                ]
+            },
+            {
+                question: "9. 關於「金錢與物質」的看法，你比較認同以下哪一種？",
+                options: [
+                    { text: "賺錢是為了獲得無拘無束的自由，不想被任何資產或帳單綁死。", types: ["seagull"] },
+                    { text: "金錢與資產要配置得當，透過理性的規劃與分析，才能立於不敗之地。", types: ["crow"] },
+                    { text: "錢不用多，夠花就好，能保障家庭平安、過好踏實日子最重要。", types: ["sparrow"] },
+                    { text: "追求精緻且高尚的生活品質，金錢是拿來活出尊嚴與美感的工具。", types: ["swan"] }
+                ]
+            },
+            {
+                question: "10. 如果生命是一場電影，你希望這部電影留給觀眾什麼樣的謝幕？",
+                options: [
+                    { text: "一場充滿驚奇、快速應變、永保青春活力的華麗冒險劇。", types: ["hummingbird"] },
+                    { text: "一部在聚光燈下極盡奪目、驚艷四座，讓人久久無法忘懷的經典巨作。", types: ["peacock"] },
+                    { text: "一個雖然平凡，卻充滿愛、團隊默契與深厚人情味的紀錄片。", types: ["penguin"] },
+                    { text: "一部情感細膩、韻味悠長，深夜看會讓人感動落淚的獨立文藝片。", types: ["nightingale"] }
+                ]
+            }
+        ];
+
+        const resultData = {
+            eagle: { name: "🦅 翱翔天際的「老鷹」", imageName: "老鷹.jpg", explain: "你是天生的開拓者與領袖。眼光宏大、意志鋼鐵，面對阻礙從不低頭。你具備極高的獨立性與決斷力，渴望掌控大局，最無法忍受被瑣碎的規則束縛。在群體中，你總能站在最高處指引方向。記得偶爾放慢腳步，等等身邊的人。" },
+            nightingale: { name: "🎵 靜謐吟唱的「夜鶯」", imageName: "夜鶯.jpg", explain: "你是一個情感細膩、充滿靈性的靈魂。就像在黑夜中獨自啼鳴的夜鶯，你不盲目追求白天的喧囂，而是在安靜、深沉的個人空間中釋放巨大的創造力與思考力。你對周遭環境與人際變化有極強的感知能力，是個溫柔而優雅的守望者。" },
+            hummingbird: { name: "🐦 靈動多變的「蜂鳥」", imageName: "蜂鳥.jpg", explain: "你是充滿能量與靈氣的化身。對新事物擁有極度敏銳的嗅覺，學習力與適應力驚人。你討厭一成不變的生活，總是快速變換軌道，帶來驚喜。在社交圈中你是快樂的催化劑，若能多點耐心深耕，你的成就將無可限量。" },
+            penguin: { name: "🐧 溫柔守護的「企鵝」", imageName: "企鵝.jpg", explain: "你是最可靠的護盾與團隊的核心基石。個性沉穩踏實，對家庭、伴侶和朋友擁有極高的忠誠度。比起個人英雄主義，你更重視集體利益與和諧。你做決定謹慎周密，能給予周遭極大的安全感。有你在的地方，就有風雨摧不垮的溫馨。" },
+            peacock: { name: "🦚 華麗奪目的「孔雀」", imageName: "孔雀.jpg", explain: "你天生自帶舞台光芒，是精緻與自我表達的代名詞。你極具群眾魅力與說服力，擅長展現自己最完美的一面，並渴望得到掌聲與認同。你熱愛美麗的人事物，生活充滿儀式感。你那無與倫比的自信，往往能感染並激勵身邊的所有人。" },
+            crow: { name: "🐦‍⬛ 智慧奇謀的「烏鴉」", imageName: "烏鴉.jpg", explain: "你是高智商、高策略性的生存大師。在複雜的環境中，你擁有超越常人的洞察力與資源整合能力，常能利用奇招扭轉劣勢。你從不盲從權威，思維特立獨行且極具批判性。雖然有時顯得世故或冷酷，但你看待世界的眼光清醒而深刻。" },
+            swan: { name: "🦢 優雅純潔的「天鵝」", imageName: "天鵝.jpg", explain: "你可以追求內在與外在的極致完美，骨子裡流淌著高貴與尊嚴。你待人接物溫和有禮，對生活美學有著極高的堅持。你對待感情羽毛般珍惜，一旦認定便至死不渝。你討厭粗鄙與混亂，總是努力在喧囂的世界中維持一方清澈與優雅。" },
+            owl: { name: "🦉 洞悉萬物的「貓頭鷹」", imageName: "貓頭鷹.jpg", explain: "你是博學、嚴謹的理性思維代表。習慣用數據、邏輯與事實說話，做任何事都要有根有據. 你成熟穩重，面對危機泰然自若，常是群體中的諮詢對象與「定心丸」。你享受獨處思考的時光，知性與冷靜是你行走世界最強大的武器。" },
+            seagull: { name: "🛩️ 逐浪乘風的「海鷗」", imageName: "海鷗.webp", explain: "你是無拘無束、靈魂自由的代名詞。你渴望廣闊的地平線，無法忍受任何體制或關係將你牢牢綁定。你適應力極強，在哪裡都能找到生存之道，隨遇而安。你熱愛冒險，敢於迎向生命中的狂風暴雨，活得瀟灑、浪漫且真實。" },
+            sparrow: { name: "🐤 溫馨知足的「麻雀」", imageName: "麻雀.jpg", explain: "你是日常生活中最接地氣、最不可或缺的溫暖存在。你個性隨和、好相處，沒有過多的野心與侵略性，懂得享受生活中平凡的小確幸。你善於打理人際關係中的小細節，極具親和力。知足常樂的你，總能活得最輕鬆、最自在。" }
+        };
+
+        let currentStep = 0;
+        let scoreTracker = {
+            eagle: 0, nightingale: 0, hummingbird: 0, penguin: 0, peacock: 0,
+            crow: 0, swan: 0, owl: 0, seagull: 0, sparrow: 0
+        };
+
+        function goToQuiz() {
+            document.getElementById('welcome-pane').classList.add('hidden');
+            document.getElementById('quiz-pane').classList.remove('hidden');
+            currentStep = 0;
+            for (const key in scoreTracker) { scoreTracker[key] = 0; }
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const data = quizData[currentStep];
+            
+            const percent = ((currentStep) / quizData.length) * 100;
+            document.getElementById('progress').style.width = percent + '%';
+            document.getElementById('progress-count').innerText = `第 ${currentStep + 1} / ${quizData.length} 題`;
+
+            document.getElementById('question-text').innerText = data.question;
+
+            const optionsBox = document.getElementById('options-box');
+            optionsBox.innerHTML = '';
+
+            data.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt.text;
+                btn.onclick = () => handleSelect(opt.types);
+                optionsBox.appendChild(btn);
+            });
+        }
+
+        function handleSelect(types) {
+            types.forEach(t => {
+                if (scoreTracker[t] !== undefined) {
+                    scoreTracker[t]++;
+                }
+            });
+
+            currentStep++;
+
+            if (currentStep < quizData.length) {
+                renderQuestion();
+            } else {
+                showFinalResult();
+            }
+        }
+
+        function showFinalResult() {
+            document.getElementById('quiz-pane').classList.add('hidden');
+            document.getElementById('result-pane').classList.remove('hidden');
+
+            let maxPoints = -1;
+            let tieList = [];
+
+            for (const key in scoreTracker) {
+                if (scoreTracker[key] > maxPoints) {
+                    maxPoints = scoreTracker[key];
+                }
+            }
+
+            for (const key in scoreTracker) {
+                if (scoreTracker[key] === maxPoints) {
+                    tieList.push(key);
+                }
+            }
+
+            const randomIndex = Math.floor(Math.random() * tieList.length);
+            const finalType = tieList[randomIndex];
+
+            const finalBird = resultData[finalType];
+            document.getElementById('bird-name').innerText = finalBird.name;
+            document.getElementById('bird-explain').innerText = finalBird.explain;
+
+            const imgContainer = document.getElementById('image-container');
+            imgContainer.innerHTML = ''; 
+            
+            const img = document.createElement('img');
+            img.src = finalBird.imageName;
+            img.alt = finalBird.name;
+            img.className = 'bird-image';
+            imgContainer.appendChild(img);
+        }
+
+        function restartQuiz() {
+            document.getElementById('result-pane').classList.add('hidden');
+            document.getElementById('welcome-pane').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

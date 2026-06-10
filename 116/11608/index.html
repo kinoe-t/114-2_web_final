@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>冰火人</title>
+
+<style>
+body{
+    margin:0;
+    background:#222;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    color:white;
+    font-family:Arial;
+}
+
+h1{
+    margin:10px;
+}
+
+canvas{
+    background:#444;
+    border:4px solid white;
+}
+
+#msg{
+    margin-top:10px;
+    font-size:22px;
+    color:gold;
+}
+</style>
+</head>
+<body>
+
+<h1>冰火人</h1>
+<canvas id="game" width="960" height="640"></canvas>
+<div id="msg"></div>
+
+<script>
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const TILE = 40;
+
+const map = [
+
+"########################",
+"#R....r.....L.....b...B#",
+"#.#######.######.####..#",
+"#..............#.......#",
+"#..~~~~........#.......#",
+"#..............#######.#",
+"#...........~~~~.......#",
+"#.######...............#",
+"#..............######..#",
+"#....bbbb..............#",
+"#......................#",
+"#..........rrrr........#",
+"#......................#",
+"#..########............#",
+"#......................#",
+"########################"
+
+];
+
+let walls = [];
+let lava = [];
+let water = [];
+let gems = [];
+
+function createLevel(){
+
+    walls=[];
+    lava=[];
+    water=[];
+    gems=[];
+
+    for(let y=0;y<map.length;y++){
+
+        for(let x=0;x<map[y].length;x++){
+
+            let c = map[y][x];
+
+            if(c=="#"){
+                walls.push({
+                    x:x*TILE,
+                    y:y*TILE
+                });
+            }
+
+            if(c=="r"){
+                gems.push({
+                    x:x*TILE+10,
+                    y:y*TILE+10,
+                    color:"red"
+                });
+            }
+
+            if(c=="b"){
+                gems.push({
+                    x:x*TILE+10,
+                    y:y*TILE+10,
+                    color:"blue"
+                });
+            }
+
+            if(c=="~"){
+                lava.push({
+                    x:x*TILE,
+                    y:y*TILE
+                });
+            }
+
+        }
+    }
+
+    water=[
+        {x:250,y:180},
+        {x:290,y:180},
+        {x:330,y:180},
+
+        {x:600,y:400},
+        {x:640,y:400},
+        {x:680,y:400}
+    ];
+
+}
+
+const startFire={x:80,y:560};
+const startIce={x:140,y:560};
+
+let fire;
+let ice;
+
+let redDoor={
+    x:40,
+    y:40
+};
+
+let blueDoor={
+    x:880,
+    y:40
+};
+
+function resetGame(){
+
+    fire={
+        x:startFire.x,
+        y:startFire.y,
+        w:30,
+        h:30,
+        color:"red"
+    };
+
+    ice={
+        x:startIce.x,
+        y:startIce.y,
+        w:30,
+        h:30,
+        color:"cyan"
+    };
+
+    createLevel();
+
+    document.getElementById("msg").innerHTML="";
+}
+
+resetGame();
+
+const keys={};
+
+document.addEventListener("keydown",e=>{
+    keys[e.key]=true;
+});
+
+document.addEventListener("keyup",e=>{
+    keys[e.key]=false;
+});
+
+function collideRect(a,b){
+
+    return (
+        a.x < b.x+b.w &&
+        a.x+a.w > b.x &&
+        a.y < b.y+b.h &&
+        a.y+a.h > b.y
+    );
+
+}
+
+function wallCollision(player){
+
+    for(let wall of walls){
+
+        let obj={
+            x:wall.x,
+            y:wall.y,
+            w:TILE,
+            h:TILE
+        };
+
+        if(collideRect(player,obj))
+            return true;
+    }
+
+    return false;
+}
+
+function movePlayer(player,dx,dy){
+
+    player.x += dx;
+
+    if(wallCollision(player))
+        player.x -= dx;
+
+    player.y += dy;
+
+    if(wallCollision(player))
+        player.y -= dy;
+}
+
+function update(){
+
+    let speed=3;
+
+    // 火人
+    if(keys["ArrowUp"]) movePlayer(fire,0,-speed);
+    if(keys["ArrowDown"]) movePlayer(fire,0,speed);
+    if(keys["ArrowLeft"]) movePlayer(fire,-speed,0);
+    if(keys["ArrowRight"]) movePlayer(fire,speed,0);
+
+    // 冰人
+    if(keys["w"]) movePlayer(ice,0,-speed);
+    if(keys["s"]) movePlayer(ice,0,speed);
+    if(keys["a"]) movePlayer(ice,-speed,0);
+    if(keys["d"]) movePlayer(ice,speed,0);
+
+    // 寶石
+    gems = gems.filter(g=>{
+
+        let gemRect={
+            x:g.x,
+            y:g.y,
+            w:20,
+            h:20
+        };
+
+        if(g.color=="red" && collideRect(fire,gemRect))
+            return false;
+
+        if(g.color=="blue" && collideRect(ice,gemRect))
+            return false;
+
+        return true;
+    });
+
+    // 岩漿
+    for(let l of lava){
+
+        let r={
+            x:l.x,
+            y:l.y,
+            w:TILE,
+            h:TILE
+        };
+
+        if(collideRect(ice,r)){
+            alert("冰人掉進岩漿！");
+            resetGame();
+        }
+    }
+
+    // 水池
+    for(let w of water){
+
+        let r={
+            x:w.x,
+            y:w.y,
+            w:TILE,
+            h:TILE
+        };
+
+        if(collideRect(fire,r)){
+            alert("火人掉進水池！");
+            resetGame();
+        }
+    }
+
+    // 通關
+    if(gems.length===0){
+
+        let fireWin=
+            fire.x<redDoor.x+40 &&
+            fire.x+30>redDoor.x &&
+            fire.y<redDoor.y+60 &&
+            fire.y+30>redDoor.y;
+
+        let iceWin=
+            ice.x<blueDoor.x+40 &&
+            ice.x+30>blueDoor.x &&
+            ice.y<blueDoor.y+60 &&
+            ice.y+30>blueDoor.y;
+
+        if(fireWin && iceWin){
+            document.getElementById("msg").innerHTML=
+            "🎉 恭喜通關！";
+        }
+    }
+}
+
+function draw(){
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // 牆壁
+    for(let w of walls){
+
+        ctx.fillStyle="#666";
+        ctx.fillRect(w.x,w.y,TILE,TILE);
+
+        ctx.strokeStyle="#333";
+        ctx.strokeRect(w.x,w.y,TILE,TILE);
+    }
+
+    // 岩漿
+    for(let l of lava){
+
+        ctx.fillStyle="red";
+        ctx.fillRect(l.x,l.y,TILE,TILE);
+    }
+
+    // 水池
+    for(let w of water){
+
+        ctx.fillStyle="deepskyblue";
+        ctx.fillRect(w.x,w.y,TILE,TILE);
+    }
+
+    // 寶石
+    for(let g of gems){
+
+        ctx.fillStyle=g.color;
+
+        ctx.beginPath();
+        ctx.moveTo(g.x+10,g.y);
+        ctx.lineTo(g.x+20,g.y+10);
+        ctx.lineTo(g.x+10,g.y+20);
+        ctx.lineTo(g.x,g.y+10);
+        ctx.fill();
+    }
+
+    // 紅門
+    ctx.fillStyle="red";
+    ctx.fillRect(redDoor.x,redDoor.y,40,60);
+
+    // 藍門
+    ctx.fillStyle="cyan";
+    ctx.fillRect(blueDoor.x,blueDoor.y,40,60);
+
+    // 火人
+    ctx.fillStyle="red";
+    ctx.beginPath();
+    ctx.arc(fire.x+15,fire.y+15,15,0,Math.PI*2);
+    ctx.fill();
+
+    // 冰人
+    ctx.fillStyle="cyan";
+    ctx.beginPath();
+    ctx.arc(ice.x+15,ice.y+15,15,0,Math.PI*2);
+    ctx.fill();
+
+}
+
+function gameLoop(){
+
+    update();
+    draw();
+
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+
+</script>
+
+</body>
+</html>

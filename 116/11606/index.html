@@ -1,0 +1,534 @@
+HTML
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D 雙人排球熱血大賽 - 飛撲進化版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #1a252f;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: white;
+            overflow: hidden;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-size: 26px;
+            color: #f1c40f;
+            letter-spacing: 2px;
+        }
+
+        .instructions-container {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .p1-ctrl { color: #3498db; font-weight: bold; }
+        .p2-ctrl { color: #e74c3c; font-weight: bold; }
+
+        #gameContainer {
+            position: relative;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 4px solid #34495e;
+        }
+
+        canvas {
+            background: linear-gradient(to bottom, #111936, #2c3b75);
+            display: block;
+        }
+
+        .scoreboard {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 40px;
+            font-size: 36px;
+            font-weight: bold;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.8);
+            font-family: 'Courier New', Courier, monospace;
+            pointer-events: none;
+        }
+
+        .player1-score { color: #3498db; }
+        .player2-score { color: #e74c3c; }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .overlay h2 {
+            font-size: 40px;
+            margin-bottom: 20px;
+            color: #fff;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .btn {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 30px;
+            transition: all 0.2s;
+            box-shadow: 0 6px 15px rgba(46, 204, 113, 0.4);
+        }
+
+        .btn:hover { background: #27ae60; transform: translateY(-2px); }
+        .btn:active { transform: translateY(1px); }
+    </style>
+</head>
+<body>
+
+    <h1>VOLLEYBALL 飛撲吧！熱血對決</h1>
+   
+    <div class="instructions-container">
+        <div class="p1-ctrl">
+            🔵 玩家一 (左側藍人)<br>
+            走動：【A】左 / 【D】右<br>
+            跳躍：【W】 | <span style="background:#3498db; color:white; padding:1px 4px; border-radius:3px;">飛撲：【S】鍵</span>
+        </div>
+        <div class="p2-ctrl">
+            🔴 玩家二 (右側紅人)<br>
+            走動：【⬅️】左 / 【➡️】右<br>
+            跳躍：【⬆️】 | <span style="background:#e74c3c; color:white; padding:1px 4px; border-radius:3px;">飛撲：【⬇️】鍵</span>
+        </div>
+    </div>
+
+    <div id="gameContainer">
+        <div class="scoreboard">
+            <span class="player1-score" id="p1Score">0</span>
+            <span style="color: white;">-</span>
+            <span class="player2-score" id="p2Score">0</span>
+        </div>
+
+        <div class="overlay" id="overlay">
+            <h2 id="overlayText">雙人極限模式</h2>
+            <button class="btn" id="startBtn" onclick="startGame()">開始對決</button>
+        </div>
+
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 物理常數
+        const GRAVITY = 0.5;
+        const GROUND_Y = 350;
+        const NET_X = canvas.width / 2;
+        const NET_HEIGHT = 90;
+        const NET_WIDTH = 10;
+
+        let p1Score = 0;
+        let p2Score = 0;
+        let gameRunning = false;
+        let gameTime = 0; // 用於計算跑步動畫雙腿擺動
+
+        // 鍵盤狀態（新增 S 和 ArrowDown 作為飛撲鍵）
+        const keys = {
+            KeyA: false, KeyD: false, KeyW: false, KeyS: false,
+            ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false
+        };
+
+        // 人物類別
+        class Player {
+            constructor(x, y, color, controls) {
+                this.x = x;
+                this.y = y;
+                this.width = 30;  // 縮小身體寬度讓身材更像人
+                this.height = 60; // 拉高身材
+                this.color = color;
+                this.vx = 0;
+                this.vy = 0;
+                this.baseSpeed = 4.5;
+                this.maxSpeed = 7.5; // 跑步加速度上限
+                this.accel = 0.3;    // 跑步加速度
+                this.currentSpeed = 0;
+                this.jumpForce = -12;
+                this.isGrounded = false;
+                this.controls = controls;
+                this.facing = (controls === 'p1') ? 1 : -1; // 1代表右，-1代表左
+               
+                // 飛撲狀態控制
+                this.isDiving = false;
+                this.diveTimer = 0;
+                this.diveCooldown = false;
+            }
+
+            update() {
+                // 如果正在飛撲中，無法被一般操控
+                if (this.isDiving) {
+                    this.x += this.vx;
+                    this.vy += GRAVITY;
+                    this.y += this.vy;
+
+                    // 飛撲落地判定
+                    if (this.y + this.height >= GROUND_Y) {
+                        this.y = GROUND_Y - this.height;
+                        this.vy = 0;
+                        this.vx *= 0.8; // 落地摩擦力減速
+                    }
+
+                    this.diveTimer--;
+                    if (this.diveTimer <= 0) {
+                        // 結束飛撲，恢復正常身材
+                        this.isDiving = false;
+                        this.width = 30;
+                        this.height = 60;
+                        // 剛爬起來時速度重置
+                        this.currentSpeed = 0;
+                    }
+                    this.boundaryCheck();
+                    return;
+                }
+
+                // --- 正常操控邏輯 ---
+                let moveLeft = (this.controls === 'p1') ? keys.KeyA : keys.ArrowLeft;
+                let moveRight = (this.controls === 'p1') ? keys.KeyD : keys.ArrowRight;
+                let jump = (this.controls === 'p1') ? keys.KeyW : keys.ArrowUp;
+                let dive = (this.controls === 'p1') ? keys.KeyS : keys.ArrowDown;
+
+                // 左右移動與加速機制（跑步）
+                if (moveLeft) {
+                    this.facing = -1;
+                    if (this.currentSpeed > -this.maxSpeed) this.currentSpeed -= this.accel;
+                    this.vx = this.currentSpeed;
+                } else if (moveRight) {
+                    this.facing = 1;
+                    if (this.currentSpeed < this.maxSpeed) this.currentSpeed += this.accel;
+                    this.vx = this.currentSpeed;
+                } else {
+                    // 沒按鍵時自然滑行減速
+                    this.currentSpeed *= 0.7;
+                    this.vx = this.currentSpeed;
+                    if (Math.abs(this.vx) < 0.1) this.vx = 0;
+                }
+
+                // 跳躍
+                if (jump && this.isGrounded) {
+                    this.vy = this.jumpForce;
+                    this.isGrounded = false;
+                }
+
+                // 瞬間爆發：熱血飛撲！
+                if (dive && !this.isDiving) {
+                    this.isDiving = true;
+                    this.diveTimer = 40; // 飛撲總持續幀數（含趴在地上）
+                   
+                    // 轉為飛撲姿勢：寬度變長、高度變矮
+                    this.width = 60;
+                    this.height = 30;
+                    this.y += 30; // 調整 Y 軸避免陷進地裡
+                   
+                    // 給予瞬間向前的衝刺速度與微幅向上跳的拋物線
+                    this.vx = this.facing * 10;
+                    this.vy = -4;
+                    this.isGrounded = false;
+                    return;
+                }
+
+                // 正常重力物理更新
+                this.vy += GRAVITY;
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // 地面碰撞
+                if (this.y + this.height >= GROUND_Y) {
+                    this.y = GROUND_Y - this.height;
+                    this.vy = 0;
+                    this.isGrounded = true;
+                }
+
+                this.boundaryCheck();
+            }
+
+            boundaryCheck() {
+                // 邊界與球網限制
+                if (this.controls === 'p1') {
+                    if (this.x < 0) this.x = 0;
+                    if (this.x + this.width > NET_X - NET_WIDTH / 2) {
+                        this.x = NET_X - NET_WIDTH / 2 - this.width;
+                    }
+                } else {
+                    if (this.x < NET_X + NET_WIDTH / 2) this.x = NET_X + NET_WIDTH / 2;
+                    if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+
+                if (this.isDiving) {
+                    // --- 繪製飛撲像素小人 (橫向) ---
+                    // 身體/軀幹
+                    ctx.fillRect(this.x, this.y + 5, this.width, 20);
+                    // 頭部
+                    let headX = (this.facing === 1) ? this.x + this.width - 15 : this.x;
+                    ctx.fillStyle = '#f1c40f'; // 皮膚色
+                    ctx.fillRect(headX, this.y, 15, 15);
+                    // 頭髮/帽子色
+                    ctx.fillStyle = this.color;
+                    ctx.fillRect(headX, this.y, 15, 4);
+                   
+                    // 向前伸出的雙手
+                    ctx.fillStyle = '#f1c40f';
+                    let armX = (this.facing === 1) ? this.x + this.width : this.x - 12;
+                    ctx.fillRect(armX, this.y + 10, 12, 6);
+                } else {
+                    // --- 繪製站立/跑步像素小人 (縱向) ---
+                    // 1. 軀幹 (衣服)
+                    ctx.fillRect(this.x + 5, this.y + 20, this.width - 10, 25);
+                   
+                    // 2. 頭部
+                    ctx.fillStyle = '#f1c40f'; // 皮膚
+                    ctx.fillRect(this.x + 6, this.y + 4, 18, 16);
+                    ctx.fillStyle = this.color; // 頭髮
+                    ctx.fillRect(this.x + 6, this.y, 18, 5);
+                   
+                    // 眼睛（朝向方向）
+                    ctx.fillStyle = 'black';
+                    let eyeX = (this.facing === 1) ? this.x + 18 : this.x + 8;
+                    ctx.fillRect(eyeX, this.y + 8, 4, 4);
+
+                    // 3. 雙腿 (跑步擺動動畫)
+                    ctx.fillStyle = '#34495e';
+                    let legW = 6;
+                    let leftLegYOffset = 0;
+                    let rightLegYOffset = 0;
+
+                    // 如果正在左右移動，且在地面，觸發雙腿擺動動畫
+                    if (Math.abs(this.vx) > 0.5 && this.isGrounded) {
+                        leftLegYOffset = Math.sin(gameTime * 0.4) * 6;
+                        rightLegYOffset = -Math.sin(gameTime * 0.4) * 6;
+                    }
+
+                    // 左腳
+                    ctx.fillRect(this.x + 6, this.y + 45 + (leftLegYOffset > 0 ? 0 : leftLegYOffset), legW, 15 - Math.abs(leftLegYOffset));
+                    // 右腳
+                    ctx.fillRect(this.x + this.width - 12, this.y + 45 + (rightLegYOffset > 0 ? 0 : rightLegYOffset), legW, 15 - Math.abs(rightLegYOffset));
+
+                    // 4. 手臂
+                    ctx.fillStyle = '#f1c40f';
+                    let armX = (this.facing === 1) ? this.x + this.width - 6 : this.x;
+                    ctx.fillRect(armX, this.y + 22, 6, 12);
+                }
+            }
+        }
+
+        // 排球類別
+        class Ball {
+            constructor() {
+                this.radius = 12;
+                this.reset('p1');
+            }
+
+            reset(servingPlayer) {
+                this.x = servingPlayer === 'p1' ? 200 : 600;
+                this.y = 60;
+                this.vx = 0;
+                this.vy = 0;
+            }
+
+            update(p1, p2) {
+                this.vy += GRAVITY * 0.65;
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // 牆壁與天花板反彈
+                if (this.x - this.radius < 0) { this.x = this.radius; this.vx = -this.vx * 0.85; }
+                if (this.x + this.radius > canvas.width) { this.x = canvas.width - this.radius; this.vx = -this.vx * 0.85; }
+                if (this.y - this.radius < 0) { this.y = this.radius; this.vy = -this.vy * 0.85; }
+
+                // 球網碰撞
+                if (this.x + this.radius > NET_X - NET_WIDTH/2 && this.x - this.radius < NET_X + NET_WIDTH/2) {
+                    if (this.y + this.radius > GROUND_Y - NET_HEIGHT) {
+                        if (this.y < GROUND_Y - NET_HEIGHT && this.vy > 0) {
+                            this.vy = -this.vy * 0.85;
+                        } else {
+                            this.vx = -this.vx * 0.85;
+                            if (this.x < NET_X) this.x = NET_X - NET_WIDTH/2 - this.radius;
+                            else this.x = NET_X + NET_WIDTH/2 + this.radius;
+                        }
+                    }
+                }
+
+                // 碰撞球員檢測
+                this.checkPlayerCollision(p1);
+                this.checkPlayerCollision(p2);
+
+                // 得分判定
+                if (this.y + this.radius >= GROUND_Y) {
+                    if (this.x < NET_X) {
+                        p2Score++;
+                        document.getElementById('p2Score').innerText = p2Score;
+                        checkRoundOver('p2');
+                    } else {
+                        p1Score++;
+                        document.getElementById('p1Score').innerText = p1Score;
+                        checkRoundOver('p1');
+                    }
+                }
+            }
+
+            checkPlayerCollision(player) {
+                let closestX = Math.max(player.x, Math.min(this.x, player.x + player.width));
+                let closestY = Math.max(player.y, Math.min(this.y, player.y + player.height));
+
+                let distanceX = this.x - closestX;
+                let distanceY = this.y - closestY;
+                let distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
+
+                if (distanceSquared < (this.radius * this.radius)) {
+                    // 如果球員處於飛撲狀態，擊球會給予特殊的驚險救球力道（大幅向上前方噴）
+                    if (player.isDiving) {
+                        this.vy = -12; // 救球飛得更高
+                        this.vx = player.facing * 5 + (this.x - (player.x + player.width/2)) * 0.2;
+                    } else {
+                        // 正常擊球
+                        this.vy = -11;
+                        let playerCenterX = player.x + player.width / 2;
+                        this.vx = (this.x - playerCenterX) * 0.45;
+                    }
+                   
+                    this.y = player.y - this.radius;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#f39c12';
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.closePath();
+            }
+        }
+
+        const player1 = new Player(150, 200, '#3498db', 'p1');
+        const player2 = new Player(650, 200, '#e74c3c', 'p2');
+        const volleyball = new Ball();
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            gameTime++; // 累加遊戲幀數計時器
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 繪製黃沙地面
+            ctx.fillStyle = '#e67e22';
+            ctx.fillRect(0, GROUND_Y, canvas.width, canvas.height - GROUND_Y);
+           
+            // 繪製球網
+            ctx.fillStyle = '#f1c40f';
+            ctx.fillRect(NET_X - NET_WIDTH / 2, GROUND_Y - NET_HEIGHT, NET_WIDTH, NET_HEIGHT);
+
+            // 更新與渲染
+            player1.update();
+            player2.update();
+            volleyball.update(player1, player2);
+
+            player1.draw();
+            player2.draw();
+            volleyball.draw();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function checkRoundOver(winnerOfRound) {
+            if (p1Score >= 5 || p2Score >= 5) {
+                gameRunning = false;
+                const overlay = document.getElementById('overlay');
+                const overlayText = document.getElementById('overlayText');
+                const startBtn = document.getElementById('startBtn');
+
+                if (p1Score >= 5) {
+                    overlayText.innerText = "🔵 玩家一 (藍方) 獲勝！";
+                    overlayText.style.color = "#3498db";
+                } else {
+                    overlayText.innerText = "🔴 玩家二 (紅方) 獲勝！";
+                    overlayText.style.color = "#e74c3c";
+                }
+
+                startBtn.innerText = "再戰一局";
+                overlay.style.display = 'flex';
+            } else {
+                volleyball.reset(winnerOfRound);
+            }
+        }
+
+        function startGame() {
+            if (p1Score >= 5 || p2Score >= 5) {
+                p1Score = 0;
+                p2Score = 0;
+                document.getElementById('p1Score').innerText = "0";
+                document.getElementById('p2Score').innerText = "0";
+            }
+           
+            player1.x = 150; player1.y = 200; player1.vx = 0; player1.vy = 0; player1.isDiving = false; player1.width = 30; player1.height = 60;
+            player2.x = 650; player2.y = 200; player2.vx = 0; player2.vy = 0; player2.isDiving = false; player2.width = 30; player2.height = 60;
+            volleyball.reset('p1');
+
+            document.getElementById('overlay').style.display = 'none';
+           
+            gameRunning = true;
+            gameLoop();
+        }
+
+        // 鍵盤事件監聽
+        window.addEventListener('keydown', (e) => {
+            if (e.code in keys) {
+                keys[e.code] = true;
+                if(['ArrowUp', 'ArrowDown', 'KeyW', 'KeyS'].includes(e.code)) {
+                    e.preventDefault();
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code in keys) {
+                keys[e.code] = false;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5x5 策略奇偶賓果遊戲</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #e67e22;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --back-color: #bdc3c7;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .rules {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            text-align: left;
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 5px solid var(--secondary-color);
+            border-radius: 4px;
+        }
+
+        .status-panel {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .bingo-count {
+            color: var(--secondary-color);
+            font-size: 1.4rem;
+        }
+
+        /* 5x5 網格 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 25px;
+            perspective: 1000px;
+        }
+
+        /* 卡牌外框 */
+        .card-container {
+            aspect-ratio: 1;
+            cursor: pointer;
+            perspective: 1000px;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+            user-select: none;
+        }
+
+        /* 點擊翻開 */
+        .card-container.flipped .card {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-sizing: border-box;
+        }
+
+        /* 背面（蓋牌） */
+        .card-back {
+            background-color: var(--back-color);
+            color: white;
+            border: 2px solid #95a5a6;
+            font-size: 1.5rem;
+        }
+
+        /* 正面（翻開） */
+        .card-front {
+            background-color: #eef2f5;
+            color: var(--text-color);
+            border: 2px solid #dcdde1;
+            font-size: 1.4rem;
+            transform: rotateY(180deg);
+        }
+
+        /* 連成「純奇數」或「純偶數」線的獲勝樣式 */
+        .card-container.line-completed .card-front {
+            background-color: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            background-color: #1a252f;
+        }
+
+        @keyframes pulse {
+            0% { transform: rotateY(180deg) scale(1); }
+            50% { transform: rotateY(180deg) scale(1.1); }
+            100% { transform: rotateY(180deg) scale(1); }
+        }
+
+        .result-message {
+            display: none;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        
+        .result-win {
+            color: var(--success-color);
+            animation: bounce 1s infinite;
+        }
+
+        .result-lose {
+            color: var(--danger-color);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>策略型奇偶賓果</h1>
+        <div class="rules">
+            <b>💡 遊戲規則：</b><br>
+            1. 這張卡片經特殊設計，<b>必定內含 2 條</b>全奇數或全偶數的線。<br>
+            2. 翻開的牌若有連線且符合全奇或全偶，會觸發連線。<br>
+            3. 達成 <b>3 條以上連線 ➔ 獲勝 🎉</b><br>
+            4. 若翻開全部卡牌後，<b>只有 2 條連線 ➔ 失敗 ❌</b>
+        </div>
+
+        <div class="status-panel">
+            目前已翻開線段：<span id="lineCount" class="bingo-count">0</span> 條
+        </div>
+
+        <div id="bingoGrid" class="grid"></div>
+
+        <button id="resetBtn" class="btn">重新生成完美關卡</button>
+        <div id="winMsg" class="result-message result-win">🎉 成功找出第3條線！你贏了！ 🎉</div>
+        <div id="loseMsg" class="result-message result-lose">❌ 翻牌結束，只有2條線，挑戰失敗！</div>
+    </div>
+
+    <script>
+        const grid = document.getElementById('bingoGrid');
+        const lineCountEl = document.getElementById('lineCount');
+        const resetBtn = document.getElementById('resetBtn');
+        const winMsg = document.getElementById('winMsg');
+        const loseMsg = document.getElementById('loseMsg');
+        
+        const SIZE = 5;
+        let matrix = [];        
+        let flippedMatrix = []; 
+        let gameOver = false;
+        let totalFlippedCount = 0;
+
+        function initGame() {
+            grid.innerHTML = '';
+            gameOver = false;
+            totalFlippedCount = 0;
+            winMsg.style.display = 'none';
+            loseMsg.style.display = 'none';
+            lineCountEl.textContent = '0';
+
+            // 呼叫「保證生成器」獲取一個剛好有兩條預設連線的矩陣
+            matrix = generateGuaranteedMatrix();
+            
+            // 初始化翻牌狀態
+            flippedMatrix = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
+
+            // 渲染網格
+            for (let i = 0; i < SIZE; i++) {
+                for (let j = 0; j < SIZE; j++) {
+                    const num = matrix[i][j];
+
+                    const cardContainer = document.createElement('div');
+                    cardContainer.classList.add('card-container');
+                    cardContainer.dataset.row = i;
+                    cardContainer.dataset.col = j;
+
+                    const card = document.createElement('div');
+                    card.classList.add('card');
+
+                    const cardBack = document.createElement('div');
+                    cardBack.classList.add('card-face', 'card-back');
+                    cardBack.textContent = '?';
+
+                    const cardFront = document.createElement('div');
+                    cardFront.classList.add('card-face', 'card-front');
+                    cardFront.textContent = num;
+
+                    card.appendChild(cardBack);
+                    card.appendChild(cardFront);
+                    cardContainer.appendChild(card);
+                    
+                    cardContainer.addEventListener('click', () => handleCardClick(cardContainer, i, j));
+                    grid.appendChild(cardContainer);
+                }
+            }
+        }
+
+        // --- 保證生成演算法區 ---
+        function generateGuaranteedMatrix() {
+            let tempMatrix;
+            let attempts = 0;
+
+            // 不斷嘗試生成，直到有一張牌面「在完全翻開的情況下」精準擁有 2 條線
+            while (attempts < 500) {
+                attempts++;
+                tempMatrix = tryToCreateMatrix();
+                const lineCount = countLinesOfMatrix(tempMatrix);
+                if (lineCount === 2) {
+                    return tempMatrix;
+                }
+            }
+            // 萬一真的沒骰到（極低機率），直接回傳最後一次結果防當機
+            return tempMatrix;
+        }
+
+        function tryToCreateMatrix() {
+            const mat = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+            const odds = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25]; // 13個
+            const evens = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24];    // 12個
+            shuffle(odds);
+            shuffle(evens);
+
+            // 隨機選定兩條不同的線來強制填入特定奇偶數
+            // 0-4: 橫列, 5-9: 直行, 10: 主對角, 11: 副對角
+            const availableLines = Array.from({length: 12}, (_, i) => i);
+            shuffle(availableLines);
+            const line1 = availableLines[0];
+            const line2 = availableLines[1];
+
+            // 決定這兩條線要填奇數(O)還是偶數(E)
+            const type1 = Math.random() > 0.5 ? 'ODD' : 'EVEN';
+            const type2 = Math.random() > 0.5 ? 'ODD' : 'EVEN';
+
+            // 標記哪些位置需要強制填什麼類型
+            const pattern = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
+            applyLinePattern(pattern, line1, type1);
+            applyLinePattern(pattern, line2, type2);
+
+            // 開始把數字填入矩陣
+            for (let i = 0; i < SIZE; i++) {
+                for (let j = 0; j < SIZE; j++) {
+                    if (pattern[i][j] === 'ODD') {
+                        mat[i][j] = odds.pop();
+                    } else if (pattern[i][j] === 'EVEN') {
+                        mat[i][j] = evens.pop();
+                    }
+                }
+            }
+
+            // 剩餘的空格用剩下的數字填滿
+            const remainder = [...odds, ...evens];
+            shuffle(remainder);
+
+            for (let i = 0; i < SIZE; i++) {
+                for (let j = 0; j < SIZE; j++) {
+                    if (mat[i][j] === 0) {
+                        mat[i][j] = remainder.pop();
+                    }
+                }
+            }
+            return mat;
+        }
+
+        function applyLinePattern(pattern, lineIdx, type) {
+            if (lineIdx >= 0 && lineIdx <= 4) { // 橫
+                for (let j = 0; j < SIZE; j++) mergePattern(pattern, lineIdx, j, type);
+            } else if (lineIdx >= 5 && lineIdx <= 9) { // 直
+                for (let i = 0; i < SIZE; i++) mergePattern(pattern, i, lineIdx - 5, type);
+            } else if (lineIdx === 10) { // 主對角
+                for (let i = 0; i < SIZE; i++) mergePattern(pattern, i, i, type);
+            } else if (lineIdx === 11) { // 副對角
+                for (let i = 0; i < SIZE; i++) mergePattern(pattern, i, SIZE - 1 - i, type);
+            }
+        }
+
+        function mergePattern(pattern, r, c, type) {
+            if (pattern[r][c] === null) {
+                pattern[r][c] = type;
+            } else if (pattern[r][c] !== type) {
+                // 如果發生衝突（交叉點一個要奇一個要偶），強制隨機抽一個，避免無解
+                pattern[r][c] = Math.random() > 0.5 ? 'ODD' : 'EVEN';
+            }
+        }
+
+        // 計算全開狀態下該矩陣擁有的總奇偶線段數
+        function countLinesOfMatrix(mat) {
+            let lines = 0;
+            const isMatch = (arr) => arr.every(n => n % 2 !== 0) || arr.every(n => n % 2 === 0);
+
+            // 橫
+            for (let i = 0; i < SIZE; i++) if (isMatch(mat[i])) lines++;
+            // 直
+            for (let j = 0; j < SIZE; j++) {
+                let col = [];
+                for (let i = 0; i < SIZE; i++) col.push(mat[i][j]);
+                if (isMatch(col)) lines++;
+            }
+            // 主對角
+            let d1 = [];
+            for (let i = 0; i < SIZE; i++) d1.push(mat[i][i]);
+            if (isMatch(d1)) lines++;
+            // 副對角
+            let d2 = [];
+            for (let i = 0; i < SIZE; i++) d2.push(mat[i][SIZE - 1 - i]);
+            if (isMatch(d2)) lines++;
+
+            return lines;
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        // --- 結束演算法區 ---
+
+
+        function handleCardClick(cardContainer, row, col) {
+            if (gameOver || flippedMatrix[row][col]) return;
+
+            flippedMatrix[row][col] = true;
+            totalFlippedCount++;
+            cardContainer.classList.add('flipped');
+
+            checkGameProgress();
+        }
+
+        function isMatchPattern(arr) {
+            const allOdd = arr.every(num => num % 2 !== 0);
+            const allEven = arr.every(num => num % 2 === 0);
+            return allOdd || allEven;
+        }
+
+        function checkGameProgress() {
+            let winLinesCells = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
+            let currentLines = 0;
+
+            // 1. 檢查橫列
+            for (let i = 0; i < SIZE; i++) {
+                if (flippedMatrix[i].every(val => val)) { 
+                    if (isMatchPattern(matrix[i])) {
+                        currentLines++;
+                        for (let j = 0; j < SIZE; j++) winLinesCells[i][j] = true;
+                    }
+                }
+            }
+
+            // 2. 檢查直行
+            for (let j = 0; j < SIZE; j++) {
+                let colFlipped = true;
+                const colValues = [];
+                for (let i = 0; i < SIZE; i++) {
+                    if (!flippedMatrix[i][j]) { colFlipped = false; break; }
+                    colValues.push(matrix[i][j]);
+                }
+                if (colFlipped && isMatchPattern(colValues)) {
+                    currentLines++;
+                    for (let i = 0; i < SIZE; i++) winLinesCells[i][j] = true;
+                }
+            }
+
+            // 3. 檢查主對角線
+            let diag1Flipped = true;
+            const diag1Values = [];
+            for (let i = 0; i < SIZE; i++) {
+                if (!flippedMatrix[i][i]) { diag1Flipped = false; break; }
+                diag1Values.push(matrix[i][i]);
+            }
+            if (diag1Flipped && isMatchPattern(diag1Values)) {
+                currentLines++;
+                for (let i = 0; i < SIZE; i++) winLinesCells[i][i] = true;
+            }
+
+            // 4. 檢查副對角線
+            let diag2Flipped = true;
+            const diag2Values = [];
+            for (let i = 0; i < SIZE; i++) {
+                if (!flippedMatrix[i][SIZE - 1 - i]) { diag2Flipped = false; break; }
+                diag2Values.push(matrix[i][SIZE - 1 - i]);
+            }
+            if (diag2Flipped && isMatchPattern(diag2Values)) {
+                currentLines++;
+                for (let i = 0; i < SIZE; i++) winLinesCells[i][SIZE - 1 - i] = true;
+            }
+
+            // 更新畫面連線格子顏色
+            const cardContainers = grid.children;
+            for (let i = 0; i < cardContainers.length; i++) {
+                const r = parseInt(cardContainers[i].dataset.row);
+                const c = parseInt(cardContainers[i].dataset.col);
+                if (winLinesCells[r][c]) {
+                    cardContainers[i].classList.add('line-completed');
+                }
+            }
+
+            lineCountEl.textContent = currentLines;
+
+            // 判定勝負邏輯
+            if (currentLines >= 3) {
+                // 條件一：只要找到 3 條連線，立即獲勝
+                gameOver = true;
+                winMsg.style.display = 'block';
+            } else if (totalFlippedCount === 25) {
+                // 條件二：全翻完了，卻只有 2 條（或以下）成立，判定失敗
+                gameOver = true;
+                loseMsg.style.display = 'block';
+            }
+        }
+
+        resetBtn.addEventListener('click', initGame);
+        window.onload = initGame;
+    </script>
+</body>
+</html>

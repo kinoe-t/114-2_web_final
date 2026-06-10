@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZB1 K-POP 抽卡機台遊戲 - ZEROBASEONE</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Permanent+Marker&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+--matte-pink: #fbc4cb;
+--matte-pink-dark: #e5a3ad;
+--rose-gold: linear-gradient(135deg, #f3cdca 0%, #b76e79 50%, #8a4f58 100%);
+--rose-gold-light: #f3cdca;
+--rose-gold-dark: #b76e79;
+--lcd-blue: #00d2ff;
+--lcd-bg: rgba(0, 20, 40, 0.95);
+--window-blue: rgba(173, 232, 244, 0.25);
+--window-glow: 0 0 25px rgba(0, 210, 255, 0.4);
+--hot-pink: #ff2a85;
+--cream-bg: #faf3f5;
+}
+
+* {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+user-select: none;
+}
+
+body {
+font-family: 'Noto Sans TC', sans-serif;
+background-color: var(--cream-bg);
+background-image:
+radial-gradient(circle at 20% 20%, rgba(253, 219, 228, 0.6) 0%, transparent 40%),
+radial-gradient(circle at 80% 80%, rgba(216, 234, 247, 0.6) 0%, transparent 40%);
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+align-items: center;
+overflow-x: hidden;
+color: #4a4a4a;
+}
+
+/* 夢幻背景展示區佈局 */
+.display-container {
+width: 100%;
+max-width: 1400px;
+display: grid;
+grid-template-columns: 1fr 460px 1fr;
+gap: 40px;
+padding: 40px 20px;
+align-items: start;
+margin: auto;
+}
+
+@media (max-width: 1200px) {
+.display-container {
+grid-template-columns: 1fr;
+justify-items: center;
+}
+.left-decor, .right-decor {
+width: 100%;
+max-width: 460px;
+}
+}
+
+/* 左側周邊：大卡海報、單隻手燈 */
+.left-decor {
+display: flex;
+flex-direction: column;
+gap: 30px;
+align-items: center;
+}
+
+.poster-frame {
+background: white;
+padding: 15px;
+border-radius: 8px;
+box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+width: 100%;
+border: 4px solid var(--rose-gold-light);
+}
+
+.group-poster {
+width: 100%;
+aspect-ratio: 4/5;
+border-radius: 4px;
+position: relative;
+overflow: hidden;
+background-color: #f7dbe6;
+}
+
+.lightstick-showcase {
+display: flex;
+flex-direction: column;
+align-items: center;
+margin-top: 10px;
+width: 100%;
+}
+.lightstick-title {
+font-size: 14px;
+color: #888;
+margin-bottom: 10px;
+font-weight: 500;
+}
+.lightstick-img {
+width: 100%;
+max-width: 180px;
+border-radius: 12px;
+box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+object-fit: contain;
+}
+
+/* 右側周邊：經典專輯 Never Say Never 10款封面 */
+.right-decor {
+background: white;
+padding: 20px;
+border-radius: 12px;
+box-shadow: 0 10px 30px rgba(0,0,0,0.07);
+border: 1px solid rgba(0,0,0,0.05);
+}
+
+.album-header-title {
+font-family: 'Permanent Marker', cursive;
+font-size: 26px;
+color: #6bb343;
+text-align: center;
+margin-bottom: 5px;
+transform: rotate(-1deg);
+text-shadow: 1px 1px 0px #fff, 2px 2px 0px rgba(0,0,0,0.1);
+}
+.album-subtitle {
+font-size: 11px;
+color: #666;
+text-align: center;
+margin-bottom: 20px;
+font-weight: 500;
+}
+
+.album-grid {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 15px;
+}
+
+.album-item {
+background: #fdfdfd;
+border: 1px solid #eee;
+border-radius: 6px;
+padding: 8px;
+display: flex;
+flex-direction: column;
+align-items: center;
+box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+transition: transform 0.2s;
+}
+.album-item:hover {
+transform: scale(1.03);
+}
+
+.album-cover-art {
+width: 100%;
+aspect-ratio: 1;
+background: #222;
+border-radius: 4px;
+position: relative;
+overflow: hidden;
+}
+
+.album-sticker {
+position: absolute;
+bottom: 4px;
+left: 4px;
+width: 16px;
+height: 16px;
+background: #ff4081;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 8px;
+color: white;
+z-index: 5;
+}
+
+.album-label {
+font-size: 11px;
+margin-top: 6px;
+font-weight: 600;
+color: #555;
+text-align: center;
+}
+
+/* 行動自動販賣機台主視覺 */
+.machine-container {
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+
+.gacha-machine {
+width: 440px;
+background-color: var(--matte-pink);
+border-radius: 35px 35px 20px 20px;
+box-shadow:
+inset 0 10px 20px rgba(255,255,255,0.5),
+inset 0 -10px 20px rgba(0,0,0,0.1),
+0 20px 50px rgba(163, 105, 114, 0.35);
+padding: 25px;
+display: flex;
+flex-direction: column;
+align-items: center;
+position: relative;
+border: 2px solid rgba(255,255,255,0.4);
+}
+
+.top-lcd-screen {
+width: 100%;
+background-color: var(--lcd-bg);
+border-radius: 10px;
+border: 4px solid var(--rose-gold-dark);
+padding: 12px 20px;
+font-family: 'Orbitron', 'Noto Sans TC', sans-serif;
+color: var(--lcd-blue);
+box-shadow:
+0 0 15px rgba(0, 210, 255, 0.4),
+inset 0 0 10px rgba(0, 210, 255, 0.3);
+margin-bottom: 20px;
+font-size: 15px;
+letter-spacing: 1px;
+line-height: 1.6;
+}
+
+.lcd-row {
+display: flex;
+justify-content: space-between;
+}
+
+.transparent-window {
+width: 100%;
+height: 380px;
+background: linear-gradient(180deg, rgba(16, 37, 66, 0.85) 0%, rgba(28, 59, 99, 0.75) 100%);
+border-radius: 15px;
+border: 5px solid rgba(255, 255, 255, 0.5);
+box-shadow: var(--window-glow), inset 0 0 30px rgba(0, 210, 255, 0.3);
+position: relative;
+padding: 20px;
+margin-bottom: 25px;
+overflow: hidden;
+transition: box-shadow 0.3s;
+}
+
+.transparent-window::before {
+content: '';
+position: absolute;
+top: 0; left: 0; right: 0; height: 50%;
+background: linear-gradient(rgba(255,255,255,0.15), transparent);
+pointer-events: none;
+z-index: 10;
+}
+
+.showcase-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 12px;
+width: 100%;
+height: 100%;
+}
+
+/* ★ 修改：小卡滿版設定 ★ */
+.lucky-card-item {
+background: linear-gradient(145deg, #ffffff, #f0f0f0);
+border-radius: 6px;
+position: relative;
+box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+overflow: hidden;
+border: 1px solid rgba(255,255,255,0.8);
+aspect-ratio: 55 / 85; /* 固定標準小卡比例 */
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+}
+
+.fur-hat-visual {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 12px;
+background: linear-gradient(45deg, #ff4081, #ff80ab);
+border-bottom: 2px dashed var(--hot-pink);
+z-index: 2;
+opacity: 0.85; /* 微微半透明讓底圖透出 */
+}
+
+.control-panel {
+width: 100%;
+background: var(--rose-gold);
+border-radius: 15px;
+padding: 20px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+box-shadow:
+0 6px 12px rgba(0,0,0,0.15),
+inset 0 2px 4px rgba(255,255,255,0.4);
+border: 1px solid rgba(255,255,255,0.2);
+margin-bottom: 25px;
+}
+
+.coin-system {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 5px;
+}
+
+.coin-slot-wrapper {
+width: 45px;
+height: 70px;
+background: #4a282d;
+border-radius: 6px;
+border: 3px solid var(--rose-gold-light);
+box-shadow: inset 0 3px 10px rgba(0,0,0,0.6);
+display: flex;
+justify-content: center;
+align-items: center;
+cursor: pointer;
+position: relative;
+transition: transform 0.1s;
+}
+.coin-slot-wrapper:active {
+transform: scale(0.95);
+}
+
+.coin-slot-line {
+width: 6px;
+height: 40px;
+background: #111;
+border-radius: 3px;
+box-shadow: 0 0 5px rgba(255,255,255,0.2);
+}
+
+.coin-label {
+font-size: 11px;
+color: #fff;
+font-weight: bold;
+text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.draw-button-container {
+flex: 1;
+display: flex;
+justify-content: center;
+align-items: center;
+}
+
+.big-round-button {
+width: 90px;
+height: 90px;
+border-radius: 50%;
+background: radial-gradient(circle, #ffffff 0%, #f5e3e5 30%, #e5a3ad 70%, #b76e79 100%);
+border: 6px solid var(--rose-gold-light);
+box-shadow:
+0 8px 15px rgba(0,0,0,0.25),
+inset 0 4px 6px rgba(255,255,255,0.6),
+inset 0 -4px 6px rgba(0,0,0,0.15);
+cursor: pointer;
+display: flex;
+justify-content: center;
+align-items: center;
+transition: all 0.1s ease;
+}
+
+.big-round-button:active {
+transform: scale(0.92);
+box-shadow:
+0 2px 5px rgba(0,0,0,0.2),
+inset 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.button-icon {
+width: 0;
+height: 0;
+border-top: 15px solid transparent;
+border-left: 26px solid #8a4f58;
+border-bottom: 15px solid transparent;
+margin-left: 6px;
+}
+
+.bottom-output-area {
+width: 100%;
+height: 90px;
+background: #3a1e22;
+border-radius: 12px;
+border: 4px solid var(--rose-gold-dark);
+box-shadow: inset 0 5px 15px rgba(0,0,0,0.8);
+position: relative;
+overflow: visible;
+display: flex;
+justify-content: center;
+}
+
+/* ★ 修改：掉落出來的實體小卡也保持比例與滿版 ★ */
+.dropped-card {
+width: 85px;
+height: 131px; /* 依照 55/85 比例調整高度 */
+background: white;
+border-radius: 6px;
+position: absolute;
+top: -10px;
+box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+transform: translateY(-150%) scale(0.6);
+opacity: 0;
+transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+pointer-events: none;
+z-index: 10;
+border: 2px solid white;
+}
+
+.dropped-card.dispense {
+transform: translateY(15px) scale(1);
+opacity: 1;
+pointer-events: auto;
+cursor: pointer;
+animation: card-glow 1.5s infinite alternate;
+}
+
+@keyframes card-glow {
+0% { box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+100% { box-shadow: 0 5px 25px var(--lcd-blue), 0 0 10px rgba(0,210,255,0.5); }
+}
+
+.dropped-card-inner {
+width: 100%;
+height: 100%;
+border-radius: 4px;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+position: relative;
+overflow: hidden;
+}
+
+.modal-overlay {
+position: fixed;
+top: 0; left: 0; right: 0; bottom: 0;
+background: rgba(0,0,0,0.75);
+backdrop-filter: blur(5px);
+display: flex;
+justify-content: center;
+align-items: center;
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.3s ease;
+z-index: 100;
+}
+
+.modal-overlay.active {
+opacity: 1;
+pointer-events: auto;
+}
+
+.modal-content {
+background: white;
+padding: 25px;
+border-radius: 16px;
+box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+max-width: 360px;
+width: 90%;
+display: flex;
+flex-direction: column;
+align-items: center;
+position: relative;
+transform: scale(0.8);
+transition: transform 0.3s ease;
+border: 4px solid var(--matte-pink);
+}
+
+.modal-overlay.active .modal-content {
+transform: scale(1);
+}
+
+/* ★ 修改：彈出的大圖小卡滿版設定 ★ */
+.modal-card-display {
+width: 220px;
+height: 340px; /* 依照小卡比例微調 */
+background: #fff;
+border-radius: 12px;
+box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+margin-bottom: 20px;
+border: 4px solid #ff4081;
+overflow: hidden;
+position: relative;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+}
+
+.modal-member-name {
+font-size: 20px;
+font-weight: 700;
+color: #333;
+margin-bottom: 5px;
+letter-spacing: 1px;
+}
+
+.modal-card-ver {
+font-size: 13px;
+color: var(--hot-pink);
+font-weight: 500;
+margin-bottom: 15px;
+}
+
+.close-btn {
+background: var(--rose-gold);
+color: white;
+border: none;
+padding: 10px 30px;
+border-radius: 20px;
+font-weight: 700;
+cursor: pointer;
+box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.toast {
+position: fixed;
+top: 20px;
+background: rgba(0,0,0,0.8);
+color: white;
+padding: 12px 24px;
+border-radius: 30px;
+font-size: 14px;
+font-weight: 500;
+opacity: 0;
+transition: opacity 0.3s;
+pointer-events: none;
+z-index: 200;
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast-msg">提示訊息</div>
+
+<div class="display-container">
+
+<div class="left-decor">
+<div class="poster-frame">
+<div class="group-poster" style="background-image: url('IMG_9063.jpeg'); background-size: cover; background-position: center;">
+</div>
+</div>
+
+<div class="lightstick-showcase">
+<div class="lightstick-title">OFFICIAL LIGHTSTICK Ver.1</div>
+<img src="IMG_9065.jpeg" alt="ZB1 Lightstick" class="lightstick-img">
+</div>
+</div>
+
+<div class="machine-container">
+<div class="gacha-machine">
+
+<div class="top-lcd-screen">
+<div class="lcd-row">
+<div>幣數 <span id="lcd-coins">0</span></div>
+<div>1幣1玩</div>
+</div>
+<div class="lcd-row">
+<div>礼品 <span id="lcd-gifts">0</span></div>
+<div>可玩次數 <span id="lcd-plays">0</span></div>
+</div>
+</div>
+
+<div class="transparent-window">
+<div class="showcase-grid" id="machine-showcase-grid">
+</div>
+</div>
+
+<div class="control-panel">
+<div class="coin-system" onclick="insertCoin()">
+<div class="coin-slot-wrapper">
+<div class="coin-slot-line"></div>
+</div>
+<div class="coin-label">投幣處</div>
+</div>
+
+<div class="draw-button-container">
+<div class="big-round-button" onclick="triggerDraw()">
+<div class="button-icon"></div>
+</div>
+</div>
+</div>
+
+<div class="bottom-output-area">
+<div class="dropped-card" id="output-card" onclick="openCardModal()">
+<div class="dropped-card-inner" id="output-card-inner">
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="right-decor">
+<div class="album-header-title">Never Say Never</div>
+<div class="album-subtitle">ZEROBASEONE THE 1ST FULL ALBUM DIGIPACK Ver.</div>
+<div class="album-grid" id="album-grid">
+</div>
+</div>
+
+</div>
+
+<div class="modal-overlay" id="card-modal" onclick="closeCardModal()">
+<div class="modal-content" onclick="event.stopPropagation()">
+<div class="modal-card-display" id="modal-card-display"></div>
+<div class="modal-member-name" id="modal-member-name">MEMBER NAME</div>
+<div class="modal-card-ver">特典幸運卡 粉帽 ver.</div>
+<button class="close-btn" onclick="closeCardModal()">收入口袋</button>
+</div>
+</div>
+
+<script>
+// ZB1 9位成員核心資料陣列
+const members = [
+{ id: 1, name: "SUNG HANBIN", img: "IMG_9067.jpeg" },
+{ id: 2, name: "KIM JIWOONG", img: "IMG_9068.jpeg" },
+{ id: 3, name: "ZHANG HAO", img: "IMG_9069.jpeg" },
+{ id: 4, name: "SEOK MATTHEW", img: "IMG_9070.jpeg" },
+{ id: 5, name: "KIM TAERAE", img: "IMG_9072.jpeg" },
+{ id: 6, name: "RICKY", img: "IMG_9073.jpeg" },
+{ id: 7, name: "KIM GYUVIN", img: "IMG_9074.jpeg" },
+{ id: 8, name: "PARK GUNWOOK", img: "IMG_9075.jpeg" },
+{ id: 9, name: "HAN YUJIN", img: "IMG_9076.jpeg" }
+];
+
+let coins = 0;
+let gifts = 0;
+let plays = 0;
+let currentDrawnMember = null;
+let isDrawing = false;
+
+// 初始化靜態版面
+function initLayout() {
+const showcaseGrid = document.getElementById('machine-showcase-grid');
+const albumGrid = document.getElementById('album-grid');
+
+// 1. 生成機台展示窗內 3x3 布局粉帽特典卡 (滿版呈現)
+showcaseGrid.innerHTML = '';
+members.forEach(m => {
+showcaseGrid.innerHTML += `
+<div class="lucky-card-item" style="background-image: url('${m.img}');">
+<div class="fur-hat-visual"></div>
+</div>
+`;
+});
+
+// 2. 生成右側專輯 (10款)
+albumGrid.innerHTML = '';
+members.forEach(m => {
+albumGrid.innerHTML += `
+<div class="album-item">
+<div class="album-cover-art" style="background-image: url('IMG_9066.jpeg'); background-size: cover; background-position: center;">
+<div class="album-sticker">★</div>
+</div>
+<div class="album-label">${m.name.split(' ')[0]} Ver.</div>
+</div>
+`;
+});
+
+// 追加第10款團體大封套
+albumGrid.innerHTML += `
+<div class="album-item" style="grid-column: span 2;">
+<div class="album-cover-art" style="background-image: url('IMG_9066.jpeg'); background-size: cover; background-position: center 20%;">
+</div>
+<div class="album-label">豪華大團體 Cover Ver.</div>
+</div>
+`;
+}
+
+// 投幣點擊事件
+function insertCoin() {
+if (isDrawing) return;
+coins += 1;
+plays += 1;
+updateLCD();
+showToast("投幣成功！可玩次數 ＋1 🪙");
+}
+
+// 更新藍色螢幕數據
+function updateLCD() {
+document.getElementById('lcd-coins').innerText = coins;
+document.getElementById('lcd-gifts').innerText = gifts;
+document.getElementById('lcd-plays').innerText = plays;
+}
+
+// 點擊圓形大按鈕開始抽卡
+function triggerDraw() {
+if (isDrawing) return;
+if (plays <= 0) {
+showToast("「可玩次數為 0」，請先點選投幣口投幣！");
+return;
+}
+
+isDrawing = true;
+plays -= 1;
+updateLCD();
+
+const outputCard = document.getElementById('output-card');
+outputCard.classList.remove('dispense');
+
+showToast("機台正在讀取，隨機小卡即將掉落...");
+
+const windowEl = document.querySelector('.transparent-window');
+windowEl.style.boxShadow = "0 0 40px #ff2a85, inset 0 0 40px #ff2a85";
+
+setTimeout(() => {
+windowEl.style.boxShadow = "var(--window-glow), inset 0 0 30px rgba(0, 210, 255, 0.3)";
+
+// 隨機抽取九名成員之一
+const randomIndex = Math.floor(Math.random() * members.length);
+currentDrawnMember = members[randomIndex];
+
+// 渲染出卡口的小卡圖片 (直接設為背景滿版)
+const inner = document.getElementById('output-card-inner');
+inner.style.backgroundImage = `url('${currentDrawnMember.img}')`;
+inner.innerHTML = `
+<div class="fur-hat-visual" style="height: 12px;"></div>
+`;
+
+outputCard.classList.add('dispense');
+gifts += 1;
+updateLCD();
+isDrawing = false;
+showToast("✨ 小卡已出匣！點擊小卡可放大收藏！");
+}, 1200);
+}
+
+// 點擊出卡口開啟大圖視窗
+function openCardModal() {
+if (!currentDrawnMember) return;
+
+const display = document.getElementById('modal-card-display');
+// 放大檢視也直接設為背景滿版
+display.style.backgroundImage = `url('${currentDrawnMember.img}')`;
+display.innerHTML = `
+<div class="fur-hat-visual" style="height:35px; display:flex; align-items:center; justify-content:center; color:white; font-size:12px; font-weight:bold; letter-spacing:2px; opacity:0.9;">
+PINK FUR HOOD
+</div>
+`;
+
+document.getElementById('modal-member-name').innerText = currentDrawnMember.name;
+document.getElementById('card-modal').classList.add('active');
+}
+
+// 關閉大圖視窗
+function closeCardModal() {
+document.getElementById('card-modal').classList.remove('active');
+document.getElementById('output-card').classList.remove('dispense');
+}
+
+// Toast 訊息提示
+function showToast(msg) {
+const toast = document.getElementById('toast-msg');
+toast.innerText = msg;
+toast.style.opacity = 1;
+setTimeout(() => {
+toast.style.opacity = 0;
+}, 2500);
+}
+
+// 頁面載入完成執行初始化
+window.onload = initLayout;
+</script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>奔跑吧！貓咪</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #f0f0f0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 400px;
+            background-color: #ffffff;
+            border: 4px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+        /* 遊戲資訊看板 */
+        #hud {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            z-index: 10;
+        }
+        /* 地平線 */
+        #ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            background-color: #e0e0e0; /* 調整地面顏色，讓去背效果更自然 */
+            border-top: 4px solid #333;
+        }
+        /* 貓咪角色 */
+        #cat {
+            position: absolute;
+            left: 50px;
+            bottom: 56px; /* 貼在地面上 */
+            width: 60px;
+            height: 60px;
+            background-image: url('6.jpg'); /* 已修正為 6.jpg */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom;
+            /* 【黑科技】自動過濾純白背景達到去背效果 */
+            mix-blend-mode: multiply; 
+        }
+        /* 障礙物通用樣式 */
+        .obstacle {
+            position: absolute;
+            bottom: 56px;
+            width: 50px;
+            height: 60px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom;
+            /* 【黑科技】自動過濾純白背景達到去背效果 */
+            mix-blend-mode: multiply; 
+        }
+        /* 遊戲結束/通關畫面 */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 20;
+        }
+        .screen h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .screen p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            color: #ccc;
+        }
+        .btn {
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .hide {
+            display: none !important;
+        }
+        /* 操作說明提示 */
+        #instructions {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="hud">
+            <div id="timer">剩餘時間: 05:00</div>
+            <div id="score">分數: 0</div>
+        </div>
+
+        <div id="cat"></div>
+
+        <div id="ground"></div>
+
+        <div id="start-screen" class="screen">
+            <h1>奔跑吧！貓咪</h1>
+            <p>使用 ⬆️ 鍵跳躍，⬇️ 鍵快速下墜。撐過 5 分鐘即可通關！</p>
+            <button class="btn" onclick="startGame()">開始遊戲</button>
+        </div>
+
+        <div id="gameover-screen" class="screen hide">
+            <h1 style="color: #ff4d4d;">通關失敗</h1>
+            <p id="fail-reason">你撞到了障礙物！</p>
+            <button class="btn" onclick="restartGame()">重新挑戰</button>
+        </div>
+
+        <div id="win-screen" class="screen hide">
+            <h1 style="color: #4caf50;">🎉 恭喜通關 🎉</h1>
+            <p>你成功堅持了 5 分鐘，貓咪太強大啦！</p>
+            <button class="btn" onclick="restartGame()">再玩一次</button>
+        </div>
+    </div>
+
+    <div id="instructions">
+        操作方式：按【方向鍵上 ⬆️】跳躍 / 【方向鍵下 ⬇️】快速落地
+    </div>
+
+    <script>
+        const gameContainer = document.getElementById('game-container');
+        const cat = document.getElementById('cat');
+        const timerElement = document.getElementById('timer');
+        const scoreElement = document.getElementById('score');
+        
+        const startScreen = document.getElementById('start-screen');
+        const gameoverScreen = document.getElementById('gameover-screen');
+        const winScreen = document.getElementById('win-screen');
+
+        // 障礙物圖片陣列
+        const obstacleImages = [
+            '下載.jpg',
+            '下載 (1).jpg',
+            '下載 (2).jpg',
+            '下載 (3).jpg'
+        ];
+
+        // 遊戲參數設定
+        const GAME_DURATION = 5 * 60; // 5 分鐘 (300 秒)
+        const GRAVITY = 0.6;          // 重力加速度
+        const JUMP_FORCE = 12;        // 跳躍初速度
+        const BASE_SPEED = 5;         // 初始移動速度
+        
+        // 遊戲狀態變數
+        let isPlaying = false;
+        let score = 0;
+        let timeLeft = GAME_DURATION;
+        let gameSpeed = BASE_SPEED;
+        
+        // 貓咪物理狀態
+        let catY = 0;                 // 貓咪距離地面的高度
+        let catVelocityY = 0;         // 貓咪垂直速度
+        let isJumping = false;
+
+        // 遊戲循環與定時器 ID
+        let gameLoopId;
+        let countdownId;
+        let obstacleSpawnId;
+
+        // 儲存目前畫面上所有障礙物的陣列
+        let obstacles = [];
+
+        // 監聽鍵盤事件
+        window.addEventListener('keydown', (e) => {
+            if (!isPlaying) return;
+
+            if (e.key === 'ArrowUp' && !isJumping) {
+                catVelocityY = JUMP_FORCE;
+                isJumping = true;
+            }
+            if (e.key === 'ArrowDown' && isJumping) {
+                catVelocityY = -JUMP_FORCE * 0.5; // 快速下墜效果
+            }
+        });
+
+        // 開始遊戲
+        function startGame() {
+            startScreen.classList.add('hide');
+            gameoverScreen.classList.add('hide');
+            winScreen.classList.add('hide');
+            
+            // 初始化數據
+            isPlaying = true;
+            score = 0;
+            timeLeft = GAME_DURATION;
+            gameSpeed = BASE_SPEED;
+            catY = 0;
+            catVelocityY = 0;
+            isJumping = false;
+            
+            // 清除舊障礙物
+            obstacles.forEach(obs => obs.element.remove());
+            obstacles = [];
+
+            // 更新顯示
+            scoreElement.innerText = `分數: ${score}`;
+            updateTimerDisplay();
+
+            // 啟動核心循環
+            gameLoopId = requestAnimationFrame(updateGame);
+            
+            // 啟動倒數計時
+            countdownId = setInterval(countdown, 1000);
+            
+            // 啟動障礙物生成
+            spawnObstacle();
+        }
+
+        // 遊戲主循環
+        function updateGame() {
+            if (!isPlaying) return;
+
+            // 1. 處理貓咪跳躍物理
+            catY += catVelocityY;
+            catVelocityY -= GRAVITY;
+
+            if (catY <= 0) {
+                catY = 0;
+                catVelocityY = 0;
+                isJumping = false;
+            }
+            // 渲染貓咪位置
+            cat.style.bottom = (56 + catY) + 'px';
+
+            // 2. 處理障礙物移動與碰撞
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let obs = obstacles[i];
+                obs.x -= gameSpeed;
+                obs.element.style.left = obs.x + 'px';
+
+                // 碰撞偵測
+                if (detectCollision(obs)) {
+                    endGame(false);
+                    return;
+                }
+
+                // 超出螢幕左端則移除並加分
+                if (obs.x < -60) {
+                    obs.element.remove();
+                    obstacles.splice(i, 1);
+                    score += 10;
+                    scoreElement.innerText = `分數: ${score}`;
+                    
+                    // 隨著分數增加稍微提升速度，增加挑戰性
+                    if (score % 50 === 0 && gameSpeed < 12) {
+                        gameSpeed += 0.5;
+                    }
+                }
+            }
+
+            gameLoopId = requestAnimationFrame(updateGame);
+        }
+
+        // 隨機生成障礙物
+        function spawnObstacle() {
+            if (!isPlaying) return;
+
+            const obsElement = document.createElement('div');
+            obsElement.classList.add('obstacle');
+            
+            // 隨機挑選一張障礙物圖片
+            const randomImg = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
+            obsElement.style.backgroundImage = `url('${randomImg}')`;
+            
+            // 隨機稍微調整障礙物寬高（模擬不同傢俱尺寸）
+            const randomWidth = Math.floor(Math.random() * 20) + 45;  // 45px ~ 65px
+            const randomHeight = Math.floor(Math.random() * 20) + 50; // 50px ~ 70px
+            obsElement.style.width = randomWidth + 'px';
+            obsElement.style.height = randomHeight + 'px';
+
+            gameContainer.appendChild(obsElement);
+
+            // 紀錄座標與尺寸資訊
+            obstacles.push({
+                element: obsElement,
+                x: 800,
+                width: randomWidth,
+                height: randomHeight
+            });
+
+            // 隨機決定下一次生成的間隔時間 (1.2 秒到 2.5 秒之間)
+            const nextSpawnTime = Math.random() * 1300 + 1200;
+            obstacleSpawnId = setTimeout(spawnObstacle, nextSpawnTime);
+        }
+
+        // 碰撞偵測演算法 (內縮判定優化)
+        function detectCollision(obs) {
+            const catLeft = 50;
+            const catRight = 50 + 60;
+            const catBottom = catY;
+            const catTop = catY + 60;
+
+            const obsLeft = obs.x;
+            const obsRight = obs.x + obs.width;
+            const obsBottom = 0;
+            const obsTop = obs.height;
+
+            // 稍微內縮判定範圍，讓白底或邊緣判定更寬容、更準確
+            const paddingX = 12;
+            const paddingY = 8;
+
+            if (catRight - paddingX > obsLeft && 
+                catLeft + paddingX < obsRight && 
+                catTop - paddingY > obsBottom && 
+                catBottom < obsTop - paddingY) {
+                return true; 
+            }
+            return false;
+        }
+
+        // 倒數計時器
+        function countdown() {
+            if (timeLeft > 0) {
+                timeLeft--;
+                updateTimerDisplay();
+            } else {
+                endGame(true); // 5 分鐘時間到，通關成功！
+            }
+        }
+
+        // 更新計時器文字呈現 (MM:SS)
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const seconds = (timeLeft % 60).toString().padStart(2, '0');
+            timerElement.innerText = `剩餘時間: ${minutes}:${seconds}`;
+        }
+
+        // 結束遊戲
+        function endGame(isWin) {
+            isPlaying = false;
+            
+            cancelAnimationFrame(gameLoopId);
+            clearInterval(countdownId);
+            clearTimeout(obstacleSpawnId);
+
+            if (isWin) {
+                winScreen.classList.remove('hide');
+            } else {
+                gameoverScreen.classList.remove('hide');
+            }
+        }
+
+        function restartGame() {
+            startGame();
+        }
+    </script>
+</body>
+</html>

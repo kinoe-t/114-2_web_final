@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今天吃什麼？- 終結選擇困難症</title>
+    <style>
+        :root {
+            --primary-color: #ff7675;
+            --secondary-color: #fab1a0;
+            --background-color: #f7f9fa;
+            --card-color: #ffffff;
+            --text-color: #2d3436;
+            --text-muted: #b2bec3;
+            --accent-color: #fdcb6e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-color);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        /* 顯示抽獎結果的大框框 */
+        .display-box {
+            background-color: #fff0f0;
+            border: 3px dashed var(--primary-color);
+            border-radius: 16px;
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .result-text {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--primary-color);
+            transition: transform 0.1s ease;
+        }
+
+        /* 按鈕風格 */
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 6px 15px rgba(255, 118, 117, 0.3);
+            transition: all 0.2s ease;
+            width: 80%;
+        }
+
+        .btn:hover {
+            background-color: #e84393;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 118, 117, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn:disabled {
+            background-color: var(--
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今天吃什麼？- 終結選擇困難症</title>
+    <style>
+        :root {
+            --primary-color: #ff7675;
+            --secondary-color: #fab1a0;
+            --background-color: #f7f9fa;
+            --card-color: #ffffff;
+            --text-color: #2d3436;
+            --text-muted: #b2bec3;
+            --accent-color: #fdcb6e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-color);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        /* 顯示抽獎結果的大框框 */
+        .display-box {
+            background-color: #fff0f0;
+            border: 3px dashed var(--primary-color);
+            border-radius: 16px;
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .result-text {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--primary-color);
+            transition: transform 0.1s ease;
+        }
+
+        /* 按鈕風格 */
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 6px 15px rgba(255, 118, 117, 0.3);
+            transition: all 0.2s ease;
+            width: 80%;
+        }
+
+        .btn:hover {
+            background-color: #e84393;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 118, 117, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn:disabled {
+            background-color: var(--text-muted);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* 菜單管理區域 */
+        .menu-management {
+            margin-top: 35px;
+            border-top: 1px solid #edf2f7;
+            padding-top: 25px;
+            text-align: left;
+        }
+
+        .menu-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #4a5568;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+        }
+
+        .add-btn {
+            background-color: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 0 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* 標籤池 */
+        .food-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .food-tag {
+            background-color: #f1f2f6;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .delete-tag {
+            color: #ff7675;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .delete-tag:hover {
+            color: #d63031;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🍳 今天吃甚麼？</h1>
+        <p class="subtitle">救星來了！再也不用為了解決下一餐想破頭</p>
+
+        <div class="display-box">
+            <div class="result-text" id="resultText">便當？火鍋？</div>
+        </div>
+
+        <button class="btn" id="rollBtn">替我決定！</button>
+
+        <div class="menu-management">
+            <div class="menu-title">
+                <span>🍱 我的候選菜單 (<span id="foodCount">0</span>)</span>
+            </div>
+            
+            <div class="input-group">
+                <input type="text" id="foodInput" placeholder="想吃的新花樣... (例如: 義大利麵)">
+                <button class="add-btn" id="addBtn">新增</button>
+            </div>
+
+            <div class="food-pool" id="foodPool">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // 預設菜單資料庫
+            let foods = [
+                "滷肉飯", "火鍋", "麥當勞", "健康餐盒", "牛肉麵", 
+                "壽司", "炸雞", "咖哩飯", "麻辣燙", "手搖飲+雞排", 
+                "便利商店", "便當", "義大利麵", "水餃", "炒飯"
+            ];
+
+            // 獲取網頁元素
+            const resultText = document.getElementById('resultText');
+            const rollBtn = document.getElementById('rollBtn');
+            const foodInput = document.getElementById('foodInput');
+            const addBtn = document.getElementById('addBtn');
+            const foodPool = document.getElementById('foodPool');
+            const foodCount = document.getElementById('foodCount');
+
+            let isRolling = false;
+
+            // 初始化渲染標籤
+            renderTags();
+
+            // 點擊「替我決定」
+            rollBtn.addEventListener('click', function() {
+                if (foods.length === 0) {
+                    alert("菜單空空如也，請先新增一些食物吧！");
+                    return;
+                }
+                if (isRolling) return;
+
+                isRolling = true;
+                rollBtn.disabled = true;
+                
+                let counter = 0;
+                const totalTicks = 20; // 滾動次數
+                
+                // 動態跑馬燈效果
+                const interval = setInterval(() => {
+                    const randomIndex = Math.floor(Math.random() * foods.length);
+                    resultText.innerText = foods[randomIndex];
+                    
+                    // 微調跳動視覺
+                    resultText.style.transform = `scale(${1 + Math.random() * 0.15})`;
+                    
+                    counter++;
+                    
+                    // 滾動結束
+                    if (counter >= totalTicks) {
+                        clearInterval(interval);
+                        
+                        // 最終決定
+                        const finalIndex = Math.floor(Math.random() * foods.length);
+                        resultText.innerText = `✨ ${foods[finalIndex]} ✨`;
+                        resultText.style.transform = "scale(1.2)";
+                        
+                        isRolling = false;
+                        rollBtn.disabled = false;
+                    }
+                }, 80); // 跑馬燈跳動速度 (毫秒)
+            });
+
+            // 新增食物功能
+            function addFood() {
+                const text = foodInput.value.trim();
+                if (text === "") return;
+                
+                if (foods.includes(text)) {
+                    alert("這個已經在清單內囉！");
+                    return;
+                }
+
+                foods.push(text);
+                foodInput.value = ""; // 清空輸入框
+                renderTags();
+            }
+
+            // 綁定新增事件 (點按鈕或按 Enter)
+            addBtn.addEventListener('click', addFood);
+            foodInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addFood();
+            });
+
+            // 刪除食物功能
+            window.deleteFood = function(index) {
+                foods.splice(index, 1);
+                renderTags();
+            };
+
+            // 渲染美食標籤池
+            function renderTags() {
+                foodPool.innerHTML = "";
+                foodCount.innerText = foods.length;
+
+                foods.forEach((food, index) => {
+                    const tag = document.createElement('div');
+                    tag.classList.add('food-tag');
+                    tag.innerHTML = `
+                        ${food}
+                        <span class="delete-tag" onclick="deleteFood(${index})">&times;</span>
+                    `;
+                    foodPool.appendChild(tag);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

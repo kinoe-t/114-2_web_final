@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>隨機歌單選擇器</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:"Microsoft JhengHei",sans-serif;
+    background:#111;
+    color:white;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+.container{
+    width:100%;
+    max-width:1000px;
+    text-align:center;
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+.song-card{
+    background:#222;
+    border-radius:20px;
+    padding:20px;
+    box-shadow:0 0 20px rgba(255,255,255,0.1);
+}
+
+#songImage{
+    width:100%;
+    max-width:700px;
+    height:400px;
+    object-fit:cover;
+    border-radius:15px;
+    margin-bottom:20px;
+    background:#333;
+}
+
+#songTitle{
+    font-size:32px;
+    font-weight:bold;
+    margin-bottom:20px;
+}
+
+button{
+    background:#ff4d6d;
+    color:white;
+    border:none;
+    padding:15px 30px;
+    border-radius:10px;
+    font-size:20px;
+    cursor:pointer;
+    transition:.3s;
+}
+
+button:hover{
+    transform:scale(1.05);
+}
+
+button:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+}
+
+.player{
+    margin-top:30px;
+}
+
+iframe{
+    width:100%;
+    max-width:800px;
+    height:450px;
+    border:none;
+    border-radius:15px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>🎵 隨機歌單選擇器 🎵</h1>
+
+    <div class="song-card">
+
+        <img id="songImage" src="" alt="歌曲圖片">
+
+        <div id="songTitle">按下按鈕開始抽歌</div>
+
+        <button id="startBtn">
+            開始隨機選歌
+        </button>
+
+        <div class="player" id="player"></div>
+
+    </div>
+
+</div>
+
+<script>
+
+const songs = [
+{
+    name:"マリー",
+    image:"hq720.jpg",
+    youtube:"qBkdlGHv_ug"
+},
+{
+    name:"月が綺麗ねと言われたい",
+    image:"想聽你說月亮真美.jpg",
+    youtube:"sP4bUWCDwmA"
+},
+{
+    name:"春雷",
+    image:"maxresdefault (1).jpg",
+    youtube:"zkNzxsaCunU"
+},
+{
+    name:"斜陽",
+    image:"ヨルシカ - 斜陽.jpg",
+    youtube:"bqigIHMComE"
+},
+{
+    name:"Choice",
+    image:"maxresdefault (1).jpg",
+    youtube:"Wae2_oEyTs4"
+},
+{
+    name:"未完成婚姻論",
+    image:"maxresdefault (1).jpg",
+    youtube:"hmTET9uBh8A"
+},
+{
+    name:"徘徊",
+    image:"maxresdefault.jpg",
+    youtube:"h6_2Y4XUnoA"
+}
+];
+
+const songImage = document.getElementById("songImage");
+const songTitle = document.getElementById("songTitle");
+const player = document.getElementById("player");
+const startBtn = document.getElementById("startBtn");
+
+function showSong(song){
+
+    songImage.src = song.image;
+    songTitle.textContent = song.name;
+
+    player.innerHTML = `
+        <iframe
+            src="https://www.youtube.com/embed/${song.youtube}?autoplay=1&rel=0"
+            allow="autoplay; encrypted-media"
+            allowfullscreen>
+        </iframe>
+    `;
+}
+
+startBtn.addEventListener("click", () => {
+
+    startBtn.disabled = true;
+    player.innerHTML = "";
+
+    let count = 0;
+
+    const interval = setInterval(() => {
+
+        const randomSong =
+            songs[Math.floor(Math.random() * songs.length)];
+
+        songImage.src = randomSong.image;
+        songTitle.textContent = randomSong.name;
+
+        count++;
+
+        if(count >= 30){
+
+            clearInterval(interval);
+
+            const finalSong =
+                songs[Math.floor(Math.random() * songs.length)];
+
+            showSong(finalSong);
+
+            startBtn.disabled = false;
+        }
+
+    },100);
+
+});
+
+</script>
+
+</body>
+</html>
+

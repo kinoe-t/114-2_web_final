@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>秒數反應挑戰</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+:root {
+  --bg: #08080f;
+  --panel: #0e0e1a;
+  --border-dark: #1a1a2e;
+  --border-bright: #5533aa;
+  --gold: #c8942a;
+  --cyan: #3a9fa8;
+  --green: #2e5f8b;
+  --red: #9b2335;
+  --white: #ccccdd;
+  --muted: #4a4a6a;
+  --orange: #b86e2a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 7px, rgba(180,0,255,0.04) 7px, rgba(180,0,255,0.04) 8px),
+    repeating-linear-gradient(90deg, transparent, transparent 7px, rgba(180,0,255,0.04) 7px, rgba(180,0,255,0.04) 8px);
+  font-family: 'Press Start 2P', monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow-x: hidden;
+}
+
+.title-wrap { text-align: center; margin-bottom: 0.5rem; }
+.title-main { font-size: 2rem; color: var(--gold); text-shadow: 4px 4px 0 #884400, 0 0 20px #ffcc0088; letter-spacing: 3px; display: block; line-height: 1.6; }
+.title-sub { font-size: 0.8rem; color: var(--muted); letter-spacing: 2px; display: block; margin-top: 6px; }
+.title-desc { display: block; font-size: 1.4rem; color: var(--muted); margin-top: 14px; line-height: 2.4; letter-spacing: 1px; }
+
+.sf-panel { width: 100%; max-width: 640px; background: var(--panel); border: 4px solid var(--border-bright); box-shadow: 0 0 0 4px var(--border-dark), 6px 6px 0 #000, inset 0 0 30px rgba(200,0,255,0.08); padding: 1.5rem 2rem; position: relative; margin-bottom: 1.2rem; }
+.sf-panel::before { content: ''; position: absolute; top: 4px; left: 4px; right: 4px; bottom: 4px; border: 2px solid rgba(200,0,255,0.25); pointer-events: none; }
+.sf-panel::after { content: ''; position: absolute; top: -4px; left: -4px; width: 12px; height: 12px; background: var(--gold); box-shadow: calc(100% + 648px - 28px) 0 0 var(--gold), 0 calc(100% + 8px - 4px) 0 var(--gold), calc(100% + 648px - 28px) calc(100% + 8px - 4px) 0 var(--gold); }
+
+.section-label { font-size: 1.2rem; color: var(--muted); letter-spacing: 2px; margin-bottom: 0.6rem; text-transform: uppercase; }
+.target-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.target-num { font-size: 2.8rem; color: var(--cyan); text-shadow: 4px 4px 0 #004444, 0 0 24px #00ffee88; letter-spacing: 4px; line-height: 1; }
+.right-col { display: flex; flex-direction: column; align-items: flex-end; gap: 14px; }
+
+.sf-btn { font-family: 'Press Start 2P', monospace; font-size: 1.2rem; background: #1a1400; color: var(--gold); border: 3px solid var(--gold); padding: 14px 22px; cursor: pointer; outline: none; position: relative; letter-spacing: 1px; image-rendering: pixelated; box-shadow: inset -3px -3px 0 #000, inset 3px 3px 0 #5a4010, 4px 4px 0 #000; transition: transform 0.05s, box-shadow 0.05s; animation: btn-bounce 0.6s infinite alternate steps(2); }
+@keyframes btn-bounce { from { transform: translateY(0px); } to { transform: translateY(-6px); } }
+.sf-btn:hover { background: #2a2000; color: #e8b030; }
+.sf-btn:active { transform: translateY(4px); box-shadow: inset -3px -3px 0 #000, inset 3px 3px 0 #5a4010, 0px 0px 0 #000; animation: none; }
+
+.score-row { display: flex; gap: 1.5rem; font-size: 0.65rem; color: var(--muted); }
+.score-row span { color: var(--gold); font-size: 0.8rem; }
+
+.sf-divider { width: 100%; height: 4px; background: repeating-linear-gradient(90deg, var(--border-bright) 0, var(--border-bright) 8px, transparent 8px, transparent 16px); margin: 0.8rem 0; opacity: 0.5; }
+
+.timer-num { font-size: 3rem; color: var(--green); text-shadow: 4px 4px 0 #001833, 0 0 24px #2e5f8b88; letter-spacing: 6px; text-align: center; line-height: 1; transition: color 0.15s, text-shadow 0.15s; }
+.timer-num.running { color: var(--orange); text-shadow: 4px 4px 0 #442200, 0 0 24px #ff880088; animation: flicker 0.4s infinite alternate; }
+.timer-num.win { color: #2e8b57; text-shadow: 4px 4px 0 #003322, 0 0 30px #2e8b57cc; }
+.timer-num.lose { color: var(--red); text-shadow: 4px 4px 0 #440011, 0 0 24px #ff224488; }
+@keyframes flicker { from { opacity: 1; } to { opacity: 0.75; } }
+
+.hint { font-size: 0.9rem; color: var(--muted); text-align: center; line-height: 2.2; letter-spacing: 1px; }
+.hint.ready { color: var(--gold); animation: blink 0.7s step-end infinite; }
+.hint.go { color: var(--orange); animation: blink 0.5s step-end infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+.status-bar { display: flex; align-items: center; gap: 10px; font-size: 0.6rem; color: var(--muted); margin-top: 4px; }
+.dot { width: 10px; height: 10px; background: var(--muted); display: inline-block; image-rendering: pixelated; }
+.dot.active { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.dot.running { background: var(--orange); box-shadow: 0 0 8px var(--orange); animation: flicker 0.4s infinite alternate; }
+
+.result-panel { width: 100%; max-width: 640px; background: var(--panel); border: 4px solid var(--muted); box-shadow: 0 0 0 4px var(--border-dark), 6px 6px 0 #000; padding: 1.2rem 2rem; text-align: center; display: none; }
+.result-panel.show { display: block; }
+.result-panel.win { border-color: var(--green); animation: win-slam 0.15s 4 alternate; }
+.result-panel.lose { border-color: var(--red); }
+@keyframes win-slam { from { transform: scale(1); } to { transform: scale(1.03); } }
+.result-msg { font-size: 1.4rem; line-height: 2; letter-spacing: 2px; }
+.result-msg.win { color: #2e8b57; text-shadow: 3px 3px 0 #003322; }
+.result-msg.lose { color: var(--red); text-shadow: 3px 3px 0 #440011; }
+.result-diff { font-size: 0.65rem; color: var(--muted); margin-top: 10px; line-height: 2.2; }
+
+.lifebar-wrap { width: 100%; max-width: 640px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; font-size: 0.55rem; color: var(--muted); gap: 8px; }
+.lifebar { flex: 1; height: 10px; background: #220033; border: 2px solid var(--muted); position: relative; overflow: hidden; }
+.lifebar-fill { height: 100%; background: var(--border-bright); width: 100%; transition: width 0.3s; }
+
+canvas#confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<div class="title-wrap">
+  <span class="title-main">** 反應挑戰 **</span>
+  <span class="title-sub">REACTION TIMER — PRESS START</span>
+  <span class="title-desc">挑戰按出目標秒數！沒有你想的那麼簡單 :)</span>
+</div>
+<div class="lifebar-wrap">
+  <span>P1</span>
+  <div class="lifebar"><div class="lifebar-fill" id="lifeBar"></div></div>
+  <span>WIN <span style="color:var(--gold)" id="winCount">0</span> / <span id="totalCount">0</span></span>
+</div>
+<div class="sf-panel">
+  <div class="target-row">
+    <div>
+      <div class="section-label">▶ 目標秒數</div>
+      <div class="target-num" id="targetDisplay">??</div>
+    </div>
+    <div class="right-col">
+      <button class="sf-btn" onclick="generateTarget()">生成目標</button>
+      <div class="score-row">挑戰 <span id="totalCount2">0</span>&nbsp;&nbsp;成功 <span id="winCount2">0</span></div>
+    </div>
+  </div>
+</div>
+<div class="sf-panel">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:0.8rem;">
+    <div class="section-label">▶ 你的計時</div>
+    <div class="timer-num" id="timerDisplay">00.0</div>
+    <div class="sf-divider"></div>
+    <div class="hint" id="hintText">先按「生成目標」，再按 ENTER</div>
+    <div class="status-bar">
+      <div class="dot" id="statusDot"></div>
+      <span id="statusText">待機中</span>
+    </div>
+  </div>
+</div>
+<div class="result-panel" id="resultBox">
+  <div class="result-msg" id="resultText"></div>
+  <div class="result-diff" id="diffText"></div>
+</div>
+<script>
+let targetTime=null,startTime=null,timerInterval=null,isRunning=false,hasTarget=false,totalCount=0,winCount=0;
+const timerDisplay=document.getElementById('timerDisplay'),targetDisplay=document.getElementById('targetDisplay'),hintText=document.getElementById('hintText'),resultBox=document.getElementById('resultBox'),resultText=document.getElementById('resultText'),diffText=document.getElementById('diffText'),statusDot=document.getElementById('statusDot'),statusText=document.getElementById('statusText'),lifeBar=document.getElementById('lifeBar');
+function setCount(){document.getElementById('totalCount').textContent=totalCount;document.getElementById('totalCount2').textContent=totalCount;document.getElementById('winCount').textContent=winCount;document.getElementById('winCount2').textContent=winCount;lifeBar.style.width=totalCount===0?'100%':(winCount/totalCount*100)+'%';}
+function generateTarget(){if(isRunning)return;targetTime=Math.floor(Math.random()*15+1);targetDisplay.textContent=targetTime;hasTarget=true;timerDisplay.textContent='00.0';timerDisplay.className='timer-num';resultBox.className='result-panel';hintText.textContent='按下 ENTER 開始計時！';hintText.className='hint ready';statusDot.className='dot active';statusText.textContent='就緒';}
+function formatTime(ms){const s=Math.floor(ms/1000),t=Math.floor((ms%1000)/100);return s.toString().padStart(2,'0')+'.'+t;}
+function startTimer(){startTime=Date.now();isRunning=true;timerDisplay.className='timer-num running';hintText.textContent='計時中... 再按 ENTER 停止！';hintText.className='hint go';statusDot.className='dot running';statusText.textContent='計時中';timerInterval=setInterval(()=>{timerDisplay.textContent=formatTime(Date.now()-startTime);},100);}
+function stopTimer(){const elapsed=Date.now()-startTime;clearInterval(timerInterval);isRunning=false;const elapsedSec=(Math.floor(elapsed/100)/10).toFixed(1);timerDisplay.textContent=formatTime(elapsed);statusDot.className='dot';statusText.textContent='已停止';totalCount++;const ew=Math.floor(elapsed/1000),et=Math.floor((elapsed%1000)/100),isWin=ew===targetTime&&et===0;hintText.className='hint';hintText.textContent=isWin?'★ PERFECT ★':'按「生成目標」再試一次';resultBox.className='result-panel show '+(isWin?'win':'lose');resultText.className='result-msg '+(isWin?'win':'lose');if(isWin){winCount++;resultText.textContent='你也太強了吧！';timerDisplay.className='timer-num win';diffText.textContent=`目標: ${targetTime}s　你的: ${elapsedSec}s　差距: ${Math.abs(parseFloat(elapsedSec)-targetTime).toFixed(1)}s`;launchConfetti();playWinSound();}else{resultText.textContent='喔不沒事，再加油！';timerDisplay.className='timer-num lose';const sign=parseFloat(elapsedSec)>targetTime?'+':'';diffText.textContent=`目標: ${targetTime}s　你的: ${elapsedSec}s　差距: ${sign}${(parseFloat(elapsedSec)-targetTime).toFixed(1)}s`;playLoseSound();}setCount();}
+document.addEventListener('keydown',(e)=>{if(e.key==='Enter'){e.preventDefault();if(!hasTarget)return;isRunning?stopTimer():startTimer();}});
+function playWinSound(){try{const ctx=new(window.AudioContext||window.webkitAudioContext)();[{f:523,t:0,d:0.1},{f:659,t:0.1,d:0.1},{f:784,t:0.2,d:0.1},{f:1047,t:0.3,d:0.25},{f:1319,t:0.45,d:0.4}].forEach(({f,t,d})=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='square';o.frequency.value=f;g.gain.setValueAtTime(0.2,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+t+d);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+d+0.01);});}catch(e){}}
+function playLoseSound(){try{const ctx=new(window.AudioContext||window.webkitAudioContext)();[{f:392,t:0,d:0.18},{f:349,t:0.18,d:0.18},{f:311,t:0.36,d:0.25},{f:261,t:0.6,d:0.5}].forEach(({f,t,d})=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sawtooth';o.frequency.value=f;g.gain.setValueAtTime(0.15,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+t+d);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+d+0.01);});}catch(e){}}
+function launchConfetti(){const canvas=document.getElementById('confetti-canvas'),ctx=canvas.getContext('2d');canvas.width=window.innerWidth;canvas.height=window.innerHeight;const colors=['#c8942a','#3a9fa8','#2e8b57','#9b2335','#7755aa','#aaaacc'],p=Array.from({length:200},()=>({x:Math.random()*canvas.width,y:-Math.random()*canvas.height*0.5,w:(Math.floor(Math.random()*3)+1)*8,h:(Math.floor(Math.random()*2)+1)*8,c:colors[Math.floor(Math.random()*colors.length)],vy:Math.random()*5+2,vx:(Math.random()-0.5)*3,a:Math.random()*Math.PI*2,va:(Math.random()-0.5)*0.25}));let f=0;(function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);p.forEach(q=>{ctx.save();ctx.translate(q.x+q.w/2,q.y+q.h/2);ctx.rotate(q.a);ctx.fillStyle=q.c;ctx.fillRect(-q.w/2,-q.h/2,q.w,q.h);ctx.restore();q.y+=q.vy;q.x+=q.vx;q.a+=q.va;});if(++f<180)requestAnimationFrame(draw);else ctx.clearRect(0,0,canvas.width,canvas.height);})();}
+setCount();
+</script>
+</body>
+</html>

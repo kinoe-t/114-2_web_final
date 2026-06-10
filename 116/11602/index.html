@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英文單字遊戲 English word search game</title>
+    <style>
+        /* 全域樣式：低飽和度橘黃漸層背景 */
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5e6d3 0%, #ecd1b4 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif; /* 排除標楷體 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+        }
+
+        /* 標題：橘黃色字體、立體描邊、非標楷體、英文字體藝術風格 */
+        .game-title-container {
+            text-align: center;
+            margin: 15px 0 5px 0;
+        }
+
+        .game-title-zh {
+            color: #ff8c00; /* 橘黃色 */
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            /* 立體描邊效果 */
+            text-shadow: 
+                -1px -1px 0 #fff,  1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff,
+                2px 2px 0px #b36200, 3px 3px 0px #b36200, 4px 4px 5px rgba(0,0,0,0.15);
+        }
+
+        .game-title-en {
+            color: #ffaa33; /* 淺橘黃 */
+            font-size: 1.8rem;
+            font-family: 'Georgia', 'Times New Roman', serif; /* 藝術風格襯線體 */
+            font-style: italic;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-top: 5px;
+            /* 立體描邊效果 */
+            text-shadow: 
+                -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff,
+                1px 1px 0px #cc7a00, 2px 2px 3px rgba(0,0,0,0.1);
+        }
+
+        .score-board {
+            font-size: 1.3rem;
+            color: #5a4b38;
+            font-weight: bold;
+            margin: 15px 0;
+            background: rgba(255, 255, 255, 0.4);
+            padding: 8px 20px;
+            border-radius: 25px;
+            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+
+        /* 遊戲主區塊 */
+        .main-container {
+            display: flex;
+            gap: 30px;
+            max-width: 1100px;
+            width: 100%;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* 20*20 網格外框 */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(20, 28px);
+            grid-template-rows: repeat(20, 28px);
+            gap: 2px;
+            background-color: rgba(160, 130, 100, 0.25);
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        /* 1x1 方格樣式 */
+        .cell {
+            width: 28px;
+            height: 28px;
+            background-color: #fffbf5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: #3d3326;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: transform 0.1s, background-color 0.15s;
+        }
+
+        .cell:hover {
+            background-color: #fff2dd;
+            transform: scale(1.08);
+        }
+
+        /* 點選後的背景：暖黃色 */
+        .cell.selected {
+            background-color: #ffd966 !important; /* 暖黃色 */
+            color: #5c4300;
+        }
+
+        /* 求救提示狀態：亮紅色變色 */
+        .cell.hinted {
+            background-color: #ff9999 !important;
+            color: #cc0000 !important;
+            font-size: 18px;
+            animation: pulse 0.8s infinite alternate;
+        }
+
+        /* 已經答對的單字所屬格子的淡淡常駐底色（提示交錯用） */
+        .cell.part-of-found {
+            border: 1px dashed #ffa042;
+        }
+
+        /* 右側提示欄 */
+        .sidebar {
+            width: 300px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 20px;
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.03);
+            box-sizing: border-box;
+        }
+
+        .sidebar h3 {
+            margin-top: 0;
+            color: #4a3c2c;
+            border-bottom: 2px solid #ff8c00;
+            padding-bottom: 8px;
+            font-size: 1.2rem;
+        }
+
+        .word-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .word-item {
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #403526;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255,255,255,0.4);
+            transition: all 0.3s ease;
+        }
+
+        /* 答對單字畫線標示紀錄 */
+        .word-item.completed {
+            text-decoration: line-through;
+            color: #b0a596;
+            background: rgba(0, 0, 0, 0.05);
+            opacity: 0.7;
+        }
+        .word-item.completed .cn-text {
+            text-decoration: line-through;
+            color: #b0a596;
+        }
+
+        .cn-text {
+            font-size: 13px;
+            color: #6e5e4f;
+            font-weight: normal;
+            margin-top: 2px;
+        }
+
+        /* 右下角求救按鈕 */
+        .hint-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #ff4d4d 0%, #ff1a1a 100%);
+            color: white;
+            border: none;
+            padding: 14px 26px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 26, 26, 0.3);
+            transition: all 0.2s ease;
+            z-index: 99;
+        }
+
+        .hint-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(255, 26, 26, 0.4);
+        }
+
+        /* 好想兔通關彈出層 */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.45);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .rabbit-card {
+            background: white;
+            padding: 35px 50px;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+            animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        /* 純 CSS 擬真卡通好想兔 */
+        .rabbit-avatar {
+            font-size: 90px;
+            display: inline-block;
+            animation: rabbitBounce 0.5s infinite alternate cubic-bezier(0.455, 0.03, 0.515, 0.955);
+        }
+
+        .pass-badge {
+            background-color: #ff8c00;
+            color: white;
+            font-size: 26px;
+            font-weight: 900;
+            padding: 6px 30px;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 15px 0;
+            box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .next-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
+        }
+        .next-btn:hover { background-color: #439e47; }
+
+        /* 動態特效 */
+        @keyframes rabbitBounce {
+            from { transform: translateY(0) scaleY(1); }
+            to { transform: translateY(-25px) scaleY(0.93); }
+        }
+        @keyframes popUp {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes pulse {
+            from { filter: contrast(1); }
+            to { filter: contrast(1.4) brightness(1.1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-title-container">
+        <div class="game-title-zh">英文單字遊戲</div>
+        <div class="game-title-en">English word search game</div>
+    </div>
+
+    <div class="score-board">當前得分：<span id="scoreText">0</span> / 100 分</div>
+
+    <div class="main-container">
+        <div class="grid-container" id="grid"></div>
+
+        <div class="sidebar">
+            <h3>待尋找的高中單字</h3>
+            <ul class="word-list" id="wordList"></ul>
+        </div>
+    </div>
+
+    <button class="hint-btn" onclick="triggerHint()">🚑 求救提示</button>
+
+    <div class="overlay" id="victoryOverlay">
+        <div class="rabbit-card">
+            <div class="rabbit-avatar">🐰</div>
+            <br>
+            <div class="pass-badge">(通過)</div>
+            <p style="color: #665544; font-weight: bold; font-size: 16px; margin-bottom: 20px;">好想兔恭喜你完美答對 10 個單字！</p>
+            <button class="next-btn" onclick="startNextLevel()">挑戰下一關</button>
+        </div>
+    </div>
+
+    <script>
+        // 大高中的英文單字庫 (附中文意思)
+        const masterWordPool = [
+            { en: "ABANDON", cn: "放棄、拋棄" }, { en: "ABSOLUTE", cn: "絕對的" },
+            { en: "ACADEMIC", cn: "學術的" }, { en: "ACCIDENT", cn: "意外事故" },
+            { en: "ACQUIRE", cn: "取得、獲得" }, { en: "BAGGAGE", cn: "行李" },
+            { en: "BALANCE", cn: "平衡" }, { en: "BARGAIN", cn: "特價商品" },
+            { en: "BEAUTIFUL", cn: "美麗的" }, { en: "BENEFIT", cn: "利益、好處" },
+            { en: "CAMPAIGN", cn: "活動、競選" }, { en: "CAPACITY", cn: "容量、能力" },
+            { en: "CHALLENGE", cn: "挑戰" }, { en: "CHEMICAL", cn: "化學的" },
+            { en: "COMFORT", cn: "舒適、慰藉" }, { en: "DECISION", cn: "決定" },
+            { en: "DELICATE", cn: "精緻的、脆弱的" }, { en: "DELIVER", cn: "遞送、發表" },
+            { en: "DOMESTIC", cn: "家庭的、國內的" }, { en: "DURATION", cn: "持續時間" },
+            { en: "ECONOMIC", cn: "經濟的" }, { en: "EDUCATION", cn: "教育" },
+            { en: "EMPHASIS", cn: "強調" }, { en: "ELEVATOR", cn: "電梯" },
+            { en: "EVIDENT", cn: "明顯的" }, { en: "FAITHFUL", cn: "忠實的" },
+            { en: "FESTIVAL", cn: "節日" }, { en: "FLEXIBLE", cn: "有彈性的" },
+            { en: "FREQUENT", cn: "頻繁的" }, { en: "FRUSTRATE", cn: "使沮喪" },
+            { en: "GENEROUS", cn: "慷慨的" }, { en: "GLORIOUS", cn: "光榮的" },
+            { en: "GOVERNMENT", cn: "政府" }, { en: "GRADUATE", cn: "畢業" },
+            { en: "GUARANTEE", cn: "保證" }, { en: "HARMONY", cn: "和諧" },
+            { en: "HERITAGE", cn: "遺產、傳統" }, { en: "HESITATE", cn: "猶豫" },
+            { en: "HORIZON", cn: "地平線" }, { en: "HOSPITAL", cn: "醫院" },
+            { en: "IMAGINE", cn: "想像" }, { en: "IMMEDIATE", cn: "立即的" },
+            { en: "INFLUENCE", cn: "影響" }, { en: "JEALOUS", cn: "嫉妒的" },
+            { en: "JOURNEY", cn: "旅程" }, { en: "JUSTICE", cn: "正義" },
+            { en: "LANGUAGE", cn: "語言" }, { en: "LAUGHTER", cn: "笑聲" },
+            { en: "MATERIAL", cn: "材料、物質" }, { en: "NEGATIVE", cn: "消極的、否定的" }
+        ];
+
+        let historyUsedWords = []; // 存儲先前關卡用過的英文單字，避免重複
+        const GRID_SIZE = 20;
+        let grid = [];
+        let currentWords = [];      // 當前關卡的10個單字物件
+        let foundWords = [];        // 已經答對的英文單字字串，防重複計分
+        let wordLocations = {};     // 紀錄正確單字的各字母座標
+        let audioCtx = null;        // 用於救護車音效的 Web Audio API 上下文
+
+        // 初始化關卡
+        function initGame() {
+            grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(''));
+            foundWords = [];
+            wordLocations = {};
+            document.getElementById('scoreText').innerText = "0";
+            document.getElementById('victoryOverlay').style.display = "none";
+
+            // 1. 過濾掉先前關卡出現過的單字
+            let pool = masterWordPool.filter(w => !historyUsedWords.includes(w.en));
+            
+            // 如果單字池不夠10個，說明所有單字都出過一遍了，重置歷史紀錄
+            if (pool.length < 10) {
+                historyUsedWords = [];
+                pool = [...masterWordPool];
+            }
+
+            // 隨機抽 10 個
+            pool.sort(() => 0.5 - Math.random());
+            currentWords = pool.slice(0, 10);
+            
+            // 記錄至歷史，以便下一關排除
+            currentWords.forEach(w => historyUsedWords.push(w.en));
+
+            // 2. 埋入單字（支援橫、縱、斜的正反向，共 8 個方向）
+            currentWords.forEach(wordObj => {
+                placeWordIntoGrid(wordObj.en);
+            });
+
+            // 3. 有機字母填空：使隨機格子不只是亂碼，可以跟上下左右任意方向連成具發音語意的片段
+            fillGridOrganically();
+
+            // 4. 渲染畫面
+            renderGrid();
+            renderWordList();
+        }
+
+        // 將單字隨機塞入20x20的格子內
+        function placeWordIntoGrid(word) {
+            const directions = [
+                [0, 1],   // 左到右
+                [0, -1],  // 右到左
+                [1, 0],   // 上到下
+                [-1, 0],  // 下到上
+                [1, 1],   // 左上到右下
+                [-1, 1],  // 左下到右上
+                [1, -1],  // 右上到左下
+                [-1, -1]  // 右下到左上
+            ];
+
+            let placed = false;
+            let attempts = 0;
+
+            while (!placed && attempts < 400) {
+                const dir = directions[Math.floor(Math.random() * directions.length)];
+                const startR = Math.floor(Math.random() * GRID_SIZE);
+                const startC = Math.floor(Math.random() * GRID_SIZE);
+
+                if (canPlaceWord(word, startR, startC, dir)) {
+                    let coords = [];
+                    for (let i = 0; i < word.length; i++) {
+                        const r = startR + i * dir[0];
+                        const c = startC + i * dir[1];
+                        grid[r][c] = word[i];
+                        coords.push({ r, c });
+                    }
+                    wordLocations[word] = coords;
+                    placed = true;
+                }
+                attempts++;
+            }
+        }
+
+        function canPlaceWord(word, r, c, dir) {
+            for (let i = 0; i < word.length; i++) {
+                const nr = r + i * dir[0];
+                const nc = c + i * dir[1];
+                if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) return false;
+                if (grid[nr][nc] !== '' && grid[nr][nc] !== word[i]) return false;
+            }
+            return true;
+        }
+
+        // 有機字母填空：觀察鄰接格子，模擬常規英文片語字母概率
+        function fillGridOrganically() {
+            const vowelPool = "AEIOU";
+            const consonantPool = "THNSRDCOMAWFLGYPBVKJXQZ";
+            
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (grid[r][c] === '') {
+                        let adjacentLetters = [];
+                        if (r > 0 && grid[r-1][c]) adjacentLetters.push(grid[r-1][c]);
+                        if (r < GRID_SIZE-1 && grid[r+1][c]) adjacentLetters.push(grid[r+1][c]);
+                        if (c > 0 && grid[r][c-1]) adjacentLetters.push(grid[r][c-1]);
+                        if (c < GRID_SIZE-1 && grid[r][c+1]) adjacentLetters.push(grid[r][c+1]);
+
+                        if (adjacentLetters.length > 0) {
+                            let neighbor = adjacentLetters[Math.floor(Math.random() * adjacentLetters.length)];
+                            // 如果鄰居是母音，這格有高機率放子音；反之亦然
+                            if (vowelPool.includes(neighbor)) {
+                                grid[r][c] = consonantPool[Math.floor(Math.random() * consonantPool.length)];
+                            } else {
+                                grid[r][c] = vowelPool[Math.floor(Math.random() * vowelPool.length)];
+                            }
+                        } else {
+                            grid[r][c] = consonantPool[Math.floor(Math.random() * consonantPool.length)];
+                        }
+                    }
+                }
+            }
+        }
+
+        // 建立 20*20 的網格元件
+        function renderGrid() {
+            const gridEl = document.getElementById('grid');
+            gridEl.innerHTML = '';
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cellEl = document.createElement('div');
+                    cellEl.classList.add('cell');
+                    cellEl.innerText = grid[r][c];
+                    cellEl.dataset.row = r;
+                    cellEl.dataset.col = c;
+                    
+                    cellEl.addEventListener('click', () => handleCellClick(cellEl, r, c));
+                    gridEl.appendChild(cellEl);
+                }
+            }
+        }
+
+        function renderWordList() {
+            const listEl = document.getElementById('wordList');
+            listEl.innerHTML = '';
+            currentWords.forEach(w => {
+                const li = document.createElement('li');
+                li.classList.add('word-item');
+                li.id = `word-${w.en}`;
+                li.innerHTML = `${w.en} <span class="cn-text">${w.cn}</span>`;
+                listEl.appendChild(li);
+            });
+        }
+
+        // 點選單一格子（背景變為暖黃色）
+        function handleCellClick(cellEl, r, c) {
+            // 切換點選狀態 (暖黃色)
+            cellEl.classList.toggle('selected');
+            cellEl.classList.remove('hinted'); // 點選後自動移除提示紅字
+
+            // 核心邏輯升級：由於字串會交錯且支持隨意點選，我們每次點選後，
+            // 會直接全面檢查當前所有「暖黃色格子」是否能完美相連拼出名單中的任何單字。
+            checkAllSelectedCombinations();
+        }
+
+        // 掃描比對所有已被選取的暖黃色方格
+        function checkAllSelectedCombinations() {
+            // 抓出畫面上所有目前為暖黃色的格子
+            const selectedEls = Array.from(document.querySelectorAll('.cell.selected'));
+            if (selectedEls.length < 2) return;
+
+            // 將點選的格子解析成座標數據
+            const coords = selectedEls.map(el => ({
+                r: parseInt(el.dataset.row),
+                c: parseInt(el.dataset.col),
+                letter: el.innerText,
+                el: el
+            }));
+
+            // 遍歷當前 10 個目標單字
+            currentWords.forEach(wordObj => {
+                const targetWord = wordObj.en;
+                
+                // 若已經答對過，則不重複計算分數
+                if (foundWords.includes(targetWord)) return;
+
+                // 從紀錄的正確解答座標，去比對現在玩家是不是把這幾個座標都點亮了
+                const correctCoords = wordLocations[targetWord];
+                if (!correctCoords) return;
+
+                // 檢查該單字的所有預設正確座標是否皆在玩家已點選的暖黃色列表內
+                let isAllPicked = correctCoords.every(cc => 
+                    coords.some(c => c.r === cc.r && c.c === cc.c)
+                );
+
+                if (isAllPicked) {
+                    // 再進一步確認這群被點選的格子在該單字長度下，是否完美「連成一線」
+                    // 過濾出只屬於這個單字的點選格子
+                    let wordPickedCells = coords.filter(c => 
+                        correctCoords.some(cc => cc.r === c.r && cc.c === c.c)
+                    );
+
+                    // 按矩陣順序排序
+                    wordPickedCells.sort((a, b) => (a.r !== b.r) ? (a.r - b.r) : (a.c - b.c));
+
+                    const dr = wordPickedCells[1].r - wordPickedCells[0].r;
+                    const dc = wordPickedCells[1].c - wordPickedCells[0].c;
+
+                    let isLinear = true;
+                    for (let i = 1; i < wordPickedCells.length; i++) {
+                        if ((wordPickedCells[i].r - wordPickedCells[i-1].r !== dr) || 
+                            (wordPickedCells[i].c - wordPickedCells[i-1].c !== dc)) {
+                            isLinear = false;
+                            break;
+                        }
+                    }
+
+                    if (isLinear) {
+                        // 雙重驗證文字正反向拼寫是否恰好吻合
+                        const strForward = wordPickedCells.map(c => c.letter).join('');
+                        const strBackward = [...wordPickedCells].reverse().map(c => c.letter).join('');
+
+                        if (strForward === targetWord || strBackward === targetWord) {
+                            // 判定成功！
+                            foundWords.push(targetWord);
+                            
+                            // 更新右側介面：將單字畫線標示紀錄
+                            const wordItem = document.getElementById(`word-${targetWord}`);
+                            if (wordItem) wordItem.classList.add('completed');
+
+                            // 標記這些格子為答對的一部分（加上淡虛線框，方便交錯時辨識，且不強行鎖死點選狀態）
+                            wordPickedCells.forEach(cell => {
+                                cell.el.classList.add('part-of-found');
+                            });
+
+                            // 分數機制：每答對一個得 10 分
+                            const score = foundWords.length * 10;
+                            document.getElementById('scoreText').innerText = score;
+
+                            // 滿 100 分通關（答完10個單字）
+                            if (score === 100) {
+                                setTimeout(() => {
+                                    document.getElementById('victoryOverlay').style.display = "flex";
+                                }, 350);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 求救提示與救護車音效（持續 3 秒、逐漸減弱）
+        function triggerHint() {
+            playAmbulanceSound();
+
+            // 尋找第一個還沒被答對的英文單字
+            let targetWord = null;
+            for (let w of currentWords) {
+                if (!foundWords.includes(w.en)) {
+                    targetWord = w.en;
+                    break;
+                }
+            }
+
+            if (!targetWord) return;
+
+            // 取得這個單字的正確座標集
+            const coords = wordLocations[targetWord];
+            if (coords && coords.length > 0) {
+                // 隨機挑其中一個字母
+                const randomCoord = coords[Math.floor(Math.random() * coords.length)];
+                const targetCell = document.querySelector(`[data-row='${randomCoord.r}'][data-col='${randomCoord.c}']`);
+                
+                // 把該字母變成不一樣的顏色 (亮紅色)
+                if (targetCell) {
+                    targetCell.classList.add('hinted');
+                }
+            }
+        }
+
+        // 利用 Web Audio API 實現純程式碼救護車音效 (3秒、高低頻切換、音量漸弱)
+        function playAmbulanceSound() {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                const now = audioCtx.currentTime;
+                const totalDuration = 3.0; // 持續 3 秒
+
+                // 音量節點 (Gain) 用於控制漸弱
+                const gainNode = audioCtx.createGain();
+                gainNode.gain.setValueAtTime(0.2, now);
+                // 2.2秒到3.0秒之間線性減弱至消失
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, now + totalDuration);
+
+                // 振盪器 (Oscillator)
+                const osc = audioCtx.createOscillator();
+                osc.type = 'sawtooth'; // 鋸齒波，模擬警笛效果
+
+                // 產生救護車經典的高低頻切換音調 (960Hz 和 770Hz)
+                osc.frequency.setValueAtTime(960, now);
+                osc.frequency.setValueAtTime(770, now + 0.5);
+                osc.frequency.setValueAtTime(960, now + 1.0);
+                osc.frequency.setValueAtTime(770, now + 1.5);
+                osc.frequency.setValueAtTime(960, now + 2.0);
+                osc.frequency.setValueAtTime(770, now + 2.5);
+
+                // 低通濾波器，讓音效更溫和
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(1400, now);
+
+                osc.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + totalDuration);
+            } catch (e) {
+                console.log("音效受限於瀏覽器安全政策，需點擊網頁後方能正常播放。");
+            }
+        }
+
+        // 前進下一關 (確保單字與先前關卡完全不重複)
+        function startNextLevel() {
+            initGame();
+        }
+
+        // 網頁載入後自動啟動
+        window.onload = initGame;
+    </script>
+</body>
+</html>

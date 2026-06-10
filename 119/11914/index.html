@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pressing Under Pressure - Leaderboard Edition</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: #0b0f12;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* 計分板 */
+        #hud {
+            font-size: 26px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        #score-display {
+            color: #00ff66;
+            text-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+        }
+
+        /* 核心遊戲圓盤 */
+        .wheel-box {
+            position: relative;
+            width: 420px;
+            height: 420px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 環形進度條 SVG */
+        .progress-ring {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring__circle-bg {
+            fill: transparent;
+            stroke: #14191f;
+            stroke-width: 26;
+        }
+
+        .progress-ring__circle {
+            fill: transparent;
+            stroke: #00ff66;
+            stroke-width: 26;
+            stroke-dasharray: 1193.8; 
+            stroke-dashoffset: 0;
+            transition: stroke 0.05s linear;
+            stroke-linecap: round;
+        }
+
+        /* 中央大按鈕 */
+        #center-button {
+            position: absolute;
+            width: 310px;
+            height: 310px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #003311 0%, #000a03 100%);
+            border: 8px solid #00ff66;
+            box-shadow: 0 0 40px rgba(0, 255, 102, 0.25), inset 0 0 25px rgba(0, 255, 102, 0.15);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            transition: transform 0.1s ease, border-color 0.2s, background 0.2s;
+        }
+
+        #center-button.danger-mode {
+            border-color: #ff3333;
+            background: radial-gradient(circle, #4d0000 0%, #1a0000 100%);
+            box-shadow: 0 0 40px rgba(255, 51, 51, 0.4), inset 0 0 25px rgba(255, 51, 51, 0.2);
+        }
+
+        #center-button:active {
+            transform: scale(0.96);
+        }
+
+        #instruction {
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+            margin-bottom: 15px;
+            line-height: 1.3;
+            z-index: 2;
+        }
+
+        .danger-text {
+            color: #ff3a3a !important;
+            text-shadow: 0 0 15px rgba(255, 58, 58, 0.8) !important;
+            animation: pulse 0.4s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        #shape-container {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            position: relative;
+        }
+
+        .shape-circle {
+            position: absolute;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: 4px solid #fff;
+            box-shadow: 0 0 15px rgba(255,255,255,0.4);
+        }
+
+        .shape-triangle {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 30px solid transparent;
+            border-right: 30px solid transparent;
+            border-bottom: 52px solid #fff;
+            filter: drop-shadow(0 0 8px rgba(255,255,255,0.6));
+        }
+
+        #controls-info {
+            margin-top: 35px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn-guide {
+            background-color: #161f28;
+            padding: 14px 28px;
+            border-radius: 10px;
+            border: 1px solid #2c3e50;
+            font-size: 16px;
+            text-align: center;
+            cursor: pointer;
+            min-width: 160px;
+            transition: background-color 0.1s;
+        }
+
+        .btn-guide span {
+            display: block;
+            font-weight: bold;
+            font-size: 22px;
+            color: #00ff66;
+            margin-top: 5px;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(11, 15, 18, 0.96);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .overlay h1 {
+            font-size: 38px;
+            margin-bottom: 15px;
+            color: #00ff66;
+            letter-spacing: 1px;
+        }
+
+        .overlay p {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #a0aec0;
+            max-width: 460px;
+            text-align: center;
+            line-height: 1.7;
+        }
+
+        /* 💥 新增：排行榜樣式 💥 */
+        .leaderboard-box {
+            background: #161f28;
+            border: 1px solid #2c3e50;
+            border-radius: 12px;
+            padding: 15px 30px;
+            margin-bottom: 25px;
+            min-width: 280px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        .leaderboard-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00ff66;
+            text-align: center;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #2c3e50;
+            padding-bottom: 5px;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            margin: 6px 0;
+            font-family: monospace;
+        }
+
+        .rank-1 { color: #ffd700; font-weight: bold; text-shadow: 0 0 5px rgba(255,215,0,0.3); } /* 金 */
+        .rank-2 { color: #c0c0c0; } /* 銀 */
+        .rank-3 { color: #cd7f32; } /* 銅 */
+
+        /* 💥 新增：新紀錄慶祝特效 💥 */
+        .new-record-alert {
+            color: #ff3333;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(255,51,51,0.6);
+            animation: blink 0.5s infinite alternate;
+            display: none;
+        }
+
+        @keyframes blink {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0.3; transform: scale(1.05); }
+        }
+
+        .start-btn {
+            background-color: #00ff66;
+            color: #0b0f12;
+            padding: 16px 45px;
+            font-size: 22px;
+            font-weight: bold;
+            border: none;
+            border-radius: 35px;
+            cursor: pointer;
+            box-shadow: 0 0 25px rgba(0, 255, 102, 0.4);
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            background-color: #00cc52;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="hud">SCORE: <span id="score-display">0</span></div>
+
+        <div class="wheel-box">
+            <svg class="progress-ring" width="420" height="420">
+                <circle class="progress-ring__circle-bg" cx="210" cy="210" r="190"></circle>
+                <circle id="progress-bar" class="progress-ring__circle" cx="210" cy="210" r="190"></circle>
+            </svg>
+
+            <div id="center-button">
+                <div id="instruction">START</div>
+                <div id="shape-container">
+                    <div id="ui-circle" class="shape-circle"></div>
+                    <div id="ui-triangle" class="shape-triangle"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="controls-info">
+            <div class="btn-guide" id="btn-diff">與上個不同 <span>← 鍵</span></div>
+            <div class="btn-guide" id="btn-same">與上個相同 <span>→ 鍵</span></div>
+        </div>
+
+        <div id="start-overlay" class="overlay">
+            <h1>Pressing Under Pressure</h1>
+            <p>
+                這是一場極致的反應力與大腦干擾考驗！<br><br>
+                1. <b>核心記憶</b>：若圖形為圓形，請依據顏色判定（←相異 / →相同）。<br>
+                2. <b>🚨突發文字指令</b>：出現 <b>DON'T PRESS</b> 別按，出現 <b>PRESS</b> 則必須按！<br>
+                3. <b>⚠️絕對干擾機制</b>：一旦中央出現<b>「▲ 三角形」</b>，<b>請完全不要按任何鍵！</b>不管上面文字寫什麼都一樣，直到時間結束即可得分。
+            </p>
+            <button class="start-btn" onclick="startGame()">接受挑戰</button>
+        </div>
+
+        <div id="gameover-overlay" class="overlay hidden">
+            <h1>GAME OVER</h1>
+            <p id="gameover-reason">時間到或是你按錯了！</p>
+            
+            <div id="new-record-tag" class="new-record-alert">🎉 NEW HIGH SCORE! 🎉</div>
+
+            <p>最終得分: <span id="final-score" style="color:#00ff66; font-size:28px; font-weight:bold;">0</span></p>
+            
+            <div class="leaderboard-box">
+                <div class="leaderboard-title">🏆 歷史最高紀錄 🏆</div>
+                <div id="leaderboard-list">
+                    </div>
+            </div>
+
+            <button class="start-btn" onclick="startGame()">再試一次</button>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲設定
+        const COLORS = ['#ff3333', '#3333ff', '#ffff33', '#ff33ff']; 
+        const INITIAL_TIME_LIMIT = 2200; 
+        const MIN_TIME_LIMIT = 650; 
+        const TIME_DECREMENT = 45; 
+        
+        // 進度條設定
+        const circle = document.getElementById('progress-bar');
+        const radius = circle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+
+        // 遊戲狀態
+        let score = 0;
+        let isPlaying = false;
+        let currentColor = '';
+        let lastColor = '';
+        let currentTimeLimit = INITIAL_TIME_LIMIT;
+        let timeLeft = INITIAL_TIME_LIMIT;
+        let gameTimer = null;
+        let lastFrameTime = 0;
+
+        let currentMode = 'NORMAL'; 
+        let currentShape = 'circle'; 
+
+        // DOM 元素
+        const instructionEl = document.getElementById('instruction');
+        const uiCircle = document.getElementById('ui-circle');
+        const uiTriangle = document.getElementById('ui-triangle');
+        const scoreDisplayEl = document.getElementById('score-display');
+        const finalScoreEl = document.getElementById('final-score');
+        const gameoverReasonEl = document.getElementById('gameover-reason');
+        const startOverlay = document.getElementById('start-overlay');
+        const gameoverOverlay = document.getElementById('gameover-overlay');
+        const centerButton = document.getElementById('center-button');
+        const leaderboardList = document.getElementById('leaderboard-list');
+        const newRecordTag = document.getElementById('new-record-tag');
+
+        function setProgress(percent) {
+            const offset = circumference - (percent / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+            
+            if (currentMode !== 'NORMAL' || currentShape === 'triangle') {
+                circle.style.stroke = "#ff3333"; 
+            } else {
+                if (percent > 50) circle.style.stroke = "#00ff66";
+                else if (percent > 25) circle.style.stroke = "#ff9900";
+                else circle.style.stroke = "#ff3333";
+            }
+        }
+
+        function startGame() {
+            score = 0;
+            currentTimeLimit = INITIAL_TIME_LIMIT;
+            scoreDisplayEl.textContent = score;
+            startOverlay.classList.add('hidden');
+            gameoverOverlay.classList.add('hidden');
+            newRecordTag.style.display = 'none'; // 隱藏破紀錄標籤
+            centerButton.classList.remove('danger-mode');
+            instructionEl.classList.remove('danger-text');
+            isPlaying = true;
+            
+            lastColor = '';
+            if (gameTimer) cancelAnimationFrame(gameTimer);
+            
+            nextRound(true); 
+            
+            lastFrameTime = performance.now();
+            gameTimer = requestAnimationFrame(updateTimer);
+        }
+
+        function nextRound(isFirstRound = false) {
+            timeLeft = currentTimeLimit;
+            setProgress(100);
+            centerButton.classList.remove('danger-mode');
+            instructionEl.classList.remove('danger-text');
+            
+            uiCircle.style.display = 'none';
+            uiTriangle.style.display = 'none';
+            
+            currentMode = 'NORMAL';
+            currentShape = 'circle';
+
+            if (!isFirstRound && score >= 2 && Math.random() < 0.35) {
+                if (Math.random() > 0.5) {
+                    currentShape = 'triangle';
+                    const randColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+                    uiTriangle.style.borderBottomColor = randColor;
+                    uiTriangle.style.display = 'block';
+
+                    centerButton.classList.add('danger-mode');
+                    instructionEl.classList.add('danger-text');
+                    instructionEl.innerHTML = Math.random() > 0.5 ? "QUICKLY<br>PRESS!!!" : "SAME AS LAST?";
+                } else {
+                    centerButton.classList.add('danger-mode');
+                    instructionEl.classList.add('danger-text');
+
+                    if (Math.random() > 0.5) {
+                        currentMode = 'DONT_PRESS';
+                        instructionEl.innerHTML = "QUICKLY<br>DON'T PRESS!!!";
+                    } else {
+                        currentMode = 'MUST_PRESS';
+                        instructionEl.innerHTML = "QUICKLY<br>PRESS!!!";
+                    }
+                }
+            } else {
+                uiCircle.style.display = 'block';
+                const randomIndex = Math.floor(Math.random() * COLORS.length);
+                currentColor = COLORS[randomIndex];
+
+                if (isFirstRound) {
+                    instructionEl.textContent = "FIRST COLOR";
+                    uiCircle.style.backgroundColor = currentColor;
+                } else {
+                    const currentTargetMatch = Math.random() > 0.5;
+                    if (currentTargetMatch) {
+                        currentColor = lastColor;
+                    } else {
+                        while (currentColor === lastColor) {
+                            currentColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+                        }
+                    }
+                    uiCircle.style.backgroundColor = currentColor;
+                    instructionEl.textContent = Math.random() > 0.5 ? "SAME AS LAST?" : "DIFFERENT?";
+                }
+            }
+            
+            lastFrameTime = performance.now();
+        }
+
+        function updateTimer(now) {
+            if (!isPlaying) return;
+
+            const deltaTime = now - lastFrameTime;
+            lastFrameTime = now;
+
+            timeLeft -= deltaTime;
+            const percent = Math.max(0, (timeLeft / currentTimeLimit) * 100);
+
+            if (timeLeft <= 0) {
+                setProgress(0);
+                
+                if (currentShape === 'triangle' || currentMode === 'DONT_PRESS') {
+                    handleSuccess();
+                    return; 
+                } else {
+                    let failReason = "時間到！反應太慢囉！";
+                    if (currentMode === 'MUST_PRESS') failReason = "你沒有在時限內按下按鍵！";
+                    gameOver(failReason);
+                    return; 
+                }
+            }
+
+            setProgress(percent);
+            gameTimer = requestAnimationFrame(updateTimer);
+        }
+
+        function handleSuccess() {
+            if (gameTimer) cancelAnimationFrame(gameTimer);
+
+            score++;
+            scoreDisplayEl.textContent = score;
+            
+            if (currentTimeLimit > MIN_TIME_LIMIT) {
+                currentTimeLimit -= TIME_DECREMENT;
+            }
+            if (currentMode === 'NORMAL' && currentShape === 'circle') {
+                lastColor = currentColor;
+            }
+            
+            nextRound(false);
+
+            lastFrameTime = performance.now();
+            gameTimer = requestAnimationFrame(updateTimer);
+        }
+
+        function playerChoice(chooseSame) {
+            if (!isPlaying) return;
+
+            if (currentShape === 'triangle') {
+                gameOver("抓到你囉！看到三角形不能按！");
+                return;
+            }
+
+            if (currentMode === 'DONT_PRESS') {
+                gameOver("跟你說了別按！！！");
+                return;
+            }
+
+            if (currentMode === 'MUST_PRESS') {
+                handleSuccess();
+                return;
+            }
+
+            if (lastColor === '') {
+                handleSuccess();
+                return;
+            }
+
+            const isCorrect = (currentColor === lastColor) === chooseSame;
+            if (isCorrect) {
+                handleSuccess();
+            } else {
+                gameOver("判定錯誤！記錯上一個顏色了！");
+            }
+        }
+
+        // 💥 排行榜邏輯處理 💥
+        function handleLeaderboard(finalScore) {
+            // 從本地快取取出分數陣列，若沒有就初始化
+            let scores = JSON.parse(localStorage.getItem('pressure_game_scores')) || [];
+            
+            // 檢查是不是歷史絕對最高分（且原先要有紀錄，避免第一次玩就跳）
+            const isNewHighScore = scores.length === 0 || finalScore > Math.max(...scores);
+
+            // 將新分數推入並排序（從大到小）
+            scores.push(finalScore);
+            scores.sort((a, b) => b - a);
+
+            // 只保留前 3 名
+            scores = scores.slice(0, 3);
+            localStorage.setItem('pressure_game_scores', JSON.stringify(scores));
+
+            // 渲染 HTML 到畫面上
+            leaderboardList.innerHTML = '';
+            scores.forEach((s, index) => {
+                const item = document.createElement('div');
+                item.className = `leaderboard-item rank-${index + 1}`;
+                
+                let trophy = '  ';
+                if (index === 0) trophy = '🥇';
+                if (index === 1) trophy = '🥈';
+                if (index === 2) trophy = '🥉';
+
+                item.innerHTML = `<span>${trophy} Rank ${index + 1}</span> <span>${s} pts</span>`;
+                leaderboardList.appendChild(item);
+            });
+
+            // 如果破紀錄，秀出慶祝文字！
+            if (isNewHighScore && finalScore > 0) {
+                newRecordTag.style.display = 'block';
+            }
+        }
+
+        function gameOver(reason) {
+            isPlaying = false;
+            if (gameTimer) cancelAnimationFrame(gameTimer);
+            gameoverReasonEl.textContent = reason;
+            finalScoreEl.textContent = score;
+            
+            // 呼叫排行榜更新
+            handleLeaderboard(score);
+
+            gameoverOverlay.classList.remove('hidden');
+        }
+
+        // 監聽鍵盤
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                playerChoice(false); 
+                triggerVisualFeedback('btn-diff');
+            } else if (e.key === 'ArrowRight') {
+                playerChoice(true); 
+                triggerVisualFeedback('btn-same');
+            }
+        });
+
+        document.getElementById('btn-diff').addEventListener('click', () => playerChoice(false));
+        document.getElementById('btn-same').addEventListener('click', () => playerChoice(true));
+        
+        centerButton.addEventListener('click', (e) => {
+            if (isPlaying) {
+                e.stopPropagation();
+                playerChoice(true); 
+            }
+        });
+
+        function triggerVisualFeedback(id) {
+            const el = document.getElementById(id);
+            el.style.backgroundColor = '#2c3e50';
+            setTimeout(() => { el.style.backgroundColor = '#161f28'; }, 100);
+        }
+    </script>
+</body>
+</html>

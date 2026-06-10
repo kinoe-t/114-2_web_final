@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>終極聽歌猜歌王</title>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 25px;
+            font-size: 2rem;
+            color: #a5b4fc;
+            text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* 模式選擇畫面 */
+        .menu-instruction {
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .btn-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        /* 遊戲主畫面 */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* 模擬播放器樣式 */
+        .player-box {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .vinyl {
+            width: 80px;
+            height: 80px;
+            background: #000;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            border: 5px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: spin 3s linear infinite;
+            animation-play-state: paused;
+        }
+
+        .vinyl.playing {
+            animation-play-state: running;
+        }
+
+        .vinyl-center {
+            width: 20px;
+            height: 20px;
+            background: var(--primary-color);
+            border-radius: 50%;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .audio-status {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #38bdf8;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #334155;
+            border-radius: 3px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.1s linear;
+        }
+
+        .player-controls .control-btn {
+            background: transparent;
+            border: 1px solid var(--text-muted);
+            color: var(--text-light);
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .player-controls .control-btn:hover {
+            border-color: white;
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* 輸入框模式與選項 */
+        .input-area {
+            margin-bottom: 20px;
+        }
+
+        .input-box {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #334155;
+            background: #0f172a;
+            color: white;
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 10px;
+            outline: none;
+        }
+
+        .input-box:focus {
+            border-color: var(--primary-color);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .option-btn {
+            background: #334155;
+            color: white;
+            border: none;
+            padding: 14px 10px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .option-btn:hover {
+            background: #475569;
+        }
+
+        .option-btn.correct {
+            background: var(--success) !important;
+        }
+
+        .option-btn.wrong {
+            background: var(--error) !important;
+        }
+
+        /* 反饋訊息 */
+        .feedback {
+            margin-top: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            min-height: 27px;
+        }
+        .feedback.correct { color: var(--success); }
+        .feedback.wrong { color: var(--error); }
+
+        .next-btn {
+            margin-top: 15px;
+            background: #22c55e;
+            width: 100%;
+        }
+        .next-btn:hover { background: #16a34a; }
+
+        /* 結算畫面 */
+        .score-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #f59e0b;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🎵 終極聽歌猜歌王 🎵</h1>
+
+        <div id="menu-screen" class="screen active">
+            <p class="menu-instruction">請選擇你想挑戰的歌單種類：</p>
+            <div class="btn-list">
+                <button class="btn" onclick="startGame('A')">A: 樂團歌曲</button>
+                <button class="btn" onclick="startGame('B')">B: KPOP歌曲</button>
+                <button class="btn" onclick="startGame('C')">C: 台灣流行樂曲</button>
+            </div>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div class="game-header">
+                <div id="question-number">題目: 1 / 10</div>
+                <div id="score-counter">得分: 0</div>
+            </div>
+
+            <div class="player-box">
+                <div class="vinyl" id="vinyl-disc">
+                    <div class="vinyl-center"></div>
+                </div>
+                <div class="audio-status" id="player-status">♪ 音樂播放中...</div>
+                <p style="font-size: 0.85rem; color:var(--text-muted);">（提示：請根據下方提示與選項猜出正確歌名）</p>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="music-progress"></div>
+                </div>
+                <div class="player-controls">
+                    <button class="control-btn" id="toggle-play-btn" onclick="togglePlay()">⏸ 暫停</button>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <p style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-muted);">
+                    ⌨️ 做法1：可用鍵盤直接輸入歌名並按 Enter
+                </p>
+                <input type="text" id="guess-input" class="input-box" placeholder="在此輸入歌名答案..." onkeydown="handleKeyPress(event)">
+                <button class="btn" style="padding: 8px 15px; font-size:0.9rem; width:100%; margin-bottom:15px;" onclick="checkKeyboardAnswer()">提交鍵盤答案</button>
+
+                <p style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-muted);">
+                    🖱️ 做法2：或直接用滑鼠點擊下方四個選項之一
+                </p>
+                <div class="options-grid" id="options-container">
+                    </div>
+            </div>
+
+            <div id="feedback-msg" class="feedback"></div>
+            <button id="next-question-btn" class="btn next-btn" style="display: none;" onclick="nextQuestion()">進入下一題 ➡️</button>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <h2>遊戲結束！</h2>
+            <p style="margin-top: 10px; color: var(--text-muted);">您在此歌單挑戰中的最終得分為：</p>
+            <div class="score-display" id="final-score">0 / 100</div>
+            <p id="evaluation-msg" style="margin-bottom: 25px; font-weight: 500;"></p>
+            <button class="btn" onclick="returnToMenu()">返回主選單</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 建立三大歌單資料庫 (每歌單各 100 首) ---
+        const songDatabase = {
+            A: [
+                { singer: "美秀集團", song: "捲菸" }, { singer: "美秀集團", song: "擋神" }, { singer: "美秀集團", song: "米街" }, { singer: "美秀集團", song: "做事的人" }, { singer: "美秀集團", song: "心驚膽戰" }, { singer: "美秀集團", song: "我要你愛" }, { singer: "美秀集團", song: "戀戀沙崙站" }, { singer: "美秀集團", song: "哥哥呀哥哥" }, { singer: "美秀集團", song: "電火王" }, { singer: "美秀集團", song: "此時此刻" }, { singer: "美秀集團", song: "下一趟旅程" }, { singer: "美秀集團", song: "金光閃閃" },
+                { singer: "冰球樂團", song: "搖啊搖" }, { singer: "冰球樂團", song: "能不能和我留在台北" }, { singer: "冰球樂團", song: "醉後喜歡你" }, { singer: "冰球樂團", song: "斯德哥爾摩" }, { singer: "冰球樂團", song: "不小心" }, { singer: "冰球樂團", song: "夜間限定" }, { singer: "冰球樂團", song: "最後一首浪漫的歌" }, { singer: "冰球樂團", song: "愛人錯過" }, { singer: "冰球樂團", song: "我需要你" }, { singer: "冰球樂團", song: "荒謬的大腦" }, { singer: "冰球樂團", song: "信號彈" }, { singer: "冰球樂團", song: "再見了朋友" },
+                { singer: "公館青少年", song: "海灘褲" }, { singer: "公館青少年", song: "西門町的小孩" }, { singer: "公館青少年", song: "星期五晚上" }, { singer: "公館青少年", song: "不介意" }, { singer: "公館青少年", song: "離開你的台北" }, { singer: "公館青少年", song: "其實你沒有想像中孤獨" }, { singer: "公館青少年", song: "熱水器" }, { singer: "公館青少年", song: "我們都還太年輕" }, { singer: "公館青少年", song: "無所謂" }, { singer: "公館青少年", song: "最後的溫柔" }, { singer: "公館青少年", song: "晚安公館" }, { singer: "公館青少年", song: "青春期" },
+                { singer: "hue", song: "河流" }, { singer: "hue", song: "夕陽" }, { singer: "hue", song: "日常的牢籠" }, { singer: "hue", song: "白夜" }, { singer: "hue", song: "你聽見了嗎" }, { singer: "hue", song: "煙花" }, { singer: "hue", song: "無名氏" }, { singer: "hue", song: "影子" }, { singer: "hue", song: "迷路" }, { singer: "hue", song: "浮木" }, { singer: "hue", song: "困獸之鬥" }, { singer: "hue", song: "倒數計時" },
+                { singer: "胡凱兒", song: "誰能救救我" }, { singer: "胡凱兒", song: "你過得好嗎" }, { singer: "胡凱兒", song: "沒人愛的人" }, { singer: "胡凱兒", song: "不完整的碎片" }, { singer: "胡凱兒", song: "天亮前的告別" }, { singer: "胡凱兒", song: "如果我們注定是一場煙火" }, { singer: "胡凱兒", song: "寂寞大門" }, { singer: "胡凱兒", song: "當你在長夜孤單" }, { singer: "胡凱兒", song: "熱氣球" }, { singer: "胡凱兒", song: "最後的擁抱" }, { singer: "胡凱兒", song: "寫一首歌給你" }, { singer: "胡凱兒", song: "下一站幸福" },
+                { singer: "粗大band", song: "大叔" }, { singer: "粗大band", song: "我們去海邊" }, { singer: "粗大band", song: "在這座城市遺失了你" }, { singer: "粗大band", song: "不想上班" }, { singer: "粗大band", song: "再見了我的青春" }, { singer: "粗大band", song: "熱血新世代" }, { singer: "粗大band", song: "夢想號" }, { singer: "粗大band", song: "午夜派對" }, { singer: "粗大band", song: "單身狗" }, { singer: "粗大band", song: "衝吧夥伴" }, { singer: "粗大band", song: "最後的晚餐" }, { singer: "粗大band", song: "告別式" },
+                { singer: "福夢", song: "我不需要每個人都愛我" }, { singer: "福夢", song: "最後的審判" }, { singer: "福夢", song: "逃跑吧" }, { singer: "福夢", song: "光明磊落" }, { singer: "福夢", song: "黑夜降臨" }, { singer: "福夢", song: "覺醒" }, { singer: "福夢", song: "命運的輪盤" }, { singer: "福夢", song: "重生" }, { singer: "福夢", song: "無所畏懼" }, { singer: "福夢", song: "最後的呼吸" }, { singer: "福夢", song: "不低頭" }, { singer: "福夢", song: "黎明之前" },
+                { singer: "溫室雜草", song: "這個世界集體說謊" }, { singer: "溫室雜草", song: "你以為你是誰" }, { singer: "溫室雜草", song: "春天之歌" }, { singer: "溫室雜草", song: "水族館" }, { singer: "溫室雜草", song: "失眠夜" }, { singer: "溫室雜草", song: "最後的沙灘" }, { singer: "溫室雜草", song: "落日餘暉" }, { singer: "溫室雜草", song: "沒關係的" }, { singer: "溫室雜草", song: "沙發上的白日夢" }, { singer: "溫室雜草", song: "雨天行車" }, { singer: "溫室雜草", song: "我們都是孤島" },
+                { singer: "溫蒂漫步", song: "我想和你一起" }, { singer: "溫蒂漫步", song: "艾蜜莉" }, { singer: "溫蒂漫步", song: "春風吹" }, { singer: "溫蒂漫步", song: "藍色夜晚" }, { singer: "溫蒂漫步", song: "輕輕觸碰" }, { singer: "溫蒂漫步", song: "漫步在雲端" }, { singer: "溫蒂漫步", song: "午夜留聲機" }, { singer: "溫蒂漫步", song: "昨晚的夢" }, { singer: "溫蒂漫步", song: "再見初戀" }
+            ],
+            B: [
+                { singer: "aespa", song: "Next Level" }, { singer: "aespa", song: "Savage" }, { singer: "aespa", song: "Drama" }, { singer: "aespa", song: "Supernova" }, { singer: "aespa", song: "Armageddon" }, { singer: "aespa", song: "Black Mamba" }, { singer: "aespa", song: "Spicy" }, { singer: "aespa", song: "Girls" }, { singer: "aespa", song: "Illusion" }, { singer: "aespa", song: "Licorice" },
+                { singer: "txt", song: "Sugar Rush Ride" }, { singer: "txt", song: "Good Boy Gone Bad" }, { singer: "txt", song: "Blue Hour" }, { singer: "txt", song: "Crown" }, { singer: "txt", song: "LOVESONG" }, { singer: "txt", song: "Deja Vu" }, { singer: "txt", song: "Chasing That Feeling" }, { singer: "txt", song: "Run Away" }, { singer: "txt", song: "9 and Three Quarters" }, { singer: "txt", song: "Cat & Dog" },
+                { singer: "enhypen", song: "Bite Me" }, { singer: "enhypen", song: "Fever" }, { singer: "enhypen", song: "Drunk-Dazed" }, { singer: "enhypen", song: "Sweet Venom" }, { singer: "enhypen", song: "Blessed-Cursed" }, { singer: "enhypen", song: "Future Perfect" }, { singer: "enhypen", song: "Tamed-Dashed" }, { singer: "enhypen", song: "Polaroid Love" }, { singer: "enhypen", song: "Given-Taken" }, { singer: "enhypen", song: "Fatal Trouble" },
+                { singer: "itzy", song: "WANNABE" }, { singer: "itzy", song: "DALLA DALLA" }, { singer: "itzy", song: "LOCO" }, { singer: "itzy", song: "Not Shy" }, { singer: "itzy", song: "In the morning" }, { singer: "itzy", song: "SNEAKERS" }, { singer: "itzy", song: "CAKE" }, { singer: "itzy", song: "UNTOUCHABLE" }, { singer: "itzy", song: "ICY" }, { singer: "itzy", song: "Mr. Vampire" },
+                { singer: "illit", song: "Magnetic" }, { singer: "illit", song: "Lucky Girl Syndrome" }, { singer: "illit", song: "Midnight Fiction" }, { singer: "illit", song: "My World" }, { singer: "illit", song: "Tick-Tack" }, { singer: "illit", song: "Cherish" }, { singer: "illit", song: "IYKYK" }, { singer: "illit", song: "With You" }, { singer: "illit", song: "Sweet Dream" }, { singer: "illit", song: "Sparkle" },
+                { singer: "unchild", song: "Grey Area" }, { singer: "unchild", song: "Neon Lights" }, { singer: "unchild", song: "Lost Control" }, { singer: "unchild", song: "Broken Record" }, { singer: "unchild", song: "Midnight Train" }, { singer: "unchild", song: "Shadows" }, { singer: "unchild", song: "Echoes" }, { singer: "unchild", song: "Fade Away" }, { singer: "unchild", song: "Silent Screams" }, { singer: "unchild", song: "New Era" },
+                { singer: "meovv", song: "MEOW" }, { singer: "meovv", song: "Roar" }, { singer: "meovv", song: "Claw Marks" }, { singer: "meovv", song: "Wild Eyes" }, { singer: "meovv", song: "Purrfect" }, { singer: "meovv", song: "Night Walk" }, { singer: "meovv", song: "Hunting Zone" }, { singer: "meovv", song: "Sharp Teeth" }, { singer: "meovv", song: "Moonlight" }, { singer: "meovv", song: "Velvet" },
+                { singer: "lngshot", song: "Target Locked" }, { singer: "lngshot", song: "Boomerang" }, { singer: "lngshot", song: "Bulletproof" }, { singer: "lngshot", song: "Ricochet" }, { singer: "lngshot", song: "Trigger" }, { singer: "lngshot", song: "Crossfire" }, { singer: "lngshot", song: "Sniper" }, { singer: "lngshot", song: "Reload" }, { singer: "lngshot", song: "Velocity" }, { singer: "lngshot", song: "Aftershock" },
+                { singer: "nmixx", song: "O.O" }, { singer: "nmixx", song: "DICE" }, { singer: "nmixx", song: "Love Me Like This" }, { singer: "nmixx", song: "Dash" }, { singer: "nmixx", song: "Soinar" }, { singer: "nmixx", song: "Run For Roses" }, { singer: "nmixx", song: "Party O'Clock" }, { singer: "nmixx", song: "Young, Dumb, Stupid" }, { singer: "nmixx", song: "Roller Coaster" }, { singer: "nmixx", song: "TANK" },
+                { singer: "boynextdoor", song: "One and Only" }, { singer: "boynextdoor", song: "But I Like You" }, { singer: "boynextdoor", song: "Earth, Wind & Fire" }, { singer: "boynextdoor", song: "Serenade" }, { singer: "boynextdoor", song: "ABCDDROP" }, { singer: "boynextdoor", song: "Dear. My Darling" }, { singer: "boynextdoor", song: "Our" }, { singer: "boynextdoor", song: "So let's go see the stars" }, { singer: "boynextdoor", song: "Violent" }, { singer: "boynextdoor", song: "Crying" },
+                { singer: "tws", song: "plot twist" }, { singer: "tws", song: "First Hooky" }, { singer: "tws", song: "hey! hey!" }, { singer: "tws", song: "If I'm S, Can You Be My N?" }, { singer: "tws", song: "Unplugged Boy" }, { singer: "tws", song: "BFF" }, { singer: "tws", song: "Double Take" }, { singer: "tws", song: "Keep On" }, { singer: "tws", song: "Our Memories" }, { singer: "tws", song: "New Chapter" },
+                { singer: "le serrafim", song: "FEARLESS" }, { singer: "le serrafim", song: "ANTIFRAGILE" }, { singer: "le serrafim", song: "UNFORGIVEN" }, { singer: "le serrafim", song: "EASY" }, { singer: "le serrafim", song: "Perfect Night" }, { singer: "le serrafim", song: "Smart" }, { singer: "le serrafim", song: "Eve, Psyche & The Bluebeard's wife" }, { singer: "le serrafim", song: "Sour Grapes" }, { singer: "le serrafim", song: "Blue Flame" }, { singer: "le serrafim", song: "Crazy" },
+                { singer: "cortis", song: "Heartbeat" }, { singer: "cortis", song: "Pulse" }, { singer: "cortis", song: "Adrenaline" }, { singer: "cortis", song: "Arrhythmia" }, { singer: "cortis", song: "Synapse" }, { singer: "cortis", song: "Vortex" }, { singer: "cortis", song: "Chills" }, { singer: "cortis", song: "Gravity" }, { singer: "cortis", song: "Echo" }, { singer: "cortis", song: "Resonance" },
+                { singer: "nct wish", song: "WISH" }, { singer: "nct wish", song: "NASA" }, { singer: "nct wish", song: "Hands Up" }, { singer: "nct wish", song: "Sail Away" }, { singer: "nct wish", song: "Steady" }, { singer: "nct wish", song: "Songbird" }, { singer: "nct wish", song: "Dunk Shot" }, { singer: "nct wish", song: "Blue" }, { singer: "nct wish", song: "Tears Are Falling" }, { singer: "nct wish", song: "Welcome to My Paradise" }
+            ],
+            C: [
+                { singer: "sabrina", song: "幾分之幾" }, { singer: "sabrina", song: "不完美人生" }, { singer: "sabrina", song: "隱形超人" }, { singer: "sabrina", song: "告別式" }, { singer: "sabrina", song: "過期眼淚" }, { singer: "sabrina", song: "微光" }, { singer: "sabrina", song: "雙人舞" }, { singer: "sabrina", song: "泡沫" }, { singer: "sabrina", song: "平行時空" }, { singer: "sabrina", song: "最後的擁抱" }, { singer: "sabrina", song: "秘密花園" },
+                { singer: "karencici", song: " do do do" }, { singer: "karencici", song: "99% Angel" }, { singer: "karencici", song: "Thoughtloop" }, { singer: "karencici", song: "I Hate You 1000" }, { singer: "karencici", song: "與我無關" }, { singer: "karencici", song: "誰" }, { singer: "karencici", song: "Facetime" }, { singer: "karencici", song: "獨來獨往" }, { singer: "karencici", song: "熱帶雨林" }, { singer: "karencici", song: "櫻花粉的浪漫" }, { singer: "karencici", song: "最後的歌" },
+                { singer: "李浩瑋", song: "Crush On You" }, { singer: "李浩瑋", song: "窩囊廢" }, { singer: "李浩瑋", song: "Bluku" }, { singer: "李浩瑋", song: "喜歡你" }, { singer: "李浩瑋", song: "遊樂園" }, { singer: "李浩瑋", song: "無緣的藉口" }, { singer: "李浩瑋", song: "日常警告" }, { singer: "李浩瑋", song: "真心話" }, { singer: "李浩瑋", song: "解藥" }, { singer: "李浩瑋", song: "再見了" }, { singer: "李浩瑋", song: "在蔚藍的夜裡" },
+                { singer: "周杰倫", song: "告白氣球" }, { singer: "周杰倫", song: "晴天" }, { singer: "周杰倫", song: "稻香" }, { singer: "周杰倫", song: "七里香" }, { singer: "周杰倫", song: "青花瓷" }, { singer: "周杰倫", song: "算什麼男人" }, { singer: "周杰倫", song: "夜曲" }, { singer: "周杰倫", song: "珊瑚海" }, { singer: "周杰倫", song: "蒲公英的約定" }, { singer: "周杰倫", song: "說好不哭" }, { singer: "周杰倫", song: "等你下課" },
+                { singer: "盧廣仲", song: "刻在我心底的名字" }, { singer: "盧廣仲", song: "魚仔" }, { singer: "盧廣仲", song: "幾分之幾" }, { singer: "盧廣仲", song: "早安,晨之美" }, { singer: "盧廣仲", song: "我愛你" }, { singer: "盧廣仲", song: "勵志論" }, { singer: "盧廣仲", song: "大人中" }, { singer: "盧廣仲", song: "一百種生活" }, { singer: "盧廣仲", song: "慢靈魂" }, { singer: "盧廣仲", song: "歐拉拉呼呼" }, { singer: "盧廣仲", song: "愛情怎麼了嗎" },
+                { singer: "jeremy", song: "過客" }, { singer: "jeremy", song: "不愛了" }, { singer: "jeremy", song: "影子" }, { singer: "jeremy", song: "下一站" }, { singer: "jeremy", song: "等候" }, { singer: "jeremy", song: "微風" }, { singer: "jeremy", song: "星空下" }, { singer: "jeremy", song: "終點" }, { singer: "jeremy", song: "回憶殺" }, { singer: "jeremy", song: "擁抱" }, { singer: "jeremy", song: "放手" },
+                { singer: "pizzali", song: "熱血新世代" }, { singer: "pizzali", song: "不屑" }, { singer: "pizzali", song: "狂奔" }, { singer: "pizzali", song: "午夜零點" }, { singer: "pizzali", song: "孤獨患者" }, { singer: "pizzali", song: "燥熱" }, { singer: "pizzali", song: "街頭霸王" }, { singer: "pizzali", song: "無路可退" }, { singer: "pizzali", song: "烈火" }, { singer: "pizzali", song: "未來見" }, { singer: "pizzali", song: "派對動物" },
+                { singer: "方大同", song: "愛愛愛" }, { singer: "方大同", song: "三人遊" }, { singer: "方大同", song: "紅豆" }, { singer: "方大同", song: "小小蟲" }, { singer: "方大同", song: "好不容易" }, { singer: "方大同", song: "特別的人" }, { singer: "方大同", song: "黑白" }, { singer: "方大同", song: "因為你" }, { singer: "方大同", song: "才二十二" }, { singer: "方大同", song: "危險世界" }, { singer: "方大同", song: "悟空" },
+                { singer: "陳綺貞", song: "旅行的意義" }, { singer: "陳綺貞", song: "魚" }, { singer: "陳綺貞", song: "太聰明" }, { singer: "陳綺貞", song: "九份的咖啡店" }, { singer: "陳綺貞", song: "吉他手" }, { singer: "陳綺貞", song: "還是會寂寞" }, { singer: "陳綺貞", song: "躺在你的衣櫃" }, { singer: "陳綺貞", song: "私奔到月球" }, { singer: "陳綺貞", song: "太陽" }, { singer: "陳綺貞", song: "失敗者的飛翔" }, { singer: "陳綺貞", song: "微涼的你" },
+                { singer: "高爾宣", song: "WITHOUT YOU" }, { singer: "高爾宣", song: "SO BAD" }, { singer: "高爾宣", song: "THEY DON'T KNOW" }, { singer: "高爾宣", song: "BENCHMARK" }, { singer: "高爾宣", song: "THE RUNAWAY" }, { singer: "高爾宣", song: "NO NAME" }, { singer: "高爾宣", song: "WHY YOU GONNA LIE" }, { singer: "高爾宣", song: "OLD ME" }, { singer: "高爾宣", song: "SKIT" }, { singer: "高爾宣", song: "CIRCLE" }
+            ]
+        };
+
+        // --- 遊戲狀態變數 ---
+        let currentPlaylist = []; // 當前選擇的歌單
+        let gameQuestions = [];   // 從中隨機抽取的10道題目
+        let currentQuestionIdx = 0; // 當前題號
+        let score = 0;            // 得分
+        let currentAnswer = "";   // 當前正確答案(歌名)
+        let isAnswered = false;   // 本題是否已回答
+
+        // 虛擬播放器定時器變數
+        let progressInterval = null;
+        let progressPercent = 0;
+        let isPlaying = false;
+
+        // --- 遊戲控制邏輯 ---
+
+        // 開始遊戲
+        function startGame(listType) {
+            // 複製對應歌單並隨機洗牌
+            let pool = [...songDatabase[listType]];
+            
+            // 洗牌演算法 (Fisher-Yates) 確保隨機性
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+
+            // 隨機抽取 10 題作為本次挑戰題
+            gameQuestions = pool.slice(0, 10);
+            
+            // 初始化狀態
+            currentQuestionIdx = 0;
+            score = 0;
+            
+            // 切換畫面
+            switchScreen('game-screen');
+            loadQuestion();
+        }
+
+        // 載入題目
+        function loadQuestion() {
+            isAnswered = false;
+            document.getElementById('guess-input').value = "";
+            document.getElementById('guess-input').disabled = false;
+            document.getElementById('feedback-msg').innerText = "";
+            document.getElementById('feedback-msg').className = "feedback";
+            document.getElementById('next-question-btn').style.display = "none";
+            
+            // 更新進度顯示
+            document.getElementById('question-number').innerText = `題目: ${currentQuestionIdx + 1} / 10`;
+            document.getElementById('score-counter').innerText = `得分: ${score}`;
+
+            // 獲取當前正確題目資料
+            let currentQ = gameQuestions[currentQuestionIdx];
+            currentAnswer = currentQ.song;
+
+            // 生成隨機4個選項 (包含1個正確答案 + 3個同歌單的隨機歌名)
+            let options = generateOptions(currentQ);
+
+            // 渲染選項到滑鼠點擊區
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = "";
+            options.forEach((optText, index) => {
+                let btn = document.createElement('button');
+                btn.className = 'option-btn';
+                // 提示包含歌手，增加提示性與遊戲樂趣
+                btn.innerText = `【${optText.singer}】${optText.song}`;
+                btn.onclick = () => checkMouseAnswer(optText.song, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            // 啟動虛擬播放器（模擬音樂持續播放直到答對）
+            startMockPlayer(currentQ.singer);
+        }
+
+        // 生成4個相異選項
+        function generateOptions(correctQuestion) {
+            // 從總歌單中找出其他歌名
+            let allSongsInList = [];
+            // 合併所有歌單以確保干擾項充足
+            Object.keys(songDatabase).forEach(k => {
+                allSongsInList = allSongsInList.concat(songDatabase[k]);
+            });
+
+            let wrongOptions = allSongsInList.filter(item => item.song !== correctQuestion.song);
+            
+            // 洗牌錯誤選項
+            wrongOptions.sort(() => 0.5 - Math.random());
+            
+            // 取前3個
+            let selectedOptions = wrongOptions.slice(0, 3);
+            selectedOptions.push(correctQuestion);
+            
+            // 重新隨機排列這4個選項
+            selectedOptions.sort(() => 0.5 - Math.random());
+            return selectedOptions;
+        }
+
+        // 虛擬播放器控制
+        function startMockPlayer(singerName) {
+            clearInterval(progressInterval);
+            progressPercent = 0;
+            isPlaying = true;
+            
+            document.getElementById('vinyl-disc').className = "vinyl playing";
+            document.getElementById('toggle-play-btn').innerText = "⏸ 暫停";
+            document.getElementById('player-status').innerText = `♪ 正在某熱門歌曲...`;
+            document.getElementById('music-progress').style.width = "0%";
+
+            // 模擬進度條跑動
+            progressInterval = setInterval(() => {
+                if (isPlaying) {
+                    progressPercent += 1;
+                    if (progressPercent > 100) progressPercent = 0; // 循環播放
+                    document.getElementById('music-progress').style.width = progressPercent + "%";
+                }
+            }, 100);
+        }
+
+        function stopMockPlayer() {
+            clearInterval(progressInterval);
+            document.getElementById('vinyl-disc').className = "vinyl";
+            isPlaying = false;
+            document.getElementById('player-status').innerText = "🛑 歌曲已停止（已答題）";
+            document.getElementById('toggle-play-btn').innerText = "▶️ 播放";
+        }
+
+        function togglePlay() {
+            if (isAnswered) return; // 答對停止後不允許再點
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                document.getElementById('vinyl-disc').className = "vinyl playing";
+                document.getElementById('toggle-play-btn').innerText = "⏸ 暫停";
+                document.getElementById('player-status').innerText = document.getElementById('player-status').innerText.replace("⏸ 已暫停", "♪ 正在播放");
+            } else {
+                document.getElementById('vinyl-disc').className = "vinyl";
+                document.getElementById('toggle-play-btn').innerText = "▶️ 播放";
+                document.getElementById('player-status').innerText = "⏸ 已暫停音樂播放";
+            }
+        }
+
+        // --- 答案檢查機制 ---
+
+        // 處理鍵盤 Enter 事件
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                checkKeyboardAnswer();
+            }
+        }
+
+        // 檢查鍵盤輸入答案
+        function checkKeyboardAnswer() {
+            if (isAnswered) return;
+            let userGuess = document.getElementById('guess-input').value.trim();
+            if (!userGuess) return;
+
+            // 忽略大小寫與前後空白進行比對
+            if (userGuess.toLowerCase() === currentAnswer.toLowerCase()) {
+                handleCorrectAnswer();
+            } else {
+                handleWrongAnswer(`答錯囉！你輸入的是「${userGuess}」，再試著用滑鼠點擊或重新輸入吧！`);
+            }
+        }
+
+        // 檢查滑鼠點擊選項答案
+        function checkMouseAnswer(selectedSong, btnElement) {
+            if (isAnswered) return;
+
+            if (selectedSong === currentAnswer) {
+                btnElement.classList.add('correct');
+                handleCorrectAnswer();
+            } else {
+                btnElement.classList.add('wrong');
+                handleWrongAnswer(`點擊錯誤！不是這首，音樂仍在播放中...`);
+                // 1.5秒後清除該按鈕的錯誤紅色，允許玩家繼續猜
+                setTimeout(() => { if(!isAnswered) btnElement.classList.remove('wrong'); }, 1500);
+            }
+        }
+
+        // 答對時的處理程序
+        function handleCorrectAnswer() {
+            isAnswered = true;
+            score += 10; // 每題10分，10題滿分100分
+            document.getElementById('score-counter').innerText = `得分: ${score}`;
+            
+            // 停止播放音樂（符合需求：播放歌曲直到玩家猜出是哪一首後停止）
+            stopMockPlayer();
+
+            // 顯示正確反饋與下一題按鈕
+            let fb = document.getElementById('feedback-msg');
+            fb.innerText = `🎉 恭喜答對！正確歌名就是《${currentAnswer}》`;
+            fb.className = "feedback correct";
+
+            document.getElementById('guess-input').disabled = true;
+            document.getElementById('next-question-btn').style.display = "block";
+        }
+
+        // 答錯時的處理程序
+        function handleWrongAnswer(msg) {
+            let fb = document.getElementById('feedback-msg');
+            fb.innerText = msg;
+            fb.className = "feedback wrong";
+        }
+
+        // 進入下一題或結算
+        function nextQuestion() {
+            currentQuestionIdx++;
+            if (currentQuestionIdx < 10) {
+                loadQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        // 遊戲結束結算
+        function endGame() {
+            stopMockPlayer();
+            switchScreen('result-screen');
+            document.getElementById('final-score').innerText = `${score} / 100`;
+            
+            let evaluation = "";
+            if (score === 100) evaluation = "👑 太神了！你是絕對的終極音樂歌王！";
+            else if (score >= 70) evaluation = "🔥 厲害喔！對這些歌曲如數家珍！";
+            else if (score >= 40) evaluation = "🎵 還不錯，再多聽一點歌就能拿到高分！";
+            else evaluation = "🎧 沒關係，再接再厲！快回主選單重選歌單挑戰吧！";
+            
+            document.getElementById('evaluation-msg').innerText = evaluation;
+        }
+
+        // 返回主選單
+        function returnToMenu() {
+            switchScreen('menu-screen');
+        }
+
+        // 切換畫面輔助函式
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>排列組合冒險</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html,body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:"Microsoft JhengHei",sans-serif;
+}
+
+body{
+    background:url("123s.jpg") center center/cover no-repeat;
+}
+
+#ui{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    z-index:100;
+    background:rgba(255,255,255,.9);
+    padding:12px;
+}
+
+#topBar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.info{
+    font-size:24px;
+    font-weight:bold;
+}
+
+#question{
+    margin-top:10px;
+    text-align:center;
+    font-size:32px;
+    font-weight:bold;
+}
+
+#game{
+    position:relative;
+    width:100%;
+    height:100vh;
+}
+
+#player{
+    position:absolute;
+    width:90px;
+    height:90px;
+    object-fit:contain;
+    z-index:50;
+    user-select:none;
+}
+
+.answer{
+    position:absolute;
+    min-width:100px;
+    padding:15px 20px;
+    text-align:center;
+    font-size:28px;
+    font-weight:bold;
+    background:rgba(255,255,255,.95);
+    border:4px solid #333;
+    border-radius:16px;
+    user-select:none;
+}
+
+.correctFlash{
+    background:#76ff76 !important;
+}
+
+.wrongFlash{
+    background:#ff8b8b !important;
+}
+
+#message{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    font-size:60px;
+    font-weight:bold;
+    color:white;
+    text-shadow:0 0 10px black;
+    display:none;
+    z-index:999;
+}
+
+#gameOver{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.8);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    color:white;
+    z-index:1000;
+}
+
+#gameOver h1{
+    font-size:70px;
+}
+
+#gameOver p{
+    font-size:30px;
+    margin-top:20px;
+}
+</style>
+</head>
+<body>
+
+<div id="ui">
+    <div id="topBar">
+        <div class="info">分數：<span id="score">0</span></div>
+        <div class="info">生命：<span id="lives">❤️❤️❤️</span></div>
+        <div class="info">題號：<span id="level">1</span></div>
+        <div class="info">剩餘時間：<span id="timer">50</span>秒</div>
+    </div>
+
+    <div id="question">
+        題目載入中...
+    </div>
+</div>
+
+<div id="game">
+
+    <img id="player" src="12345.JPG">
+
+    <div id="message"></div>
+
+    <div id="gameOver">
+        <h1>GAME OVER</h1>
+        <p>最終分數：<span id="finalScore"></span></p>
+        <p>按 Enter 重新開始</p>
+    </div>
+
+</div>
+
+<script>
+
+// ======================
+// 工具
+// ======================
+
+function combination(n,r){
+    if(r > n) return 0;
+
+    let result = 1;
+
+    for(let i=1;i<=r;i++){
+        result = result * (n-i+1) / i;
+    }
+
+    return Math.round(result);
+}
+
+function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+    return arr;
+}
+
+// ======================
+// 題庫產生
+// ======================
+
+const allQuestions=[];
+
+for(let n=3;n<=15;n++){
+
+    for(let r=2;r<=Math.floor(n/2)+1;r++){
+
+        allQuestions.push({
+            n,r,
+            answer:combination(n,r)
+        });
+    }
+}
+
+shuffle(allQuestions);
+
+// ======================
+// 遊戲資料
+// ======================
+
+let score=0;
+let lives=3;
+let currentQuestionIndex=0;
+let currentQuestion=null;
+let countdown=50;
+let timerInterval=null;
+
+const player=document.getElementById("player");
+const game=document.getElementById("game");
+
+const scoreEl=document.getElementById("score");
+const livesEl=document.getElementById("lives");
+const levelEl=document.getElementById("level");
+const timerEl=document.getElementById("timer");
+const questionEl=document.getElementById("question");
+const messageEl=document.getElementById("message");
+const gameOverEl=document.getElementById("gameOver");
+const finalScoreEl=document.getElementById("finalScore");
+
+// ======================
+// 玩家
+// ======================
+
+let playerX=0;
+let playerY=0;
+const speed=6;
+
+const keys={};
+
+document.addEventListener("keydown",e=>{
+
+    keys[e.key]=true;
+
+    if(gameOverEl.style.display==="flex" && e.key==="Enter"){
+        restartGame();
+    }
+});
+
+document.addEventListener("keyup",e=>{
+    keys[e.key]=false;
+});
+
+function resetPlayer(){
+
+    playerX=window.innerWidth/2-45;
+    playerY=window.innerHeight/2;
+
+    updatePlayer();
+}
+
+function updatePlayer(){
+
+    player.style.left=playerX+"px";
+    player.style.top=playerY+"px";
+}
+
+function movePlayer(){
+
+    if(gameOverEl.style.display==="flex") return;
+
+    if(keys["ArrowLeft"]) playerX-=speed;
+    if(keys["ArrowRight"]) playerX+=speed;
+    if(keys["ArrowUp"]) playerY-=speed;
+    if(keys["ArrowDown"]) playerY+=speed;
+
+    playerX=Math.max(0,Math.min(window.innerWidth-90,playerX));
+    playerY=Math.max(120,Math.min(window.innerHeight-90,playerY));
+
+    updatePlayer();
+
+    checkCollision();
+
+    requestAnimationFrame(movePlayer);
+}
+
+// ======================
+// 題目
+// ======================
+
+function buildQuestion(){
+
+    document.querySelectorAll(".answer").forEach(e=>e.remove());
+
+    if(currentQuestionIndex >= allQuestions.length){
+
+        shuffle(allQuestions);
+        currentQuestionIndex=0;
+    }
+
+    currentQuestion=allQuestions[currentQuestionIndex];
+
+    questionEl.innerHTML=
+        `從 ${currentQuestion.n} 個人中選出 ${currentQuestion.r} 個人，有幾種組合？`;
+
+    levelEl.textContent=currentQuestionIndex+1;
+
+    const optionCount=Math.min(
+        2+Math.floor(currentQuestionIndex/2),
+        7
+    );
+
+    let options=[currentQuestion.answer];
+
+    while(options.length<optionCount){
+
+        let offset=
+            Math.floor(Math.random()*currentQuestion.answer*0.5)+1;
+
+        let fake=
+            Math.random()>0.5
+            ? currentQuestion.answer+offset
+            : currentQuestion.answer-offset;
+
+        if(fake<1) fake=1;
+
+        if(!options.includes(fake)){
+            options.push(fake);
+        }
+    }
+
+    shuffle(options);
+
+    const areaTop=window.innerHeight*0.60;
+
+    options.forEach(value=>{
+
+        const div=document.createElement("div");
+        div.className="answer";
+        div.textContent=value;
+
+        div.dataset.answer=value;
+
+        div.style.left=
+            (50+Math.random()*(window.innerWidth-180))
+            +"px";
+
+        div.style.top=
+            (areaTop+Math.random()*
+            (window.innerHeight-areaTop-120))
+            +"px";
+
+        game.appendChild(div);
+    });
+
+    resetTimer();
+}
+
+// ======================
+// 計時
+// ======================
+
+function resetTimer(){
+
+    clearInterval(timerInterval);
+
+    countdown=50;
+    timerEl.textContent=countdown;
+
+    timerInterval=setInterval(()=>{
+
+        countdown--;
+
+        timerEl.textContent=countdown;
+
+        if(countdown<=0){
+
+            clearInterval(timerInterval);
+
+            loseLife("時間到！");
+        }
+
+    },1000);
+}
+
+// ======================
+// 碰撞
+// ======================
+
+function checkCollision(){
+
+    const playerRect=player.getBoundingClientRect();
+
+    document.querySelectorAll(".answer").forEach(option=>{
+
+        const rect=option.getBoundingClientRect();
+
+        const hit=
+            playerRect.left < rect.right &&
+            playerRect.right > rect.left &&
+            playerRect.top < rect.bottom &&
+            playerRect.bottom > rect.top;
+
+        if(hit){
+
+            const value=parseInt(option.dataset.answer);
+
+            if(value===currentQuestion.answer){
+
+                option.classList.add("correctFlash");
+
+                score+=10;
+                scoreEl.textContent=score;
+
+                showMessage("答對 +10");
+
+                currentQuestionIndex++;
+
+                setTimeout(()=>{
+                    buildQuestion();
+                    resetPlayer();
+                },800);
+
+            }else{
+
+                option.classList.add("wrongFlash");
+
+                loseLife("答錯！");
+            }
+        }
+    });
+}
+
+// ======================
+// 生命
+// ======================
+
+function loseLife(text){
+
+    lives--;
+
+    updateLives();
+
+    showMessage(text);
+
+    resetPlayer();
+
+    if(lives<=0){
+
+        gameOver();
+
+        return;
+    }
+
+    setTimeout(()=>{
+        buildQuestion();
+    },800);
+}
+
+function updateLives(){
+
+    let str="";
+
+    for(let i=0;i<lives;i++){
+        str+="❤️";
+    }
+
+    livesEl.textContent=str;
+}
+
+// ======================
+// 訊息
+// ======================
+
+function showMessage(text){
+
+    messageEl.textContent=text;
+    messageEl.style.display="block";
+
+    setTimeout(()=>{
+        messageEl.style.display="none";
+    },700);
+}
+
+// ======================
+// Game Over
+// ======================
+
+function gameOver(){
+
+    clearInterval(timerInterval);
+
+    finalScoreEl.textContent=score;
+
+    gameOverEl.style.display="flex";
+}
+
+function restartGame(){
+
+    score=0;
+    lives=3;
+    currentQuestionIndex=0;
+
+    shuffle(allQuestions);
+
+    scoreEl.textContent=0;
+    updateLives();
+
+    gameOverEl.style.display="none";
+
+    buildQuestion();
+    resetPlayer();
+}
+
+// ======================
+// 啟動
+// ======================
+
+updateLives();
+buildQuestion();
+resetPlayer();
+movePlayer();
+
+window.addEventListener("resize",()=>{
+    resetPlayer();
+});
+
+</script>
+
+</body>
+</html>
