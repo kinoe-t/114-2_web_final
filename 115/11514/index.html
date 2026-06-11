@@ -10,13 +10,13 @@ body{
     background:white;
     text-align:center;
     font-family:Arial,sans-serif;
-    margin:30px;
+    padding:20px;
 }
 
 h1{
     font-size:80px;
     font-weight:900;
-    margin-bottom:20px;
+    margin:20px 0;
     background:linear-gradient(
         90deg,
         red,
@@ -31,11 +31,16 @@ h1{
     -webkit-text-fill-color:transparent;
 }
 
-img{
-    max-width:400px;
+#eyesImage,
+#fullImage{
     width:90%;
+    max-width:450px;
     border:4px solid black;
     margin:20px 0;
+}
+
+#fullImage{
+    display:none;
 }
 
 input{
@@ -46,60 +51,70 @@ input{
 }
 
 button{
-    font-size:24px;
-    padding:10px 25px;
+    font-size:22px;
+    padding:10px 20px;
+    margin:10px;
     cursor:pointer;
 }
 
 #result{
-    font-size:32px;
+    font-size:30px;
     font-weight:bold;
     margin-top:20px;
 }
 
-#fullImage{
+#nextBtn{
     display:none;
 }
 
 footer{
     margin-top:60px;
     color:#666;
+    font-size:18px;
+}
+
+#questionNumber{
+    font-size:24px;
+    margin-bottom:10px;
 }
 </style>
 
-<!-- 彩帶動畫 -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
 </head>
-
 <body>
 
 <h1>你是我的眼</h1>
 
-<h2>猜這是誰的眼睛👀</h2>
+<div id="questionNumber"></div>
 
-<!-- 眼睛照片 -->
-<img id="eyesImage" src="18-2.jpg" alt="眼睛照片">
+<h2>請猜猜這雙眼睛的主人是誰 👀(座號不用加0)</h2>
+
+<img id="eyesImage">
 
 <br>
 
 <input
-    type="text"
+    type="number"
     id="answer"
-    placeholder="例如 02"
-    maxlength="4"
+    placeholder="座號"
 >
 
-<button onclick="checkAnswer()">
+<br>
+
+<button id="submitBtn" onclick="checkAnswer()">
 送出答案
 </button>
 
 <div id="result"></div>
 
-<div id="fullImage">
-    <h2>完整照片</h2>
-    <img id="fullPhoto" src="18-1.jpg" alt="完整照片">
+<div>
+    <img id="fullImage">
 </div>
+
+<button id="nextBtn" onclick="nextQuestion()">
+下一題 ➜
+</button>
 
 <footer>
 此網站僅供娛樂，感謝各位的盛情演出💃❤️‍🔥❤️‍🔥
@@ -107,41 +122,93 @@ footer{
 
 <script>
 
-/*
-====================
-修改這裡即可
-====================
-*/
+/* =========================
+   題庫
+   請把班上所有座號加進來
+========================= */
 
-// 正確答案
-const correctAnswer = "18";
+const questions = [
+    "1",
+    "2",
+    "3",
+    "4",
+    "7",
+    "9",
+    "10",
+    "11",
+    "18",
+    "21",
+    "26",
+    "30",
+];
 
-// 完整照片檔名
-const fullImageFile = "18-1.jpg";
+/* ========================= */
 
-// 眼睛照片檔名
-const eyesImageFile = "18-2.jpg";
+let remainingQuestions = [...questions];
+let currentAnswer = "";
 
-/*
-02號與18號特殊命名範例：
+function shuffle(array){
+    for(let i=array.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [array[i],array[j]]=[array[j],array[i]];
+    }
+}
 
-02醜-1.jpg
-02醜-2.jpg
+shuffle(remainingQuestions);
 
-02美-1.jpg
-02美-2.jpg
+function loadQuestion(){
 
-18醜-1.jpg
-18醜-2.jpg
+    if(remainingQuestions.length===0){
 
-18美-1.jpg
-18美-2.jpg
+        document.body.innerHTML = `
+            <h1 style="
+                font-size:80px;
+                background:linear-gradient(
+                    90deg,
+                    red,
+                    orange,
+                    yellow,
+                    green,
+                    cyan,
+                    blue,
+                    purple
+                );
+                -webkit-background-clip:text;
+                -webkit-text-fill-color:transparent;
+            ">
+            挑戰完成！
+            </h1>
 
-只要把上面的檔名填進來即可
-*/
+            <h2>🎉 你已經猜完所有題目 🎉</h2>
 
-document.getElementById("eyesImage").src = eyesImageFile;
-document.getElementById("fullPhoto").src = fullImageFile;
+            <p style="margin-top:50px;color:#666;">
+            此網站僅供娛樂，感謝各位的盛情演出💃❤️‍🔥❤️‍🔥
+            </p>
+        `;
+        return;
+    }
+
+    currentAnswer = remainingQuestions.pop();
+
+    document.getElementById("questionNumber").innerText =
+        `剩餘題數：${remainingQuestions.length + 1}`;
+
+    document.getElementById("eyesImage").src =
+        currentAnswer + "-2.jpg";
+
+    document.getElementById("fullImage").src =
+        currentAnswer + "-1.jpg";
+
+    document.getElementById("fullImage").style.display = "none";
+
+    document.getElementById("result").innerHTML = "";
+
+    document.getElementById("answer").value = "";
+
+    document.getElementById("submitBtn").style.display = "inline-block";
+
+    document.getElementById("nextBtn").style.display = "none";
+}
 
 function checkAnswer(){
 
@@ -153,10 +220,10 @@ function checkAnswer(){
     const result =
         document.getElementById("result");
 
-    if(userAnswer === correctAnswer){
+    if(userAnswer === Number(currentAnswer).toString()){
 
         result.innerHTML =
-        "🎉 答對了！你是眼睛專家😎！";
+            "🎉 答對了！你是眼睛專家😎！";
 
         confetti({
             particleCount:150,
@@ -167,13 +234,25 @@ function checkAnswer(){
     }else{
 
         result.innerHTML =
-        "😡 答錯了！你太不了解同學了！<br><br>同學表示很受傷💔";
-
+            `
+            😡 答錯了！你太不了解同學了！<br><br>
+            同學表示很受傷💔<br><br>
+            正確答案：${currentAnswer}
+            `;
     }
 
-    document.getElementById("fullImage")
-        .style.display = "block";
+    document.getElementById("fullImage").style.display = "inline";
+
+    document.getElementById("submitBtn").style.display = "none";
+
+    document.getElementById("nextBtn").style.display = "inline-block";
 }
+
+function nextQuestion(){
+    loadQuestion();
+}
+
+loadQuestion();
 
 </script>
 
