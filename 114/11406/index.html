@@ -3,471 +3,712 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KGHS 合作社小遊戲</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Zpix&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <title>殘骸之詩：輪迴與記憶的編織</title>
     <style>
+        :root {
+            --bg-color: #020204;
+            --panel-color: #0a080d;
+            --text-color: #cbd5e1;
+            --accent-blood: #ff0033; 
+            --gothic-gold: #c5a059;  
+            --shadow-purple: #3b0764; 
+        }
+
         body {
-            font-family: 'Zpix', 'Press Start 2P', monospace, sans-serif;
-            image-rendering: pixelated;
+            font-family: 'Georgia', 'Times New Roman', "Microsoft JhengHei", serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 50%, #0f051c 0%, #020204 100%);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
         }
-        /* 像素風邊框 */
-        .pixel-border {
-            border: 4px solid #000;
-            box-shadow: 4px 4px 0px #888;
+
+        .game-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--panel-color);
+            padding: 30px;
+            border-radius: 4px;
+            border: 2px solid var(--gothic-gold);
+            box-shadow: 0 0 30px rgba(197, 160, 89, 0.15), inset 0 0 20px rgba(0,0,0,0.8);
+            position: relative;
         }
-        .pixel-btn {
-            border: 3px solid #000;
-            box-shadow: 2px 2px 0px #000;
-            transition: transform 0.05s;
+
+        h1 {
+            text-align: center;
+            color: var(--gothic-gold);
+            font-size: 2.2rem;
+            letter-spacing: 5px;
+            text-shadow: 0 0 10px rgba(197, 160, 89, 0.4);
+            margin-bottom: 5px;
         }
-        .pixel-btn:active {
-            transform: translate(2px, 2px);
-            box-shadow: 0px 0px 0px #000;
+
+        .subtitle {
+            text-align: center;
+            color: #57534e;
+            font-style: italic;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
         }
-        /* 學生生氣或點錯時的抖動動畫 */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
+
+        .status-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border: 1px solid rgba(197, 160, 89, 0.25);
         }
-        .animate-shake {
-            animation: shake 0.2s ease-in-out infinite;
+
+        .status-item { font-size: 0.95rem; line-height: 1.5; }
+
+        .bar {
+            width: 100%;
+            background-color: #1c1917;
+            height: 10px;
+            overflow: hidden;
+            margin-top: 6px;
+            border: 1px solid #44403c;
+        }
+
+        .hp-bar-fill { height: 100%; background: linear-gradient(90deg, #7c2d12, var(--accent-blood)); width: 100%; transition: width 0.2s; }
+        .san-bar-fill { height: 100%; background: linear-gradient(90deg, #581c87, #c084fc); width: 0%; transition: width 0.2s; }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        @media (min-width: 700px) {
+            .main-content { grid-template-columns: 1.3fr 1fr; }
+        }
+
+        .log-box {
+            background-color: rgba(3, 3, 3, 0.95);
+            border: 1px solid rgba(197, 160, 89, 0.15);
+            padding: 20px;
+            height: 360px;
+            overflow-y: auto;
+            font-size: 1.15rem;
+            line-height: 1.8;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.9);
+        }
+
+        .log-box p { margin: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.01); }
+
+        .action-panel { display: flex; flex-direction: column; gap: 12px; }
+
+        button {
+            background: #1c1917;
+            color: #a8a29e;
+            border: 1px solid #44403c;
+            padding: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-family: inherit;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            background: #2e2a24;
+            color: #fff;
+            border-color: var(--gothic-gold);
+        }
+
+        button:disabled { opacity: 0.15; cursor: not-allowed; }
+
+        .btn-danger { color: #f87171; border-color: #991b1b; }
+        .btn-danger:hover:not(:disabled) { background: #991b1b; }
+
+        .btn-hidden-clue {
+            background: linear-gradient(135deg, #4c0519 0%, #2e1065 100%) !important;
+            color: #f43f5e !important;
+            border: 2px dashed #f43f5e !important;
+            animation: pulse 1.5s infinite;
+        }
+
+        .btn-grave {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+            color: #38bdf8 !important;
+            border: 2px solid #38bdf8 !important;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        /* 記憶覺醒面板樣式 */
+        .memory-panel {
+            background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+            border: 1px solid #6366f1;
+            padding: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.35);
+        }
+
+        .enemy-box { background: #140303; border: 1px solid var(--accent-blood); padding: 15px; display: none; }
+        .timer-badge { background-color: var(--accent-blood); color: white; padding: 1px 6px; }
+
+        .clue-highlight { color: #f43f5e; font-weight: bold; text-shadow: 0 0 6px rgba(244, 63, 94, 0.6); }
+        .text-important { color: var(--gothic-gold); }
+        .text-damage { color: #ef4444; }
+        .text-heal { color: #22c55e; }
+        .text-shadow { color: #a855f7; }
+        
+        .hallucination-overlay {
+            position: fixed; color: rgba(244, 63, 94, 0.18); font-size: 1.5rem;
+            pointer-events: none; z-index: 999; font-weight: bold; letter-spacing: 4px;
+            animation: fadeOut 2.5s forwards;
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 0; transform: translateY(0px) scale(0.9); }
+            15% { opacity: 1; }
+            85% { opacity: 0.8; }
+            100% { opacity: 0; transform: translateY(-30px) scale(1.05); }
+        }
+
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+
+        #ending-screen {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 999; justify-content: center; align-items: center;
+            flex-direction: column; padding: 40px; text-align: center;
         }
     </style>
 </head>
-<body class="bg-gray-200 min-h-screen flex flex-col items-center justify-center p-4 selection:bg-indigo-200">
+<body>
 
-    <div class="w-full max-w-xl bg-white pixel-border flex flex-col relative overflow-hidden" style="height: 780px;">
-        
-        <div class="bg-blue-50 border-b-4 border-black p-3 text-center relative">
-            <h1 class="text-3xl font-bold text-blue-600 tracking-wider mb-2" style="text-shadow: 2px 2px 0px #bfdbfe;">
-                KGHS 合作社
-            </h1>
-            <div class="flex justify-between items-center px-4 bg-yellow-100 border-2 border-black p-1 text-sm font-bold">
-                <div class="flex items-center space-x-2">
-                    <div>剩餘時間: <span id="timer" class="text-red-600 text-lg">60</span> 秒</div>
-                    <button id="pause-btn" onclick="togglePause()" class="bg-white hover:bg-gray-100 text-black px-2 py-0.5 text-xs pixel-btn cursor-pointer font-bold ml-1 hidden">暫停</button>
-                </div>
-                <div class="text-xs text-orange-600">連擊: <span id="combo-ui" class="text-sm">0</span></div>
-                <div>本日營業額: <span id="revenue" class="text-green-600 text-lg">$0</span></div>
-            </div>
+<div id="game-ui" class="game-container">
+    <h1>『 殘 骸 之 詩 』</h1>
+    <div class="subtitle">「肉體在轉生中退化，記憶在血之祭儀中覺醒。」</div>
+
+    <!-- 狀態欄 -->
+    <div class="status-panel">
+        <div class="status-item">
+            <strong>軀殼容貌:</strong> <span id="player-title" class="text-important">無名腐屍</span><br>
+            <strong>魂魄序位:</strong> 階級 <span id="player-level">1</span> <span id="rebirth-count" style="color:#a855f7; font-size:0.8rem;"></span>
         </div>
-
-        <div class="flex-grow relative bg-stone-50 p-4 flex flex-col justify-between">
-            
-            <div class="absolute top-2 right-2 w-16 h-20 bg-amber-800 border-4 border-black flex items-center justify-center text-xs text-white font-bold shadow-md">
-                入口
-            </div>
-
-            <div class="mt-16 space-y-4 w-3/4">
-                <div class="border-b-4 border-gray-400 bg-gray-300 h-8 flex items-center px-2 justify-around shadow-inner">
-                    <span class="text-xl">🌯</span><span class="text-xl">🍦</span><span class="text-xl">🧃</span><span class="text-xl">🥚</span>
-                </div>
-                <div class="border-b-4 border-gray-400 bg-gray-300 h-8 flex items-center px-2 justify-around shadow-inner">
-                    <span class="text-xl">🥟</span><span class="text-xl">🥖</span><span class="text-xl">🍢</span><span class="text-xl">🍱</span>
-                </div>
-            </div>
-
-            <div id="game-stage" class="absolute inset-0 pointer-events-none"></div>
-
-            <div class="w-full flex justify-between items-end border-t-4 border-dashed border-gray-300 pt-4 mt-auto">
-                <div class="bg-amber-600 border-4 border-black w-32 h-20 flex flex-col items-center justify-center text-white font-bold shadow-lg z-10">
-                    <div>收銀台</div>
-                    <div class="text-[11px] text-amber-200">💰 請依序結帳</div>
-                </div>
-                <div class="text-xs text-gray-400 italic mb-1">學生排隊區 ⮕</div>
-            </div>
+        <div class="status-item">
+            <strong>生命殘值 (HP):</strong> <span id="player-hp-text">100/100</span>
+            <div class="bar"><div id="player-hp-bar" class="hp-bar-fill"></div></div>
         </div>
-
-        <div class="bg-gray-100 border-t-4 border-black p-3">
-            <div class="text-xs font-bold text-gray-600 mb-2">▼ 點擊按鈕為排隊第一位學生結帳（雙重訂單需點選兩次）：</div>
-            <div id="checkout-panel" class="grid grid-cols-4 gap-2"></div>
+        <div class="status-item">
+            <strong>神智裂痕 (SAN):</strong> <span id="player-san-text">0/100</span>
+            <div class="bar"><div id="player-san-bar" class="san-bar-fill"></div></div>
         </div>
-
-        <div id="pause-screen" class="hidden absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white z-40 p-6 text-center">
-            <h2 class="text-4xl font-bold text-blue-400 mb-6 tracking-widest" style="text-shadow: 2px 2px 0px #000;">遊戲暫停中</h2>
-            <button onclick="togglePause()" class="bg-green-600 hover:bg-green-700 text-white text-lg font-bold px-8 py-3 pixel-btn cursor-pointer">
-                繼續營業
-            </button>
-        </div>
-
-        <div id="game-over-screen" class="hidden absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white z-50 p-6 text-center">
-            <h2 class="text-4xl font-bold text-yellow-400 mb-4">本日營業結束！</h2>
-            <p class="text-xl mb-2">KGHS 合作社今日總營業額：</p>
-            <p id="final-revenue" class="text-5xl font-extrabold text-green-400 mb-4">$0</p>
-            <p id="final-combo" class="text-sm text-orange-300 mb-8">最高連擊數：0次</p>
-            <button onclick="startGame()" class="bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold px-8 py-3 pixel-btn cursor-pointer">
-                重新開店
-            </button>
-        </div>
-
-        <div id="start-screen" class="absolute inset-0 bg-white flex flex-col items-center justify-center z-50 p-6 text-center">
-            <h2 class="text-3xl font-bold text-blue-600 mb-2">KGHS 合作社經營賽</h2>
-            <div class="bg-gray-50 border-2 border-black p-4 text-left text-xs space-y-2 mb-6 max-w-sm leading-relaxed">
-                <p>1. 學生進店挑選商品後，會至收銀台排隊。</p>
-                <p>2. <span class="bg-yellow-200 px-1 font-bold">部分學生會一次想買<b>兩種商品</b>，頭頂氣泡會顯示兩個圖案！</b></span></p>
-                <p>3. 玩家必須依照<b>「從左到右」</b>的順序，連續點對兩個商品才能完成結帳！</p>
-                <p>4. 超過 10 秒變紅警戒，超過 20 秒氣跑離開。連續點對可累積 Combo 喔！</p>
-            </div>
-            <button onclick="startGame()" class="bg-green-600 hover:bg-green-700 text-white text-xl font-bold px-8 py-3 pixel-btn cursor-pointer">
-                開始營業 (60秒)
-            </button>
+        <div class="status-item">
+            <strong>枯萎骨幣:</strong> 🪙<span id="player-gold" class="text-important">0</span><br>
+            <strong>基礎刻印 (ATK):</strong> <span id="player-atk" class="text-damage">9</span>
         </div>
     </div>
 
-    <script>
-        const products = [
-            { id: 'riceball', name: '飯卷', price: 50, icons: ['🌯'] },
-            { id: 'icecream', name: '冰品', price: 30, icons: ['🍦', '🍨', '🍧'] },
-            { id: 'drink', name: '飲料', price: 30, icons: ['🧃', '🥤'] },
-            { id: 'egg', name: '茶葉蛋', price: 11, icons: ['🥚'] },
-            { id: 'dumpling', name: '水餃', price: 50, icons: ['🥟'] },
-            { id: 'bread', name: '麵包', price: 13, icons: ['🥖', '🥐', '🥯', '🍞'] },
-            { id: 'oden', name: '關東煮', price: 15, icons: ['🍢'] },
-            { id: 'bento', name: '便當', price: 80, icons: ['🍱'] },
-            { id: 'cookie', name: '餅乾', price: 32, icons: ['🍪'] }
-        ];
+    <!-- 🔮 記憶覺醒區（完美回歸） -->
+    <div id="memory-zone" class="memory-panel" style="display:none;">
+        <h3 style="color:#a5b4fc; text-align:center; border:none; margin-bottom:5px;">🔮 靈魂深處的罪孽正在共鳴...</h3>
+        <p id="memory-hint" style="font-size:0.95rem; text-align:center; margin:8px 0; color:#e0e7ff; font-style:italic;"></p>
+        <button style="width:100%; background:#4f46e5; color:#fff; border:none; padding:10px;" onclick="awakenMemory()">【 聆 聽 並 承 接 禁 忌 記 憶 】</button>
+    </div>
 
-        const studentStyles = [
-            { emoji: '👩‍🎓', bg: 'bg-pink-400' },
-            { emoji: '👩🏻‍🏫', bg: 'bg-purple-400' },
-            { emoji: '👩', bg: 'bg-cyan-400' },
-            { emoji: '🙎‍', bg: 'bg-yellow-400' },
-            { emoji: '👧', bg: 'bg-teal-400' }
-        ];
+    <!-- 敵方區 -->
+    <div id="enemy-box" class="enemy-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 id="enemy-type" style="margin:0; color:var(--accent-blood); border:none; font-size:1rem;">⚠️ 遭遇孽物</h3>
+            <div style="font-size:0.85rem;">⏱️ 殘脈倒數: <span id="combat-timer" class="timer-badge">6</span> 秒</div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <strong id="enemy-name" style="color:#f87171;">殘存者</strong>
+            <span id="enemy-hp-text">25/25</span>
+        </div>
+        <div class="bar"><div id="enemy-hp-bar" class="hp-bar-fill" style="background: #dc2626;"></div></div>
+    </div>
 
-        let gameTimer = null;
-        let spawnTimer = null;
-        let timeLeft = 60;
-        let revenue = 0;
-        let combo = 0;
-        let maxCombo = 0;
-        let studentsQueue = []; 
-        let audioCtx = null; 
-        let isPaused = false; 
-        let lastSpawnTime = 0; 
-        let nextSpawnInterval = 3000; 
+    <!-- 主要區域 -->
+    <div class="main-content">
+        <div>
+            <h3>📜 意識殘卷</h3>
+            <div id="log-box" class="log-box"></div>
+        </div>
 
-        function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-        }
-
-        function playSound(type) {
-            if (!audioCtx || isPaused) return; 
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            if (type === 'half-ding') { 
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); 
-                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.15);
-            } else if (type === 'ding') { 
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
-                osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.08); 
-                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.3);
-            } else if (type === 'angry') { 
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-                osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.4);
-                gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.4);
-            }
-        }
-
-        function createPanel() {
-            const panel = document.getElementById('checkout-panel');
-            panel.innerHTML = '';
-            products.forEach(p => {
-                const btn = document.createElement('button');
-                btn.className = "bg-white hover:bg-gray-50 text-black p-2 pixel-btn flex flex-col items-center justify-center text-xs font-bold cursor-pointer";
-                btn.innerHTML = `<span class="text-xl mb-1">${p.icons[0]}</span><span>${p.name}</span><span class="text-gray-500 text-[10px]">$${p.price}</span>`;
-                btn.onclick = () => handleCheckout(p.id);
-                panel.appendChild(btn);
-            });
-        }
-
-        function startGame() {
-            initAudio();
-            timeLeft = 60;
-            revenue = 0;
-            combo = 0;
-            maxCombo = 0;
-            studentsQueue = [];
-            isPaused = false;
-            document.getElementById('timer').innerText = timeLeft;
-            document.getElementById('revenue').innerText = `$${revenue}`;
-            document.getElementById('combo-ui').innerText = combo;
-            document.getElementById('game-stage').innerHTML = '';
+        <div class="action-panel">
+            <h3>🥀 宿命抉擇</h3>
             
-            document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('game-over-screen').classList.add('hidden');
-            document.getElementById('pause-screen').classList.add('hidden');
-            document.getElementById('pause-btn').classList.remove('hidden');
+            <button id="btn-explore" onclick="explore()">👁️ 深入永夜荒野（尋找血肉）</button>
+            <button id="btn-rest" onclick="rest()">🖤 焚燒骨幣（消耗 6 幣回復 40 HP）</button>
+            <button id="btn-attack" class="btn-danger" onclick="attackEnemy()" disabled>⚙️ 揮刀平砍撕裂（攻擊）</button>
 
-            clearInterval(gameTimer);
-            gameTimer = setInterval(() => {
-                if (isPaused) return; 
-                timeLeft--;
-                document.getElementById('timer').innerText = timeLeft;
-                if (timeLeft <= 0) endGame();
-            }, 1000);
+            <!-- 動態隱藏按鈕（線索弱點） -->
+            <button id="btn-clue-action" class="btn-hidden-clue" style="display:none;" onclick="triggerClueAction()"></button>
 
-            clearInterval(spawnTimer);
-            lastSpawnTime = Date.now();
-            nextSpawnInterval = 2000 + Math.random() * 2000;
-            spawnWithRandomInterval();
-            spawnStudent();
-        }
+            <!-- 動態隱藏按鈕（前世掃墓彩蛋） -->
+            <button id="btn-grave-action" class="btn-grave" style="display:none;" onclick="visitGrave()"></button>
 
-        function togglePause() {
-            if (timeLeft <= 0) return;
-            
-            isPaused = !isPaused;
-            const pauseScreen = document.getElementById('pause-screen');
-            const pauseBtn = document.getElementById('pause-btn');
+            <!-- 轉生與終局按鈕 -->
+            <button id="btn-rebirth" style="display:none; border:2px solid #a855f7; color:#c084fc; background:#2e1065;" onclick="processRebirth()">🌀 靈魂殘裂：撕裂意志「轉生」</button>
+            <button id="btn-final-event" class="btn-danger" style="display:none; border:2px solid var(--gothic-gold); color:var(--gothic-gold);" onclick="triggerFinalChoice()">🕯️ 開啟最終祭壇（迎向終局）</button>
 
-            if (isPaused) {
-                pauseScreen.classList.remove('hidden');
-                pauseBtn.innerText = "繼續";
-                clearTimeout(spawnTimer);
-                nextSpawnInterval = Math.max(500, nextSpawnInterval - (Date.now() - lastSpawnTime));
-            } else {
-                pauseScreen.classList.add('hidden');
-                pauseBtn.innerText = "暫停";
-                lastSpawnTime = Date.now();
-                spawnTimer = setTimeout(() => {
-                    spawnStudent();
-                    nextSpawnInterval = 2000 + Math.random() * 2000;
-                    spawnWithRandomInterval();
-                }, nextSpawnInterval);
+            <!-- 成就祭儀進度（記憶覺醒的燃料） -->
+            <div style="background:rgba(0,0,0,0.5); padding:12px; border:1px solid #44403c; font-size:0.85rem;">
+                <span style="color:#78716c; font-weight:bold;">【血之祭儀進度】</span><br>
+                • 撕碎怨靈數: <span id="ach-kills">0</span> / 3<br>
+                • 劫掠骨幣數: <span id="ach-gold">0</span> / 25<br>
+                • 受創痛苦數: <span id="ach-hit">0</span> / 8
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 結局 -->
+<div id="ending-screen">
+    <h1 id="end-title" style="font-size: 2.5rem; margin-bottom: 20px;">結局</h1>
+    <p id="end-desc" style="max-width: 600px; font-size: 1.1rem; line-height: 1.8; color: #d6d3d1; margin-bottom: 40px;"></p>
+    <button id="end-action-btn" onclick="location.reload()" style="padding: 12px 30px; border-color:var(--gothic-gold); color:var(--gothic-gold);">「重新步入無盡輪迴」</button>
+</div>
+
+<script>
+    let metaData = {
+        rebirthTimes: 0,
+        maxSanPenalty: 0,
+        lastGrave: null 
+    };
+
+    const player = {
+        title: "無名腐屍", level: 1, hp: 100, maxHp: 100, atk: 9, gold: 0,
+        insanity: 0, maxInsanity: 100, steps: 0, memoryStage: 0,
+        highInsight: false // 記憶獲得的抗性或機制
+    };
+
+    // 成就追蹤系統（用來觸發記憶）
+    const achievements = {
+        kills: 0, targetKills: 3,
+        goldEarned: 0, targetGold: 25,
+        hitCount: 0, targetHit: 8,
+        unlocked: [false, false, false]
+    };
+
+    let currentEnemy = null;
+    let isFighting = false;
+    let combatTimerInterval = null;
+    let timeLeft = 6;
+    let currentActiveClue = null;
+
+    const monsters = [
+        { name: "蠕動的怨毒斷肢", hp: 18, maxHp: 18, atk: 2, gold: 6 },
+        { name: "枯萎的黑夜敲門者", hp: 26, maxHp: 26, atk: 4, gold: 9 },
+        { name: "無眼墓園哀悼者", hp: 35, maxHp: 35, atk: 5, gold: 12 }
+    ];
+
+    const combatClues = [
+        { word: "裸露的心臟", btnText: "⚡ 精準突刺（雙倍傷害）", type: "heart" },
+        { word: "重心不穩", btnText: "🦿 惡意絆摔（使其癱瘓）", type: "trip" }
+    ];
+
+    const memories = [
+        "【第一層記憶】：你跪地痛苦抱頭。你想起來了...你曾是高貴的聖騎士隊長。但你奉命屠殺了整座染疫的村莊，身上斑駁的腐肉是死者靈魂的刻印。(解鎖：弱點洞察眼界提升)",
+        "【第二層記憶】：血幣的冰冷讓你反胃。你想起來了，國王沒有瘋，瘋的是你們。為了不朽，你們在井中注入古神之血。你是微笑着自願喝下的。(解鎖：最大生命值克制提升20，並將軀體補滿)",
+        "【第三層記憶】：焦黑的鎖鏈開始瘋狂鳴響。你記起來了，將你永埋地底的封印並非仇敵所施，而是你在理智完全蒸發前親手為自己鎖上的。現在，終焉的祭壇大門已徹底為你敞開..."
+    ];
+
+    const hallucinations = [
+        "你確信這具肉體屬於你自己嗎？",
+        "上一世的你正在棺材裡抓撓。",
+        "數值只是謊言，你在步向虛無。",
+        "👁️ 祂在看著你 👁️"
+    ];
+
+    function corruptText(text) {
+        if (metaData.rebirthTimes === 0) return text;
+        const corruptChars = ["縗", "纕", "☠️", "囈", "蟪", " ̶"];
+        let arr = text.split("");
+        let rate = Math.min(0.25, metaData.rebirthTimes * 0.07); 
+        for(let i=0; i<arr.length; i++) {
+            if(Math.random() < rate && arr[i] !== " " && arr[i] !== ">") {
+                arr[i] = corruptChars[Math.floor(Math.random() * corruptChars.length)];
             }
         }
+        return arr.join("");
+    }
 
-        function spawnWithRandomInterval() {
-            if (timeLeft <= 0 || isPaused) return;
-            nextSpawnInterval = 2000 + Math.random() * 2000; 
-            spawnTimer = setTimeout(() => {
-                if (!isPaused) {
-                    spawnStudent();
-                    lastSpawnTime = Date.now();
-                    spawnWithRandomInterval();
-                }
-            }, nextSpawnInterval);
+    function triggerVisualHallucination() {
+        if (metaData.rebirthTimes === 0 || Math.random() > 0.4) return;
+        const text = hallucinations[Math.floor(Math.random() * hallucinations.length)];
+        const div = document.createElement('div');
+        div.className = 'hallucination-overlay';
+        div.innerText = text;
+        div.style.top = Math.random() * 70 + 10 + "%";
+        div.style.left = Math.random() * 60 + 10 + "%";
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 2500);
+    }
+
+    window.onload = function() {
+        player.maxInsanity = 100 - metaData.maxSanPenalty;
+        if(metaData.rebirthTimes > 0) {
+            document.getElementById('rebirth-count').innerText = `[轉生第 ${metaData.rebirthTimes} 世]`;
+            logMessage(`🌀 靈魂帶著殘裂紋路再度甦醒。最大神智上限被禁錮至 ${player.maxInsanity}。`, "text-shadow");
+        } else {
+            logMessage("你在枯萎的焦土中甦醒。失去過往，沒有痛覺。只有殘卷在指引你。", "text-important");
+        }
+        updateUI();
+    };
+
+    function updateUI() {
+        document.getElementById('player-title').innerText = player.title;
+        document.getElementById('player-level').innerText = player.level;
+        document.getElementById('player-hp-text').innerText = `${player.hp}/${player.maxHp}`;
+        document.getElementById('player-hp-bar').style.width = `${(player.hp / player.maxHp) * 100}%`;
+        
+        document.getElementById('player-san-text').innerText = `${player.insanity}/${player.maxInsanity}`;
+        document.getElementById('player-san-bar').style.width = `${(player.insanity / player.maxInsanity) * 100}%`;
+        
+        document.getElementById('player-atk').innerText = player.atk;
+        document.getElementById('player-gold').innerText = player.gold;
+
+        document.getElementById('ach-kills').innerText = achievements.kills;
+        document.getElementById('ach-gold').innerText = achievements.goldEarned;
+        document.getElementById('ach-hit').innerText = achievements.hitCount;
+
+        // 探索限制：戰鬥中或記憶共鳴中不可探索
+        let isMemoryActive = (document.getElementById('memory-zone').style.display === 'block');
+        document.getElementById('btn-explore').disabled = isFighting || isMemoryActive;
+        document.getElementById('btn-rest').disabled = isFighting || isMemoryActive || player.gold < 6;
+        document.getElementById('btn-attack').disabled = !isFighting;
+
+        if (player.level === "🚫 終焉" || player.hp <= 0) {
+            document.getElementById('btn-rebirth').style.display = 'block';
+        } else {
+            document.getElementById('btn-rebirth').style.display = 'none';
         }
 
-        function spawnStudent() {
-            if (timeLeft <= 4 || isPaused) return; 
+        if (player.level === "🚫 終焉") {
+            document.getElementById('btn-final-event').style.display = 'block';
+        } else {
+            document.getElementById('btn-final-event').style.display = 'none';
+        }
 
-            const stage = document.getElementById('game-stage');
-            const studentId = 'student_' + Date.now() + '_' + Math.floor(Math.random()*1000);
-            const style = studentStyles[Math.floor(Math.random() * studentStyles.length)];
+        const enemyBox = document.getElementById('enemy-box');
+        if (isFighting && currentEnemy) {
+            enemyBox.style.display = 'block';
+            document.getElementById('enemy-name').innerText = currentEnemy.name;
+            document.getElementById('enemy-hp-text').innerText = `${currentEnemy.hp}/${currentEnemy.maxHp}`;
+            document.getElementById('enemy-hp-bar').style.width = `${(currentEnemy.hp / currentEnemy.maxHp) * 100}%`;
+            document.getElementById('combat-timer').innerText = timeLeft;
+        } else {
+            enemyBox.style.display = 'none';
+            document.getElementById('btn-clue-action').style.display = 'none';
+        }
 
-            const isDoubleOrder = Math.random() < 0.45;
-            let orderItems = [];
+        checkAchievements();
+    }
 
-            const p1 = products[Math.floor(Math.random() * products.length)];
-            orderItems.push({ productId: p1.id, icon: p1.icons[Math.floor(Math.random() * p1.icons.length)], price: p1.price });
+    function logMessage(text, className = "") {
+        const logBox = document.getElementById('log-box');
+        const p = document.createElement('p');
+        if (className) p.className = className;
+        let processedText = corruptText(text);
+        p.innerHTML = `» ${processedText}`;
+        logBox.appendChild(p);
+        logBox.scrollTop = logBox.scrollHeight;
+    }
 
-            if (isDoubleOrder) {
-                const p2 = products[Math.floor(Math.random() * products.length)];
-                orderItems.push({ productId: p2.id, icon: p2.icons[Math.floor(Math.random() * p2.icons.length)], price: p2.price });
+    function startCombatTimer() {
+        timeLeft = 6; 
+        document.getElementById('combat-timer').innerText = timeLeft;
+        clearInterval(combatTimerInterval);
+        combatTimerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('combat-timer').innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(combatTimerInterval);
+                let penaltyDmg = currentEnemy.atk + 1;
+                player.hp = Math.max(0, player.hp - penaltyDmg);
+                achievements.hitCount += 1;
+                logMessage(`⏳ 【遲疑】你神智恍惚！【${currentEnemy.name}】突襲造成 ${penaltyDmg} 點傷害。`, "text-damage");
+                if (player.hp <= 0) handleDeath();
+                else startCombatTimer();
+                updateUI();
             }
+        }, 1000);
+    }
 
-            const studentEl = document.createElement('div');
-            studentEl.id = studentId;
-            studentEl.className = "absolute transition-all duration-500 flex flex-col items-center pointer-events-auto z-20";
-            studentEl.style.top = "50px";
-            studentEl.style.right = "20px";
-            
-            const iconsHTML = orderItems.map((item, idx) => `
-                <span id="item-${idx}" class="text-lg mx-0.5 px-0.5 rounded transition-all duration-200">${item.icon}</span>
-            `).join(orderItems.length > 1 ? '<span class="text-gray-400 text-xs">+</span>' : '');
+    function explore() {
+        if (player.hp <= 0) return;
+        player.steps += 1;
+        triggerVisualHallucination();
 
-            studentEl.innerHTML = `
-                <div class="bubble hidden mb-1 bg-white border-2 border-black px-2 py-1 rounded shadow-md text-center relative animate-bounce flex flex-col items-center min-w-[40px]">
-                    <div class="flex items-center justify-center">${iconsHTML}</div>
-                    <div class="w-10 h-1 bg-gray-200 mt-1 border border-black overflow-hidden">
-                        <div class="progress-bar h-full bg-green-500 w-full transition-all duration-100"></div>
-                    </div>
-                </div>
-                <div class="w-8 h-8 rounded-full ${style.bg} border-2 border-black flex items-center justify-center text-lg shadow-sm">
-                    ${style.emoji}
-                </div>
-            `;
-
-            stage.appendChild(studentEl);
-
-            setTimeout(() => {
-                studentEl.style.right = "auto";
-                studentEl.style.left = (40 + Math.random() * 120) + "px";
-                studentEl.style.top = (70 + Math.random() * 60) + "px";
-
-                const pickTime = 2000 + Math.random() * 1000; 
-                setTimeout(() => {
-                    goToCashierQueue(studentEl, orderItems);
-                }, pickTime);
-            }, 100);
+        if (metaData.lastGrave && !metaData.lastGrave.visited && player.steps === metaData.lastGrave.deathStep) {
+            triggerGraveEvent();
+            return;
         }
 
-        function goToCashierQueue(studentEl, orderItems) {
-            const studentData = {
-                id: studentEl.id,
-                orders: orderItems, 
-                currentIdx: 0,      
-                el: studentEl,
-                waitTime: 0
-            };
-
-            studentsQueue.push(studentData);
-            updateQueuePositions();
-
-            const bubble = studentEl.querySelector('.bubble');
-            bubble.classList.remove('hidden');
-
-            studentData.interval = setInterval(() => {
-                if (isPaused) return; 
-                
-                studentData.waitTime++;
-                
-                const progressBar = studentEl.querySelector('.progress-bar');
-                const percent = Math.max(0, 100 - (studentData.waitTime / 20) * 100);
-                if(progressBar) progressBar.style.width = `${percent}%`;
-
-                if (studentData.waitTime >= 10 && studentData.waitTime < 20) {
-                    bubble.classList.add('bg-red-100', 'border-red-600', 'animate-shake');
-                    if(progressBar) {
-                        progressBar.classList.remove('bg-green-500', 'bg-yellow-500');
-                        progressBar.classList.add('bg-red-500');
-                    }
-                } else if (studentData.waitTime >= 5 && studentData.waitTime < 10) {
-                    if(progressBar) {
-                        progressBar.classList.remove('bg-green-500');
-                        progressBar.classList.add('bg-yellow-500');
-                    }
-                }
-                
-                if (studentData.waitTime >= 20) {
-                    clearInterval(studentData.interval);
-                    playSound('angry');
-                    
-                    combo = 0;
-                    document.getElementById('combo-ui').innerText = combo;
-
-                    studentsQueue = studentsQueue.filter(s => s.id !== studentData.id);
-                    
-                    bubble.innerHTML = `<span class="text-red-600 font-bold text-sm">生氣💢</span>`;
-                    studentEl.style.left = "-100px"; 
-                    
-                    setTimeout(() => { studentEl.remove(); }, 600);
-                    updateQueuePositions();
-                }
-            }, 1000);
-        }
-
-        function updateQueuePositions() {
-            studentsQueue.forEach((student, index) => {
-                // 【優化】將排隊與結帳區域移至最右下角 (440px)，第一位結帳學生 (index為0) 剛好落在收銀台右側 (170px)
-                // 後續學生以 80px 的舒適間距往右延伸排隊，與商品架完全錯開
-                student.el.style.top = "560px";
-                student.el.style.left = (170 + index * 80) + "px";
-            });
-        }
-
-        function handleCheckout(clickedProductId) {
-            if (studentsQueue.length === 0 || isPaused) return; 
-
-            const currentStudent = studentsQueue[0];
-            const targetOrder = currentStudent.orders[currentStudent.currentIdx];
-
-            if (targetOrder.productId === clickedProductId) {
-                currentStudent.currentIdx++;
-
-                if (currentStudent.currentIdx < currentStudent.orders.length) {
-                    playSound('half-ding');
-                    
-                    const matchedItemEl = currentStudent.el.querySelector(`#item-${currentStudent.currentIdx - 1}`);
-                    if(matchedItemEl) {
-                        matchedItemEl.classList.add('opacity-20', 'line-through');
-                    }
-                } else {
-                    clearInterval(currentStudent.interval);
-                    playSound('ding');
-
-                    combo++;
-                    if (combo > maxCombo) maxCombo = combo;
-                    document.getElementById('combo-ui').innerText = combo;
-
-                    let totalPrice = 0;
-                    currentStudent.orders.forEach(o => totalPrice += o.price);
-                    
-                    const multiOrderBonus = currentStudent.orders.length > 1 ? 10 : 0;
-                    const comboBonus = combo >= 5 ? 5 : 0;
-                    const finalEarnings = totalPrice + multiOrderBonus + comboBonus;
-                    
-                    revenue += finalEarnings;
-                    document.getElementById('revenue').innerText = `$${revenue}`;
-
-                    const bubble = currentStudent.el.querySelector('.bubble');
-                    bubble.innerHTML = `<span class="text-yellow-600 font-bold text-xs">✨+$${finalEarnings}</span>`;
-                    
-                    currentStudent.el.style.top = "520px"; 
-                    currentStudent.el.style.opacity = "0";
-                    
-                    studentsQueue.shift();
-                    updateQueuePositions();
-
-                    setTimeout(() => { currentStudent.el.remove(); }, 500);
-                }
-            } else {
-                combo = 0;
-                document.getElementById('combo-ui').innerText = combo;
-
-                currentStudent.currentIdx = 0;
-                currentStudent.orders.forEach((_, idx) => {
-                    const itemEl = currentStudent.el.querySelector(`#item-${idx}`);
-                    if (itemEl) {
-                        itemEl.classList.remove('opacity-20', 'line-through');
-                    }
-                });
-
-                const bubble = currentStudent.el.querySelector('.bubble');
-                bubble.classList.add('animate-shake');
-                setTimeout(() => {
-                    if (currentStudent.waitTime < 10) {
-                        bubble.classList.remove('animate-shake');
-                    }
-                }, 300);
+        let rand = Math.random();
+        if (rand < 0.12) {
+            let dmg = 3 + Math.floor(Math.random() * 3);
+            player.hp = Math.max(1, player.hp - dmg);
+            achievements.hitCount += 1;
+            logMessage(`地磚上的生鏽刑具割傷了你的肢體，流失 ${dmg} 點生命。`, "text-damage");
+            updateUI();
+        } else if (rand < 0.25) {
+            player.insanity = Math.min(player.maxInsanity, player.insanity + 10);
+            logMessage("周圍的黑暗迴盪起嬰孩的啼哭，你的神智裂痕在擴大。", "text-shadow");
+            if(player.insanity >= player.maxInsanity) {
+                logMessage("⚠️ 理智決堤！你陷入短暫癲狂，胡亂自殘流失 12 點生命！", "text-damage");
+                player.hp = Math.max(1, player.hp - 12);
+                player.insanity = 0;
             }
+            updateUI();
+        } else {
+            let idx = Math.floor(Math.random() * monsters.length);
+            currentEnemy = { ...monsters[idx] };
+            isFighting = true;
+            logMessage(`⚔️ 陰影扭曲，【${currentEnemy.name}】於虛無中現身。`, "text-important");
+            rollClueEvent();
+            startCombatTimer();
+            updateUI();
+        }
+    }
+
+    function rollClueEvent() {
+        document.getElementById('btn-clue-action').style.display = 'none';
+        currentActiveClue = null;
+        // 記憶1解鎖後，弱點暴露機率大幅攀升
+        let baseChance = player.highInsight ? 0.75 : 0.45;
+        if (Math.random() < baseChance) {
+            let clue = combatClues[Math.floor(Math.random() * combatClues.length)];
+            currentActiveClue = clue.type;
+            logMessage(`🔍 破綻！你注意到它此刻正處於 <span class="clue-highlight">${clue.word}</span> 的狀態！`);
+            const clueBtn = document.getElementById('btn-clue-action');
+            clueBtn.innerText = clue.btnText;
+            clueBtn.style.display = 'block';
+        }
+    }
+
+    function attackEnemy() {
+        if (!isFighting || !currentEnemy) return;
+        timeLeft = 6;
+        let dmg = player.atk + Math.floor(Math.random() * 3) - 1;
+        currentEnemy.hp -= dmg;
+        logMessage(`你揮刀砍擊，對【${currentEnemy.name}】造成 ${dmg} 點微末創傷。`);
+
+        if (checkEnemyDeath()) return;
+
+        let edmg = currentEnemy.atk;
+        player.hp -= edmg;
+        achievements.hitCount += 1;
+        logMessage(`💥 【${currentEnemy.name}】反擊，你承受了 ${edmg} 點反噬。`, "text-damage");
+
+        if (player.hp <= 0) handleDeath();
+        else rollClueEvent();
+        updateUI();
+    }
+
+    function triggerClueAction() {
+        if (!isFighting || !currentEnemy || !currentActiveClue) return;
+        timeLeft = 6;
+        logMessage(`⚡ 精確截擊！你抓住了轉瞬即逝的動態破綻！`, "text-important");
+
+        if (currentActiveClue === "heart") {
+            let critDmg = (player.atk * 2);
+            currentEnemy.hp -= critDmg;
+            logMessage(`⚔️ 刺穿心臟！爆發 ${critDmg} 點崩解重創！`);
+        } else if (currentActiveClue === "trip") {
+            currentEnemy.hp -= 4;
+            logMessage(`🦿 絆摔成功！孽物跌入塵土，此回合因癱瘓無法反擊。`);
+            rollClueEvent();
+            updateUI();
+            return;
         }
 
-        function endGame() {
-            clearInterval(gameTimer);
-            clearTimeout(spawnTimer);
-            studentsQueue.forEach(s => clearInterval(s.interval));
-            document.getElementById('pause-btn').classList.add('hidden');
+        if (checkEnemyDeath()) return;
+        
+        let edmg = currentEnemy.atk;
+        player.hp -= edmg;
+        achievements.hitCount += 1;
+        logMessage(`💥 孽物盲目反撲，你受到 ${edmg} 點反噬。`, "text-damage");
+        if (player.hp <= 0) handleDeath();
+        else rollClueEvent();
+        updateUI();
+    }
 
-            document.getElementById('final-revenue').innerText = `$${revenue}`;
-            document.getElementById('final-combo').innerText = `最高連擊數：${maxCombo} 次`;
-            document.getElementById('game-over-screen').classList.remove('hidden');
+    function checkEnemyDeath() {
+        if (currentEnemy.hp <= 0) {
+            clearInterval(combatTimerInterval);
+            player.gold += currentEnemy.gold;
+            achievements.goldEarned += currentEnemy.gold;
+            achievements.kills += 1;
+            logMessage(`🎉 孽物消散。劫掠得到骨幣 🪙${currentEnemy.gold}。`, "text-heal");
+            isFighting = false;
+            currentEnemy = null;
+            updateUI();
+            return true;
+        }
+        return false;
+    }
+
+    function handleDeath() {
+        clearInterval(combatTimerInterval);
+        player.hp = 0;
+        isFighting = false;
+        logMessage("💀 軀殼碎裂。你可以點擊【靈魂殘裂】強行進入下一世輪迴。", "text-important");
+        updateUI();
+    }
+
+    function rest() {
+        if (player.gold < 6) return;
+        player.gold -= 6;
+        player.hp = Math.min(player.maxHp, player.hp + 40);
+        logMessage("🖤 拋入骨幣。微弱的營火餘燼重新黏合了你的軀殼，回復 40 點生命值。", "text-heal");
+        updateUI();
+    }
+
+    // ================= 🔮 記憶覺醒控制系統 =================
+
+    function checkAchievements() {
+        // 階級 1 記憶
+        if (achievements.kills >= achievements.targetKills && !achievements.unlocked[0] && player.memoryStage === 0) {
+            triggerMemoryStage("殺戮的血雨滲透進乾涸的顱骨，某些被鎖住的記憶殘片在蠢蠢欲動...", 0);
+        }
+        // 階級 2 記憶
+        else if (achievements.goldEarned >= achievements.targetGold && !achievements.unlocked[1] && player.memoryStage === 1) {
+            triggerMemoryStage("冰冷的骨幣在掌心堆疊，熟悉的金屬腥味喚醒了第二重罪孽...", 1);
+        }
+        // 階級 3 記憶
+        else if (achievements.hitCount >= achievements.targetHit && !achievements.unlocked[2] && player.memoryStage === 2) {
+            triggerMemoryStage("肉體反覆碎裂的極致痛苦，終於化作黑色的鐵釘，鑿開了靈魂的最後枷鎖...", 2);
+        }
+    }
+
+    function triggerMemoryStage(hintText, stage) {
+        document.getElementById('memory-zone').style.display = 'block';
+        document.getElementById('memory-hint').innerText = hintText;
+    }
+
+    function awakenMemory() {
+        let currentStage = player.memoryStage;
+        logMessage(memories[currentStage], "text-shadow");
+        
+        achievements.unlocked[currentStage] = true;
+        player.memoryStage += 1;
+
+        // 防通膨機制繼承與解鎖，絕不給予爆炸性數值
+        if (currentStage === 0) {
+            player.title = "血落聖騎士";
+            player.highInsight = true; // 機制：戰鬥弱點感知機率永久提高
+            player.level = 2;
+        } else if (currentStage === 1) {
+            player.title = "古神共犯";
+            player.maxHp = 120; // 緊湊的血量模型增幅
+            player.hp = player.maxHp;
+            player.level = 3;
+        } else if (currentStage === 2) {
+            player.title = "深淵夢魘";
+            player.level = "🚫 終焉"; // 滿級，可直接觸發結局
         }
 
-        window.onload = () => {
-            createPanel();
+        document.getElementById('memory-zone').style.display = 'none';
+        updateUI();
+    }
+
+    // ================= 🪦 前世掃墓彩蛋與轉生系統 =================
+
+    function triggerGraveEvent() {
+        const grave = metaData.lastGrave;
+        logMessage(`🕯️ 【英靈遺蹟】你在荒野枯樹下看見了一座散發著冰冷螢光的【古老墓碑】。`, "text-important");
+        logMessage(`墓誌銘刻著前世的名號：『${grave.name}』。`);
+        logMessage(`死因：『${grave.cause}』。地上靜靜躺著生前未被帶走的遺物。`);
+        
+        const graveBtn = document.getElementById('btn-grave-action');
+        graveBtn.innerText = `🪦 幫前世「掃墓」（回收 🪙${grave.goldSaved} 骨幣）`;
+        graveBtn.style.display = 'block';
+        updateUI();
+    }
+
+    function visitGrave() {
+        if (!metaData.lastGrave) return;
+        let savedGold = metaData.lastGrave.goldSaved;
+        player.gold += savedGold;
+        metaData.lastGrave.visited = true; 
+        
+        logMessage(`🙏 你拂去墓碑上的黑雪。前世的殘魂化作飛灰，你承襲了 🪙${savedGold} 枚枯萎骨幣。`, "text-heal");
+        document.getElementById('btn-grave-action').style.display = 'none';
+        updateUI();
+    }
+
+    function processRebirth() {
+        let confirmRebirth = confirm("⚠️ 確定要強行切斷現有因果，撕裂靈魂轉生嗎？\n\n[轉生代價]：\n1. 當前進度、記憶階段與骨幣重置。\n2. 最大理智值(Max SAN) 永久扣除 20 點！\n3. 系統文字將會更嚴重地受到古神亂碼、幻覺污染！\n\n(但你這一世倒下的地方，將會化為下一世的地圖遺蹟供你掃墓)");
+        if (!confirmRebirth) return;
+
+        let currentCause = player.hp <= 0 ? "不敵宿命撕咬破碎而死" : "在清醒的絕望中主動重組靈魂";
+        metaData.lastGrave = {
+            name: player.title + ` (第 ${metaData.rebirthTimes + 1} 世)`,
+            cause: currentCause,
+            goldSaved: Math.min(15, Math.floor(player.gold * 0.5)), // 防通膨，繼承上限
+            deathStep: Math.max(2, player.steps), 
+            visited: false
         };
-    </script>
+
+        metaData.rebirthTimes += 1;
+        metaData.maxSanPenalty = Math.min(80, metaData.maxSanPenalty + 20);
+
+        // 重置所有角色狀態與祭儀成就
+        player.title = "無名腐屍";
+        player.level = 1;
+        player.hp = 100;
+        player.maxHp = 100;
+        player.atk = 9;
+        player.gold = 0;
+        player.insanity = 0;
+        player.steps = 0;
+        player.memoryStage = 0;
+        player.highInsight = false;
+        player.maxInsanity = 100 - metaData.maxSanPenalty;
+
+        achievements.kills = 0;
+        achievements.goldEarned = 0;
+        achievements.hitCount = 0;
+        achievements.unlocked = [false, false, false];
+
+        isFighting = false;
+        currentEnemy = null;
+        clearInterval(combatTimerInterval);
+
+        const logBox = document.getElementById('log-box');
+        logBox.innerHTML = "";
+        document.getElementById('btn-grave-action').style.display = 'none';
+        document.getElementById('memory-zone').style.display = 'none';
+        
+        logMessage(`🌀 靈魂在無盡囈語中完成了第 ${metaData.rebirthTimes} 次痛苦的重組。`, "text-shadow");
+        updateUI();
+    }
+
+    function triggerFinalChoice() {
+        let choice = prompt("暮色祭壇已在眼前綻放。請輸入數字決定世界終局：\n\n1. 【寂滅】：捏碎核心，帶走所有的詛咒之血。\n2. 【僭越】：吞噬祭壇，登基為極度克制的黑金統治者。");
+        if (choice === "1") {
+            showEnding("結局 A：【微光碎屑】", "你拒絕了王座。在寂靜中，你捏碎了跳動的核心。你的軀殼化作微小的黑砂碎屑，詛咒自此終結。");
+        } else if (choice === "2") {
+            showEnding("結局 B：【黑金永夜秩序】", "你坐在王座上，制定了殘酷、精準且極其克制的鐵血秩序。永夜在你的統治下，優雅地運轉。");
+        }
+    }
+
+    function showEnding(title, description) {
+        document.getElementById('game-ui').style.display = 'none';
+        const endScreen = document.getElementById('ending-screen');
+        endScreen.style.display = 'flex';
+        document.getElementById('end-title').innerText = title;
+        document.getElementById('end-desc').innerText = description;
+        
+        const endBtn = document.getElementById('end-action-btn');
+        endBtn.innerText = "「不接受結局，強行撕裂這重因果（轉生）」";
+        endBtn.onclick = function() {
+            endScreen.style.display = 'none';
+            document.getElementById('game-ui').style.display = 'block';
+            processRebirth();
+        };
+    }
+</script>
+
 </body>
 </html>
