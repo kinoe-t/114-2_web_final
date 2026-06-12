@@ -1,1035 +1,350 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Tw">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>棉花糖逃脫！</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神秘占星術：星座頻率</title>
+    <style>
+        * {
+            box-sizing: border-box; 
+        }
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: #0b0f19; /* 神秘宇宙深藍黑 */
+            color: #f1f5f9;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-  :root {
-    --fire: #ff4500;
-    --ember: #ff8c00;
-    --cream: #fff5e6;
-    --wood: #6b3a2a;
-    --dark-wood: #3d1f10;
-    --wall: #c8a882;
-    --shadow: rgba(0,0,0,0.5);
-    --glow: rgba(255,100,0,0.3);
-  }
+        .game-container {
+            background: linear-gradient(145deg, #1e1b4b, #111827); /* 魔幻紫色漸層底框 */
+            border: 2px solid #4338ca;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+            width: 100%;
+            max-width: 600px;
+            padding: 35px;
+            text-align: center;
+        }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+        h1 {
+            color: #a78bfa; /* 浪漫紫羅蘭色 */
+            font-size: 28px;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
 
-  body {
-    background: #1a0a00;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    font-family: 'Noto Serif TC', serif;
-    overflow: hidden;
-    user-select: none;
-  }
+        .progress-bar {
+            color: #a78bfa;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
 
-  /* ── HUD ── */
-  #hud {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
-    background: rgba(20,6,0,0.85);
-    border-bottom: 2px solid var(--ember);
-    z-index: 100;
-  }
-  #timer {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 2rem;
-    color: var(--ember);
-    text-shadow: 0 0 12px var(--fire);
-    transition: color 0.3s;
-  }
-  #timer.danger { color: var(--fire); animation: pulse 0.5s infinite alternate; }
-  @keyframes pulse { from { opacity: 1; } to { opacity: 0.4; } }
-  #scene-label {
-    font-size: 0.85rem;
-    color: var(--wall);
-    letter-spacing: 0.1em;
-  }
-  #nav-btns { display: flex; gap: 8px; }
-  .nav-btn {
-    background: var(--dark-wood);
-    border: 1px solid var(--wood);
-    color: var(--cream);
-    padding: 6px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: 'Noto Serif TC', serif;
-    font-size: 0.8rem;
-    transition: background 0.2s;
-  }
-  .nav-btn:hover { background: var(--wood); }
+        .question-text {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
 
-  /* ── GAME WRAPPER ── */
-  #game {
-    position: relative;
-    width: 800px;
-    height: 520px;
-    margin-top: 60px;
-    overflow: hidden;
-    border: 3px solid var(--dark-wood);
-    box-shadow: 0 0 60px var(--glow), 0 0 120px rgba(255,69,0,0.15);
-  }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
 
-  /* ── SCENES ── */
-  .scene {
-    position: absolute;
-    inset: 0;
-    display: none;
-  }
-  .scene.active { display: block; }
+        .option-btn {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: #f1f5f9;
+            border: 1px solid #4338ca;
+            border-radius: 8px;
+            padding: 14px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
 
-  /* SCENE: MAIN ROOM */
-  #scene-room {
-    background: linear-gradient(180deg, #b8926a 0%, #c8a882 40%, #a07850 100%);
-  }
+        .option-btn:hover {
+            background-color: #4338ca;
+            transform: translateX(5px);
+        }
 
-  /* Floor */
-  #room-floor {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 120px;
-    background: repeating-linear-gradient(
-      90deg,
-      #6b3a2a 0px, #6b3a2a 59px,
-      #5a2d1f 59px, #5a2d1f 60px
-    );
-    background-size: 60px 100%;
-  }
+        .feedback-text {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
 
-  /* Wall texture */
-  #room-wall {
-    position: absolute;
-    inset: 0;
-    bottom: 120px;
-    background:
-      repeating-linear-gradient(0deg, transparent 0px, transparent 39px, rgba(0,0,0,0.06) 39px, rgba(0,0,0,0.06) 40px),
-      repeating-linear-gradient(90deg, transparent 0px, transparent 79px, rgba(0,0,0,0.06) 79px, rgba(0,0,0,0.06) 80px);
-  }
+        .result-desc {
+            font-size: 16px;
+            color: #cbd5e1;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
 
-  /* Fireplace glow at bottom */
-  #fire-glow {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 200px;
-    background: radial-gradient(ellipse at 50% 100%, rgba(255,100,0,0.35) 0%, transparent 70%);
-    pointer-events: none;
-    animation: flicker 1.5s infinite alternate;
-  }
-  @keyframes flicker {
-    0%   { opacity: 0.7; }
-    50%  { opacity: 1; }
-    100% { opacity: 0.5; }
-  }
+        .meme-img {
+            display: block;
+            width: 100%;
+            max-width: 350px;
+            height: auto;
+            margin: 20px auto;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.1);
+        }
 
-  /* ── CLOCK ── */
-  #clock {
-    position: absolute;
-    left: 30px;
-    bottom: 118px;
-    width: 55px;
-    height: 160px;
-    cursor: pointer;
-    transition: filter 0.2s;
-  }
-  #clock:hover { filter: brightness(1.3) drop-shadow(0 0 8px gold); }
-  .clock-body {
-    width: 55px;
-    height: 160px;
-    background: linear-gradient(135deg, #4a2810 0%, #7a4020 50%, #4a2810 100%);
-    border-radius: 6px 6px 4px 4px;
-    border: 2px solid #8b5a30;
-    position: relative;
-    box-shadow: 3px 3px 10px rgba(0,0,0,0.6);
-  }
-  .clock-face {
-    position: absolute;
-    top: 18px; left: 50%; transform: translateX(-50%);
-    width: 38px; height: 38px;
-    background: #f5e8d0;
-    border-radius: 50%;
-    border: 2px solid #8b5a30;
-  }
-  .clock-hand {
-    position: absolute;
-    bottom: 50%; left: 50%;
-    width: 2px;
-    transform-origin: bottom center;
-    background: #2a1a0a;
-    border-radius: 1px;
-  }
-  .clock-hand-hour  { height: 11px; transform: translateX(-50%) rotate(90deg); }
-  .clock-hand-min   { height: 14px; transform: translateX(-50%) rotate(0deg); }
-  .clock-pendulum {
-    position: absolute;
-    bottom: 10px; left: 50%; transform: translateX(-50%);
-    width: 8px; height: 8px;
-    background: #c8a020;
-    border-radius: 50%;
-    animation: swing 1.2s infinite ease-in-out;
-  }
-  @keyframes swing {
-    0%, 100% { transform: translateX(-50%) rotate(-20deg); }
-    50% { transform: translateX(-50%) rotate(20deg); }
-  }
-  .clock-label { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); width: 2px; height: 20px; background: #8b5a30; }
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
 
-  /* ── HALF-ROUND TABLE ── */
-  #table {
-    position: absolute;
-    right: 130px;
-    bottom: 118px;
-  }
-  .table-top {
-    width: 160px;
-    height: 80px;
-    background: linear-gradient(180deg, #7a4820 0%, #5a3010 100%);
-    border-radius: 80px 80px 0 0;
-    border: 2px solid #a06030;
-    position: relative;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    cursor: default;
-  }
-  .table-leg {
-    width: 12px;
-    height: 35px;
-    background: linear-gradient(180deg, #6a3818 0%, #4a2810 100%);
-    border-radius: 2px;
-    position: absolute;
-    bottom: -35px;
-  }
-  .table-leg.left  { left: 30px; }
-  .table-leg.right { right: 30px; }
+        .restart-btn {
+            background-color: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 35px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s ease;
+        }
 
-  /* Paper on table */
-  #paper {
-    position: absolute;
-    top: 12px; left: 50%; transform: translateX(-50%);
-    width: 48px; height: 48px;
-    cursor: pointer;
-    transition: filter 0.2s;
-    z-index: 10;
-  }
-  #paper:hover { filter: brightness(1.3) drop-shadow(0 0 6px gold); }
-  .paper-circle {
-    width: 48px; height: 48px;
-    background: radial-gradient(circle, #f5f0e8 60%, #e0d8c8 100%);
-    border-radius: 50%;
-    border: 2px solid #b0a080;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.55rem;
-    color: #6b5030;
-    text-align: center;
-    line-height: 1.2;
-    padding: 4px;
-  }
+        .restart-btn:hover { background-color: #4f46e5; }
 
-  /* ── FLOATING CABINET ── */
-  #cabinet {
-    position: absolute;
-    right: 80px;
-    top: 40px;
-    cursor: pointer;
-    transition: filter 0.2s;
-  }
-  #cabinet:hover { filter: brightness(1.2) drop-shadow(0 0 8px gold); }
-  .cabinet-body {
-    width: 140px;
-    height: 100px;
-    background: linear-gradient(135deg, #5a3010 0%, #8a5030 50%, #5a3010 100%);
-    border: 2px solid #a06030;
-    border-radius: 4px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.1);
-    position: relative;
-  }
-  .cabinet-door {
-    position: absolute;
-    inset: 8px;
-    background: linear-gradient(135deg, #6a3818 0%, #9a6040 50%, #6a3818 100%);
-    border-radius: 2px;
-    border: 1px solid #b07848;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .cabinet-handle {
-    width: 20px; height: 5px;
-    background: #c8a020;
-    border-radius: 3px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-  }
-  .cabinet-shadow {
-    position: absolute;
-    bottom: -12px; left: 10px; right: 10px;
-    height: 12px;
-    background: rgba(0,0,0,0.3);
-    border-radius: 0 0 4px 4px;
-    filter: blur(4px);
-  }
+        .yes-btn { background-color: #10b981; color: white; border: none; border-radius: 8px; padding: 12px 25px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        .yes-btn:hover { background-color: #059669; }
+        
+        .no-btn { background-color: #f43f5e; color: white; border: none; border-radius: 8px; padding: 12px 25px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        .no-btn:hover { background-color: #e11d48; }
 
-  /* ── WINDOW (back wall) ── */
-  .window-frame {
-    position: absolute;
-    top: 40px; left: 50%; transform: translateX(-50%);
-    width: 120px; height: 100px;
-    background: linear-gradient(135deg, #ffcc66 0%, #ff9933 100%);
-    border: 5px solid #7a4820;
-    border-radius: 4px;
-    box-shadow: inset 0 0 20px rgba(255,80,0,0.4);
-    overflow: hidden;
-  }
-  .window-cross-h {
-    position: absolute; top: 50%; left: 0; right: 0;
-    height: 5px; background: #7a4820; transform: translateY(-50%);
-  }
-  .window-cross-v {
-    position: absolute; left: 50%; top: 0; bottom: 0;
-    width: 5px; background: #7a4820; transform: translateX(-50%);
-  }
-
-  /* SCENE: DOOR */
-  #scene-door {
-    background: linear-gradient(180deg, #b8926a 0%, #c8a882 40%, #a07850 100%);
-  }
-  #door-floor {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 120px;
-    background: repeating-linear-gradient(90deg, #6b3a2a 0px, #6b3a2a 59px, #5a2d1f 59px, #5a2d1f 60px);
-  }
-  #door-wall {
-    position: absolute;
-    inset: 0; bottom: 120px;
-    background:
-      repeating-linear-gradient(0deg, transparent 0px, transparent 39px, rgba(0,0,0,0.06) 39px, rgba(0,0,0,0.06) 40px),
-      repeating-linear-gradient(90deg, transparent 0px, transparent 79px, rgba(0,0,0,0.06) 79px, rgba(0,0,0,0.06) 80px);
-  }
-  #the-door {
-    position: absolute;
-    left: 50%; bottom: 118px;
-    transform: translateX(-50%);
-    width: 130px;
-    height: 220px;
-    background: linear-gradient(135deg, #4a2810 0%, #7a4020 50%, #4a2810 100%);
-    border: 4px solid #8b5a30;
-    border-radius: 6px 6px 0 0;
-    box-shadow: 4px 0 15px rgba(0,0,0,0.5), -2px 0 8px rgba(0,0,0,0.3);
-  }
-  .door-panel {
-    position: absolute;
-    border: 2px solid #6a3818;
-    border-radius: 3px;
-    background: rgba(0,0,0,0.15);
-  }
-  .door-panel.top    { top: 15px; left: 12px; right: 12px; height: 70px; }
-  .door-panel.bottom { top: 100px; left: 12px; right: 12px; height: 90px; }
-  .door-knob {
-    position: absolute;
-    right: 14px; top: 50%;
-    width: 14px; height: 14px;
-    background: radial-gradient(circle at 35% 35%, #e0c060 0%, #c0a040 60%, #806020 100%);
-    border-radius: 50%;
-    box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-  }
-
-  /* Keypad */
-  #keypad {
-    position: absolute;
-    right: 160px; top: 160px;
-    width: 80px;
-    cursor: pointer;
-    transition: filter 0.2s;
-  }
-  #keypad:hover { filter: brightness(1.3) drop-shadow(0 0 6px #00ff88); }
-  .keypad-body {
-    width: 80px; height: 100px;
-    background: #1a1a2e;
-    border: 2px solid #00cc66;
-    border-radius: 6px;
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 4px;
-    box-shadow: 0 0 12px rgba(0,200,100,0.3);
-  }
-  .keypad-display {
-    width: 60px; height: 20px;
-    background: #002200;
-    border: 1px solid #00aa44;
-    border-radius: 2px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.9rem;
-    color: #00ff88;
-    display: flex; align-items: center; justify-content: center;
-    letter-spacing: 0.2em;
-  }
-  .keypad-dots {
-    display: flex; gap: 6px;
-  }
-  .keypad-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: #005522;
-    border: 1px solid #00aa44;
-  }
-
-  /* ── MODALS / POPUPS ── */
-  #overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.75);
-    z-index: 200;
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
-  #overlay.show { display: flex; }
-
-  .popup {
-    background: linear-gradient(135deg, #2d1508 0%, #3d2010 100%);
-    border: 2px solid var(--ember);
-    border-radius: 10px;
-    padding: 30px;
-    max-width: 420px;
-    width: 90%;
-    color: var(--cream);
-    position: relative;
-    box-shadow: 0 0 40px rgba(255,80,0,0.3);
-    text-align: center;
-    animation: popIn 0.3s ease;
-  }
-  @keyframes popIn {
-    from { transform: scale(0.7); opacity: 0; }
-    to   { transform: scale(1);   opacity: 1; }
-  }
-  .popup h2 { font-size: 1.3rem; color: var(--ember); margin-bottom: 14px; }
-  .popup p  { font-size: 0.95rem; line-height: 1.7; color: #e8d0b0; }
-  .popup-close {
-    position: absolute; top: 10px; right: 14px;
-    background: none; border: none;
-    color: var(--ember); font-size: 1.4rem; cursor: pointer;
-  }
-  .popup-btn {
-    margin-top: 18px;
-    background: var(--dark-wood);
-    border: 1px solid var(--ember);
-    color: var(--cream);
-    padding: 10px 24px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-family: 'Noto Serif TC', serif;
-    font-size: 0.9rem;
-    transition: background 0.2s;
-  }
-  .popup-btn:hover { background: var(--wood); }
-
-  /* Clock popup */
-  #popup-clock .big-clock-face {
-    width: 130px; height: 130px;
-    background: #f5e8d0;
-    border-radius: 50%;
-    border: 5px solid #8b5a30;
-    margin: 12px auto;
-    position: relative;
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
-  }
-  .big-hand {
-    position: absolute;
-    bottom: 50%; left: 50%;
-    transform-origin: bottom center;
-    border-radius: 2px;
-    background: #2a1a0a;
-  }
-  .big-hand-hour { width: 4px; height: 40px; transform: translateX(-50%) rotate(90deg); }
-  .big-hand-min  { width: 3px; height: 52px; transform: translateX(-50%) rotate(0deg); }
-  .clock-center {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-    width: 8px; height: 8px; background: #2a1a0a; border-radius: 50%;
-  }
-  /* Roman numerals hint */
-  .clock-hint-text { font-size: 0.8rem; color: #c8a070; margin-top: 8px; }
-
-  /* Paper popup */
-  #popup-paper .paper-visual {
-    width: 120px; height: 120px;
-    background: #f5f0e8;
-    border-radius: 50%;
-    border: 3px solid #b0a080;
-    margin: 14px auto;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.85rem; color: #5a4020; line-height: 1.5;
-    padding: 12px; text-align: center;
-  }
-
-  /* Cabinet popup */
-  #popup-cabinet .cabinet-visual {
-    width: 180px; height: 130px;
-    background: linear-gradient(135deg, #5a3010 0%, #8a5030 50%, #5a3010 100%);
-    border: 3px solid #a06030;
-    border-radius: 6px;
-    margin: 14px auto;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 3rem; color: #c8a020;
-    position: relative;
-    overflow: hidden;
-  }
-  .cabinet-open-door {
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 85px;
-    background: linear-gradient(135deg, #6a3818 0%, #9a6040 100%);
-    border-right: 2px solid #b07848;
-    transform-origin: left center;
-    transform: perspective(200px) rotateY(-70deg);
-    display: flex; align-items: center; justify-content: flex-end;
-    padding-right: 8px;
-  }
-  .cabinet-number {
-    position: absolute;
-    right: 30px;
-    font-size: 3.5rem;
-    font-weight: 900;
-    color: var(--fire);
-    text-shadow: 0 0 10px rgba(255,69,0,0.6);
-  }
-
-  /* Keypad popup */
-  #popup-keypad {
-    max-width: 340px;
-  }
-  #popup-keypad h2 { color: #00ff88; }
-  .keypad-input-display {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 2rem;
-    color: #00ff88;
-    background: #001800;
-    border: 2px solid #00aa44;
-    border-radius: 6px;
-    padding: 12px 20px;
-    letter-spacing: 0.4em;
-    min-width: 120px;
-    text-align: center;
-    margin: 12px auto;
-  }
-  .keypad-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    max-width: 200px;
-    margin: 0 auto;
-  }
-  .key-btn {
-    background: #0a2a0a;
-    border: 1px solid #00aa44;
-    color: #00ff88;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 1.2rem;
-    padding: 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.15s, box-shadow 0.15s;
-  }
-  .key-btn:hover { background: #0a4a0a; box-shadow: 0 0 8px rgba(0,255,100,0.4); }
-  .key-btn.del { color: #ff6644; border-color: #aa3322; }
-  .key-btn.enter { color: #88ffcc; border-color: #00ccaa; font-size: 0.8rem; }
-  #keypad-msg { font-size: 0.85rem; margin-top: 10px; height: 20px; color: #ff4444; }
-
-  /* ── GAME OVER / WIN screens ── */
-  #screen-end {
-    position: fixed; inset: 0;
-    z-index: 500;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    text-align: center;
-  }
-  #screen-end.show { display: flex; }
-  #screen-end.lose {
-    background: #000;
-    animation: burnIn 1.5s ease forwards;
-  }
-  @keyframes burnIn { from { background: #ff4500; } to { background: #000; } }
-  #screen-end.win {
-    background: radial-gradient(ellipse at center, #0a3a1a 0%, #001008 100%);
-  }
-  #end-text {
-    font-size: 1.6rem;
-    color: var(--ember);
-    line-height: 1.8;
-    max-width: 500px;
-    padding: 20px;
-    animation: fadeIn 2s ease;
-  }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  #end-text.win-text { color: #88ffcc; }
-  #restart-btn {
-    margin-top: 24px;
-    padding: 12px 32px;
-    background: transparent;
-    border: 2px solid currentColor;
-    color: inherit;
-    font-family: 'Noto Serif TC', serif;
-    font-size: 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  #restart-btn:hover { background: rgba(255,255,255,0.1); }
-
-  /* ── INTRO ── */
-  #intro {
-    position: fixed; inset: 0;
-    background: #0a0400;
-    z-index: 600;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 30px;
-  }
-  #intro h1 {
-    font-size: 2.4rem;
-    color: var(--ember);
-    text-shadow: 0 0 20px var(--fire);
-    margin-bottom: 20px;
-  }
-  #intro .marshmallow-emoji { font-size: 4rem; margin-bottom: 10px; animation: bounce 1s infinite alternate; }
-  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
-  #intro p {
-    color: #e0c090;
-    font-size: 1rem;
-    line-height: 1.9;
-    max-width: 500px;
-    margin-bottom: 24px;
-  }
-  #start-btn {
-    background: var(--fire);
-    border: none;
-    color: white;
-    font-family: 'Noto Serif TC', serif;
-    font-size: 1.1rem;
-    padding: 14px 40px;
-    border-radius: 8px;
-    cursor: pointer;
-    box-shadow: 0 0 20px rgba(255,80,0,0.5);
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  #start-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(255,80,0,0.8); }
-
-  /* ── Hint badge ── */
-  #hints-bar {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: rgba(20,6,0,0.9);
-    border-top: 1px solid var(--dark-wood);
-    padding: 6px 16px;
-    font-size: 0.78rem;
-    color: #a08060;
-    display: flex; gap: 16px; align-items: center;
-    z-index: 90;
-    min-height: 32px;
-  }
-  .hint-item { display: flex; align-items: center; gap: 5px; }
-  .hint-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #333; border: 1px solid #666;
-    transition: background 0.5s;
-  }
-  .hint-dot.found { background: var(--ember); box-shadow: 0 0 5px var(--fire); }
-</style>
+        .hidden { display: none !important; }
+    </style>
 </head>
 <body>
 
-<!-- INTRO -->
-<div id="intro">
-  <div class="marshmallow-emoji">🍬</div>
-  <h1>棉花糖大逃脫！</h1>
-  <p>
-    你是一塊柔軟的棉花糖，卻被困在一間神秘的房間裡。<br>
-    不知為何，室溫正在不斷升高……<br>
-    <strong style="color:var(--fire)">如果無法在3分鐘內逃出去，你將被熔化！</strong><br><br>
-    點擊畫面中的物品來尋找線索，找到密碼開門逃脫吧！<br>
-    左上角有倒數計時器。右上角可切換房間視角。
-  </p>
-  <button id="start-btn" onclick="startGame()">開始逃脫！</button>
-</div>
-
-<!-- HUD -->
-<div id="hud" style="display:none">
-  <div id="timer">03:00</div>
-  <div id="scene-label">📍 房間內部</div>
-  <div id="nav-btns">
-    <button class="nav-btn" onclick="switchScene('room')">🪑 房間</button>
-    <button class="nav-btn" onclick="switchScene('door')">🚪 門口</button>
-  </div>
-</div>
-
-<!-- GAME -->
-<div id="game" style="display:none">
-
-  <!-- SCENE: ROOM -->
-  <div class="scene active" id="scene-room">
-    <div id="room-wall"></div>
-
-    <!-- Window -->
-    <div class="window-frame">
-      <div class="window-cross-h"></div>
-      <div class="window-cross-v"></div>
-    </div>
-
-    <!-- Clock -->
-    <div id="clock" onclick="showPopup('clock')" title="點擊查看時鐘">
-      <div class="clock-body">
-        <div class="clock-face">
-          <div class="clock-hand clock-hand-hour"></div>
-          <div class="clock-hand clock-hand-min"></div>
+    <div class="game-container">
+        <h1>🔮 神秘占星術：靈魂頻率測驗</h1>
+        
+        <!-- 1. 測驗進行中的區塊 -->
+        <div id="quiz-section">
+            <div class="progress-bar" id="progress">題目載入中...</div>
+            <div class="question-text" id="question">正在連結星象核心...</div>
+            <div class="options-container" id="options"></div>
         </div>
-        <div class="clock-label"></div>
-        <div class="clock-pendulum"></div>
-      </div>
-    </div>
 
-    <!-- Table -->
-    <div id="table">
-      <div class="table-top">
-        <!-- Paper on table -->
-        <div id="paper" onclick="showPopup('paper')" title="點擊查看紙張">
-          <div class="paper-circle" id="paper-face">
-            圓形<br>圖案
-          </div>
+        <!-- 2. 測驗結果區塊 -->
+        <div id="result-section" class="hidden">
+            <p class="feedback-text" style="color: #a78bfa;">✨ 占星核心共振完畢 ✨</p>
+            <p style="font-size: 18px; margin-bottom: 5px;">窺探你的靈魂本質，你絕對是：</p>
+            <h2 id="zodiac-name" style="font-size: 36px; color: #fbbf24; margin: 10px 0; letter-spacing: 2px;">星座計算中...</h2>
+            <p class="result-desc" id="zodiac-desc">特質分析中...</p>
+            
+            <hr style="border: 0; border-top: 1px solid #4338ca; margin: 25px 0;">
+            <p style="font-size: 18px; font-weight: bold; color: #cbd5e1;">請問占星術大師猜得準嗎？</p>
+            <div class="btn-group">
+                <button class="yes-btn" onclick="handleFeedback(true)">沒錯！太準了 🔮</button>
+                <button class="no-btn" onclick="handleFeedback(false)">不太對，猜錯了 ❌</button>
+            </div>
         </div>
-        <div class="table-leg left"></div>
-        <div class="table-leg right"></div>
-      </div>
-    </div>
 
-    <!-- Cabinet -->
-    <div id="cabinet" onclick="showPopup('cabinet')" title="點擊查看懸浮櫃子">
-      <div class="cabinet-body">
-        <div class="cabinet-door" id="cabinet-door-visual">
-          <div class="cabinet-handle"></div>
+        <!-- 3. 最終梗圖回饋區塊 -->
+        <div id="feedback-section" class="hidden">
+            <h2 id="feedback-title" style="font-size: 32px; margin-bottom: 10px;"></h2>
+            <p id="feedback-comment" style="font-size: 18px; color: #cbd5e1; margin-bottom: 20px;"></p>
+            
+            <!-- 修正後的動態梗圖圖片 -->
+            <img id="meme-image" class="meme-img" src="" alt="梗圖載入中...">
+            
+            <div style="margin-top: 25px;">
+                <button class="restart-btn" onclick="restartQuiz()">重新測驗</button>
+            </div>
         </div>
-      </div>
-      <div class="cabinet-shadow"></div>
     </div>
 
-    <div id="room-floor"></div>
-    <div id="fire-glow"></div>
-  </div>
+    <script>
+        const questions = [
+            {
+                text: "1. 當你面對一個全新的挑戰或未知冒險時，你的第一反應是？",
+                options: [
+                    { text: "熱血沸騰，先衝再說！毫無畏懼！", zodiacs: ["Aries", "Leo", "Sagittarius"] },
+                    { text: "冷靜觀察，默默收集資料規劃完美路線", zodiacs: ["Virgo", "Capricorn", "Scorpio"] },
+                    { text: "找朋友討論，聽聽大家的想法再決定", zodiacs: ["Libra", "Gemini", "Aquarius"] },
+                    { text: "憑直覺感受，覺得不對勁就先觀望", zodiacs: ["Cancer", "Pisces", "Taurus"] }
+                ]
+            },
+            {
+                text: "2. 朋友臨時取消晚上的聚會，你內心的真實想法是？",
+                options: [
+                    { text: "太棒了！終於可以合法宅在家放空了！", zodiacs: ["Taurus", "Cancer", "Capricorn"] },
+                    { text: "有點小失落，那我找別人出去玩好了！", zodiacs: ["Gemini", "Leo", "Sagittarius"] },
+                    { text: "沒關係，剛好可以利用時間做自己的計畫", zodiacs: ["Virgo", "Aquarius", "Aries"] },
+                    { text: "會想很多，是不是自己講錯話被討厭了？", zodiacs: ["Pisces", "Scorpio", "Libra"] }
+                ]
+            },
+            {
+                text: "3. 挑選隨身物品（如手機殼、衣服）時，你最看重什麼？",
+                options: [
+                    { text: "實用性高、耐用且高質感、性價比好", zodiacs: ["Taurus", "Virgo", "Capricorn"] },
+                    { text: "設計獨特、外觀一定要耀眼、有大牌感", zodiacs: ["Leo", "Aries", "Scorpio"] },
+                    { text: "款式新穎，要嘛搞怪、要嘛走在流行尖端", zodiacs: ["Gemini", "Aquarius", "Sagittarius"] },
+                    { text: "看感覺，最好帶有某種故事或溫暖的氛圍", zodiacs: ["Cancer", "Libra", "Pisces"] }
+                ]
+            },
+            {
+                text: "4. 你最不能忍受哪一種人的相處模式？",
+                options: [
+                    { text: "講話拐彎幕角、虛偽不真誠的人", zodiacs: ["Aries", "Leo", "Sagittarius"] },
+                    { text: "毫無邏輯、講不聽又沒計畫的人", zodiacs: ["Virgo", "Capricorn", "Gemini"] },
+                    { text: "控制狂，連芝麻綠豆小事都要管的人", zodiacs: ["Aquarius", "Libra", "Scorpio"] },
+                    { text: "自私自利、完全不顧及別人感受的人", zodiacs: ["Cancer", "Pisces", "Taurus"] }
+                ]
+            },
+            {
+                text: "5. 面對工作或學業上的壓力，你通常怎麼宣洩？",
+                options: [
+                    { text: "瘋狂大吃美食、爆買東西犒賞自己", zodiacs: ["Taurus", "Cancer", "Libra"] },
+                    { text: "去唱KTV、運動暴汗、找人痛快大哭一場", zodiacs: ["Aries", "Pisces", "Leo"] },
+                    { text: "瘋狂追劇、打遊戲，讓腦袋徹底與世隔絕", zodiacs: ["Gemini", "Sagittarius", "Aquarius"] },
+                    { text: "把壓力轉換成動力，逼自己做到完美為止", zodiacs: ["Virgo", "Scorpio", "Capricorn"] }
+                ]
+            },
+            {
+                text: "6. 在團體中，你通常不知不覺中扮演什麼角色？",
+                options: [
+                    { text: "帶頭衝鋒、給出肯定方向的決策者", zodiacs: ["Aries", "Leo", "Capricorn"] },
+                    { text: "傾聽大家心聲、居中調解的和事佬", zodiacs: ["Libra", "Cancer", "Pisces"] },
+                    { text: "提供瘋狂鬼點子、活絡氣氛的開心果", zodiacs: ["Gemini", "Sagittarius", "Aquarius"] },
+                    { text: "默默做事、注重細節的把關者", zodiacs: ["Taurus", "Virgo", "Scorpio"] }
+                ]
+            },
+            {
+                text: "7. 關於愛情，你內心深處最渴望的是？",
+                options: [
+                    { text: "轟轟烈烈、充滿激情與崇拜的愛", zodiacs: ["Aries", "Leo", "Scorpio"] },
+                    { text: "相知相惜、像朋友一樣靈魂契合且自由", zodiacs: ["Gemini", "Sagittarius", "Aquarius"] },
+                    { text: "相濡以沫、細水長流的日常陪伴與安全感", zodiacs: ["Taurus", "Cancer", "Libra"] },
+                    { text: "絕對的忠誠、互相扶持走向未來的踏實感", zodiacs: ["Virgo", "Capricorn", "Pisces"] }
+                ]
+            }
+        ];
 
-  <!-- SCENE: DOOR -->
-  <div class="scene" id="scene-door">
-    <div id="door-wall"></div>
-    <div id="the-door">
-      <div class="door-panel top"></div>
-      <div class="door-panel bottom"></div>
-      <div class="door-knob"></div>
-    </div>
-    <!-- Keypad -->
-    <div id="keypad" onclick="showPopup('keypad')" title="點擊電子鎖">
-      <div class="keypad-body">
-        <div class="keypad-display">---</div>
-        <div class="keypad-dots">
-          <div class="keypad-dot"></div>
-          <div class="keypad-dot"></div>
-          <div class="keypad-dot"></div>
-        </div>
-      </div>
-    </div>
-    <div id="door-floor"></div>
-  </div>
-</div>
+        const zodiacDatabase = {
+            Aries: { name: "牡羊座 ♈", desc: "純真熱情、行動力爆表的直球對決大師！" },
+            Taurus: { name: "金牛座 ♉", desc: "精打細算、懂得享受極致生活的低調美學家！" },
+            Gemini: { name: "雙子座 ♊", desc: "一秒鐘有八百個鬼點子的靈魂社交觀察家！" },
+            Cancer: { name: "巨蟹座 ♋", desc: "防備心高卻極度溫柔、充滿母愛光輝的傾聽者！" },
+            Leo: { name: "獅子座 ♌", desc: "天生自帶聚光燈、講義氣又愛面子的霸氣王者！" },
+            Virgo: { name: "處女座 ♍", desc: "細節控、精神潔癖、將清醒與理性刻入骨髓的智者！" },
+            Libra: { name: "天秤座 ♎", desc: "追求和諧、骨子裡優雅卻有選擇障礙的和平使者！" },
+            Scorpio: { name: "天蠍座 ♏", desc: "第六感極強、愛恨分明且充滿致命神秘感的強者！" },
+            Sagittarius: { name: "射手座 ♐", desc: "靈魂永不被拘束、永遠在追求新奇冒險的自由浪子！" },
+            Capricorn: { name: "摩羯座 ♑", desc: "內冷外熱、默默耕耘、意志力驚人的現實主義王者！" },
+            Aquarius: { name: "水瓶座 ♒", desc: "思維活在外太空、討厭墨守成規的獨特外星人！" },
+            Pisces: { name: "雙魚座 ♓", desc: "浪漫至上、情感豐富、活在夢幻泡泡裡的藝術家！" }
+        };
 
-<!-- HINTS BAR -->
-<div id="hints-bar" style="display:none">
-  <span style="color:#888">線索：</span>
-  <div class="hint-item"><div class="hint-dot" id="hint1"></div><span>時鐘</span></div>
-  <div class="hint-item"><div class="hint-dot" id="hint2"></div><span>紙張</span></div>
-  <div class="hint-item"><div class="hint-dot" id="hint3"></div><span>櫃子</span></div>
-</div>
+        let currentQuestionIndex = 0;
+        let zodiacScores = {
+            Aries: 0, Taurus: 0, Gemini: 0, Cancer: 0, Leo: 0, Virgo: 0,
+            Libra: 0, Scorpio: 0, Sagittarius: 0, Capricorn: 0, Aquarius: 0, Pisces: 0
+        };
 
-<!-- OVERLAY -->
-<div id="overlay" onclick="overlayClick(event)">
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            for (let z in zodiacScores) zodiacScores[z] = 0;
+            
+            document.getElementById("quiz-section").classList.remove("hidden");
+            document.getElementById("result-section").classList.add("hidden");
+            document.getElementById("feedback-section").classList.add("hidden");
+            showQuestion();
+        }
 
-  <!-- Clock popup -->
-  <div class="popup" id="popup-clock" style="display:none">
-    <button class="popup-close" onclick="closePopup()">✕</button>
-    <h2>🕰️ 老式時鐘</h2>
-    <div class="big-clock-face">
-      <div class="big-hand big-hand-hour"></div>
-      <div class="big-hand big-hand-min"></div>
-      <div class="clock-center"></div>
-    </div>
-    <p class="clock-hint-text">時針靜靜地停在某個方向……</p>
-    <p style="margin-top:8px;font-size:0.85rem;color:#a08060">這個位置似乎藏著什麼意義。</p>
-    <button class="popup-btn" onclick="closePopup(); markHint(1)">仔細看過了</button>
-  </div>
+        function showQuestion() {
+            const currentQuestion = questions[currentQuestionIndex];
+            document.getElementById("progress").innerText = `問題 ${currentQuestionIndex + 1} / ${questions.length}`;
+            document.getElementById("question").innerText = currentQuestion.text;
+            
+            const optionsContainer = document.getElementById("options");
+            optionsContainer.innerHTML = "";
+            
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement("button");
+                button.classList.add("option-btn");
+                button.innerText = option.text;
+                button.onclick = () => selectOption(option.zodiacs);
+                optionsContainer.appendChild(button);
+            });
+        }
 
-  <!-- Paper popup -->
-  <div class="popup" id="popup-paper" style="display:none">
-    <button class="popup-close" onclick="closePopup()">✕</button>
-    <h2>📄 圓形紙張</h2>
-    <div id="paper-popup-content">
-      <div class="paper-visual" id="paper-front">
-        <span>神秘的圓形紙張<br><br><em style="font-size:0.7rem">（點擊翻面）</em></span>
-      </div>
-    </div>
-    <p id="paper-instruction" style="margin-top:8px;font-size:0.9rem;color:#d0b090">請翻到背面查看。</p>
-    <button class="popup-btn" id="paper-flip-btn" onclick="flipPaper()">翻面</button>
-  </div>
+        function selectOption(associatedZodiacs) {
+            associatedZodiacs.forEach(z => zodiacScores[z]++);
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
 
-  <!-- Cabinet popup -->
-  <div class="popup" id="popup-cabinet" style="display:none">
-    <button class="popup-close" onclick="closePopup()">✕</button>
-    <h2>🗄️ 懸浮櫃子</h2>
-    <div id="cabinet-popup-content">
-      <div class="cabinet-visual" id="cabinet-visual-closed" style="cursor:pointer" onclick="openCabinet()">
-        <div style="text-align:center;color:#c8a070;font-size:0.9rem">古老的木製小櫃<br><em style="font-size:0.75rem">（點擊打開）</em></div>
-      </div>
-    </div>
-    <p style="margin-top:8px;font-size:0.85rem;color:#a08060">裡面不知道放著什麼……</p>
-  </div>
+        function showResult() {
+            document.getElementById("quiz-section").classList.add("hidden");
+            document.getElementById("result-section").classList.remove("hidden");
+            
+            let finalZodiac = "Aries";
+            let maxScore = -1;
+            for (const z in zodiacScores) {
+                if (zodiacScores[z] > maxScore) {
+                    maxScore = zodiacScores[z];
+                    finalZodiac = z;
+                }
+            }
+            
+            const resultData = zodiacDatabase[finalZodiac];
+            document.getElementById("zodiac-name").innerText = resultData.name;
+            document.getElementById("zodiac-desc").innerText = resultData.desc;
+        }
 
-  <!-- Keypad popup -->
-  <div class="popup" id="popup-keypad" style="display:none">
-    <button class="popup-close" onclick="closePopup()">✕</button>
-    <h2>🔒 電子鎖</h2>
-    <p style="font-size:0.85rem;color:#88cc88">輸入3位數密碼</p>
-    <div class="keypad-input-display" id="keypad-display">___</div>
-    <div class="keypad-grid">
-      <button class="key-btn" onclick="pressKey('1')">1</button>
-      <button class="key-btn" onclick="pressKey('2')">2</button>
-      <button class="key-btn" onclick="pressKey('3')">3</button>
-      <button class="key-btn" onclick="pressKey('4')">4</button>
-      <button class="key-btn" onclick="pressKey('5')">5</button>
-      <button class="key-btn" onclick="pressKey('6')">6</button>
-      <button class="key-btn" onclick="pressKey('7')">7</button>
-      <button class="key-btn" onclick="pressKey('8')">8</button>
-      <button class="key-btn" onclick="pressKey('9')">9</button>
-      <button class="key-btn del" onclick="deleteKey()">⌫</button>
-      <button class="key-btn" onclick="pressKey('0')">0</button>
-      <button class="key-btn enter" onclick="submitCode()">確認</button>
-    </div>
-    <div id="keypad-msg"></div>
-  </div>
+        // 🌟 核心修正：改用 GIPHY 官方絕對穩定的開放圖源網址！
+        function handleFeedback(isCorrect) {
+            document.getElementById("result-section").classList.add("hidden");
+            document.getElementById("feedback-section").classList.remove("hidden");
+            
+            const titleEl = document.getElementById("feedback-title");
+            const commentEl = document.getElementById("feedback-comment");
+            const imgEl = document.getElementById("meme-image");
+            
+            if (isCorrect) {
+                titleEl.innerText = "🎉 太棒了！！！";
+                titleEl.style.color = "#10b981"; 
+                commentEl.innerText = "我就知道占星大師是不會出錯的！簡直神準！";
+                // GIPHY 官方經典快樂慶祝動態圖
+                imgEl.src = "https://media.giphy.com/media/l0AM3MDqA40cRlJXG/giphy.gif"; 
+                imgEl.alt = "開心動態梗圖";
+            } else {
+                titleEl.innerText = "😭 太可惜了，重新再來一次";
+                titleEl.style.color = "#f43f5e"; 
+                commentEl.innerText = "可惡，宇宙星象竟然失手了！一定是磁場干擾，再測一次試試看！";
+                // GIPHY 官方經典無奈哭笑不得/崩潰動態圖
+                imgEl.src = "https://media.giphy.com/media/26BGAOkDPOZTXwmHK/giphy.gif";
+                imgEl.alt = "哭臉動態梗圖";
+            }
+        }
 
-</div>
+        function restartQuiz() {
+            startQuiz();
+        }
 
-<!-- END SCREEN -->
-<div id="screen-end">
-  <div id="end-text"></div>
-  <button id="restart-btn" onclick="restartGame()">再玩一次</button>
-</div>
-
-<script>
-  // ── State ──
-  let timeLeft = 180;
-  let timerInterval = null;
-  let paperFlipped = false;
-  let cabinetOpened = false;
-  let keyInput = '';
-  let gameOver = false;
-  let hintsFound = [false, false, false];
-
-  const PASSWORD = '358';
-
-  // ── Start ──
-  function startGame() {
-    document.getElementById('intro').style.display = 'none';
-    document.getElementById('hud').style.display = 'flex';
-    document.getElementById('game').style.display = 'block';
-    document.getElementById('hints-bar').style.display = 'flex';
-    timerInterval = setInterval(tick, 1000);
-  }
-
-  function tick() {
-    if (gameOver) return;
-    timeLeft--;
-    updateTimer();
-    if (timeLeft <= 0) loseGame();
-  }
-
-  function updateTimer() {
-    const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-    const s = (timeLeft % 60).toString().padStart(2, '0');
-    const el = document.getElementById('timer');
-    el.textContent = `${m}:${s}`;
-    el.className = timeLeft <= 30 ? 'danger' : '';
-  }
-
-  // ── Scene switch ──
-  function switchScene(name) {
-    document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
-    document.getElementById('scene-' + name).classList.add('active');
-    const labels = { room: '📍 房間內部', door: '🚪 門口' };
-    document.getElementById('scene-label').textContent = labels[name];
-  }
-
-  // ── Popups ──
-  function showPopup(name) {
-    if (gameOver) return;
-    document.querySelectorAll('.popup').forEach(p => p.style.display = 'none');
-    document.getElementById('popup-' + name).style.display = 'block';
-    document.getElementById('overlay').classList.add('show');
-  }
-
-  function closePopup() {
-    document.getElementById('overlay').classList.remove('show');
-    document.querySelectorAll('.popup').forEach(p => p.style.display = 'none');
-  }
-
-  function overlayClick(e) {
-    if (e.target === document.getElementById('overlay')) closePopup();
-  }
-
-  // ── Hints ──
-  function markHint(n) {
-    hintsFound[n - 1] = true;
-    document.getElementById('hint' + n).classList.add('found');
-  }
-
-  // ── Paper flip ──
-  function flipPaper() {
-    const front = document.getElementById('paper-front');
-    const btn   = document.getElementById('paper-flip-btn');
-    const instr = document.getElementById('paper-instruction');
-    if (!paperFlipped) {
-      front.innerHTML = '<span style="font-size:4rem;font-weight:900;color:#2a1a0a">5</span>';
-      instr.textContent = '紙張背面寫著一個數字……';
-      btn.textContent = '翻回正面';
-      paperFlipped = true;
-      markHint(2);
-    } else {
-      front.innerHTML = '<span>神秘的圓形紙張<br><br><em style="font-size:0.7rem">（點擊翻面）</em></span>';
-      instr.textContent = '請翻到背面查看。';
-      btn.textContent = '翻面';
-      paperFlipped = false;
-    }
-  }
-
-  // ── Cabinet ──
-  function openCabinet() {
-    if (cabinetOpened) return;
-    cabinetOpened = true;
-    const visual = document.getElementById('cabinet-visual-closed');
-    visual.innerHTML = `
-      <div class="cabinet-open-door"></div>
-      <div class="cabinet-number">8</div>
-    `;
-    visual.style.cursor = 'default';
-    markHint(3);
-    document.querySelector('#popup-cabinet p:last-of-type').textContent = '裡面貼著一張數字！';
-  }
-
-  // ── Keypad ──
-  function pressKey(k) {
-    if (keyInput.length >= 3) return;
-    keyInput += k;
-    updateDisplay();
-  }
-
-  function deleteKey() {
-    keyInput = keyInput.slice(0, -1);
-    updateDisplay();
-  }
-
-  function updateDisplay() {
-    const d = document.getElementById('keypad-display');
-    const shown = keyInput.padEnd(3, '_');
-    d.textContent = shown;
-    document.getElementById('keypad-msg').textContent = '';
-  }
-
-  function submitCode() {
-    if (keyInput.length < 3) {
-      document.getElementById('keypad-msg').textContent = '請輸入完整3位數！';
-      return;
-    }
-    if (keyInput === PASSWORD) {
-      winGame();
-    } else {
-      document.getElementById('keypad-msg').textContent = '❌ 密碼錯誤！再試試。';
-      keyInput = '';
-      updateDisplay();
-    }
-  }
-
-  // ── Win / Lose ──
-  function winGame() {
-    gameOver = true;
-    clearInterval(timerInterval);
-    closePopup();
-    const end = document.getElementById('screen-end');
-    end.className = 'show win';
-    document.getElementById('end-text').className = 'win-text';
-    document.getElementById('end-text').innerHTML = `
-      🎉 門開了！<br><br>
-      你迅速滾出了房間，<br>
-      在最後一刻躲過了熔化的命運。<br><br>
-      <span style="font-size:1.1rem">棉花糖萬歲！</span><br>
-      <span style="font-size:0.85rem;color:#88ffcc;margin-top:12px;display:block">剩餘時間：${formatTime(timeLeft)}</span>
-    `;
-  }
-
-  function loseGame() {
-    gameOver = true;
-    clearInterval(timerInterval);
-    closePopup();
-    const end = document.getElementById('screen-end');
-    end.className = 'show lose';
-    document.getElementById('end-text').className = '';
-    document.getElementById('end-text').innerHTML = `
-      你被燒到融化，<br>癱倒在地。<br><br>
-      <span style="font-size:0.85rem;color:#996644">那個房間從此再也沒人知道你的存在……</span>
-    `;
-  }
-
-  function restartGame() {
-    timeLeft = 180;
-    paperFlipped = false;
-    cabinetOpened = false;
-    keyInput = '';
-    gameOver = false;
-    hintsFound = [false, false, false];
-
-    document.getElementById('screen-end').className = '';
-    document.getElementById('hint1').classList.remove('found');
-    document.getElementById('hint2').classList.remove('found');
-    document.getElementById('hint3').classList.remove('found');
-
-    // Reset paper
-    document.getElementById('paper-front').innerHTML = '<span>神秘的圓形紙張<br><br><em style="font-size:0.7rem">（點擊翻面）</em></span>';
-    document.getElementById('paper-instruction').textContent = '請翻到背面查看。';
-    document.getElementById('paper-flip-btn').textContent = '翻面';
-
-    // Reset cabinet
-    const cv = document.getElementById('cabinet-visual-closed');
-    cv.innerHTML = '<div style="text-align:center;color:#c8a070;font-size:0.9rem">古老的木製小櫃<br><em style="font-size:0.75rem">（點擊打開）</em></div>';
-    cv.style.cursor = 'pointer';
-    cv.onclick = openCabinet;
-    document.querySelector('#popup-cabinet p:last-of-type').textContent = '裡面不知道放著什麼……';
-
-    // Reset keypad
-    updateDisplay();
-
-    updateTimer();
-    switchScene('room');
-    clearInterval(timerInterval);
-    timerInterval = setInterval(tick, 1000);
-  }
-
-  function formatTime(s) {
-    return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
-  }
-</script>
+        window.onload = startQuiz;
+    </script>
 </body>
 </html>
+
