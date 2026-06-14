@@ -1,0 +1,379 @@
+HTML
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>看圖猜人名挑戰賽</title>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-container {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 480px;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 畫面切換 */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* 標題與文字 */
+        h1 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        p.desc {
+            color: var(--text-muted);
+            font-size: 16px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        /* 按鈕基本樣式 */
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        /* 遊戲上方資訊 */
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        /* 5秒倒數計時條 */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--danger-color);
+            width: 100%;
+            /* 用於動態控制的 transition */
+            transition: width 5s linear; 
+        }
+
+        /* 圖片容器 */
+        .img-box {
+            width: 100%;
+            height: 260px;
+            border-radius: 15px;
+            background-color: #f8fafc;
+            border: 2px solid #e2e8f0;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .img-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* 四個選項版面 */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background-color: #f8fafc;
+            color: var(--text-main);
+            border: 2px solid #cbd5e1;
+            padding: 14px 10px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .option-btn:hover {
+            background-color: #e2e8f0;
+            border-color: #94a3b8;
+        }
+
+        /* 結算畫面 */
+        .score-num {
+            font-size: 64px;
+            font-weight: 800;
+            color: var(--success-color);
+            margin: 20px 0;
+        }
+
+        .comment {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        
+        <!-- 畫面一：開始首頁 -->
+        <div id="start-screen" class="screen active">
+            <h1>看圖猜人名挑戰</h1>
+            <p class="desc">考驗你的眼力與反應速度！<br>系統將隨機抽取 5 題，每題只有 <b>5 秒</b> 考慮時間！</p>
+            <button class="btn" onclick="startGame()">開始遊戲</button>
+        </div>
+
+        <!-- 畫面二：遊戲進行中 -->
+        <div id="game-screen" class="screen">
+            <div class="game-info">
+                <span id="question-idx">第 1 / 5 題</span>
+                <span id="score-display">分數: 0</span>
+            </div>
+            
+            <!-- 倒數計時進度條 -->
+            <div class="progress-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+
+            <!-- 題目圖片 -->
+            <div class="img-box">
+                <img id="quest-img" src="" alt="題目圖片">
+            </div>
+
+            <!-- 四個選項 -->
+            <div class="options-grid">
+                <button class="option-btn" onclick="submitAnswer(0)"></button>
+                <button class="option-btn" onclick="submitAnswer(1)"></button>
+                <button class="option-btn" onclick="submitAnswer(2)"></button>
+                <button class="option-btn" onclick="submitAnswer(3)"></button>
+            </div>
+        </div>
+
+        <!-- 畫面三：結算分數 -->
+        <div id="result-screen" class="screen">
+            <h1>挑戰結束！</h1>
+            <div class="score-num"><span id="final-score">0</span><span style="font-size: 24px; color: var(--text-muted);"> / 50 分</span></div>
+            <p id="result-comment" class="comment">非常棒！</p>
+            <button class="btn" onclick="restartGame()">再玩一次</button>
+        </div>
+
+    </div>
+
+    <script>
+        // 完整 10 題題庫 (包含圖片名稱、正確答案，以及幫你配好的另外三個干擾選項)
+        const totalQuestionPool = [
+            { img: "my.jpg", answer: "陳其邁", options: ["陳其邁", "柯文哲", "蔣萬安", "侯友宜"] },
+            { img: "IU.jpg", answer: "IU", options: ["IU", "太妍", "林潤娥", "Jennie"] },
+            { img: "han.jpg", answer: "許光漢", options: ["許光漢", "林柏宏", "彭于晏", "劉以豪"] },
+            { img: "V.jpg", answer: "金泰亨", options: ["金泰亨", "田柾國", "車銀優", "朴寶劍"] },
+            { img: "lisa.jpg", answer: "Lisa", options: ["Lisa", "Jisoo", "Rosé", "Hanni"] },
+            { img: "hao.jpg", answer: "周湯豪", options: ["周湯豪", "周杰倫", "林俊傑", "韋禮安"] },
+            { img: "justin.jpg", answer: "Justin Bieber", options: ["Justin Bieber", "Bruno Mars", "Ed Sheeran", "Shawn Mendes"] },
+            { img: "ya.jpg", answer: "葉舒華", options: ["葉舒華", "宋雨琦", "周子瑜", "張員瑛"] },
+            { img: "sunny.jpg", answer: "SunnyYummy", options: ["SunnyYummy", "蔡阿嘎", "阿滴英文", "這群人"] },
+            { img: "yo.jpg", answer: "YOASOBI", options: ["YOASOBI", "King Gnu", "milet", "Ado"] }
+        ];
+
+        let currentRoundQuestions = []; // 本局抽出的 5 題
+        let currentIndex = 0;           // 當前題號索引
+        let currentScore = 0;           // 當前累積分數
+        let gameTimer = null;           // 5秒計時器指標
+
+        // 開始新遊戲
+        function startGame() {
+            currentScore = 0;
+            currentIndex = 0;
+            
+            // 從 10 題中隨機洗牌，並取出前 5 題
+            const shuffledPool = [...totalQuestionPool].sort(() => 0.5 - Math.random());
+            currentRoundQuestions = shuffledPool.slice(0, 5);
+
+            // 切換到遊戲畫面
+            changeScreen('game-screen');
+            // 載入第一題
+            loadQuestion();
+        }
+
+        // 載入題目資料
+        function loadQuestion() {
+            // 如果 5 題都答完了，進入結算
+            if (currentIndex >= 5) {
+                showResult();
+                return;
+            }
+
+            // 更新介面上的文字
+            document.getElementById('question-idx').innerText = `第 ${currentIndex + 1} / 5 題`;
+            document.getElementById('score-display').innerText = `分數: ${currentScore}`;
+
+            const currentData = currentRoundQuestions[currentIndex];
+
+            // 換圖片網址
+            document.getElementById('quest-img').src = currentData.img;
+
+            // 將四個選項進行隨機打亂，避免正確答案每次都在同一個位置
+            const shuffledOptions = [...currentData.options].sort(() => 0.5 - Math.random());
+
+            // 填入按鈕
+            const optionButtons = document.querySelectorAll('.option-btn');
+            optionButtons.forEach((btn, index) => {
+                btn.innerText = shuffledOptions[index];
+                // 將文字綁定到 dataset 供點擊時比對
+                btn.dataset.value = shuffledOptions[index]; 
+            });
+
+            // 啟動倒數
+            startCountdown();
+        }
+
+        // 5秒倒數計時邏輯
+        function startCountdown() {
+            const progressBar = document.getElementById('progress-bar');
+            
+            // 重設計時條：先移除過渡效果、恢復滿格
+            progressBar.style.transition = 'none';
+            progressBar.style.width = '100%';
+            
+            // 強制瀏覽器重繪 (Reflow)，確保過渡動畫能重新被偵測與觸發
+            void progressBar.offsetWidth; 
+            
+            // 開始 5 秒倒數過渡動畫：寬度變為 0%
+            progressBar.style.transition = 'width 5s linear';
+            progressBar.style.width = '0%';
+
+            // 清除之前的計時器，避免堆疊
+            clearTimeout(gameTimer);
+
+            // 設定 5 秒後若無操作，自動視為答錯，進入下一題
+            gameTimer = setTimeout(() => {
+                goToNextQuestion(); 
+            }, 5000);
+        }
+
+        // 處理玩家點擊選項
+        function submitAnswer(btnIndex) {
+            // 玩家有動作，立即停止倒數
+            clearTimeout(gameTimer);
+
+            const clickedBtn = document.querySelectorAll('.option-btn')[btnIndex];
+            const selectedValue = clickedBtn.dataset.value;
+            const correctAnswer = currentRoundQuestions[currentIndex].answer;
+
+            // 比對答案，正確就加 10 分
+            if (selectedValue === correctAnswer) {
+                currentScore += 10;
+            }
+
+            // 前進下一題
+            goToNextQuestion();
+        }
+
+        // 跳下一題
+        function goToNextQuestion() {
+            currentIndex++;
+            loadQuestion();
+        }
+
+        // 顯示結算畫面
+        function showResult() {
+            clearTimeout(gameTimer);
+            changeScreen('result-screen');
+            document.getElementById('final-score').innerText = currentScore;
+
+            // 根據分數給予不同評語
+            let commentText = "";
+            if (currentScore === 50) {
+                commentText = "太神啦！你是追星兼時事大師吧！🏆";
+            } else if (currentScore >= 30) {
+                commentText = "很不錯喔！眼疾手快，實力堅強！👍";
+            } else if (currentScore >= 10) {
+                commentText = "再接再厲！速度可能要再加快一點喔！⏱️";
+            } else {
+                commentText = "咦？是不是手滑了？再挑戰一次吧！😮";
+            }
+            document.getElementById('result-comment').innerText = commentText;
+        }
+
+        // 重新玩一次
+        function restartGame() {
+            changeScreen('start-screen');
+        }
+
+        // 畫面顯示切換工具
+        function changeScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(scr => {
+                scr.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+    </script>
+</body>
+</html>

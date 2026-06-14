@@ -169,7 +169,6 @@ body{background:#000;overflow:hidden;font-family:'Share Tech Mono',monospace;col
 <canvas id="c"></canvas>
 <div id="crosshair"></div>
 
-<!-- HUD -->
 <div id="hud">
   <div class="hud-block">
     <div class="hud-label">❤ 生命值</div>
@@ -192,7 +191,6 @@ body{background:#000;overflow:hidden;font-family:'Share Tech Mono',monospace;col
   </div>
 </div>
 
-<!-- 失去滑鼠鎖定時的提示 -->
 <div id="relock-hint">
   <span>點擊畫面繼續遊戲</span>
 </div>
@@ -200,28 +198,25 @@ body{background:#000;overflow:hidden;font-family:'Share Tech Mono',monospace;col
 <div id="dmg-vignette"></div>
 <div id="blackout"></div>
 
-<!-- 開始畫面 -->
 <div id="overlay">
   <div class="overlay-title">CONDEMNED</div>
   <div class="overlay-sub">3D 密室迷宮逃脫</div>
   <div class="overlay-box">
     <span>點擊畫面</span>開始遊戲並鎖定游標<br>
-    <span>WASD / 方向鍵</span> 移動 　<span>滑鼠</span> 視角<br>
+    <span>WASD / 方向鍵</span> 移動  <span>滑鼠</span> 視角<br>
     <span>Shift</span> 衝刺（消耗體力）<br><br>
-    找到發光的 <span>紅色方塊</span> 逃脫迷宮<br>
-    小心——毒氣倒數計時，時間到後視線變綠、持續扣血！
+    找到發光的 <span>粉紅 Kitty</span> 逃脫迷宮<br>
+    小心——毒氣倒數計時與蠕動的紫色爛泥怪！
   </div>
   <button class="overlay-btn" id="btn-start">進入地獄</button>
 </div>
 
-<!-- 結局畫面 -->
 <div id="endscreen">
   <div id="end-title"></div>
   <div id="end-sub"></div>
   <button id="btn-retry">再試一次</button>
 </div>
 
-<!-- Three.js r128 CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /* ════════════════════════════════════════════════════════════
@@ -229,13 +224,13 @@ body{background:#000;overflow:hidden;font-family:'Share Tech Mono',monospace;col
    ════════════════════════════════════════════════════════════ */
 
 // ── 常數 ────────────────────────────────────────────────────
-const COLS = 15, ROWS = 15;
+const COLS = 10, ROWS = 10;
 const CELL  = 4;           // 每格世界單位寬度
 const WALL_H = 3;          // 牆高
 const PLAYER_H = 1.6;      // 攝影機高度（模擬眼睛）
 const PLAYER_R = 0.35;     // 碰撞半徑
-const SPEED_NORMAL  = 5.0;
-const SPEED_SPRINT  = 10.0;
+const SPEED_NORMAL  = 4.0; // 走路速度
+const SPEED_SPRINT  = 8.0; // 衝刺速度
 const SPEED_EXHAUST = 1.8; // 體力耗盡時的慢速
 const STAM_MAX   = 100;
 const STAM_DRAIN = 40;     // 衝刺每秒消耗
@@ -258,6 +253,10 @@ let gasActive = false;
 let gasLevel = 0;           // 0~1
 let exitPos = new THREE.Vector3();
 let won = false;
+
+// 新增怪物與無敵時間變數
+let monsters = [];
+let invulnerableTimer = 0;
 
 // ── 手電筒閃爍狀態 ──────────────────────────────────────────
 let flickerTimer = 0;       // 距下次閃爍的時間
@@ -341,11 +340,9 @@ function makeWallTexture() {
   cv.width = cv.height = size;
   const c = cv.getContext('2d');
 
-  // 中灰底色（比原本的深灰更亮，讓手電筒照射後清晰可見）
   c.fillStyle = '#3a3530';
   c.fillRect(0, 0, size, size);
 
-  // 磚塊線條
   const brickW = 64, brickH = 32;
   c.strokeStyle = 'rgba(0,0,0,0.8)';
   c.lineWidth = 2;
@@ -359,7 +356,6 @@ function makeWallTexture() {
     }
   }
 
-  // Perlin-like 雜訊（簡易版）
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const n = noise2d(x*0.05, y*0.05);
@@ -369,7 +365,6 @@ function makeWallTexture() {
     }
   }
 
-  // 汙漬條紋
   for (let i = 0; i < 12; i++) {
     const gx = Math.random()*size;
     const gy = Math.random()*size;
@@ -393,7 +388,6 @@ function makeFloorTexture() {
   const c = cv.getContext('2d');
   c.fillStyle = '#252520';
   c.fillRect(0, 0, size, size);
-  // 瓷磚格線
   const tile = 64;
   c.strokeStyle = 'rgba(50,50,50,0.8)';
   c.lineWidth = 1.5;
@@ -415,7 +409,6 @@ function makeFloorTexture() {
   return t;
 }
 
-// 簡易 value noise
 function noise2d(x, y) {
   const ix=Math.floor(x), iy=Math.floor(y);
   const fx=x-ix, fy=y-iy;
@@ -434,33 +427,28 @@ function noise2d(x, y) {
    Three.js 場景建立
    ════════════════════════════════════════════ */
 function initScene() {
-  // 場景
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
-  scene.fog = new THREE.FogExp2(0x000000, 0.04); // 霧（較淡，手電筒範圍內可看清楚）
+  scene.fog = new THREE.FogExp2(0x000000, 0.04);
 
-  // 攝影機
   camera = new THREE.PerspectiveCamera(80, innerWidth/innerHeight, 0.05, 60);
 
-  // 渲染器
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(innerWidth, innerHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  // 極低環境光（讓牆壁隱約可辨，不至於全黑）
   const ambient = new THREE.AmbientLight(0x223322, 0.4);
   scene.add(ambient);
 
-  // 手電筒（SpotLight 綁在攝影機上）— 大幅增亮、拉遠、加寬
   spotlight = new THREE.SpotLight(0xfff8e8, 8, 28, Math.PI*0.28, 0.35, 1.2);
   spotlight.castShadow = true;
   spotlight.shadow.mapSize.width  = 512;
   spotlight.shadow.mapSize.height = 512;
   camera.add(spotlight);
-  camera.add(spotlight.target); // target 也跟著攝影機
-  spotlight.target.position.set(0, 0, -1); // 朝前照
+  camera.add(spotlight.target);
+  spotlight.target.position.set(0, 0, -1);
   scene.add(camera);
 
   buildMazeGeometry();
@@ -470,9 +458,8 @@ function initScene() {
    建立迷宮幾何
    ════════════════════════════════════════════ */
 function buildMazeGeometry() {
-  // 清理舊物件
   wallMeshes = [];
-  while (scene.children.length > 3) scene.remove(scene.children[3]); // 保留 ambient+camera
+  while (scene.children.length > 3) scene.remove(scene.children[3]);
 
   const wallTex  = makeWallTexture();
   const floorTex = makeFloorTexture();
@@ -481,7 +468,6 @@ function buildMazeGeometry() {
   const ceilMat = new THREE.MeshLambertMaterial({ color: 0x0d0d0d });
   const floorMat= new THREE.MeshLambertMaterial({ map: floorTex });
 
-  // 地板
   const floorGeo = new THREE.PlaneGeometry(COLS*CELL, ROWS*CELL);
   const floor = new THREE.Mesh(floorGeo, floorMat);
   floor.rotation.x = -Math.PI/2;
@@ -489,14 +475,12 @@ function buildMazeGeometry() {
   floor.receiveShadow = true;
   scene.add(floor);
 
-  // 天花板
   const ceilGeo = new THREE.PlaneGeometry(COLS*CELL, ROWS*CELL);
   const ceil = new THREE.Mesh(ceilGeo, ceilMat);
   ceil.rotation.x = Math.PI/2;
   ceil.position.set(COLS*CELL/2, WALL_H, ROWS*CELL/2);
   scene.add(ceil);
 
-  // 牆壁
   const wallThick = 0.2;
 
   for (let r = 0; r < ROWS; r++) {
@@ -504,41 +488,49 @@ function buildMazeGeometry() {
       const cell = mazeData[r][c];
       const wx = c*CELL, wz = r*CELL;
 
-      // 北牆（z方向負邊）
       if (cell.n) addWall(wx, wz, wx+CELL, wz+wallThick, wallMat);
-      // 南牆
       if (cell.s) addWall(wx, wz+CELL-wallThick, wx+CELL, wz+CELL, wallMat);
-      // 西牆
       if (cell.w) addWall(wx, wz, wx+wallThick, wz+CELL, wallMat);
-      // 東牆
       if (cell.e) addWall(wx+CELL-wallThick, wz, wx+CELL, wz+CELL, wallMat);
     }
   }
 
-  // 出口發光紅色方塊（右下角）
-  const exitC = COLS-1, exitR = ROWS-1;
+  // ── 出口：Hello Kitty 粉紅方塊（右下角） ──
+  const exitC = COLS - 1, exitR = ROWS - 1;
   exitPos = cellCenter(exitC, exitR);
   exitPos.y = 0.5;
 
-  const exitGeo = new THREE.BoxGeometry(0.8, 1.0, 0.8);
+  const kittyCv = document.createElement('canvas');
+  kittyCv.width = 256; kittyCv.height = 256;
+  const ctx = kittyCv.getContext('2d');
+  ctx.fillStyle = '#ffb6c1';
+  ctx.fillRect(0, 0, 256, 256);
+  ctx.font = '100px sans-serif';
+  ctx.textAlign = 'center'; 
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🐱🎀', 128, 128);
+  
+  const kittyTex = new THREE.CanvasTexture(kittyCv);
+
+  const exitGeo = new THREE.BoxGeometry(1.0, 1.0, 1.0);
   const exitMat = new THREE.MeshStandardMaterial({
-    color: 0xff2200, emissive: 0xff1100, emissiveIntensity: 2,
+    map: kittyTex,
+    color: 0xffffff,
+    emissive: 0xff66a3,
+    emissiveIntensity: 0.8
   });
+  
   const exitMesh = new THREE.Mesh(exitGeo, exitMat);
   exitMesh.position.copy(exitPos);
   exitMesh.userData.isExit = true;
   scene.add(exitMesh);
 
-  // 出口點光源
-  const exitLight = new THREE.PointLight(0xff2200, 3, 6);
+  const exitLight = new THREE.PointLight(0xff66a3, 3, 6);
   exitLight.position.copy(exitPos);
   exitLight.position.y = 1.5;
   scene.add(exitLight);
 
-  // ── 煙霧粒子 ──────────────────────────────
   spawnSmokePuffs();
-
-  // ── 可愛小生物 ────────────────────────────
   spawnCreatures();
 }
 
@@ -550,15 +542,65 @@ function addWall(x0, z0, x1, z1, mat) {
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   scene.add(mesh);
-  // 登記碰撞 AABB
   wallMeshes.push({ minX:x0, maxX:x1, minZ:z0, maxZ:z1 });
+}
+
+function spawnSmokePuffs() {}
+
+// ── 怪物生成邏輯 ──
+function spawnCreatures() {
+  monsters.forEach(m => {
+    scene.remove(m.mesh);
+  });
+  monsters = [];
+  
+  const numMonsters = 3; 
+
+  for (let i = 0; i < numMonsters; i++) {
+    const group = new THREE.Group(); // 用 Group 把多個小球綁在一起
+    
+    // 建立 3 個大小不一的球體，製造不規則爛泥感
+    for(let j=0; j<3; j++) {
+      const size = 0.15 + Math.random() * 0.2;
+      const geo = new THREE.SphereGeometry(size, 16, 16);
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x660099, // 深紫色
+        emissive: 0x330066,
+        roughness: 0,     // 極度光滑，看起來很濕
+        metalness: 0.1
+      });
+      const s = new THREE.Mesh(geo, mat);
+      // 隨機擺放小球位置
+      s.position.set((Math.random()-0.5)*0.3, 0, (Math.random()-0.5)*0.3);
+      group.add(s);
+    }
+
+    let r, c;
+    do {
+      r = Math.floor(Math.random() * ROWS);
+      c = Math.floor(Math.random() * COLS);
+    } while ((r === 0 && c === 0) || (r === ROWS - 1 && c === COLS - 1));
+
+    const pos = cellCenter(c, r);
+    pos.y = 0.2;
+    group.position.copy(pos);
+    scene.add(group);
+
+    monsters.push({
+      mesh: group,
+      r: r, c: c,
+      dr: 0, dc: 0,
+      speed: 1.2, // 再慢一點，更有壓迫感
+      movingTo: null,
+      offset: Math.random() * 100
+    });
+  }
 }
 
 /* ════════════════════════════════════════════
    玩家初始化
    ════════════════════════════════════════════ */
 function initPlayer() {
-  // 起點：左上角 (col=0,row=0)
   const start = cellCenter(0, 0);
   playerPos.set(start.x, PLAYER_H, start.z);
   yaw = 0; pitch = 0;
@@ -566,6 +608,7 @@ function initPlayer() {
   timeLeft = GAS_TIMER;
   gasActive = false; gasLevel = 0;
   won = false;
+  invulnerableTimer = 0; // 重置無敵時間
   updateCamera();
 }
 
@@ -582,12 +625,10 @@ function updateCamera() {
 function resolveCollision(nx, nz) {
   const r = PLAYER_R;
   for (const w of wallMeshes) {
-    // AABB vs 圓形（玩家）
     const cx = Math.max(w.minX, Math.min(nx, w.maxX));
     const cz = Math.max(w.minZ, Math.min(nz, w.maxZ));
     const dx = nx-cx, dz = nz-cz;
     if (Math.sqrt(dx*dx+dz*dz) < r) {
-      // 推出牆壁：找最短推出方向
       const oxL = nx - (w.minX - r);
       const oxR = (w.maxX + r) - nx;
       const ozT = nz - (w.minZ - r);
@@ -608,8 +649,6 @@ function resolveCollision(nx, nz) {
 document.addEventListener('mousemove', e => {
   if (!gameActive) return;
   const sens = 0.002;
-  // movementX/Y 在 Pointer Lock 下不受螢幕邊界限制
-  // 沒有 Pointer Lock 時也能用（備用）
   const dx = e.movementX || 0;
   const dy = e.movementY || 0;
   yaw   -= dx * sens;
@@ -617,7 +656,6 @@ document.addEventListener('mousemove', e => {
   pitch = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, pitch));
 });
 
-// 點擊畫面任意處重新鎖定游標
 document.addEventListener('click', () => {
   if (gameActive) canvas.requestPointerLock();
 });
@@ -636,7 +674,7 @@ document.addEventListener('pointerlockerror', () => {});
    ════════════════════════════════════════════ */
 document.addEventListener('keydown', e => {
   keys[e.code] = true;
-  keys[e.key.toLowerCase()] = true; // 相容不同輸入法/鍵盤佈局
+  keys[e.key.toLowerCase()] = true; 
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
 });
 document.addEventListener('keyup', e => {
@@ -652,15 +690,14 @@ function updateFlicker(dt) {
   if (flickerTimer <= 0 && !flickerActive) {
     flickerActive = true;
     let count = 0;
-    const totalFlicks = 4 + Math.floor(Math.random() * 5); // 4~8次快速抖動
+    const totalFlicks = 4 + Math.floor(Math.random() * 5); 
     function doFlick() {
       if (count >= totalFlicks) {
         flickerActive = false;
-        spotlight.intensity = 8; // 恢復正常亮度
+        spotlight.intensity = 8; 
         scheduleNextFlicker();
         return;
       }
-      // 在 1~8 之間隨機強度，不會完全熄滅
       spotlight.intensity = 1 + Math.random() * 7;
       count++;
       setTimeout(doFlick, 40 + Math.random() * 80);
@@ -670,7 +707,7 @@ function updateFlicker(dt) {
 }
 
 function scheduleNextFlicker() {
-  flickerTimer = 10 + Math.random()*15; // 10~25秒後下次閃爍（頻率降低）
+  flickerTimer = 10 + Math.random()*15; 
 }
 
 /* ════════════════════════════════════════════
@@ -691,7 +728,6 @@ function loop(t) {
 function update(dt) {
   // ── 移動 ──────────────────────────────────
   const sprinting = keys['ShiftLeft'] || keys['ShiftRight'] || keys['shift'];
-  // 毒氣中移動速度乘以減速倍率
   const gasSlow = gasActive ? Math.max(0.25, 1 - gasLevel * 0.7) : 1.0;
   let speed;
   if (stamina <= 0 && sprinting) {
@@ -708,7 +744,6 @@ function update(dt) {
   const right= new THREE.Vector3( Math.cos(yaw), 0, -Math.sin(yaw));
   const move = new THREE.Vector3();
 
-  // 支援 KeyW/KeyS/KeyA/KeyD（實體鍵碼）、'w'/'s'/'a'/'d'（字元）、方向鍵
   const goFwd   = keys['KeyW'] || keys['w'] || keys['ArrowUp'];
   const goBack  = keys['KeyS'] || keys['s'] || keys['ArrowDown'];
   const goLeft  = keys['KeyA'] || keys['a'] || keys['ArrowLeft'];
@@ -722,7 +757,6 @@ function update(dt) {
   let nx = playerPos.x + move.x;
   let nz = playerPos.z + move.z;
 
-  // 邊界夾緊
   nx = Math.max(PLAYER_R, Math.min(COLS*CELL-PLAYER_R, nx));
   nz = Math.max(PLAYER_R, Math.min(ROWS*CELL-PLAYER_R, nz));
 
@@ -740,7 +774,6 @@ function update(dt) {
       gasActive = true;
     }
   } else {
-    // 毒氣加濃，霧色變綠
     gasLevel = Math.min(1, gasLevel + 0.012*dt);
     const fogColor = new THREE.Color().lerpColors(
       new THREE.Color(0x000000),
@@ -749,22 +782,18 @@ function update(dt) {
     );
     scene.fog.color.copy(fogColor);
     renderer.setClearColor(fogColor);
-    // 毒氣只扣很少血（主要效果是減速），濃度越高扣越多但仍然緩慢
     hp = Math.max(0, hp - 1.5 * gasLevel * dt);
 
-    // 毒霧視覺
     gasVig.style.opacity = gasLevel * 0.6;
     gasVig.style.background = `radial-gradient(ellipse at center,transparent 30%,rgba(0,${Math.floor(gasLevel*100)},0,${gasLevel*0.5}) 100%)`;
     gasBarWrap.style.opacity = '1';
     gasLabelEl.style.opacity = '1';
     gasValEl.style.opacity = '1';
     gasBar.style.width = (gasLevel*100)+'%';
-    // 顯示減速程度
     const slowPct = Math.round((1 - Math.max(0.25, 1 - gasLevel*0.7)) * 100);
-    gasValEl.textContent = `濃度 ${Math.ceil(gasLevel*100)}%　移速 -${slowPct}%`;
+    gasValEl.textContent = `濃度 ${Math.ceil(gasLevel*100)}% 移速 -${slowPct}%`;
   }
 
-  // 手電筒閃爍
   updateFlicker(dt);
 
   // ── 低血量暈影 ──────────────────────────────
@@ -785,7 +814,6 @@ function update(dt) {
     endGame(true);
   }
 
-  // ── 死亡 ──────────────────────────────────
   if (hp <= 0) endGame(false);
 
   // ── 出口脈衝動畫 ──────────────────────────
@@ -796,26 +824,90 @@ function update(dt) {
     }
   });
 
+  // ── 怪物巡邏與碰撞扣血邏輯 ────────────────
+  monsters.forEach(m => {
+    if (!m.movingTo) {
+      const cell = mazeData[m.r][m.c];
+      const validDirs = [];
+      if (!cell.n) validDirs.push({ dr: -1, dc: 0 });
+      if (!cell.s) validDirs.push({ dr: 1, dc: 0 });
+      if (!cell.w) validDirs.push({ dr: 0, dc: -1 });
+      if (!cell.e) validDirs.push({ dr: 0, dc: 1 });
+
+      let nextDir = validDirs.find(d => d.dr === m.dr && d.dc === m.dc);
+
+      if (!nextDir || Math.random() < 0.3) {
+        nextDir = validDirs[Math.floor(Math.random() * validDirs.length)];
+      }
+
+      m.dr = nextDir.dr;
+      m.dc = nextDir.dc;
+      m.movingTo = cellCenter(m.c + m.dc, m.r + m.dr);
+      m.movingTo.y = 0.3; // 貼近地面
+    }
+
+    const mdx = m.movingTo.x - m.mesh.position.x;
+    const mdz = m.movingTo.z - m.mesh.position.z;
+    const dist = Math.sqrt(mdx * mdx + mdz * mdz);
+    const moveAmt = m.speed * dt;
+
+    if (dist <= moveAmt) {
+      m.mesh.position.copy(m.movingTo);
+      m.r += m.dr;
+      m.c += m.dc;
+      m.movingTo = null;
+    } else {
+      m.mesh.position.x += (mdx / dist) * moveAmt;
+      m.mesh.position.z += (mdz / dist) * moveAmt;
+    }
+
+    // ── 怪物爛泥蠕動動畫 ──
+    const time = Date.now() / 200 + m.offset;
+    // 讓整個怪物群不斷扭曲
+    m.mesh.children.forEach((s, idx) => {
+       s.scale.set(
+         1 + Math.sin(time + idx) * 0.5, 
+         1 + Math.cos(time + idx) * 0.5, 
+         1 + Math.sin(time) * 0.5
+       );
+    });
+    // 身體隨移動微微擺動
+    m.mesh.position.y = 0.2 + Math.abs(Math.sin(time * 0.5)) * 0.1;
+
+    // ── 5. 縮小受傷判定範圍 ──
+    const pdx = playerPos.x - m.mesh.position.x;
+    const pdz = playerPos.z - m.mesh.position.z;
+    const pDist = Math.sqrt(pdx * pdx + pdz * pdz);
+
+    // 判定距離從 1.2 縮小到 0.8，不用怕擦邊就扣血
+    if (pDist < 0.8 && invulnerableTimer <= 0) {
+      hp -= 10;
+      invulnerableTimer = 1.0; 
+      dmgVig.style.opacity = '1';
+      dmgVig.style.background = 'radial-gradient(ellipse at center,transparent 10%,rgba(255,0,0,0.9) 100%)';
+      setTimeout(() => { if (hp / HP_MAX >= 0.3) dmgVig.style.opacity = '0'; }, 300);
+    }
+  });
+
+  if (invulnerableTimer > 0) invulnerableTimer -= dt;
+
   // ── 更新 UI ──────────────────────────────
   updateHUD();
 }
 
 function updateHUD() {
-  // 血量
   const hpPct = (hp/HP_MAX*100).toFixed(0);
   hpBar.style.width = hpPct+'%';
   hpVal.textContent = Math.ceil(hp);
   if (hp < 30) hpBar.style.background = 'linear-gradient(90deg,#880000,#cc2200)';
   else hpBar.style.background = 'linear-gradient(90deg,#ff2222,#ff6644)';
 
-  // 體力
   const stPct = (stamina/STAM_MAX*100).toFixed(0);
   stamBar.style.width = stPct+'%';
   stamVal.textContent = Math.ceil(stamina);
   if (stamina < 20) stamBar.style.background='linear-gradient(90deg,#884400,#ffaa00)';
   else stamBar.style.background='linear-gradient(90deg,#ffaa00,#ffee44)';
 
-  // 計時器
   if (!gasActive) {
     const m = Math.floor(timeLeft/60).toString().padStart(2,'0');
     const s = Math.floor(timeLeft%60).toString().padStart(2,'0');
@@ -838,7 +930,6 @@ function endGame(success) {
   if (relockHint) relockHint.style.display = 'none';
 
   if (success) {
-    endTitle.textContent = '탈출 성공';  // 韓文梗的感覺
     endTitle.textContent = '逃脫成功';
     endTitle.style.color = '#00ff88';
     endTitle.style.textShadow = '0 0 40px #00ff8888';
