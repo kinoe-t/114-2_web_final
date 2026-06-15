@@ -1,390 +1,724 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>冰火人</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>精緻玻璃擬態 Picross 邏輯拼圖</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #chbeff 100%);
+            --primary-blue: #38bdf8;
+            --primary-dark: #0369a1;
+            --glass-bg: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
 
-<style>
-body{
-    margin:0;
-    background:#222;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    color:white;
-    font-family:Arial;
-}
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            margin: 0;
+            padding: 0;
+        }
 
-h1{
-    margin:10px;
-}
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #c7d2fe 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #0f172a;
+            padding: 20px;
+        }
 
-canvas{
-    background:#444;
-    border:4px solid white;
-}
+        .container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--glass-shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 100%;
+        }
 
-#msg{
-    margin-top:10px;
-    font-size:22px;
-    color:gold;
-}
-</style>
+        h1 {
+            font-size: 2rem;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .theme-hint {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #0369a1;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.6);
+            padding: 5px 15px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* 遊戲狀態欄 */
+        .status-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .lives-container {
+            display: flex;
+            gap: 8px;
+        }
+
+        .heart {
+            font-size: 1.8rem;
+            color: #ef4444;
+            transition: all 0.5s ease;
+            filter: drop-shadow(0 2px 4px rgba(239, 68, 68, 0.3));
+        }
+
+        .heart.lost {
+            opacity: 0;
+            transform: scale(0.5) translateY(-10px);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        /* 遊戲主體棋盤佈局 */
+        .game-layout {
+            display: grid;
+            grid-template-columns: 100px auto;
+            grid-template-rows: 100px auto;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .corner {
+            grid-column: 1;
+            grid-row: 1;
+        }
+
+        /* 行列提示區 */
+        .cols-hints {
+            grid-column: 2;
+            grid-row: 1;
+            display: grid;
+            grid-template-columns: repeat(15, 30px);
+        }
+
+        .col-hint-item {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #334155;
+            border-right: 1px solid rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .rows-hints {
+            grid-column: 1;
+            grid-row: 2;
+            display: grid;
+            grid-template-rows: repeat(15, 30px);
+        }
+
+        .row-hint-item {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding-right: 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #334155;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .hint-num {
+            margin: 1px;
+            padding: 1px 3px;
+            border-radius: 4px;
+        }
+
+        /* 提示完成時打勾樣式 */
+        .hint-item.completed {
+            color: #059669;
+            opacity: 0.6;
+        }
+        .hint-item.completed::after {
+            content: "✓";
+            position: absolute;
+            font-size: 0.7rem;
+            font-weight: 900;
+        }
+        .row-hint-item.completed::after { left: 5px; }
+        .col-hint-item.completed::after { top: 5px; }
+
+        /* 每 5 格加粗格線邊界 */
+        .col-hint-item:nth-child(5n), .grid-cell:nth-child(5n) {
+            border-right: 2px solid rgba(3, 105, 161, 0.4) !important;
+        }
+        .row-hint-item:nth-child(5n) {
+            border-bottom: 2px solid rgba(3, 105, 161, 0.4) !important;
+        }
+
+        /* 遊戲網格 */
+        .grid {
+            grid-column: 2;
+            grid-row: 2;
+            display: grid;
+            grid-template-columns: repeat(15, 30px);
+            grid-template-rows: repeat(15, 30px);
+            background: rgba(255,255,255,0.5);
+            border-top: 1px solid rgba(3, 105, 161, 0.2);
+            border-left: 1px solid rgba(3, 105, 161, 0.2);
+        }
+
+        .grid-cell {
+            width: 30px;
+            height: 30px;
+            border-right: 1px solid rgba(3, 105, 161, 0.15);
+            border-bottom: 1px solid rgba(3, 105, 161, 0.15);
+            cursor: pointer;
+            position: relative;
+            background: transparent;
+            transition: background 0.15s, transform 0.1s;
+        }
+
+        /* 5格粗線補強 (列) */
+        .grid {
+            border-right: 1px solid rgba(3, 105, 161, 0.2);
+        }
+        .grid-cell-wrap-5 {
+            /* 用於JS邏輯中每5行底部的加粗 */
+        }
+
+        /* 填滿格子：深色漸層 */
+        .grid-cell.filled {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            animation: popIn 0.2s ease-out;
+        }
+
+        /* 標記 X 樣式 */
+        .grid-cell.marked-x::before, .grid-cell.marked-x::after {
+            content: '';
+            position: absolute;
+            width: 60%;
+            height: 2px;
+            background-color: #64748b;
+            top: 50%;
+            left: 20%;
+        }
+        .grid-cell.marked-x::before { transform: rotate(45deg); }
+        .grid-cell.marked-x::after { transform: rotate(-45deg); }
+
+        /* 點錯紅色叉叉樣式 */
+        .grid-cell.error {
+            background: rgba(254, 226, 226, 0.7);
+        }
+        .grid-cell.error::before, .grid-cell.error::after {
+            content: '';
+            position: absolute;
+            width: 70%;
+            height: 3px;
+            background-color: #ef4444;
+            top: 50%;
+            left: 15%;
+            animation: shake 0.3s ease-in-out;
+        }
+        .grid-cell.error::before { transform: rotate(45deg); }
+        .grid-cell.error::after { transform: rotate(-45deg); }
+
+        /* 彈出訊息視窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255,255,255,0.8);
+            max-width: 400px;
+            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-content h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        /* 動態效果 */
+        @keyframes popIn {
+            0% { transform: scale(0.8); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) rotate(45deg); }
+            20%, 60% { transform: translateX(-2px) rotate(45deg); }
+            40%, 80% { transform: translateX(2px) rotate(45deg); }
+        }
+
+        @keyframes modalPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
 </head>
 <body>
 
-<h1>冰火人</h1>
-<canvas id="game" width="960" height="640"></canvas>
-<div id="msg"></div>
+    <div class="container">
+        <h1>Picross 邏輯拼圖</h1>
+        <div class="theme-hint" id="theme-text">關卡主題：載入中...</div>
 
-<script>
+        <div class="status-panel">
+            <div class="lives-container" id="lives-box">
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+            </div>
+            <button class="btn" id="restart-btn">重新開始</button>
+        </div>
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+        <div class="game-layout">
+            <div class="corner"></div>
+            <div class="cols-hints" id="cols-hints"></div>
+            <div class="rows-hints" id="rows-hints"></div>
+            <div class="grid" id="game-grid"></div>
+        </div>
+    </div>
 
-const TILE = 40;
+    <div class="modal" id="game-modal">
+        <div class="modal-content">
+            <h2 id="modal-title">遊戲結束</h2>
+            <p id="modal-desc" style="margin-bottom: 25px; color: #475569;"></p>
+            <button class="btn" id="modal-btn">再試一次</button>
+        </div>
+    </div>
 
-const map = [
+    <script>
+        // 定義一些精心設計的 15x15 經典特定圖案
+        const PRESETS = [
+            {
+                name: "愛心 💗",
+                answer: [
+                    [0,0,1,1,0,0,0,0,0,1,1,0,0,0,0],
+                    [0,1,1,1,1,0,0,0,1,1,1,1,0,0,0],
+                    [1,1,1,1,1,1,0,1,1,1,1,1,1,0,0],
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+                    [0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],
+                    [0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],
+                    [0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],
+                    [0,0,0,0,1,1,1,1,1,0,0,0,0,0,0],
+                    [0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                ]
+            },
+            {
+                name: "可愛小鴨 🦆",
+                answer: [
+                    [0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+                    [0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+                    [0,0,1,1,1,1,0,1,1,1,0,0,0,0,0],
+                    [0,0,1,1,1,1,1,1,1,1,0,0,0,0,0],
+                    [0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+                    [0,0,0,1,1,1,1,1,1,1,1,1,0,0,0],
+                    [0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+                    [0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+                    [0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+                    [0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+                    [0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+                    [0,0,0,0,0,1,1,0,1,1,0,0,0,0,0],
+                    [0,0,0,0,1,1,1,0,1,1,1,0,0,0,0]
+                ]
+            },
+            {
+                name: "經典音符 🎵",
+                answer: [
+                    [0,0,0,0,0,0,0,1,1,1,1,1,1,1,0],
+                    [0,0,0,0,0,0,0,1,1,1,1,1,1,1,0],
+                    [0,0,0,0,0,0,0,1,1,0,0,0,0,1,0],
+                    [0,0,0,0,0,0,0,1,1,0,0,0,0,1,0],
+                    [0,0,0,0,0,0,0,1,1,0,0,0,0,1,0],
+                    [0,0,0,0,0,0,0,1,1,0,0,0,0,1,0],
+                    [0,0,0,0,0,0,0,1,1,0,0,0,0,1,0],
+                    [0,0,0,0,0,0,0,1,1,0,0,0,0,1,0],
+                    [0,0,1,1,1,0,0,1,1,0,0,1,1,1,0],
+                    [0,1,1,1,1,1,0,1,1,0,1,1,1,1,1],
+                    [1,1,1,1,1,1,0,0,0,1,1,1,1,1,1],
+                    [1,1,1,1,1,1,0,0,0,1,1,1,1,1,1],
+                    [0,1,1,1,1,0,0,0,0,0,1,1,1,1,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                ]
+            }
+        ];
 
-"########################",
-"#R....r.....L.....b...B#",
-"#.#######.######.####..#",
-"#..............#.......#",
-"#..~~~~........#.......#",
-"#..............#######.#",
-"#...........~~~~.......#",
-"#.######...............#",
-"#..............######..#",
-"#....bbbb..............#",
-"#......................#",
-"#..........rrrr........#",
-"#......................#",
-"#..########............#",
-"#......................#",
-"########################"
+        const SIZE = 15;
+        let currentPuzzle = {};
+        let answerGrid = [];
+        let playerGrid = []; // 0:空, 1:填滿, 2:叉叉, 3:錯誤紅叉
+        let lives = 3;
+        let isDrawing = false;
+        let drawMode = null; // 'fill', 'clear', 'x', 'clear-x'
 
-];
+        // 綁定 DOM 元素
+        const gridEl = document.getElementById('game-grid');
+        const rowsHintsEl = document.getElementById('rows-hints');
+        const colsHintsEl = document.getElementById('cols-hints');
+        const themeTextEl = document.getElementById('theme-text');
+        const livesBox = document.getElementById('lives-box');
+        const restartBtn = document.getElementById('restart-btn');
+        const modal = document.getElementById('game-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDesc = document.getElementById('modal-desc');
+        const modalBtn = document.getElementById('modal-btn');
 
-let walls = [];
-let lava = [];
-let water = [];
-let gems = [];
+        // 初始化遊戲
+        function initGame() {
+            // 隨機選取一個預設題目
+            currentPuzzle = PRESETS[Math.floor(Math.random() * PRESETS.length)];
+            themeTextEl.textContent = `關卡主題：${currentPuzzle.name}`;
+            answerGrid = currentPuzzle.answer;
+            
+            // 初始化玩家棋盤與生命值
+            playerGrid = Array(SIZE).fill().map(() => Array(SIZE).fill(0));
+            lives = 3;
+            updateLivesUI();
+            
+            // 渲染提示與空格子
+            renderHints();
+            renderGrid();
+            checkHintsCompletion();
+        }
 
-function createLevel(){
+        // 計算並產生行與列的 Picross 提示數字
+        function generateHints(line) {
+            let hints = [];
+            let count = 0;
+            for (let val of line) {
+                if (val === 1) {
+                    count++;
+                } else {
+                    if (count > 0) {
+                        hints.push(count);
+                        count = 0;
+                    }
+                }
+            }
+            if (count > 0) hints.push(count);
+            return hints.length === 0 ? [0] : hints;
+        }
 
-    walls=[];
-    lava=[];
-    water=[];
-    gems=[];
+        function renderHints() {
+            // 清空舊提示
+            rowsHintsEl.innerHTML = '';
+            colsHintsEl.innerHTML = '';
 
-    for(let y=0;y<map.length;y++){
-
-        for(let x=0;x<map[y].length;x++){
-
-            let c = map[y][x];
-
-            if(c=="#"){
-                walls.push({
-                    x:x*TILE,
-                    y:y*TILE
+            // 生成行 (Row) 提示
+            for (let r = 0; r < SIZE; r++) {
+                const hints = generateHints(answerGrid[r]);
+                const rowItem = document.createElement('div');
+                rowItem.className = 'row-hint-item hint-item';
+                rowItem.id = `row-hint-${r}`;
+                if (r % 5 === 4) rowItem.style.borderBottom = "2px solid rgba(3, 105, 161, 0.4)";
+                
+                hints.forEach(num => {
+                    const span = document.createElement('span');
+                    span.className = 'hint-num';
+                    span.textContent = num;
+                    rowItem.appendChild(span);
                 });
+                rowsHintsEl.appendChild(rowItem);
             }
 
-            if(c=="r"){
-                gems.push({
-                    x:x*TILE+10,
-                    y:y*TILE+10,
-                    color:"red"
+            // 生成列 (Col) 提示
+            for (let c = 0; c < SIZE; c++) {
+                const colLine = [];
+                for (let r = 0; r < SIZE; r++) colLine.push(answerGrid[r][c]);
+                const hints = generateHints(colLine);
+                
+                const colItem = document.createElement('div');
+                colItem.className = 'col-hint-item hint-item';
+                colItem.id = `col-hint-${c}`;
+                if (c % 5 === 4) colItem.style.borderRight = "2px solid rgba(3, 105, 161, 0.4)";
+                
+                hints.forEach(num => {
+                    const span = document.createElement('span');
+                    span.className = 'hint-num';
+                    span.textContent = num;
+                    colItem.appendChild(span);
                 });
+                colsHintsEl.appendChild(colItem);
+            }
+        }
+
+        function renderGrid() {
+            gridEl.innerHTML = '';
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+
+                    // 每 5 格加粗下邊界格線
+                    if (r % 5 === 4) {
+                        cell.style.borderBottom = "2px solid rgba(3, 105, 161, 0.4)";
+                    }
+
+                    // 阻擋預設右鍵選單
+                    cell.addEventListener('contextmenu', e => e.preventDefault());
+
+                    // 滑鼠按下事件
+                    cell.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        isDrawing = true;
+                        
+                        const isRightClick = e.button === 2;
+                        const currentVal = playerGrid[r][c];
+
+                        if (!isRightClick) { // 左鍵
+                            if (currentVal === 1) {
+                                drawMode = 'clear';
+                                handleAction(r, c, 0);
+                            } else if (currentVal === 0 || currentVal === 2) {
+                                drawMode = 'fill';
+                                handleAction(r, c, 1);
+                            }
+                        } else { // 右鍵
+                            if (currentVal === 2) {
+                                drawMode = 'clear-x';
+                                handleAction(r, c, 0);
+                            } else if (currentVal === 0 || currentVal === 1) {
+                                drawMode = 'x';
+                                handleAction(r, c, 2);
+                            }
+                        }
+                    });
+
+                    // 滑鼠拖曳滑過事件
+                    cell.addEventListener('mouseenter', () => {
+                        if (!isDrawing || drawMode === null) return;
+                        const currentVal = playerGrid[r][c];
+
+                        if (drawMode === 'fill' && (currentVal === 0 || currentVal === 2)) {
+                            handleAction(r, c, 1);
+                        } else if (drawMode === 'clear' && currentVal === 1) {
+                            handleAction(r, c, 0);
+                        } else if (drawMode === 'x' && (currentVal === 0 || currentVal === 1)) {
+                            handleAction(r, c, 2);
+                        } else if (drawMode === 'clear-x' && currentVal === 2) {
+                            handleAction(r, c, 0);
+                        }
+                    });
+
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+        // 處理玩家動作與對錯判定
+        function handleAction(r, c, targetType) {
+            // 如果該格已經被判定成錯誤的紅叉，則不允許再點擊變更
+            if (playerGrid[r][c] === 3) return;
+
+            const isCorrectAnswer = answerGrid[r][c] === 1;
+
+            if (targetType === 1) { // 玩家想填黑
+                if (isCorrectAnswer) {
+                    playerGrid[r][c] = 1;
+                    updateCellUI(r, c, 'filled');
+                } else {
+                    // 按錯了：顯示紅色叉叉並扣血
+                    playerGrid[r][c] = 3; 
+                    updateCellUI(r, c, 'error');
+                    triggerWrongAnswer();
+                }
+            } else if (targetType === 2) { // 玩家想點叉叉
+                // 標記叉叉純屬玩家自主註記，不計錯（除非點在原本答案是黑格的地方，依傳統Picross右鍵不罰，這裡設計成自由標記）
+                playerGrid[r][c] = 2;
+                updateCellUI(r, c, 'marked-x');
+            } else if (targetType === 0) { // 取消填寫/取消叉叉
+                playerGrid[r][c] = 0;
+                updateCellUI(r, c, 'empty');
             }
 
-            if(c=="b"){
-                gems.push({
-                    x:x*TILE+10,
-                    y:y*TILE+10,
-                    color:"blue"
-                });
+            checkHintsCompletion();
+            checkWinCondition();
+        }
+
+        // 更新單一格子的外觀
+        function updateCellUI(r, c, state) {
+            const index = r * SIZE + c;
+            const cell = gridEl.children[index];
+            cell.className = 'grid-cell'; // reset
+            
+            if (state === 'filled') cell.classList.add('filled');
+            if (state === 'marked-x') cell.classList.add('marked-x');
+            if (state === 'error') cell.classList.add('error');
+        }
+
+        // 行列提示自主打勾檢查
+        function checkHintsCompletion() {
+            // 檢查行
+            for (let r = 0; r < SIZE; r++) {
+                const playerLine = playerGrid[r].map(v => v === 1 ? 1 : 0);
+                const ansLine = answerGrid[r];
+                const rowHintEl = document.getElementById(`row-hint-${r}`);
+                if (JSON.stringify(generateHints(playerLine)) === JSON.stringify(generateHints(ansLine))) {
+                    rowHintEl.classList.add('completed');
+                } else {
+                    rowHintEl.classList.remove('completed');
+                }
             }
 
-            if(c=="~"){
-                lava.push({
-                    x:x*TILE,
-                    y:y*TILE
-                });
+            // 檢查列
+            for (let c = 0; c < SIZE; c++) {
+                const playerLine = [];
+                const ansLine = [];
+                for (let r = 0; r < SIZE; r++) {
+                    playerLine.push(playerGrid[r][c] === 1 ? 1 : 0);
+                    ansLine.push(answerGrid[r][c]);
+                }
+                const colHintEl = document.getElementById(`col-hint-${c}`);
+                if (JSON.stringify(generateHints(playerLine)) === JSON.stringify(generateHints(ansLine))) {
+                    colHintEl.classList.add('completed');
+                } else {
+                    colHintEl.classList.remove('completed');
+                }
             }
-
         }
-    }
 
-    water=[
-        {x:250,y:180},
-        {x:290,y:180},
-        {x:330,y:180},
-
-        {x:600,y:400},
-        {x:640,y:400},
-        {x:680,y:400}
-    ];
-
-}
-
-const startFire={x:80,y:560};
-const startIce={x:140,y:560};
-
-let fire;
-let ice;
-
-let redDoor={
-    x:40,
-    y:40
-};
-
-let blueDoor={
-    x:880,
-    y:40
-};
-
-function resetGame(){
-
-    fire={
-        x:startFire.x,
-        y:startFire.y,
-        w:30,
-        h:30,
-        color:"red"
-    };
-
-    ice={
-        x:startIce.x,
-        y:startIce.y,
-        w:30,
-        h:30,
-        color:"cyan"
-    };
-
-    createLevel();
-
-    document.getElementById("msg").innerHTML="";
-}
-
-resetGame();
-
-const keys={};
-
-document.addEventListener("keydown",e=>{
-    keys[e.key]=true;
-});
-
-document.addEventListener("keyup",e=>{
-    keys[e.key]=false;
-});
-
-function collideRect(a,b){
-
-    return (
-        a.x < b.x+b.w &&
-        a.x+a.w > b.x &&
-        a.y < b.y+b.h &&
-        a.y+a.h > b.y
-    );
-
-}
-
-function wallCollision(player){
-
-    for(let wall of walls){
-
-        let obj={
-            x:wall.x,
-            y:wall.y,
-            w:TILE,
-            h:TILE
-        };
-
-        if(collideRect(player,obj))
-            return true;
-    }
-
-    return false;
-}
-
-function movePlayer(player,dx,dy){
-
-    player.x += dx;
-
-    if(wallCollision(player))
-        player.x -= dx;
-
-    player.y += dy;
-
-    if(wallCollision(player))
-        player.y -= dy;
-}
-
-function update(){
-
-    let speed=3;
-
-    // 火人
-    if(keys["ArrowUp"]) movePlayer(fire,0,-speed);
-    if(keys["ArrowDown"]) movePlayer(fire,0,speed);
-    if(keys["ArrowLeft"]) movePlayer(fire,-speed,0);
-    if(keys["ArrowRight"]) movePlayer(fire,speed,0);
-
-    // 冰人
-    if(keys["w"]) movePlayer(ice,0,-speed);
-    if(keys["s"]) movePlayer(ice,0,speed);
-    if(keys["a"]) movePlayer(ice,-speed,0);
-    if(keys["d"]) movePlayer(ice,speed,0);
-
-    // 寶石
-    gems = gems.filter(g=>{
-
-        let gemRect={
-            x:g.x,
-            y:g.y,
-            w:20,
-            h:20
-        };
-
-        if(g.color=="red" && collideRect(fire,gemRect))
-            return false;
-
-        if(g.color=="blue" && collideRect(ice,gemRect))
-            return false;
-
-        return true;
-    });
-
-    // 岩漿
-    for(let l of lava){
-
-        let r={
-            x:l.x,
-            y:l.y,
-            w:TILE,
-            h:TILE
-        };
-
-        if(collideRect(ice,r)){
-            alert("冰人掉進岩漿！");
-            resetGame();
+        // 扣血機制與生命值愛心淡出
+        function triggerWrongAnswer() {
+            lives--;
+            updateLivesUI();
+            if (lives <= 0) {
+                setTimeout(() => {
+                    showModal("遊戲結束", "很遺憾，三條生命已全部扣完！再接再厲！");
+                }, 300);
+            }
         }
-    }
 
-    // 水池
-    for(let w of water){
-
-        let r={
-            x:w.x,
-            y:w.y,
-            w:TILE,
-            h:TILE
-        };
-
-        if(collideRect(fire,r)){
-            alert("火人掉進水池！");
-            resetGame();
+        function updateLivesUI() {
+            const hearts = livesBox.querySelectorAll('.heart');
+            hearts.forEach((heart, index) => {
+                if (index >= lives) {
+                    heart.classList.add('lost');
+                } else {
+                    heart.classList.remove('lost');
+                }
+            });
         }
-    }
 
-    // 通關
-    if(gems.length===0){
-
-        let fireWin=
-            fire.x<redDoor.x+40 &&
-            fire.x+30>redDoor.x &&
-            fire.y<redDoor.y+60 &&
-            fire.y+30>redDoor.y;
-
-        let iceWin=
-            ice.x<blueDoor.x+40 &&
-            ice.x+30>blueDoor.x &&
-            ice.y<blueDoor.y+60 &&
-            ice.y+30>blueDoor.y;
-
-        if(fireWin && iceWin){
-            document.getElementById("msg").innerHTML=
-            "🎉 恭喜通關！";
+        // 檢查是否順利通關
+        function checkWinCondition() {
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    // 如果答案是1但玩家沒填，或者答案是0但玩家填了(且不是錯的紅叉)，就算還沒贏
+                    if (answerGrid[r][c] === 1 && playerGrid[r][c] !== 1) return;
+                    if (answerGrid[r][c] === 0 && playerGrid[r][c] === 1) return;
+                }
+            }
+            setTimeout(() => {
+                showModal("恭喜通關！🎉", `你成功的拼出了【${currentPuzzle.name}】的漂亮圖案！`);
+                revealFullPattern();
+            }, 300);
         }
-    }
-}
 
-function draw(){
+        // 贏的時候自動把其餘格子補滿或美化
+        function revealFullPattern() {
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    if (answerGrid[r][c] === 0 && playerGrid[r][c] !== 3) {
+                        updateCellUI(r, c, 'empty');
+                    }
+                }
+            }
+        }
 
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+        // 彈跳視窗控制
+        function showModal(title, desc) {
+            modalTitle.textContent = title;
+            modalDesc.textContent = desc;
+            modal.style.display = 'flex';
+        }
 
-    // 牆壁
-    for(let w of walls){
+        function hideModal() {
+            modal.style.display = 'none';
+        }
 
-        ctx.fillStyle="#666";
-        ctx.fillRect(w.x,w.y,TILE,TILE);
+        // 全域滑鼠放開時停止拖曳
+        window.addEventListener('mouseup', () => {
+            isDrawing = false;
+            drawMode = null;
+        });
 
-        ctx.strokeStyle="#333";
-        ctx.strokeRect(w.x,w.y,TILE,TILE);
-    }
+        // 監聽按鈕
+        restartBtn.addEventListener('click', initGame);
+        modalBtn.addEventListener('click', () => {
+            hideModal();
+            initGame();
+        });
 
-    // 岩漿
-    for(let l of lava){
-
-        ctx.fillStyle="red";
-        ctx.fillRect(l.x,l.y,TILE,TILE);
-    }
-
-    // 水池
-    for(let w of water){
-
-        ctx.fillStyle="deepskyblue";
-        ctx.fillRect(w.x,w.y,TILE,TILE);
-    }
-
-    // 寶石
-    for(let g of gems){
-
-        ctx.fillStyle=g.color;
-
-        ctx.beginPath();
-        ctx.moveTo(g.x+10,g.y);
-        ctx.lineTo(g.x+20,g.y+10);
-        ctx.lineTo(g.x+10,g.y+20);
-        ctx.lineTo(g.x,g.y+10);
-        ctx.fill();
-    }
-
-    // 紅門
-    ctx.fillStyle="red";
-    ctx.fillRect(redDoor.x,redDoor.y,40,60);
-
-    // 藍門
-    ctx.fillStyle="cyan";
-    ctx.fillRect(blueDoor.x,blueDoor.y,40,60);
-
-    // 火人
-    ctx.fillStyle="red";
-    ctx.beginPath();
-    ctx.arc(fire.x+15,fire.y+15,15,0,Math.PI*2);
-    ctx.fill();
-
-    // 冰人
-    ctx.fillStyle="cyan";
-    ctx.beginPath();
-    ctx.arc(ice.x+15,ice.y+15,15,0,Math.PI*2);
-    ctx.fill();
-
-}
-
-function gameLoop(){
-
-    update();
-    draw();
-
-    requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
-
-</script>
-
+        // 啟動遊戲
+        initGame();
+    </script>
 </body>
 </html>
+  
