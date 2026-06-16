@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歌劇魅影：克莉絲汀的命運交響曲</title>
+    <style>
+        :root {
+            --gold: #dfba6b;
+            --velvet-red: #800020;
+            --dark-bg: #000000;
+            --text-color: #e0e0e0;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Times New Roman', 'Noto Serif TC', serif;
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        /* 背景大圖 */
+        #bg-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-repeat: no-repeat;
+            background-size: contain;
+            background-position: center;
+            background-color: #000000;
+            transition: background-image 1.2s ease-in-out;
+            filter: brightness(0.5) contrast(1.15);
+            z-index: 1;
+        }
+
+        /* 氛圍遮罩 */
+        .vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 35%, rgba(0,0,0,0.85) 100%);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* 主要佈局 */
+        .game-container {
+            position: relative;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+            padding: 30px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        h1 {
+            color: var(--gold);
+            font-size: 2.2rem;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px rgba(223, 186, 107, 0.5);
+            margin: 0 0 5px 0;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: #aaa;
+            font-style: italic;
+        }
+
+        /* 劇情文字框 */
+        .story-box {
+            background: rgba(12, 12, 15, 0.9);
+            border: 1px solid var(--gold);
+            border-radius: 6px;
+            padding: 25px 35px;
+            max-width: 750px;
+            width: 90%;
+            min-height: 160px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        .story-text {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            letter-spacing: 1.5px;
+            text-align: justify;
+            animation: fadeIn 0.8s ease-in-out forwards;
+        }
+
+        /* 選項按鈕區 */
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 90%;
+            max-width: 550px;
+            margin-bottom: 20px;
+        }
+
+        .btn-option {
+            background: linear-gradient(135deg, rgba(128, 0, 32, 0.85) 0%, rgba(60, 0, 15, 0.95) 100%);
+            border: 1px solid var(--gold);
+            color: #fff;
+            padding: 14px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            text-align: center;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        .btn-option:hover {
+            background: var(--gold);
+            color: #000;
+            font-weight: bold;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(223, 186, 107, 0.5);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #333 0%, #111 100%);
+            border: 1px solid #aaa;
+            color: #fff;
+            padding: 14px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn-reset:hover {
+            background: #fff;
+            color: #000;
+            font-weight: bold;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.6rem; }
+            .story-text { font-size: 1.05rem; }
+            .btn-option { font-size: 0.9rem; padding: 12px 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="bg-container"></div>
+    <div class="vignette"></div>
+
+    <div class="game-container">
+        <header>
+            <h1>歌劇魅影</h1>
+            <div class="subtitle">— 克莉絲汀的命運交響曲 —</div>
+        </header>
+
+        <div class="story-box">
+            <div id="story" class="story-text">正在拉開序幕...</div>
+        </div>
+
+        <div id="options" class="options-container"></div>
+    </div>
+
+    <script>
+        // 經典 Phantom Logo 圖片
+        const phantomImg = "https://images.vavel.com/f/the-phantom-of-the-opera-logo-4573356578.jpg";
+
+        // 擴充版多關卡劇情資料庫
+        const storyData = {
+            // =================【第一幕：抉擇的起點】=================
+            start: {
+                text: "【第一幕：命運的敲門聲】\n後台休息室裡，剛結束完美演出的你（克莉絲汀）正對著鏡子發呆。此時，牆壁後面傳來了『音樂天使』低沉而充滿磁性的呼喚。與此同時，你的青梅竹馬勞爾子爵也在門外急促地敲門，渴望與你重逢。面對交織的過去與未知，你決定...",
+                bg: phantomImg,
+                options: [
+                    { text: "轉向鏡子，跟隨耳邊的神秘歌聲步入密道", nextNode: "act2_phantom" },
+                    { text: "無視歌聲，立刻轉身開門擁抱熱情的勞爾", nextNode: "act2_raoul" },
+                    { text: "鎖死房門，誰都不見。你需要靠自己平復混亂的靈魂", nextNode: "act2_alone" }
+                ]
+            },
+
+            // =================【第二幕：分歧的考驗】=================
+            
+            // 路線 A：跟隨魅影
+            act2_phantom: {
+                text: "【第二幕：地底迷宮的夜之樂章】\n你穿過幽暗的密道，乘著小船來到歌劇院深處的地底湖。黑衣面具人（魅影）向你傾訴他瘋狂的愛意，並向你展示他為你量身打造的歌劇劇本。他遞給你一把象徵臣服的權杖，命令你為他歌唱。這時，你發現了他的管風琴旁放著一封威脅劇院經理的勒索信。你決定...",
+                bg: phantomImg,
+                options: [
+                    { text: "假意順從，用最溫柔的歌聲安撫他，藉機偷看他的面具底細", nextNode: "phantom_unmask_check" },
+                    { text: "義正嚴辭地拒絕他！斥責他的勒索行為，並試圖尋找出口逃跑", nextNode: "phantom_escape_check" },
+                    { text: "與他展開藝術共鳴，主動修改劇本，試圖在音樂上引導他走向光明", nextNode: "phantom_art_check" }
+                ]
+            },
+
+            // 路線 B：選擇勞爾
+            act2_raoul: {
+                text: "【第二幕：月光屋頂的誓言】\n你奔向了勞爾，他帶你逃到了歌劇院灑滿月光的屋頂。你向他訴說對地底怪人的恐懼，勞爾深情地吻了你，盟誓會用生命和貴族名譽保護你。然而，此時頭頂的雕像後傳來了一聲心碎的低吟，魅影正藏在暗處！勞爾提議立刻收拾行李私奔，但明天就是新劇《漢尼拔》的首演，你決定...",
+                bg: phantomImg,
+                options: [
+                    { text: "答應勞爾，今晚就連夜坐火車離開巴黎，遠離是非之地", nextNode: "raoul_elope_check" },
+                    { text: "拒絕私奔，堅持留下來演出。你不想放棄舞台，並決定在首演與魅影做了斷", nextNode: "raoul_stage_check" },
+                    { text: "說服勞爾不要逃跑，利用他的貴族權力調動軍警，對劇院地底進行地毯式搜捕", nextNode: "raoul_police_check" }
+                ]
+            },
+
+            // 路線 C：獨立覺醒
+            act2_alone: {
+                text: " =【第二幕：獨立女性的覺醒】\n你將自己反鎖在房間。當夜，你意識到無論是魅影令人窒息的掌控，還是勞爾依賴貴族光環的保護，都不是你真正想要的。你擁有全巴黎最完美的歌喉，命運應該握在自己手中！隔天一早，兩位劇院新經理因為收到魅影的恐嚇信而焦頭爛額，前來尋求你的協助，你決定...",
+                bg: phantomImg,
+                options: [
+                    { text: "宣布無限期退出這座充滿陰謀的歌劇院，前往維也納深造古典音樂", nextNode: "alone_vienna_check" },
+                    { text: "展現商業頭腦，提出由你出資入股歌劇院，成為擁有決策權的首席女董事", nextNode: "alone_ceo_check" },
+                    { text: "召開記者會公開「劇院幽靈」的勒索真相，用現代科學與法律對抗迷信", nextNode: "alone_truth_check" }
+                ]
+            },
+
+            // =================【第三幕：終章命運抉擇（結局）】=================
+
+            // 魅影分支結局
+            phantom_unmask_check: {
+                text: "【第三幕：詛咒的真相】\n你趁他沉浸在音樂中時，猛然揭開了他的面具！那張被上帝詛咒的殘缺面容暴露在空氣中，魅影先是爆怒將你推倒，但看到你眼中流下的不是恐懼而是心疼的淚水時，他徹底崩潰並跪在地上痛哭。此時，勞爾提著燈找到了這裡，魅影看著你們，做出了最後的決定...",
+                bg: phantomImg,
+                options: [{ text: "迎向命運：【結局 A-1：夜之輓歌】", nextNode: "end_a1" }]
+            },
+            phantom_escape_check: {
+                text: "【第三幕：地下湖的追逐】\n你的反抗激怒了瀕臨瘋狂的魅影。他將你囚禁在水牢中，隨後返回地面啟動了復仇機關——巨大的歌劇院水晶燈在演出途中轟然墜落！整個劇院陷入火海與混亂，勞爾隻身一人衝入地底試圖救你...",
+                bg: phantomImg,
+                options: [{ text: "迎向命運：【結局 A-2：烈火焚城】", nextNode: "end_a2" }]
+            },
+            phantom_art_check: {
+                text: "【第三幕：地底的靈感女神】\n你的音樂才華與包容心徹底折服了魅影。你們在地底沒日沒夜地鑽研音樂，將歌劇修改得如同天籟。幾年後，巴黎歌劇院雖然換了無數經理，但依然流傳著神秘的「樂章傳說」，沒有人再見過你，除了那些驚世駭俗的新曲譜...",
+                bg: phantomImg,
+                options: [{ text: "迎向命運：【結局 A-3：地底的音樂帝后】", nextNode: "end_a3" }]
+            },
+
+            // 勞爾分支結局
+            raoul_elope_check: {
+                text: "【第三幕：遠離巴黎的列車】\n你跟著勞爾登上了前往外省的深夜列車。列車啟動時，你望著車窗外漸漸遠去的巴黎夜景，心中五味雜陳。這時，你發現大衣口袋裡不知何時被塞進了一張樂譜，上面寫著：『我的愛已隨你而去。』",
+                bg: phantomImg,
+                options: [{ text: "迎向命運：【結局 B-1：平凡的幸福與餘音】", nextNode: "end_b1" }]
+            },
+            raoul_stage_check: {
+                text: "【第三幕：聚光燈下的生死對唱】\n首演之夜，萬眾矚目。到了男女主角對唱的經典橋段時，你驚覺台上的男主角不知何時已被面具魅影掉包！在全場觀眾面前，魅影緊緊握著你的手，傾注靈魂與你對唱。台下的勞爾與警衛已經包圍了舞台...",
+                bg: phantomImg,
+                options: [{ text: "迎向命運：【結局 B-2：聚光燈下的永恆】", nextNode: "end_b2" }]
+            },
+            raoul_police_check: {
+                text: "【第三幕：黑暗的困獸之鬥】\n全副武裝的軍警在勞爾的帶領下踐踏了地下迷宮。然而，被逼入絕境的天才魅影展現了殘忍的防禦天賦，迷宮中佈滿的吊索與機關讓搜捕隊損失慘重。在黑暗的混亂中，魅影突然出現在你和勞爾身後...",
+                bg: phantomImg,
+                options: [{ text: "迎向命運：【結局 B-3：迷宮的殺戮】", nextNode: "end_b3" }]
+            },
+
+            // 獨立分支結局
+            alone_vienna_check: {
+                text: "【第三幕：音樂之都的洗禮】\n你來到了維也納，擺脫了情感的枷鎖，全心投入聲樂藝術。幾年後，你成為名震歐洲的頂尖傳奇獨立音樂家。你用實力證明了你不需要任何人的庇護或掌控，你就是音樂本身。",
+                bg: phantomImg,
+                options: [{ text: "迎向命運：【結局 C-1：真正的首席女高音】", nextNode: "end_c1" }]
+            },
+            alone_ceo_check: {
+                text: "【第三幕：掌控舞台的女王】\n你成功利用手段收購了歌劇院的多數股權。你讓勞爾成為你的商業股東，並暗中為地底的魅影源源不絕地提供他所需的物資與樂譜手稿，但限制他干涉地面。巴黎歌劇院在你的帶領下迎來了黃金盛世。",
+                bg: phantomImg,
+                options: [{ text: "迎向命運：【結局 C-2：歌劇院的第一女總裁】", nextNode: "end_c2" }]
+            },
+            alone_truth_check: {
+                text: "【第三幕：神話的終結】\n隨著記者會的揭露與警方的介入，歌劇院長久以來的神秘面紗被無情撕開。魅影的各種光學機關與暗道被一一破解，大眾的迷信變成了科學的搜捕。神話破滅後，魅影不得不永遠逃離巴黎，不知所蹤。",
+                bg: phantomImg,
+                options: [{ text: "迎向命運：【結局 C-3：理性的勝利與惆悵】", nextNode: "end_c3" }]
+            },
+
+            // =================【最終章：結局文本】=================
+            end_a1: {
+                text: "【結局 A-1：夜之輓歌】\n魅影在你的淚水與溫柔中得到了救贖。他明白愛不是佔有，於是親手放走了你與勞爾。當劇院大火蔓延時，他獨自坐在管風琴前彈奏完最後的音符，與這座充滿他痛苦與才華的建築一同化為灰燼。多年後，你在他的墓前放下了一朵綁著黑色絲帶的紅玫瑰。",
+                bg: phantomImg,
+                options: [{ text: "重返序幕，開啟新的人生", nextNode: "start" }]
+            },
+            end_a2: {
+                text: "【結局 A-2：烈火焚城】\n水晶燈砸碎了舞台，大火吞噬了一切。勞爾雖然在最後關頭找到了水牢，但崩塌的梁柱擋住了去路。你、勞爾、以及在地底深處瘋狂大笑的魅影，最終都沒能逃出這座宏偉的世紀墳墓。這場驚世的三角虐戀，永遠埋葬在巴黎的焦土之下。",
+                bg: phantomImg,
+                options: [{ text: "重返序幕，開啟新的人生", nextNode: "start" }]
+            },
+            end_a3: {
+                text: "【結局 A-3：地底的音樂帝后】\n你選擇永遠留在黑暗的地底，成為魅影唯一的女神。在外界眼中你已經失蹤或死亡，但只有你知道，你們共同創造出的無上樂章超越了人類的極限。雖然見不到陽光，但在音樂的世界裡，你擁有最絕對的自由與永恆的愛。",
+                bg: phantomImg,
+                options: [{ text: "重返序幕，開啟新的人生", nextNode: "start" }]
+            },
+            end_b1: {
+                text: "【結局 B-1：平凡的幸福與餘音】\n你與勞爾在遠方的鄉間隱姓埋名，過上了平靜溫馨的貴族生活。你生了孩子，遠離了聚光燈。只是每當深夜狂風暴雨、或是聽到熟悉的旋律時，你總會望著巴黎的方向發呆，耳邊隱約響起那首未完的《夜之樂章》……",
+                bg: phantomImg,
+                options: [{ text: "重返序幕，開啟新的人生", nextNode: "start" }]
+            },
+            end_b2: {
+                text: "【結局 B-2：聚光燈下的永恆】\n在對唱的最高潮，你親吻了魅影的面具。就在這一瞬間，魅影在舞台上升起漫天迷霧。當迷霧散去，你與魅影同時在舞台上憑空消失。勞爾搜遍了全法國都找不到你們的蹤跡。舞台上留下的，只有那一頂掉落的白色面具與燃燒的玫瑰。",
+                bg: phantomImg,
+                options: [{ text: "重返序幕，開啟新的人生", nextNode: "start" }]
+            },
+            end_b3: {
+                text: "【結局 B-3：迷宮的殺戮】\n魅影利用地底機關，在黑暗中無情地清除了軍警。勞爾為了保護你，在與魅影的決鬥中身負重傷。看著滿地的鮮血與重傷的愛人，你舉起地上的手槍對準了魅影……這場搜捕沒有贏家，只有沾滿鮮血的雙手與永遠無法癒合的靈魂創傷。",
+                bg: phantomImg,
+                options: [{ text: "重返序幕，開啟新的人生", nextNode: "start" }]
+            },
+            end_c1: {
+                text: "【結局 C-1：真正的首席女高音】\n在維也納的金色大廳裡，你完成了個人的世紀獨唱會。全場觀眾起立為你瘋狂鼓掌。你不再是誰的「克莉絲汀」，你是名震歐洲的藝術大師。據說，你每場演出的首席包廂裡，永遠會空下來，並被人留下一朵綁著黑色絲帶的紅玫瑰。",
+                bg: phantomImg,
+                options: [{ text: "重返序幕，開啟新的人生", nextNode: "start" }]
+            },
+            end_c2: {
+                text: "【結局 C-2：歌劇院的第一女總裁】\n你身穿華麗的高管禮服，坐在歌劇院最高決策辦公室裡。勞爾向你回報票房大賣，魅影從地底下送來了最新的傳世劇本。你用理智與手腕，將危險的狂熱化為了不朽的商業與藝術帝國。你是這座劇院真正的主宰者，高貴的女王。",
+                bg: phantomImg,
+                options: [{ text: "重返序幕，開啟新的人生", nextNode: "start" }]
+            },
+            end_c3: {
+                text: "【結局 C-3：理性的勝利與惆悵】\n神秘的鬼魅傳說被科學與法律終結。歌劇院恢復了往常的平靜與安全，經理們彈冠相慶，觀眾們也不再害怕。然而，坐在休息室鏡子前的你，看著再也不會傳出聲音的牆壁，心中卻感受到了一種無比的空虛。歌劇院安全了，但也永遠失去了那種令人靈魂顫抖的瘋狂藝術魔力。",
+                bg: phantomImg,
+                options: [{ text: "重返序幕，開啟新的人生", nextNode: "start" }]
+            }
+        };
+
+        // 遊戲核心引擎
+        const storyEl = document.getElementById("story");
+        const optionsContainer = document.getElementById("options");
+        const bgContainer = document.getElementById("bg-container");
+
+        function renderNode(nodeKey) {
+            const node = storyData[nodeKey];
+            if (!node) return;
+
+            // 1. 設定背景圖
+            bgContainer.style.backgroundImage = `url('${node.bg}')`;
+
+            // 2. 清空現有選項
+            optionsContainer.innerHTML = "";
+
+            // 3. 處理劇情文字（打字機效果）
+            storyEl.innerHTML = "";
+            let i = 0;
+            // 由於文本變長，速度調快為每字 12 毫秒，維持流暢感
+            function typeWriter() {
+                if (i < node.text.length) {
+                    storyEl.innerHTML += node.text.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, 12); 
+                } else {
+                    showOptions(node.options);
+                }
+            }
+            typeWriter();
+        }
+
+        function showOptions(options) {
+            options.forEach((opt, index) => {
+                const button = document.createElement("button");
+                // 判斷是否為結局返回按鈕
+                if (opt.nextNode === "start") {
+                    button.className = "btn-reset";
+                } else {
+                    button.className = "btn-option";
+                }
+                button.innerHTML = opt.text;
+                button.style.animation = `fadeIn 0.5s ease-in-out ${index * 0.15}s forwards`;
+                button.style.opacity = 0;
+                
+                button.addEventListener("click", () => {
+                    renderNode(opt.nextNode);
+                });
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        // 初始化
+        window.onload = () => {
+            renderNode("start");
+        };
+    </script>
+</body>
+</html>
