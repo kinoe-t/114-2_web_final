@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>書單探索</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;700&family=Noto+Sans+TC:wght@300;400;500&display=swap');
+
+:root {
+  --ink: #16161e;
+  --ink2: #3a3a50;
+  --paper: #f6f3ee;
+  --paper2: #edeae2;
+  --accent: #9b2335;
+  --accent-pale: #f2dada;
+  --gold: #7a5c10;
+  --teal: #1a6b72;
+  --border: #d9d3c9;
+  --white: #ffffff;
+  --shadow-sm: 0 2px 10px rgba(22,22,30,.09);
+  --shadow-md: 0 5px 22px rgba(22,22,30,.14);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+body {
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Noto Sans TC',sans-serif;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ── Header ── */
+header {
+  background:var(--ink);
+  color:var(--paper);
+  padding:2.6rem 2.5rem 2rem;
+  position:relative;
+  overflow:hidden;
+  flex-shrink:0;
+}
+header::after {
+  content:'閱';
+  font-family:'Noto Serif TC',serif;
+  font-size:20rem;font-weight:700;
+  color:rgba(255,255,255,.03);
+  position:absolute;right:-1.5rem;top:-3.5rem;
+  pointer-events:none;user-select:none;line-height:1;
+}
+.h-eye {
+  font-size:.68rem;letter-spacing:.48em;color:#9595b8;
+  text-transform:uppercase;margin-bottom:.55rem;
+}
+header h1 {
+  font-family:'Noto Serif TC',serif;
+  font-size:clamp(1.9rem,4.5vw,3rem);
+  font-weight:300;letter-spacing:.22em;line-height:1;
+  position:relative;z-index:1;
+}
+header h1 b {font-weight:700;color:#c05060;}
+.h-sub {
+  margin-top:.85rem;font-size:.8rem;
+  color:rgba(246,243,238,.38);letter-spacing:.06em;
+  position:relative;z-index:1;
+}
+
+/* ── Layout ── */
+.layout {
+  display:grid;
+  grid-template-columns:1fr 360px;
+  flex:1;min-height:0;
+}
+
+/* ── Left: tags ── */
+.left {
+  padding:2rem 2rem 2.5rem;
+  border-right:1px solid var(--border);
+  overflow-y:auto;
+}
+
+/* tag category groups */
+.group + .group { margin-top:1.6rem; }
+.group-label {
+  font-size:.65rem;letter-spacing:.4em;color:var(--gold);
+  text-transform:uppercase;margin-bottom:.75rem;
+  display:flex;align-items:center;gap:.6rem;
+}
+.group-label::after {
+  content:'';flex:1;height:1px;background:var(--border);
+}
+.tag-row { display:flex;flex-wrap:wrap;gap:.5rem; }
+
+.tag-btn {
+  display:inline-flex;align-items:center;gap:.38rem;
+  padding:.5rem 1rem;
+  border:1.5px solid var(--border);
+  background:var(--white);
+  border-radius:100px;
+  font-family:'Noto Sans TC',sans-serif;
+  font-size:.86rem;color:var(--ink2);
+  cursor:pointer;
+  transition:border-color .16s,background .16s,color .16s,box-shadow .16s,transform .13s;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.tag-btn:hover {
+  border-color:var(--ink);color:var(--ink);
+  background:var(--paper2);
+  transform:translateY(-2px);box-shadow:var(--shadow-sm);
+}
+.tag-btn.on {
+  background:var(--ink);border-color:var(--ink);
+  color:var(--paper);
+  box-shadow:var(--shadow-sm);
+}
+.tag-btn.on:hover { transform:translateY(-2px);box-shadow:var(--shadow-md); }
+.tc {
+  font-size:.63rem;padding:.06rem .38rem;
+  border-radius:100px;background:rgba(0,0,0,.08);opacity:.7;
+}
+.tag-btn.on .tc { background:rgba(255,255,255,.18);opacity:1; }
+
+/* helper */
+.helper {
+  margin-top:2rem;padding-top:1.3rem;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;
+  justify-content:space-between;gap:1rem;flex-wrap:wrap;
+}
+.helper-txt { font-size:.75rem;color:#aaa;line-height:1.8; }
+.clear-btn {
+  flex-shrink:0;background:none;
+  border:1px solid var(--border);
+  padding:.36rem .95rem;border-radius:100px;
+  font-size:.76rem;font-family:'Noto Sans TC',sans-serif;
+  color:var(--ink2);cursor:pointer;
+  transition:border-color .15s,color .15s;
+}
+.clear-btn:hover { border-color:var(--accent);color:var(--accent); }
+
+/* ── Right: results ── */
+.right {
+  padding:2rem 1.7rem 2.5rem;
+  overflow-y:auto;background:var(--paper);
+}
+.r-label {
+  font-size:.68rem;letter-spacing:.42em;color:var(--gold);
+  text-transform:uppercase;margin-bottom:.75rem;
+}
+.active-strip {
+  display:flex;flex-wrap:wrap;gap:.3rem;
+  min-height:4px;margin-bottom:.9rem;
+}
+.chip {
+  font-size:.68rem;padding:.18rem .55rem;
+  background:var(--accent-pale);color:var(--accent);
+  border-radius:100px;letter-spacing:.03em;
+}
+.r-meta {
+  font-size:.77rem;color:#aaa;
+  min-height:1.2em;margin-bottom:1.2rem;
+}
+.r-meta strong { color:var(--accent); }
+
+/* empty */
+.empty {
+  display:flex;flex-direction:column;
+  align-items:center;padding:3rem 1rem 2rem;
+  color:#ccc;text-align:center;gap:.75rem;
+}
+.empty-ico { font-size:2.8rem; }
+.empty p { font-size:.82rem;line-height:1.95; }
+
+/* book list */
+.book-list { display:flex;flex-direction:column;gap:.42rem; }
+.book-card {
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:9px;
+  padding:.7rem 1rem;
+  display:flex;align-items:center;gap:.7rem;
+  transition:transform .14s,box-shadow .14s,border-color .14s;
+  animation:sIn .2s ease both;
+}
+.book-card:hover {
+  transform:translateX(4px);
+  box-shadow:var(--shadow-sm);border-color:#bfb9b0;
+}
+.book-card a {
+  display:flex;align-items:center;gap:.7rem;
+  text-decoration:none;color:inherit;width:100%;
+}
+.book-card a:hover .bn  { color:var(--accent); }
+.book-card a:hover .ext { color:var(--gold); }
+.dot {
+  width:6px;height:6px;border-radius:50%;
+  background:var(--accent);flex-shrink:0;
+}
+.bn {
+  font-family:'Noto Serif TC',serif;
+  font-size:.9rem;font-weight:400;
+  color:var(--ink);flex:1;
+  transition:color .14s;
+}
+.ext { font-size:.7rem;color:#ccc;flex-shrink:0;transition:color .14s; }
+
+@keyframes sIn {
+  from{opacity:0;transform:translateX(-7px)}
+  to  {opacity:1;transform:translateX(0)}
+}
+
+/* ── Responsive ── */
+@media(max-width:680px){
+  .layout{grid-template-columns:1fr}
+  .left{border-right:none;border-bottom:1px solid var(--border);padding:1.4rem 1rem}
+  .right{padding:1.4rem 1rem}
+  header{padding:1.7rem 1rem 1.4rem}
+  header::after{font-size:10rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-eye">Novel Explorer</div>
+  <h1>書單<b>探索</b></h1>
+  <p class="h-sub">選擇標籤，找到你的下一本書 — 可多選，結果取交集</p>
+</header>
+
+<div class="layout">
+  <!-- Left: tag panel -->
+  <div class="left" id="leftPanel"></div>
+
+  <!-- Right: results -->
+  <div class="right">
+    <div class="r-label">推薦書單</div>
+    <div class="active-strip" id="activeStrip"></div>
+    <div class="r-meta" id="rMeta"></div>
+    <div id="rList"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// Book database
+// ════════════════════════════════════════════════
+const RAW = [
+  // ── 經典名著
+  {t:'簡愛',           tags:['經典名著','愛情','西方']},
+  {t:'傲慢與偏見',     tags:['經典名著','愛情','西方']},
+  {t:'咆哮山莊',       tags:['經典名著','愛情','西方']},
+  {t:'艾瑪',           tags:['經典名著','愛情','西方']},
+  {t:'北與南',         tags:['經典名著','愛情','西方']},
+  {t:'湯姆歷險記',     tags:['經典名著','西方']},
+  {t:'小婦人',         tags:['經典名著','西方']},
+  {t:'海底兩萬里',     tags:['經典名著','架空','西方']},
+  {t:'所羅門王的寶藏', tags:['經典名著','西方']},
+  {t:'環遊世界八十天', tags:['經典名著','西方']},
+  {t:'孤星淚',         tags:['經典名著','西方']},
+  {t:'少年維特的煩惱', tags:['經典名著','愛情','短篇','西方']},
+  {t:'仲夏夜之夢',     tags:['經典名著','輕鬆','西方']},
+  {t:'紅樓夢',         tags:['經典名著','愛情','東方']},
+  {t:'西遊記',         tags:['經典名著','東方']},
+  {t:'金瓶梅',         tags:['經典名著','愛情','東方']},
+  {t:'三國演義',       tags:['經典名著','東方']},
+  {t:'水滸傳',         tags:['經典名著','東方']},
+  {t:'皆大歡喜',       tags:['經典名著','輕鬆','西方']},
+
+  // ── 武俠（金庸，帶連結）
+  {t:'射鵰英雄傳', url:'https://www.haodoo.net/?M=book&P=55',   tags:['武俠','系列文','東方']},
+  {t:'神鵰俠侶',   url:'https://www.haodoo.net/?M=book&P=56',   tags:['武俠','系列文','愛情','東方']},
+  {t:'倚天屠龍記', url:'https://www.haodoo.net/?M=book&P=57',   tags:['武俠','系列文','愛情','東方']},
+  {t:'書劍恩仇錄', url:'https://www.haodoo.net/?M=book&P=58',   tags:['武俠','系列文','東方']},
+  {t:'碧血劍',     url:'https://www.haodoo.net/?M=book&P=59',   tags:['武俠','系列文','東方']},
+  {t:'連城訣',     url:'https://www.haodoo.net/?M=book&P=62',   tags:['武俠','系列文','東方']},
+  {t:'雪山飛狐',   url:'https://www.haodoo.net/?M=book&P=60',   tags:['武俠','系列文','東方']},
+  {t:'飛狐外傳',   url:'https://www.haodoo.net/?M=book&P=61',   tags:['武俠','系列文','東方']},
+  {t:'俠客行',     url:'https://www.haodoo.net/?M=book&P=63',   tags:['武俠','系列文','東方']},
+  {t:'天龍八部',   url:'https://www.haodoo.net/?M=book&P=65',   tags:['武俠','系列文','東方']},
+  {t:'笑傲江湖',   url:'https://www.haodoo.net/?M=book&P=66',   tags:['武俠','系列文','東方']},
+  {t:'鹿鼎記',     url:'https://www.haodoo.net/?M=book&P=67',   tags:['武俠','系列文','輕鬆','東方']},
+  {t:'越女劍',     url:'https://www.haodoo.net/?M=book&P=10U4', tags:['武俠','系列文','短篇','東方']},
+
+  // ── 言情
+  {t:'偷偷藏不住',      tags:['言情','愛情','現代','東方']},
+  {t:'難哄',            tags:['言情','愛情','現代','東方']},
+  {t:'三生三世十里桃花', tags:['言情','愛情','東方']},
+  {t:'成何體統',        tags:['言情','愛情','現代','東方']},
+  {t:'成了霸總的心間寵', tags:['言情','愛情','現代','東方']},
+  {t:'黑蓮花攻略手冊',  tags:['言情','愛情','東方']},
+  {t:'她變得又撩又甜',  tags:['言情','愛情','現代','東方']},
+  {t:'逐玉',            tags:['言情','愛情','東方']},
+
+  // ── 耽美
+  {t:'破雲',                   tags:['耽美','愛情','懸疑','現代','東方']},
+  {t:'二哈和他的白貓師尊',     tags:['耽美','愛情','東方']},
+  {t:'魔道祖師',               tags:['耽美','愛情','東方']},
+  {t:'天官賜福',               tags:['耽美','愛情','東方']},
+  {t:'重生之人渣反派自救系統',  tags:['耽美','愛情','輕鬆','東方']},
+  {t:'判官',                   tags:['耽美','愛情','懸疑','東方']},
+  {t:'我嗑了對家X我的cp',      tags:['耽美','愛情','現代','東方']},
+  {t:'不要在垃圾桶裡撿男朋友', tags:['耽美','愛情','現代','輕鬆','東方']},
+  {t:'偽裝學渣',               tags:['耽美','愛情','現代','輕鬆','東方']},
+  {t:'全球高考',               tags:['耽美','愛情','東方']},
+  {t:'迪奧先生',               tags:['耽美','愛情','現代','東方']},
+  {t:'美學公式',               tags:['耽美','愛情','現代','東方']},
+
+  // ── 輕鬆
+  {t:'我是貓',          tags:['輕鬆','東方']},
+  {t:'茶館裡的嫌疑人',  tags:['輕鬆','推理','東方']},
+  {t:'世界盡頭的咖啡館', tags:['輕鬆','短篇','西方']},
+
+  // ── 懸疑 / 推理
+  {t:'盜墓筆記',          tags:['懸疑','系列文','東方']},
+  {t:'十日終焉',          tags:['懸疑','推理','東方']},
+  {t:'諸神愚戲',          tags:['懸疑','東方']},
+  {t:'我不是戲神',        tags:['懸疑','東方']},
+  {t:'一個都不留',        tags:['推理','短篇','西方']},
+  {t:'嫌疑犯X的獻身',     tags:['推理','東方']},
+  {t:'假面飯店',          tags:['推理','現代','東方']},
+  {t:'迷宮裡的魔術師',    tags:['推理','東方']},
+  {t:'世界上最透明的故事', tags:['推理','短篇','東方']},
+  {t:'亞森羅蘋',          tags:['推理','系列文','西方']},
+  {t:'福爾摩斯',          tags:['推理','系列文','西方']},
+
+  // ── 互動
+  {t:'S', tags:['互動','短篇']},
+
+  // ── 短篇
+  {t:'人間椅子',       tags:['短篇','懸疑','東方']},
+  {t:'兩分銅幣',       tags:['短篇','推理','西方']},
+  {t:'即使你不在這裡', tags:['短篇','東方']},
+  {t:'人間失格',       tags:['短篇','東方']},
+
+  // ── 架空 / 科幻
+  {t:'波西傑克森', tags:['架空','系列文','西方']},
+  {t:'哈利波特',   tags:['架空','系列文','西方']},
+  {t:'極限返航',   tags:['架空','西方']},
+  {t:'沙丘',       tags:['架空','系列文','西方']},
+  {t:'三體',       tags:['架空','系列文','東方']},
+  {t:'全知讀者視角',tags:['架空','東方']},
+];
+
+// dedup by title
+const seen = new Set();
+const BOOKS = RAW.filter(b => { if(seen.has(b.t)) return false; seen.add(b.t); return true; });
+
+// ════════════════════════════════════════════════
+// Tag panel config — groups with labels
+// ════════════════════════════════════════════════
+const TAG_GROUPS = [
+  { label: '類型',     tags: ['言情','耽美','武俠','推理','懸疑','架空','輕鬆','互動'] },
+  { label: '形式',     tags: ['短篇','系列文','現代','經典名著'] },
+  { label: '主題',     tags: ['愛情'] },
+  { label: '地域',     tags: ['東方','西方'] },
+];
+
+// flat ordered list for lookup
+const ALL_TAGS = TAG_GROUPS.flatMap(g => g.tags);
+
+function booksFor(tag) {
+  return BOOKS.filter(b => b.tags.includes(tag));
+}
+
+// ════════════════════════════════════════════════
+// State
+// ════════════════════════════════════════════════
+const active = new Set();
+
+// ════════════════════════════════════════════════
+// Build tag panel
+// ════════════════════════════════════════════════
+const leftPanel = document.getElementById('leftPanel');
+
+TAG_GROUPS.forEach(group => {
+  const sec = document.createElement('div');
+  sec.className = 'group';
+
+  const lbl = document.createElement('div');
+  lbl.className = 'group-label';
+  lbl.textContent = group.label;
+  sec.appendChild(lbl);
+
+  const row = document.createElement('div');
+  row.className = 'tag-row';
+
+  group.tags.forEach(tag => {
+    const cnt = booksFor(tag).length;
+    const btn = document.createElement('button');
+    btn.className = 'tag-btn';
+    btn.dataset.tag = tag;
+    btn.innerHTML = `${tag}<span class="tc">${cnt}</span>`;
+    btn.addEventListener('click', () => toggle(tag));
+    row.appendChild(btn);
+  });
+
+  sec.appendChild(row);
+  leftPanel.appendChild(sec);
+});
+
+// helper row
+const helper = document.createElement('div');
+helper.className = 'helper';
+helper.innerHTML = `
+  <p class="helper-txt">可同時選多個標籤<br>書單取所選標籤的交集</p>
+  <button class="clear-btn" id="clearBtn">清除全部</button>`;
+leftPanel.appendChild(helper);
+document.getElementById('clearBtn').addEventListener('click', () => { active.clear(); render(); });
+
+// ════════════════════════════════════════════════
+// Toggle & render
+// ════════════════════════════════════════════════
+function toggle(tag) {
+  active.has(tag) ? active.delete(tag) : active.add(tag);
+  render();
+}
+
+function render() {
+  // buttons
+  document.querySelectorAll('.tag-btn').forEach(btn => {
+    btn.classList.toggle('on', active.has(btn.dataset.tag));
+  });
+
+  // chips
+  const strip = document.getElementById('activeStrip');
+  strip.innerHTML = [...active].map(t => `<span class="chip">${t}</span>`).join('');
+
+  const meta = document.getElementById('rMeta');
+  const list = document.getElementById('rList');
+
+  if (!active.size) {
+    meta.innerHTML = '';
+    list.innerHTML = `<div class="empty"><div class="empty-ico">📚</div><p>點選左側標籤<br>探索你的下一本書</p></div>`;
+    return;
+  }
+
+  // intersection
+  const arr = [...active];
+  let books = booksFor(arr[0]);
+  for (let i = 1; i < arr.length; i++) {
+    const s = new Set(booksFor(arr[i]).map(b => b.t));
+    books = books.filter(b => s.has(b.t));
+  }
+
+  meta.innerHTML = `找到 <strong>${books.length}</strong> 本符合的書`;
+
+  if (!books.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-ico">🔍</div><p>此標籤組合暫無符合書目<br>請減少選擇的標籤數量</p></div>`;
+    return;
+  }
+
+  const ul = document.createElement('div');
+  ul.className = 'book-list';
+
+  books.forEach((book, i) => {
+    const card = document.createElement('div');
+    card.className = 'book-card';
+    card.style.animationDelay = `${i * 0.032}s`;
+
+    if (book.url) {
+      card.innerHTML = `<a href="${book.url}" target="_blank" rel="noopener noreferrer">
+        <span class="dot"></span>
+        <span class="bn">${book.t}</span>
+        <span class="ext">↗</span>
+      </a>`;
+    } else {
+      card.innerHTML = `<span class="dot"></span><span class="bn">${book.t}</span>`;
+    }
+    ul.appendChild(card);
+  });
+
+  list.innerHTML = '';
+  list.appendChild(ul);
+}
+
+render();
+</script>
+</body>
+</html>

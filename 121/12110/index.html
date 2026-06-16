@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>消失的燈塔守衛</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06090f;--panel:#0c1220;--panel2:#101828;
+  --sea:#0a1628;--sky:#0d1f3c;
+  --gold:#7eb8d4;--goldl:#a8d4e8;--goldd:#4a7a94;
+  --accent:#c8a44a;--accentl:#e0bc6a;--accentd:#8a6a28;
+  --txt:#c8dce8;--txtd:#6a8a9e;--txtm:#3a5a6e;
+  --border:rgba(126,184,212,0.18);--borderl:rgba(126,184,212,0.45);
+  --red:#7a2020;--green:#1a5a2a;
+  --danger:#e05030;--safe:#40a060;
+}
+body{background:var(--bg);color:var(--txt);font-family:'Noto Sans TC',sans-serif;min-height:100vh;overflow-x:hidden;user-select:none}
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex;flex-direction:column}
+
+/* ── TITLE ── */
+#s-title{
+  align-items:center;justify-content:center;text-align:center;
+  padding:3rem 1.5rem;
+  background:radial-gradient(ellipse at 50% 60%,#0d1f3c 0%,#06090f 70%);
+  position:relative;overflow:hidden
+}
+.stars{position:absolute;inset:0;pointer-events:none}
+.t-eye{font-size:3.5rem;margin-bottom:1.5rem;display:block;filter:drop-shadow(0 0 20px rgba(200,164,74,0.5))}
+.t-main{
+  font-family:'Noto Serif TC',serif;font-size:clamp(2rem,5vw,3.2rem);
+  font-weight:700;color:var(--accent);letter-spacing:.12em;
+  text-shadow:0 0 40px rgba(200,164,74,0.3);margin-bottom:.4rem
+}
+.t-sub{font-size:.8rem;color:var(--txtd);letter-spacing:.6em;margin-bottom:2rem}
+.t-divider{width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--goldd),transparent);margin:0 auto 2rem}
+.t-story{
+  max-width:480px;margin:0 auto 2.5rem;color:var(--txtd);
+  font-size:.9rem;line-height:2.1;
+  border:1px solid var(--border);padding:1.6rem 2rem;
+  background:rgba(10,22,40,0.6);position:relative
+}
+.t-story::before,.t-story::after{
+  content:'';position:absolute;width:12px;height:12px;
+  border-color:var(--goldd);border-style:solid
+}
+.t-story::before{top:-1px;left:-1px;border-width:1px 0 0 1px}
+.t-story::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
+.btn{
+  background:transparent;border:1px solid var(--accent);color:var(--accent);
+  font-family:'Noto Sans TC',sans-serif;font-size:.9rem;letter-spacing:.25em;
+  padding:.85rem 2.5rem;cursor:pointer;transition:all .3s;
+  position:relative
+}
+.btn::before{
+  content:'';position:absolute;inset:0;
+  background:rgba(200,164,74,0);transition:background .3s
+}
+.btn:hover::before{background:rgba(200,164,74,0.08)}
+.btn:hover{box-shadow:0 0 30px rgba(200,164,74,0.15)}
+.btn:active{transform:scale(.97)}
+.btn-sm{padding:.35rem .9rem;font-size:.75rem;letter-spacing:.12em;border-color:var(--border)}
+.btn-sm:hover{border-color:var(--goldd);color:var(--goldd)}
+.btn-danger{border-color:var(--danger);color:var(--danger)}
+.btn-danger:hover::before{background:rgba(224,80,48,0.08)}
+
+/* ── GAME ── */
+#s-game{flex-direction:column}
+.hud{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.55rem 1.2rem;background:#040709;
+  border-bottom:1px solid var(--border);flex-wrap:wrap;gap:.4rem;z-index:50
+}
+.hud-title{font-family:'Noto Serif TC',serif;color:var(--accent);font-size:.82rem;letter-spacing:.2em}
+.hud-center{display:flex;flex-direction:column;align-items:center;gap:2px}
+.hud-timer{
+  font-family:'Space Mono',monospace;font-size:1.35rem;
+  color:var(--txt);letter-spacing:.1em;
+  transition:color .5s
+}
+.hud-timer.warn{color:var(--danger);animation:pulse 1s ease-in-out infinite}
+.hud-timer.ok{color:var(--safe)}
+.timer-bar-wrap{width:160px;height:3px;background:#1a2a38;border-radius:2px;overflow:hidden}
+.timer-bar{height:100%;background:var(--safe);border-radius:2px;transition:width 1s linear,background .5s}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.hud-r{display:flex;gap:.5rem;align-items:center}
+.hint-badge{
+  font-family:'Space Mono',monospace;font-size:.7rem;
+  color:var(--txtd);background:#0c1828;border:1px solid var(--border);
+  padding:.2rem .5rem;letter-spacing:.05em
+}
+.prog-wrap{height:1px;background:#080c14}
+.prog{height:100%;background:var(--accent);transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+.game-body{display:flex;flex:1;min-height:0;overflow:hidden}
+
+/* ── PANORAMA ── */
+.pano-outer{flex:1;min-width:0;position:relative;overflow:hidden;background:var(--sea);cursor:grab}
+.pano-outer:active{cursor:grabbing}
+.pano-inner{
+  position:absolute;top:0;bottom:0;
+  width:2000px;
+  display:flex;align-items:stretch
+}
+.room-svg{width:100%;height:100%;display:block;min-height:480px}
+.pano-hint{
+  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+  font-size:.7rem;color:rgba(126,184,212,0.4);letter-spacing:.15em;
+  pointer-events:none;transition:opacity 1s
+}
+
+/* hotspots */
+.hotspot{cursor:pointer;transition:opacity .2s}
+.hotspot .hs-ring{opacity:0;transition:opacity .2s;pointer-events:none}
+.hotspot:hover .hs-ring{opacity:1}
+.hotspot.done{opacity:.35;pointer-events:none}
+
+/* ── SIDE PANEL ── */
+.side{
+  width:250px;flex-shrink:0;display:flex;flex-direction:column;
+  background:var(--panel);border-left:1px solid var(--border);overflow-y:auto
+}
+.pane{padding:.85rem 1rem;border-bottom:1px solid var(--border)}
+.pane-label{
+  font-size:.62rem;color:var(--txtm);letter-spacing:.4em;
+  margin-bottom:.65rem;display:flex;align-items:center;gap:.4rem
+}
+.pane-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.inv-grid{display:flex;flex-direction:column;gap:.3rem;min-height:20px}
+.inv-chip{
+  background:var(--panel2);border:1px solid var(--border);
+  padding:.3rem .65rem;font-size:.74rem;color:var(--txtd);
+  display:flex;align-items:center;gap:.4rem
+}
+.inv-chip .dot{width:6px;height:6px;background:var(--accent);border-radius:50%;flex-shrink:0}
+.locks-wrap{padding:.85rem 1rem}
+.lock-row{
+  display:flex;align-items:center;gap:.6rem;padding:.42rem .6rem;
+  border:1px solid var(--border);margin-bottom:.35rem;cursor:pointer;
+  transition:all .2s;position:relative;overflow:hidden
+}
+.lock-row::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:0;
+  background:rgba(126,184,212,0.04);transition:width .3s
+}
+.lock-row:hover::before{width:100%}
+.lock-row:hover{border-color:var(--goldd)}
+.lock-row.open{opacity:.5;pointer-events:none}
+.lock-row.open::before{width:100%;background:rgba(64,160,96,0.06)}
+.lock-icon{font-size:.9rem;flex-shrink:0;font-family:'Space Mono',monospace}
+.lock-label{font-size:.78rem;flex:1}
+.lock-status{
+  font-size:.62rem;font-family:'Space Mono',monospace;
+  color:var(--txtm);letter-spacing:.05em
+}
+.lock-row.open .lock-status{color:var(--safe)}
+.door-btn-wrap{padding:0 1rem 1rem}
+.notes-wrap{flex:1;padding:.85rem 1rem;overflow-y:auto;max-height:240px}
+.note-entry{
+  font-size:.76rem;color:var(--txtd);line-height:1.85;
+  padding:.35rem 0;border-bottom:1px solid rgba(126,184,212,0.06)
+}
+.note-entry:last-child{border-bottom:none}
+.note-new{color:var(--goldl);animation:fadeNote 3s forwards}
+@keyframes fadeNote{0%{color:var(--goldl)}100%{color:var(--txtd)}}
+
+/* ── MODAL ── */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.88);z-index:200;
+  align-items:center;justify-content:center;padding:1rem;
+  backdrop-filter:blur(4px)
+}
+.overlay.open{display:flex}
+.modal{
+  background:var(--panel);border:1px solid var(--borderl);
+  max-width:500px;width:100%;padding:1.8rem;
+  position:relative;max-height:92vh;overflow-y:auto;
+  box-shadow:0 0 60px rgba(0,0,0,.8)
+}
+.modal-corner{position:absolute;width:10px;height:10px;border-color:var(--accent);border-style:solid}
+.modal-corner.tl{top:0;left:0;border-width:1px 0 0 1px}
+.modal-corner.tr{top:0;right:0;border-width:1px 1px 0 0}
+.modal-corner.bl{bottom:0;left:0;border-width:0 0 1px 1px}
+.modal-corner.br{bottom:0;right:0;border-width:0 1px 1px 0}
+.modal-title{
+  font-family:'Noto Serif TC',serif;color:var(--accent);
+  font-size:1.05rem;margin-bottom:1rem;
+  padding-bottom:.7rem;border-bottom:1px solid var(--border)
+}
+.modal-body{font-size:.85rem;color:var(--txtd);line-height:2}
+.modal-close{
+  position:absolute;top:.9rem;right:1rem;background:none;border:none;
+  color:var(--txtm);font-size:1rem;cursor:pointer;
+  transition:color .2s;font-family:'Space Mono',monospace;letter-spacing:0
+}
+.modal-close:hover{color:var(--accent)}
+.modal-acts{margin-top:1.2rem;display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end}
+
+/* ── PUZZLE WIDGETS ── */
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;margin:.8rem 0}
+.kbtn{
+  background:#070b12;border:1px solid var(--border);
+  color:var(--txt);font-family:'Space Mono',monospace;
+  font-size:.95rem;padding:.55rem;cursor:pointer;
+  transition:all .18s
+}
+.kbtn:hover{border-color:var(--goldd);background:#0c1520}
+.kbtn:active{transform:scale(.93)}
+.kdisp{
+  text-align:center;font-family:'Space Mono',monospace;font-size:1.6rem;
+  color:var(--accent);letter-spacing:.6em;padding:.5rem;
+  background:#070b12;border:1px solid var(--border);margin-bottom:.5rem;
+  min-height:60px;display:flex;align-items:center;justify-content:center
+}
+.kdisp .cursor{animation:blink-c .8s infinite;color:var(--goldd)}
+@keyframes blink-c{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+/* Frequency dial puzzle */
+.freq-display{
+  background:#070b12;border:1px solid var(--border);
+  padding:1rem;margin:.8rem 0;text-align:center;
+  font-family:'Space Mono',monospace
+}
+.freq-val{font-size:2rem;color:var(--accent);letter-spacing:.1em}
+.freq-unit{font-size:.7rem;color:var(--txtm);letter-spacing:.3em;display:block;margin-top:.2rem}
+.freq-controls{display:flex;gap:.4rem;justify-content:center;margin:.6rem 0}
+.freq-btn{
+  background:#070b12;border:1px solid var(--border);color:var(--txt);
+  font-family:'Space Mono',monospace;font-size:.9rem;padding:.4rem .9rem;
+  cursor:pointer;transition:all .18s
+}
+.freq-btn:hover{border-color:var(--goldd)}
+.freq-presets{display:flex;gap:.3rem;flex-wrap:wrap;margin:.5rem 0}
+.freq-pre{
+  background:#070b12;border:1px solid var(--border);color:var(--txtd);
+  font-size:.72rem;font-family:'Space Mono',monospace;
+  padding:.25rem .5rem;cursor:pointer;transition:all .18s
+}
+.freq-pre:hover{border-color:var(--accent);color:var(--accent)}
+.freq-pre.active{border-color:var(--accent);color:var(--accent);background:rgba(126,184,212,0.06)}
+
+/* Mirror angle puzzle */
+.mirror-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  gap:3px;margin:.8rem auto;width:fit-content
+}
+.mirror-cell{
+  width:52px;height:52px;background:#070b12;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:1.2rem;transition:all .18s;position:relative
+}
+.mirror-cell:hover:not(.fixed){border-color:var(--goldd);background:#0c1520}
+.mirror-cell.fixed{cursor:default;background:#0a1018}
+.mirror-cell.lit{background:rgba(200,164,74,0.12);border-color:rgba(200,164,74,0.4)}
+.mirror-cell svg{pointer-events:none}
+
+/* Knot sequence puzzle */
+.knot-sequence{display:flex;gap:.4rem;margin:.8rem 0;flex-wrap:wrap}
+.knot-btn{
+  background:#070b12;border:1px solid var(--border);color:var(--txt);
+  font-size:1.1rem;width:44px;height:44px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .18s;font-family:'Space Mono',monospace
+}
+.knot-btn:hover{border-color:var(--accent)}
+.knot-btn.sel{border-color:var(--accent);background:rgba(126,184,212,0.1);color:var(--accent)}
+.knot-slots{display:flex;gap:.4rem;margin:.6rem 0;min-height:52px;align-items:center}
+.knot-slot{
+  width:44px;height:44px;background:#040709;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+  font-family:'Space Mono',monospace;color:var(--accent)
+}
+.knot-slot.empty{color:var(--txtm)}
+
+.msg{
+  margin-top:.6rem;padding:.4rem .8rem;font-size:.78rem;
+  border-left:2px solid transparent;display:none;
+  font-family:'Space Mono',monospace
+}
+.msg.ok{display:block;border-color:var(--safe);color:var(--safe);background:rgba(40,120,80,.08)}
+.msg.err{display:block;border-color:var(--danger);color:var(--danger);background:rgba(120,40,30,.08)}
+
+/* ── END ── */
+#s-end{
+  align-items:center;justify-content:center;text-align:center;
+  padding:3rem 1.5rem;
+  background:radial-gradient(ellipse at center,#0d1f3c 0%,#06090f 65%)
+}
+.end-ico{font-size:3.5rem;margin-bottom:1.5rem;display:block;
+  filter:drop-shadow(0 0 20px rgba(200,164,74,0.5))}
+.end-title{font-family:'Noto Serif TC',serif;font-size:1.8rem;color:var(--accent);margin-bottom:.8rem}
+.end-divider{width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--goldd),transparent);margin:1rem auto}
+.end-desc{color:var(--txtd);font-size:.87rem;line-height:2;max-width:420px;margin:0 auto 2rem}
+.end-stats{display:flex;gap:2rem;justify-content:center;margin:1.5rem 0;flex-wrap:wrap}
+.stat-val{font-family:'Space Mono',monospace;font-size:1.8rem;color:var(--accent)}
+.stat-lbl{font-size:.68rem;color:var(--txtm);letter-spacing:.25em;margin-top:.2rem}
+
+@media(max-width:680px){
+  .game-body{flex-direction:column}
+  .side{width:100%;max-height:260px;flex-direction:row;flex-wrap:wrap;overflow-y:visible}
+  .pane,.locks-wrap,.notes-wrap{flex:1;min-width:150px}
+  .notes-wrap{max-height:100px}
+}
+</style>
+</head>
+<body>
+
+<!-- TITLE -->
+<div id="s-title" class="screen active">
+  <canvas class="stars" id="starCanvas"></canvas>
+  <span class="t-eye">⚓</span>
+  <h1 class="t-main">消失的燈塔守衛</h1>
+  <p class="t-sub">密室逃脫 · 第二章</p>
+  <div class="t-divider"></div>
+  <div class="t-story">
+    1953年，孤島燈塔守衛麥爾斯在一個風暴之夜憑空消失。<br>
+    他留下了無線電、密碼、和一個不能說出的秘密。<br><br>
+    你受困於燈塔之中。<strong style="color:var(--accent)">25分鐘</strong>後，
+    漲潮將淹沒唯一的出口。<br>
+    那些線索就藏在房間的每個角落。
+  </div>
+  <button class="btn" onclick="startGame()">進入燈塔</button>
+</div>
+
+<!-- GAME -->
+<div id="s-game" class="screen">
+  <div class="hud">
+    <span class="hud-title">⚓ 消失的燈塔守衛</span>
+    <div class="hud-center">
+      <span class="hud-timer" id="hud-timer">25:00</span>
+      <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar" style="width:100%"></div></div>
+    </div>
+    <div class="hud-r">
+      <span class="hint-badge" id="hint-badge">HINT ×2</span>
+      <button class="btn btn-sm" onclick="useHint()">求助</button>
+    </div>
+  </div>
+  <div class="prog-wrap"><div class="prog" id="prog" style="width:0%"></div></div>
+
+  <div class="game-body">
+    <!-- PANORAMA SVG SCENE -->
+    <div class="pano-outer" id="pano-outer">
+      <div class="pano-inner" id="pano-inner">
+        <svg class="room-svg" viewBox="0 0 2000 520" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMid meet">
+          <defs>
+            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#050c1a"/>
+              <stop offset="100%" stop-color="#0a1830"/>
+            </linearGradient>
+            <linearGradient id="seaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#081428"/>
+              <stop offset="100%" stop-color="#040a18"/>
+            </linearGradient>
+            <radialGradient id="lampBeam" cx="50%" cy="100%" r="100%">
+              <stop offset="0%" stop-color="#c8a44a" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#c8a44a" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="lampCore" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ffe8a0" stop-opacity="0.9"/>
+              <stop offset="60%" stop-color="#c8a44a" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#c8a44a" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="wallGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#0c1828"/>
+              <stop offset="100%" stop-color="#08101e"/>
+            </linearGradient>
+            <linearGradient id="floorGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#0e1a2c"/>
+              <stop offset="100%" stop-color="#090f1c"/>
+            </linearGradient>
+            <linearGradient id="ironGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#1e2a3a"/>
+              <stop offset="50%" stop-color="#2a3848"/>
+              <stop offset="100%" stop-color="#182030"/>
+            </linearGradient>
+            <pattern id="woodPattern" x="0" y="0" width="40" height="8" patternUnits="userSpaceOnUse">
+              <rect width="40" height="8" fill="#0e1a2c"/>
+              <line x1="0" y1="7.5" x2="40" y2="7.5" stroke="#0a1420" stroke-width=".5"/>
+              <rect x="0" y="0" width="20" height="7.5" fill="none" stroke="#121e2e" stroke-width=".3"/>
+            </pattern>
+            <pattern id="wallPattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+              <rect width="60" height="60" fill="#0c1828"/>
+              <rect x="0" y="0" width="29" height="29" fill="none" stroke="#0e1c30" stroke-width=".5"/>
+              <rect x="31" y="0" width="29" height="29" fill="none" stroke="#0a1424" stroke-width=".5"/>
+              <rect x="0" y="31" width="29" height="29" fill="none" stroke="#0a1424" stroke-width=".5"/>
+              <rect x="31" y="31" width="29" height="29" fill="none" stroke="#0e1c30" stroke-width=".5"/>
+            </pattern>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="softglow">
+              <feGaussianBlur stdDeviation="8" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <clipPath id="roomClip"><rect width="2000" height="520"/></clipPath>
+          </defs>
+          <g clip-path="url(#roomClip)">
+
+          <!-- ═══ BACKGROUND OUTSIDE WINDOW ═══ -->
+          <!-- sky -->
+          <rect x="0" y="0" width="2000" height="520" fill="url(#skyGrad)"/>
+          <!-- stars visible through windows -->
+          <circle cx="520" cy="60" r="1" fill="#c8d8e8" opacity=".6"/>
+          <circle cx="560" cy="40" r=".8" fill="#c8d8e8" opacity=".5"/>
+          <circle cx="600" cy="70" r="1.2" fill="#c8d8e8" opacity=".7"/>
+          <circle cx="540" cy="85" r=".6" fill="#c8d8e8" opacity=".4"/>
+          <circle cx="580" cy="55" r=".9" fill="#c8d8e8" opacity=".6"/>
+          <circle cx="1420" cy="55" r="1" fill="#c8d8e8" opacity=".6"/>
+          <circle cx="1460" cy="30" r=".8" fill="#c8d8e8" opacity=".5"/>
+          <circle cx="1500" cy="80" r="1.1" fill="#c8d8e8" opacity=".7"/>
+          <circle cx="1440" cy="90" r=".7" fill="#c8d8e8" opacity=".4"/>
+          <!-- sea through windows -->
+          <rect x="480" y="200" width="170" height="200" fill="url(#seaGrad)" opacity=".8"/>
+          <rect x="1390" y="200" width="170" height="200" fill="url(#seaGrad)" opacity=".8"/>
+          <!-- wave lines -->
+          <path d="M480,300 Q530,295 580,300 Q630,305 650,300" stroke="#1a2e48" stroke-width="1" fill="none" opacity=".7"/>
+          <path d="M480,320 Q540,314 590,320 Q630,326 650,320" stroke="#1a2e48" stroke-width="1" fill="none" opacity=".5"/>
+          <path d="M1390,290 Q1440,285 1490,290 Q1530,295 1560,290" stroke="#1a2e48" stroke-width="1" fill="none" opacity=".7"/>
+          <!-- distant lighthouse beam from outside -->
+          <polygon points="1000,0 800,520 1200,520" fill="rgba(200,164,74,0.03)"/>
+
+          <!-- ═══ WALLS (stone) ═══ -->
+          <rect x="0" y="0" width="2000" height="520" fill="url(#wallPattern)"/>
+          <!-- wall overlay darkening near edges -->
+          <rect x="0" y="0" width="200" height="520" fill="rgba(0,0,0,.25)"/>
+          <rect x="1800" y="0" width="200" height="520" fill="rgba(0,0,0,.25)"/>
+
+          <!-- floor -->
+          <rect x="0" y="400" width="2000" height="120" fill="url(#woodPattern)"/>
+          <rect x="0" y="398" width="2000" height="3" fill="#1a2838"/>
+
+          <!-- ceiling beam -->
+          <rect x="0" y="0" width="2000" height="24" fill="#0a1420"/>
+          <rect x="0" y="22" width="2000" height="4" fill="#1a2838"/>
+          <!-- cross beams -->
+          <rect x="400" y="0" width="20" height="30" fill="#0e1828"/>
+          <rect x="900" y="0" width="20" height="30" fill="#0e1828"/>
+          <rect x="1400" y="0" width="20" height="30" fill="#0e1828"/>
+          <rect x="1850" y="0" width="20" height="30" fill="#0e1828"/>
+
+          <!-- ambient ceiling lamp glow -->
+          <ellipse cx="450" cy="24" rx="300" ry="200" fill="url(#lampBeam)" opacity=".4"/>
+          <ellipse cx="1550" cy="24" rx="300" ry="200" fill="url(#lampBeam)" opacity=".3"/>
+
+          <!-- ═══ WINDOW LEFT ═══ -->
+          <rect x="470" y="120" width="190" height="280" fill="none" stroke="#2a3a50" stroke-width="4"/>
+          <!-- window frame inner shadow -->
+          <rect x="470" y="120" width="190" height="280" fill="rgba(0,0,0,0.3)"/>
+          <!-- window panes: sea view -->
+          <rect x="474" y="124" width="90" height="134" fill="rgba(8,20,40,.85)"/>
+          <rect x="566" y="124" width="90" height="134" fill="rgba(8,20,40,.85)"/>
+          <rect x="474" y="260" width="90" height="136" fill="rgba(8,20,40,.85)"/>
+          <rect x="566" y="260" width="90" height="136" fill="rgba(8,20,40,.85)"/>
+          <!-- window mullions -->
+          <rect x="558" y="120" width="8" height="280" fill="#2a3a50"/>
+          <rect x="470" y="252" width="190" height="8" fill="#2a3a50"/>
+          <!-- reflection lines on glass -->
+          <line x1="480" y1="130" x2="490" y2="250" stroke="#7ea8c8" stroke-width=".4" opacity=".3"/>
+          <line x1="576" y1="130" x2="586" y2="250" stroke="#7ea8c8" stroke-width=".4" opacity=".2"/>
+
+          <!-- ═══ WINDOW RIGHT ═══ -->
+          <rect x="1380" y="120" width="190" height="280" fill="none" stroke="#2a3a50" stroke-width="4"/>
+          <rect x="1380" y="120" width="190" height="280" fill="rgba(0,0,0,0.3)"/>
+          <rect x="1384" y="124" width="90" height="134" fill="rgba(8,20,40,.85)"/>
+          <rect x="1476" y="124" width="90" height="134" fill="rgba(8,20,40,.85)"/>
+          <rect x="1384" y="260" width="90" height="136" fill="rgba(8,20,40,.85)"/>
+          <rect x="1476" y="260" width="90" height="136" fill="rgba(8,20,40,.85)"/>
+          <rect x="1468" y="120" width="8" height="280" fill="#2a3a50"/>
+          <rect x="1380" y="252" width="190" height="8" fill="#2a3a50"/>
+          <line x1="1390" y1="130" x2="1400" y2="250" stroke="#7ea8c8" stroke-width=".4" opacity=".3"/>
+
+          <!-- ═══ DOOR (far right) ═══ -->
+          <rect x="1820" y="140" width="140" height="280" fill="url(#ironGrad)" rx="2"/>
+          <rect x="1820" y="140" width="140" height="280" fill="none" stroke="#2a3a4e" stroke-width="3" rx="2"/>
+          <!-- door panels with 3D bevel effect -->
+          <rect x="1832" y="155" width="54" height="80" fill="none" stroke="#1e2e40" stroke-width="1.5" rx="1"/>
+          <rect x="1832" y="155" width="54" height="80" fill="none" stroke="#3a4e62" stroke-width=".5" rx="1"/>
+          <rect x="1894" y="155" width="54" height="80" fill="none" stroke="#1e2e40" stroke-width="1.5" rx="1"/>
+          <rect x="1832" y="248" width="116" height="100" fill="none" stroke="#1e2e40" stroke-width="1.5" rx="1"/>
+          <rect x="1832" y="362" width="116" height="48" fill="none" stroke="#1e2e40" stroke-width="1.5" rx="1"/>
+          <!-- rivets -->
+          <circle cx="1832" cy="155" r="3.5" fill="#2a3a4e"/><circle cx="1886" cy="155" r="3.5" fill="#2a3a4e"/>
+          <circle cx="1832" cy="235" r="3.5" fill="#2a3a4e"/><circle cx="1886" cy="235" r="3.5" fill="#2a3a4e"/>
+          <circle cx="1894" cy="155" r="3.5" fill="#2a3a4e"/><circle cx="1948" cy="155" r="3.5" fill="#2a3a4e"/>
+          <!-- handle -->
+          <rect x="1808" y="278" width="14" height="40" fill="#2a3a50" rx="3"/>
+          <circle cx="1815" cy="285" r="6" fill="#3a4e62"/>
+          <!-- lock indicators -->
+          <g id="door-l1"><circle cx="1858" cy="310" r="8" fill="#0a1218" stroke="#7a2020" stroke-width="1.5"/>
+            <text x="1858" y="314" text-anchor="middle" font-size="9" fill="#7a2020" font-family="Space Mono">①</text></g>
+          <g id="door-l2"><circle cx="1890" cy="310" r="8" fill="#0a1218" stroke="#7a2020" stroke-width="1.5"/>
+            <text x="1890" y="314" text-anchor="middle" font-size="9" fill="#7a2020" font-family="Space Mono">②</text></g>
+          <g id="door-l3"><circle cx="1922" cy="310" r="8" fill="#0a1218" stroke="#7a2020" stroke-width="1.5"/>
+            <text x="1922" y="314" text-anchor="middle" font-size="9" fill="#7a2020" font-family="Space Mono">③</text></g>
+          <text x="1890" y="136" text-anchor="middle" font-size="11" fill="#3a4e62" font-family="Noto Sans TC">鐵門出口</text>
+          <!-- door hotspot -->
+          <g class="hotspot" id="hs-door" onclick="openDoorPanel()">
+            <rect x="1820" y="140" width="140" height="280" fill="transparent"/>
+            <rect class="hs-ring" x="1817" y="137" width="146" height="286" fill="rgba(126,184,212,0.04)" stroke="#7eb8d4" stroke-width="1.5" stroke-dasharray="5,3" rx="2"/>
+          </g>
+
+          <!-- ═══ RADIO DESK (left zone) ═══ -->
+          <!-- desk surface with 3D depth -->
+          <rect x="60" y="310" width="340" height="15" fill="#2a3848" rx="2"/><!-- top edge highlight -->
+          <rect x="60" y="325" width="340" height="90" fill="#1e2c3e" rx="1"/><!-- front face -->
+          <rect x="60" y="318" width="340" height="8" fill="#243040"/><!-- under ledge shadow -->
+          <!-- legs -->
+          <rect x="75" y="415" width="16" height="50" fill="#1a2838"/>
+          <rect x="369" y="415" width="16" height="50" fill="#1a2838"/>
+          <rect x="75" y="410" width="310" height="6" fill="#243040"/>
+
+          <!-- RADIO unit -->
+          <rect x="90" y="230" width="180" height="100" fill="#1a2838" stroke="#2a3a50" stroke-width="1.5" rx="2"/>
+          <!-- radio face -->
+          <rect x="96" y="236" width="168" height="88" fill="#0e1a2a" rx="1"/>
+          <!-- frequency display -->
+          <rect x="102" y="244" width="100" height="28" fill="#070d18" stroke="#1a2a3a" stroke-width="1" rx="1"/>
+          <text id="radio-freq-display" x="152" y="262" text-anchor="middle" font-family="Space Mono" font-size="14" fill="#4a9a60">156.800</text>
+          <text x="152" y="272" text-anchor="middle" font-family="Space Mono" font-size="7" fill="#2a5a38">MHz</text>
+          <!-- dials -->
+          <circle cx="218" cy="258" r="14" fill="#1a2838" stroke="#2e3e52" stroke-width="1.5"/>
+          <circle cx="218" cy="258" r="10" fill="#243048"/>
+          <line x1="218" y1="258" x2="218" y2="247" stroke="#c8a44a" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- signal strength bars -->
+          <rect x="108" y="278" width="6" height="10" fill="#1a3a28"/>
+          <rect x="116" y="273" width="6" height="15" fill="#1a3a28"/>
+          <rect x="124" y="268" width="6" height="20" fill="#1a4a30"/>
+          <rect x="132" y="275" width="6" height="13" fill="#1a3a28"/>
+          <!-- speaker grill -->
+          <line x1="104" y1="298" x2="200" y2="298" stroke="#1a2838" stroke-width="1"/>
+          <line x1="104" y1="302" x2="200" y2="302" stroke="#1a2838" stroke-width="1"/>
+          <line x1="104" y1="306" x2="200" y2="306" stroke="#1a2838" stroke-width="1"/>
+          <line x1="104" y1="310" x2="200" y2="310" stroke="#1a2838" stroke-width="1"/>
+          <line x1="104" y1="314" x2="200" y2="314" stroke="#1a2838" stroke-width="1"/>
+          <line x1="104" y1="318" x2="200" y2="318" stroke="#1a2838" stroke-width="1"/>
+          <!-- RADIO HOTSPOT -->
+          <g class="hotspot" id="hs-radio" onclick="examineItem('radio')">
+            <rect x="90" y="230" width="180" height="100" fill="transparent"/>
+            <rect class="hs-ring" x="87" y="227" width="186" height="106" fill="rgba(126,184,212,0.04)" stroke="#7eb8d4" stroke-width="1.5" stroke-dasharray="5,3" rx="3"/>
+            <text x="180" y="228" text-anchor="middle" font-size="11" fill="rgba(126,184,212,0.6)" font-family="Noto Sans TC">📻 無線電</text>
+          </g>
+
+          <!-- LOGBOOK on desk -->
+          <rect x="290" y="290" width="80" height="58" fill="#1e3040" rx="2" transform="rotate(-5,330,319)"/>
+          <rect x="294" y="294" width="72" height="50" fill="#182838" rx="1" transform="rotate(-5,330,319)"/>
+          <line x1="330" y1="298" x2="326" y2="338" stroke="#0e1e2e" stroke-width=".5" transform="rotate(-5,330,319)"/>
+          <rect x="290" y="290" width="4" height="58" fill="#c8a44a" rx="1" transform="rotate(-5,330,319)" opacity=".7"/>
+          <!-- LOGBOOK HOTSPOT -->
+          <g class="hotspot" id="hs-logbook" onclick="examineItem('logbook')">
+            <rect x="275" y="280" width="100" height="70" fill="transparent"/>
+            <rect class="hs-ring" x="272" y="277" width="106" height="76" fill="rgba(126,184,212,0.04)" stroke="#7eb8d4" stroke-width="1.5" stroke-dasharray="5,3" rx="3"/>
+            <text x="325" y="276" text-anchor="middle" font-size="11" fill="rgba(126,184,212,0.6)" font-family="Noto Sans TC">📒 航海日誌</text>
+          </g>
+
+          <!-- ═══ MAP BOARD (center) ═══ -->
+          <!-- board frame with 3D shadow -->
+          <rect x="702" y="60" width="596" height="380" fill="#1a2838" rx="3"/><!-- shadow -->
+          <rect x="698" y="56" width="596" height="380" fill="#243040" rx="3"/><!-- frame -->
+          <rect x="708" y="66" width="576" height="360" fill="#1a2030" rx="1"/><!-- cork -->
+          <!-- map paper -->
+          <rect x="720" y="78" width="320" height="220" fill="#1c2e40" rx="1"/>
+          <!-- map details -->
+          <circle cx="820" cy="148" r="30" fill="none" stroke="#2a4a5a" stroke-width="1"/><!-- island -->
+          <circle cx="820" cy="148" r="16" fill="#1e3848"/>
+          <rect x="812" y="128" width="16" height="30" fill="none" stroke="#2a4a5a" stroke-width=".5"/><!-- lighthouse on map -->
+          <text x="820" y="152" text-anchor="middle" font-size="9" fill="#4a7a8a" font-family="Space Mono">🗼</text>
+          <!-- compass rose on map -->
+          <circle cx="900" cy="170" r="20" fill="none" stroke="#2a4060" stroke-width="1"/>
+          <text x="900" y="155" text-anchor="middle" font-size="9" fill="#4a7090" font-family="Space Mono">N</text>
+          <text x="900" y="192" text-anchor="middle" font-size="9" fill="#4a7090" font-family="Space Mono">S</text>
+          <text x="885" y="174" text-anchor="middle" font-size="9" fill="#4a7090" font-family="Space Mono">W</text>
+          <text x="915" y="174" text-anchor="middle" font-size="9" fill="#4a7090" font-family="Space Mono">E</text>
+          <line x1="900" y1="152" x2="900" y2="190" stroke="#3a6080" stroke-width=".5"/>
+          <line x1="882" y1="170" x2="918" y2="170" stroke="#3a6080" stroke-width=".5"/>
+          <!-- depth soundings -->
+          <text x="750" y="185" font-size="8" fill="#2a4a5e" font-family="Space Mono">48m</text>
+          <text x="760" y="215" font-size="8" fill="#2a4a5e" font-family="Space Mono">62m</text>
+          <text x="800" y="200" font-size="8" fill="#2a4a5e" font-family="Space Mono">31m</text>
+          <!-- routes -->
+          <path d="M730,280 Q780,260 820,270 Q860,280 900,260" stroke="#3a5a6e" stroke-width="1" fill="none" stroke-dasharray="4,3"/>
+          <path d="M730,290 Q790,275 840,285" stroke="#3a6a4e" stroke-width=".7" fill="none" stroke-dasharray="3,3"/>
+
+          <!-- mirror puzzle panel (right of map) -->
+          <rect x="1060" y="78" width="200" height="220" fill="#0e1a28" rx="1" stroke="#1e2e3e" stroke-width="1"/>
+          <text x="1160" y="96" text-anchor="middle" font-size="10" fill="#3a5a6e" font-family="Space Mono">SIGNAL ARRAY</text>
+          <text x="1160" y="108" text-anchor="middle" font-size="9" fill="#2a4050" font-family="Space Mono">— MIRROR ALIGNMENT —</text>
+
+          <!-- MAP BOARD HOTSPOT -->
+          <g class="hotspot" id="hs-mapboard" onclick="examineItem('mapboard')">
+            <rect x="698" y="56" width="596" height="380" fill="transparent"/>
+            <rect class="hs-ring" x="695" y="53" width="602" height="386" fill="rgba(126,184,212,0.03)" stroke="#7eb8d4" stroke-width="1.5" stroke-dasharray="5,3" rx="3"/>
+            <text x="996" y="54" text-anchor="middle" font-size="11" fill="rgba(126,184,212,0.6)" font-family="Noto Sans TC">🗺 任務版</text>
+          </g>
+
+          <!-- ═══ WARDROBE / CABINET (right zone) ═══ -->
+          <rect x="1640" y="80" width="160" height="340" fill="#1e2c3c" stroke="#2a3a4e" stroke-width="2" rx="2"/>
+          <!-- cabinet face shadow -->
+          <rect x="1644" y="84" width="152" height="332" fill="#182638" rx="1"/>
+          <!-- doors -->
+          <rect x="1648" y="88" width="70" height="260" fill="#1a2838" stroke="#253545" stroke-width="1" rx="1"/>
+          <rect x="1722" y="88" width="70" height="260" fill="#1a2838" stroke="#253545" stroke-width="1" rx="1"/>
+          <!-- door detail lines -->
+          <rect x="1652" y="96" width="62" height="100" fill="none" stroke="#1e2e3e" stroke-width=".8"/>
+          <rect x="1652" y="202" width="62" height="140" fill="none" stroke="#1e2e3e" stroke-width=".8"/>
+          <rect x="1726" y="96" width="62" height="100" fill="none" stroke="#1e2e3e" stroke-width=".8"/>
+          <rect x="1726" y="202" width="62" height="140" fill="none" stroke="#1e2e3e" stroke-width=".8"/>
+          <!-- handles -->
+          <rect x="1713" y="208" width="9" height="24" fill="#2e3e50" rx="3"/>
+          <rect x="1720" y="208" width="9" height="24" fill="#2e3e50" rx="3"/>
+          <!-- knot rope pinned to cabinet door -->
+          <text x="1683" y="320" text-anchor="middle" font-size="28" fill="#8a6a30" opacity=".9">⛵</text>
+          <text x="1683" y="340" text-anchor="middle" font-size="8" fill="#3a5060" font-family="Space Mono">KNOTTED</text>
+          <!-- CABINET HOTSPOT -->
+          <g class="hotspot" id="hs-cabinet" onclick="examineItem('cabinet')">
+            <rect x="1640" y="80" width="160" height="340" fill="transparent"/>
+            <rect class="hs-ring" x="1637" y="77" width="166" height="346" fill="rgba(126,184,212,0.04)" stroke="#7eb8d4" stroke-width="1.5" stroke-dasharray="5,3" rx="3"/>
+            <text x="1720" y="76" text-anchor="middle" font-size="11" fill="rgba(126,184,212,0.6)" font-family="Noto Sans TC">🚪 儲物櫃</text>
+          </g>
+
+          <!-- ═══ SHELF (above radio desk) ═══ -->
+          <rect x="60" y="180" width="340" height="8" fill="#2a3848" rx="1"/><!-- shelf board -->
+          <rect x="60" y="188" width="340" height="3" fill="#1a2838"/><!-- shadow -->
+          <!-- shelf items: jars, tools -->
+          <rect x="75" y="140" width="25" height="40" fill="#1e3040" rx="12"/><!-- jar 1 -->
+          <ellipse cx="87" cy="140" rx="12" ry="4" fill="#2a4050"/>
+          <rect x="108" y="148" width="22" height="32" fill="#1a2c3e" rx="10"/><!-- jar 2 -->
+          <ellipse cx="119" cy="148" rx="11" ry="3.5" fill="#243848"/>
+          <!-- STAR CHART (framed, on shelf) -->
+          <rect x="140" y="130" width="90" height="50" fill="#1a2c3e" stroke="#2a3e52" stroke-width="1.5" rx="1"/>
+          <rect x="144" y="134" width="82" height="42" fill="#0e1a28"/>
+          <!-- stars on chart -->
+          <circle cx="160" cy="148" r="1.5" fill="#c8d8e8"/>
+          <circle cx="180" cy="142" r="2" fill="#c8d8e8"/>
+          <circle cx="170" cy="158" r="1" fill="#c8d8e8"/>
+          <circle cx="195" cy="152" r="1.5" fill="#c8d8e8"/>
+          <circle cx="210" cy="145" r="2" fill="#c8d8e8"/>
+          <circle cx="205" cy="162" r="1" fill="#c8d8e8"/>
+          <line x1="160" y1="148" x2="180" y2="142" stroke="#4a6080" stroke-width=".5"/>
+          <line x1="180" y1="142" x2="195" y2="152" stroke="#4a6080" stroke-width=".5"/>
+          <line x1="195" y1="152" x2="210" y2="145" stroke="#4a6080" stroke-width=".5"/>
+          <text x="185" y="175" text-anchor="middle" font-size="9" fill="#2a4050" font-family="Space Mono">ORION</text>
+          <!-- STAR CHART HOTSPOT -->
+          <g class="hotspot" id="hs-starchart" onclick="examineItem('starchart')">
+            <rect x="140" y="130" width="90" height="50" fill="transparent"/>
+            <rect class="hs-ring" x="137" y="127" width="96" height="56" fill="rgba(126,184,212,0.05)" stroke="#7eb8d4" stroke-width="1.5" stroke-dasharray="4,3" rx="2"/>
+            <text x="185" y="126" text-anchor="middle" font-size="11" fill="rgba(126,184,212,0.6)" font-family="Noto Sans TC">🌟 星圖</text>
+          </g>
+
+          <!-- wrench, compass tool -->
+          <rect x="245" y="160" width="8" height="30" fill="#2a3848" rx="2"/>
+          <circle cx="249" cy="163" r="6" fill="none" stroke="#2a3848" stroke-width="2.5"/>
+          <rect x="268" y="155" width="6" height="35" fill="#2a3848" rx="1"/>
+          <rect x="264" y="152" width="14" height="6" fill="#2a3848" rx="1"/>
+
+          <!-- ═══ EQUIPMENT RACK (center-left) ═══ -->
+          <rect x="460" y="310" width="200" height="110" fill="#182028" stroke="#2a3040" stroke-width="1.5" rx="2"/>
+          <rect x="466" y="316" width="188" height="98" fill="#0e1620" rx="1"/>
+          <!-- rack equipment units -->
+          <rect x="470" y="320" width="180" height="20" fill="#141c28" stroke="#1e2a38" stroke-width=".5" rx="1"/>
+          <text x="480" y="333" font-size="9" fill="#2a4050" font-family="Space Mono">UNIT-1: OFFLINE</text>
+          <circle cx="638" cy="330" r="4" fill="#3a0a0a"/>
+          <rect x="470" y="344" width="180" height="20" fill="#141c28" stroke="#1e2a38" stroke-width=".5" rx="1"/>
+          <text x="480" y="357" font-size="9" fill="#2a4050" font-family="Space Mono">UNIT-2: OFFLINE</text>
+          <circle cx="638" cy="354" r="4" fill="#3a0a0a"/>
+          <rect x="470" y="368" width="180" height="20" fill="#141c28" stroke="#1e2a38" stroke-width=".5" rx="1"/>
+          <text x="480" y="381" font-size="9" fill="#1a5a30" font-family="Space Mono">UNIT-3: STANDBY</text>
+          <circle cx="638" cy="378" r="4" fill="#0a3a18"/>
+          <rect x="470" y="392" width="180" height="16" fill="#141c28" stroke="#1e2a38" stroke-width=".5" rx="1"/>
+          <text x="480" y="403" font-size="9" fill="#3a4a58" font-family="Space Mono">FREQ: ████████</text>
+
+          <!-- chain hanging on wall -->
+          <line x1="1600" y1="24" x2="1600" y2="120" stroke="#2a3848" stroke-width="2.5"/>
+          <ellipse cx="1600" cy="130" rx="8" ry="5" fill="#2a3848"/>
+          <line x1="1600" y1="130" x2="1595" y2="150" stroke="#2a3848" stroke-width="1.5"/>
+          <line x1="1600" y1="130" x2="1605" y2="150" stroke="#2a3848" stroke-width="1.5"/>
+          <line x1="1595" y1="150" x2="1605" y2="150" stroke="#2a3848" stroke-width="1.5"/>
+
+          <!-- ═══ PHOTOGRAPH on wall ═══ -->
+          <rect x="1120" y="290" width="120" height="90" fill="#1e2c3c" stroke="#2a3a4e" stroke-width="2" rx="1"/>
+          <rect x="1124" y="294" width="112" height="82" fill="#181e28"/>
+          <!-- photo content: old man silhouette -->
+          <ellipse cx="1180" cy="328" rx="14" ry="18" fill="#1e2a38"/>
+          <ellipse cx="1180" cy="310" rx="10" ry="11" fill="#1e2a38"/>
+          <text x="1180" y="372" text-anchor="middle" font-size="9" fill="#3a4a5a" font-family="Space Mono">Myers, 1949</text>
+          <!-- PHOTO HOTSPOT -->
+          <g class="hotspot" id="hs-photo" onclick="examineItem('photo')">
+            <rect x="1120" y="290" width="120" height="90" fill="transparent"/>
+            <rect class="hs-ring" x="1117" y="287" width="126" height="96" fill="rgba(126,184,212,0.04)" stroke="#7eb8d4" stroke-width="1.5" stroke-dasharray="4,3" rx="2"/>
+            <text x="1180" y="286" text-anchor="middle" font-size="11" fill="rgba(126,184,212,0.6)" font-family="Noto Sans TC">📷 老照片</text>
+          </g>
+
+          <!-- ═══ ROPE CHEST (floor, center) ═══ -->
+          <rect x="850" y="382" width="160" height="90" fill="#1e2c3c" stroke="#2a3a4e" stroke-width="2" rx="3"/>
+          <!-- chest lid detail -->
+          <rect x="850" y="382" width="160" height="20" fill="#243040" stroke="#2a3a4e" stroke-width="1.5" rx="3"/>
+          <rect x="850" y="398" width="160" height="4" fill="#1a2838"/>
+          <!-- chest latch -->
+          <rect x="918" y="388" width="24" height="14" fill="#2a3848" rx="2" stroke="#3a4e62" stroke-width="1"/>
+          <circle cx="930" cy="395" r="3.5" fill="#4a6070"/>
+          <!-- ropes peeking out -->
+          <path d="M870,398 Q885,395 890,400 Q895,405 880,408" stroke="#8a6a30" stroke-width="2" fill="none"/>
+          <path d="M960,398 Q975,395 980,400 Q985,406 970,409" stroke="#6a5025" stroke-width="2" fill="none"/>
+          <!-- CHEST HOTSPOT -->
+          <g class="hotspot" id="hs-chest" onclick="examineItem('chest')">
+            <rect x="850" y="382" width="160" height="90" fill="transparent"/>
+            <rect class="hs-ring" x="847" y="379" width="166" height="96" fill="rgba(126,184,212,0.04)" stroke="#7eb8d4" stroke-width="1.5" stroke-dasharray="4,3" rx="3"/>
+            <text x="930" y="378" text-anchor="middle" font-size="11" fill="rgba(126,184,212,0.6)" font-family="Noto Sans TC">📦 繩結箱</text>
+          </g>
+
+          <!-- label at top for scrolling hint -->
+          <text x="1000" y="510" text-anchor="middle" font-size="11" fill="rgba(126,184,212,0.35)" font-family="Noto Sans TC">← 左右拖曳可移動視角 →</text>
+          </g>
+        </svg>
+      </div>
+      <div class="pano-hint" id="pano-hint">← 拖曳移動視角 →</div>
+    </div>
+
+    <!-- SIDE PANEL -->
+    <div class="side">
+      <div class="pane">
+        <div class="pane-label">持有物品</div>
+        <div class="inv-grid" id="inv-grid">
+          <span style="font-size:.72rem;color:var(--txtm)">— 空 —</span>
+        </div>
+      </div>
+
+      <div class="locks-wrap">
+        <div class="pane-label" style="margin-bottom:.65rem">出口鎖具</div>
+        <div class="lock-row" id="lr-1" onclick="openLock(1)">
+          <span class="lock-icon" id="li-1">🔒</span>
+          <span class="lock-label">無線電頻率鎖</span>
+          <span class="lock-status" id="ls-1">LOCKED</span>
+        </div>
+        <div class="lock-row" id="lr-2" onclick="openLock(2)">
+          <span class="lock-icon" id="li-2">🔒</span>
+          <span class="lock-label">鏡子訊號鎖</span>
+          <span class="lock-status" id="ls-2">LOCKED</span>
+        </div>
+        <div class="lock-row" id="lr-3" onclick="openLock(3)">
+          <span class="lock-icon" id="li-3">🔒</span>
+          <span class="lock-label">繩結密碼鎖</span>
+          <span class="lock-status" id="ls-3">LOCKED</span>
+        </div>
+      </div>
+      <div class="door-btn-wrap">
+        <button class="btn btn-sm" style="width:100%;opacity:.35;cursor:not-allowed" id="door-btn" disabled onclick="endGame(true)">推開出口鐵門</button>
+      </div>
+
+      <div class="notes-wrap pane" style="border-top:1px solid var(--border);border-bottom:none">
+        <div class="pane-label">調查紀錄</div>
+        <div id="notes-list">
+          <span style="font-size:.72rem;color:var(--txtm)">— 尚無紀錄 —</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- END -->
+<div id="s-end" class="screen">
+  <span class="end-ico" id="end-ico">🏆</span>
+  <h2 class="end-title" id="end-title">成功脫逃！</h2>
+  <div class="end-divider"></div>
+  <p class="end-desc" id="end-desc"></p>
+  <div class="end-stats">
+    <div class="end-stat"><div class="stat-val" id="st-time">--</div><div class="stat-lbl">剩餘時間</div></div>
+    <div class="end-stat"><div class="stat-val" id="st-hints">-</div><div class="stat-lbl">提示次數</div></div>
+    <div class="end-stat"><div class="stat-val" id="st-score">--</div><div class="stat-lbl">評分</div></div>
+  </div>
+  <button class="btn" onclick="location.reload()">再次挑戰</button>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal-box">
+    <div class="modal-corner tl"></div>
+    <div class="modal-corner tr"></div>
+    <div class="modal-corner bl"></div>
+    <div class="modal-corner br"></div>
+    <button class="modal-close" onclick="closeModal()">[ ✕ ]</button>
+    <div class="modal-title" id="m-title"></div>
+    <div class="modal-body" id="m-body"></div>
+    <div id="m-puzzle"></div>
+    <div class="modal-acts" id="m-acts"></div>
+  </div>
+</div>
+
+<script>
+// ── GAME STATE ──
+const G={
+  secs:25*60, totalSecs:25*60, ti:null,
+  hintsLeft:2, hintsUsed:0,
+  locks:{1:false,2:false,3:false},
+  inv:[], notes:[], examined:new Set(),
+  // puzzle states
+  freqVal:156.800,
+  mirrorState:null,  // 5x5 grid of angles: 0,1,2,3 = /, \, -, |
+  knotSel:[],
+};
+
+// ── STAR CANVAS ──
+function initStars(){
+  const c=document.getElementById('starCanvas');
+  if(!c) return;
+  c.width=window.innerWidth; c.height=window.innerHeight;
+  const ctx=c.getContext('2d');
+  for(let i=0;i<200;i++){
+    const x=Math.random()*c.width, y=Math.random()*c.height;
+    const r=Math.random()*1.2+0.3;
+    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(200,220,240,${Math.random()*0.6+0.2})`;
+    ctx.fill();
+  }
+}
+initStars();
+
+// ── PANORAMA DRAG ──
+(function(){
+  const outer=document.getElementById('pano-outer');
+  const inner=document.getElementById('pano-inner');
+  if(!outer||!inner) return;
+  let dragging=false, startX=0, scrollLeft=0;
+  outer.addEventListener('mousedown',e=>{dragging=true;startX=e.pageX-outer.offsetLeft;scrollLeft=outer.scrollLeft;});
+  outer.addEventListener('mousemove',e=>{if(!dragging)return;const x=e.pageX-outer.offsetLeft;outer.scrollLeft=scrollLeft-(x-startX);});
+  outer.addEventListener('mouseup',()=>dragging=false);
+  outer.addEventListener('mouseleave',()=>dragging=false);
+  outer.addEventListener('touchstart',e=>{startX=e.touches[0].pageX;scrollLeft=outer.scrollLeft;},{passive:true});
+  outer.addEventListener('touchmove',e=>{outer.scrollLeft=scrollLeft-(e.touches[0].pageX-startX);},{passive:true});
+  // hide hint after first drag
+  let hinted=false;
+  outer.addEventListener('scroll',()=>{if(!hinted){hinted=true;const h=document.getElementById('pano-hint');if(h)h.style.opacity='0';}});
+  // set initial scroll to center
+  setTimeout(()=>{ outer.scrollLeft=(inner.offsetWidth-outer.offsetWidth)/2; },100);
+})();
+
+// ── ITEMS ──
+const ITEMS={
+  radio:{
+    title:'📻 無線電機',
+    body:`老舊的無線電機，燈管微微發光。表盤上顯示當前頻率 <span style="color:var(--accent);font-family:'Space Mono',monospace">156.800 MHz</span>。<br><br>
+機身側面貼著一張磨損的紙條：<br>
+<em style="color:var(--goldl)">"緊急頻道已封鎖。麥爾斯告訴我：<br>
+救援頻道隱藏在星圖獵戶座的第三、第四、第七顆星的<strong>亮度排名數字</strong>之中。<br>
+格式：1__.___ MHz"</em><br><br>
+<span style="color:var(--txtm);font-size:.82rem">需要找出正確頻率才能呼叫救援船。</span>`,
+    clue:null, pickup:null
+  },
+  starchart:{
+    title:'🌟 獵戶座星圖',
+    body:`牆上的星圖標示著獵戶座（Orion），每顆星旁標有編號與亮度等級：<br><br>
+<div style="font-family:'Space Mono',monospace;font-size:.8rem;line-height:2.2;background:#070d18;padding:.8rem;border:1px solid var(--border)">
+⭐ 1. 參宿四  (Betelgeuse) — α等星 — 亮度排名: <span style="color:var(--accent)">1</span><br>
+⭐ 2. 參宿五  (Bellatrix)  — γ等星 — 亮度排名: <span style="color:var(--accent)">5</span><br>
+⭐ 3. 參宿六  (Mintaka)    — δ等星 — 亮度排名: <span style="color:var(--accent)">7</span><br>
+⭐ 4. 參宿一  (Alnilam)    — ε等星 — 亮度排名: <span style="color:var(--accent)">4</span><br>
+⭐ 5. 參宿二  (Alnitak)    — ζ等星 — 亮度排名: <span style="color:var(--accent)">6</span><br>
+⭐ 6. 參宿三  (Saiph)      — κ等星 — 亮度排名: <span style="color:var(--accent)">3</span><br>
+⭐ 7. 參宿七  (Rigel)      — β等星 — 亮度排名: <span style="color:var(--accent)">2</span>
+</div><br>
+<span style="color:var(--txtm);font-size:.82rem">第三顆星：參宿六，排名 7<br>第四顆星：參宿一，排名 4<br>第七顆星：參宿七，排名 2</span>`,
+    clue:'📡 星圖線索：第3顆→7，第4顆→4，第7顆→2。格式 1__.___ → 頻率數字待推算',
+    pickup:'獵戶座星圖抄本'
+  },
+  logbook:{
+    title:'📒 航海日誌',
+    body:`翻到最後有字的那頁——日期：1953年10月。<br><br>
+<em style="color:var(--goldl)">"今夜海況惡劣，無法發報。<br>
+信號板的四面鏡子需要重新校準。<br>
+根據規程，鏡子序列為：<br>
+<br>
+&nbsp;&nbsp;① 斜右（/）&nbsp;&nbsp;② 斜左（\\）&nbsp;&nbsp;③ 橫（—）<br>
+&nbsp;&nbsp;④ 斜右（/）&nbsp;&nbsp;⑤ 斜左（\\）<br>
+<br>
+順序不能錯，否則訊號無法對準遠方的船隻。<br>
+記住：從左上到右下讀取，取對角線的五格。"</em><br><br>
+<span style="color:var(--txtm);font-size:.82rem">5×5 鏡子陣列的<strong style="color:var(--txtd)">左上→右下對角線</strong>（位置0,6,12,18,24）依序：/ \\ — / \\</span>`,
+    clue:'🪞 鏡子線索：對角線(↘)依序為 / \\ — / \\',
+    pickup:'航海日誌殘頁'
+  },
+  mapboard:{
+    title:'🗺 任務版',
+    body:`任務版上貼著各種地圖、公告。中央有一張手寫紙：<br><br>
+<em style="color:var(--goldl)">"繩結密碼系統——<br>
+在海員之間，我們用繩結符號傳遞秘密訊息。<br>
+每種繩結代表一個字母：<br>
+<br>
+<span style="font-family:'Space Mono',monospace">
+🪢 = S &nbsp;&nbsp; ⚓ = O &nbsp;&nbsp; 🔱 = S<br>
+🪝 = R &nbsp;&nbsp; ⛵ = U &nbsp;&nbsp; 🌊 = N
+</span><br>
+<br>
+出口暗語是遇難求救的國際信號。<br>
+用繩結順序拼出這個三字暗語（3個符號）。"</em><br><br>
+<span style="color:var(--txtm);font-size:.82rem">答案：求救信號 = SOS（🪢⚓🔱）</span>`,
+    clue:'🪢 繩結線索：SOS = 🪢 ⚓ 🔱',
+    pickup:null
+  },
+  cabinet:{
+    title:'🚪 儲物櫃',
+    body:`打開櫃門，裡面掛著麥爾斯的雨衣和幾件制服。<br><br>
+口袋裡摸到一張折疊的小紙片：<br><br>
+<em style="color:var(--goldl)">"備忘：頻率記法——<br>
+取三顆星的排名，拼成 74_，再加小數：_2<br>
+完整頻率：1<span style='color:var(--accent)'>74.2</span> MHz<br><br>
+等等，不對……日誌說的是第三、四、七顆星。<br>
+7, 4, 2……<br>
+格式是 1__.___——<br>
+一百多 MHz——<br>
+<span style='color:var(--accent)'>156.742</span>？不對，再想想。<br>
+格式 1__.___ 且三個數字是 7、4、2……<br>
+排列組合：<span style='color:var(--accent)'>174.200</span>? <span style='color:var(--accent)'>147.200</span>?<br>
+麥爾斯說：'按星的順序讀'——742<br>
+→ 1<span style='color:var(--accent)'>74.2</span>00 MHz"</em><br><br>
+<span style="color:var(--txtm);font-size:.82rem">答案仍不確定，需結合星圖仔細推算……</span>`,
+    clue:'📡 頻率提示：三個星排名依序讀出 = 742，格式 1__.___ → <strong style="color:var(--accent)">174.200</strong>',
+    pickup:'備忘紙片'
+  },
+  photo:{
+    title:'📷 老照片',
+    body:`一張泛黃的黑白照片——一個年長的男人站在燈塔旁邊，面帶微笑。<br>
+背面手寫：<em style="color:var(--goldl)">"麥爾斯，1949年。此塔即我家。"</em><br><br>
+照片框的背面藏著一張小紙條：<br><br>
+<em style="color:var(--goldl)">"如果你找到這裡，說明我已離開。<br>
+記住繩結的順序就是答案。<br>
+求救，永遠求救。"</em>`,
+    clue:'🪢 照片線索：「求救」——想想國際求救信號',
+    pickup:null
+  },
+  chest:{
+    title:'📦 繩結箱',
+    body:`沉重的木箱裡放著各種繩子，以及一本薄薄的《國際繩結密碼手冊》。<br><br>
+手冊第一頁：<br>
+<div style="font-family:'Space Mono',monospace;font-size:.8rem;line-height:2.2;background:#070d18;padding:.8rem;border:1px solid var(--border)">
+🪢 = S (平結)<br>
+⚓ = O (錨結)<br>
+🔱 = S (海員結)<br>
+🪝 = R (鉤結)<br>
+⛵ = U (帆結)<br>
+🌊 = N (波浪結)
+</div><br>
+<em style="color:var(--goldl)">"密碼鎖需要輸入三個繩結符號，<br>
+代表一個你在危難時最先想到的詞。"</em>`,
+    clue:'🪢 手冊確認：符號對應字母，輸入三個代表求救信號的繩結',
+    pickup:'繩結手冊'
+  }
+};
+
+const HINTS=[
+  '📡 <strong>無線電頻率</strong>：查看星圖第3、4、7顆星的亮度排名（分別是7、4、2），按順序組成 742，套入格式 1__.___ = <span style="color:var(--accent)">174.200</span> MHz。',
+  '🪞 <strong>鏡子訊號</strong>：5×5方格中，點擊左上→右下的對角線5格，依序設定為 / \\ — / \\（斜右、斜左、橫線、斜右、斜左）。',
+  '🪢 <strong>繩結密碼</strong>：SOS 是國際求救信號，用繩結表示是 🪢⚓🔱，按這個順序點擊送出。',
+];
+
+// ── TIMER ──
+function startTimer(){
+  G.ti=setInterval(()=>{
+    G.secs--;
+    updateTimerUI();
+    if(G.secs<=0){clearInterval(G.ti);endGame(false);}
+  },1000);
+}
+function updateTimerUI(){
+  const m=Math.floor(G.secs/60),s=G.secs%60;
+  const el=document.getElementById('hud-timer');
+  el.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const pct=G.secs/G.totalSecs;
+  const bar=document.getElementById('timer-bar');
+  if(bar){bar.style.width=(pct*100)+'%';bar.style.background=pct<0.25?'var(--danger)':pct<0.5?'#c8a44a':'var(--safe)';}
+  if(G.secs<=120){el.className='hud-timer warn';}
+  else if(G.secs<=300){el.className='hud-timer';}
+  else{el.className='hud-timer ok';}
+}
+
+// ── SCREENS ──
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function startGame(){
+  showScreen('s-game');
+  initMirrorState();
+  startTimer();
+  updateTimerUI();
+}
+
+// ── EXAMINE ──
+function examineItem(id){
+  const it=ITEMS[id];
+  if(!it) return;
+  G.examined.add(id);
+  const acts=[{label:'關閉',fn:closeModal}];
+  if(it.pickup&&!G.inv.includes(it.pickup)){
+    acts.unshift({label:`取得「${it.pickup}」`,fn:()=>{addInv(it.pickup);closeModal();}});
+  }
+  openModal(it.title,it.body,acts);
+  if(it.clue) addNote(it.clue);
+  markExamined(id);
+}
+function markExamined(id){
+  const el=document.getElementById('hs-'+id);
+  // don't mark some items as done since they need revisiting
+  if(id==='radio'||id==='mapboard'||id==='chest') return;
+  if(el) el.classList.add('done');
+}
+function addInv(name){
+  if(G.inv.includes(name)) return;
+  G.inv.push(name);
+  const grid=document.getElementById('inv-grid');
+  if(G.inv.length===1) grid.innerHTML='';
+  const chip=document.createElement('div');
+  chip.className='inv-chip';
+  chip.innerHTML=`<span class="dot"></span>${name}`;
+  grid.appendChild(chip);
+}
+function addNote(note){
+  if(G.notes.includes(note)) return;
+  G.notes.push(note);
+  const nl=document.getElementById('notes-list');
+  if(G.notes.length===1) nl.innerHTML='';
+  const div=document.createElement('div');
+  div.className='note-entry note-new';
+  div.innerHTML=note;
+  nl.appendChild(div);
+}
+
+// ── LOCKS ──
+function openLock(n){
+  if(G.locks[n]) return;
+  if(n===1) showLock1Modal();
+  else if(n===2) showLock2Modal();
+  else showLock3Modal();
+}
+function updateLockUI(n,open){
+  G.locks[n]=open;
+  document.getElementById('li-'+n).textContent=open?'🔓':'🔒';
+  document.getElementById('ls-'+n).textContent=open?'OPEN':'LOCKED';
+  if(open){
+    document.getElementById('lr-'+n).classList.add('open');
+    const ind=document.getElementById('door-l'+n);
+    if(ind){
+      ind.querySelector('circle').setAttribute('stroke','var(--safe)');
+      ind.querySelector('text').setAttribute('fill','var(--safe)');
+    }
+  }
+  const pct=(Object.values(G.locks).filter(Boolean).length/3)*100;
+  document.getElementById('prog').style.width=pct+'%';
+  const allOpen=G.locks[1]&&G.locks[2]&&G.locks[3];
+  const btn=document.getElementById('door-btn');
+  btn.disabled=!allOpen;
+  btn.style.opacity=allOpen?'1':'0.35';
+  btn.style.cursor=allOpen?'pointer':'not-allowed';
+}
+
+// ── LOCK 1: Frequency Radio ──
+// Answer: 174.200
+function showLock1Modal(){
+  openModal('📻 無線電頻率鎖','撥動旋鈕找到正確的救援頻率（格式：1__.___）：',[]);
+  const puz=document.getElementById('m-puzzle');
+  G.freqVal=156.800;
+  puz.innerHTML=`
+    <div class="freq-display">
+      <div class="freq-val" id="fv">156.800</div>
+      <span class="freq-unit">MHz</span>
+    </div>
+    <div style="font-size:.74rem;color:var(--txtm);margin:.4rem 0;font-family:'Space Mono',monospace">
+      信號強度：<span id="sig-bar">▁▁▁▁▁▁▁▁</span>
+    </div>
+    <div class="freq-controls">
+      <button class="freq-btn" onclick="adjFreq(-1)">− 1</button>
+      <button class="freq-btn" onclick="adjFreq(-0.1)">−0.1</button>
+      <button class="freq-btn" onclick="adjFreq(-0.001)">−.001</button>
+      <button class="freq-btn" onclick="adjFreq(0.001)">+.001</button>
+      <button class="freq-btn" onclick="adjFreq(0.1)">+0.1</button>
+      <button class="freq-btn" onclick="adjFreq(1)">+ 1</button>
+    </div>
+    <div style="font-size:.74rem;color:var(--txtm);margin:.3rem 0">快速預設：</div>
+    <div class="freq-presets" id="freq-presets">
+      ${[156.800,162.550,156.300,174.200,156.000,121.500].map(f=>
+        `<div class="freq-pre" onclick="setFreq(${f})">${f.toFixed(3)}</div>`
+      ).join('')}
+    </div>
+    <button class="kbtn" style="width:100%;margin-top:.6rem" onclick="checkL1()">✓ 嘗試接通</button>
+    <div class="msg" id="l1msg"></div>`;
+}
+function adjFreq(d){
+  G.freqVal=Math.round((G.freqVal+d)*1000)/1000;
+  G.freqVal=Math.max(100,Math.min(200,G.freqVal));
+  updateFreqUI();
+}
+function setFreq(f){
+  G.freqVal=f;
+  updateFreqUI();
+  document.querySelectorAll('.freq-pre').forEach(el=>{
+    el.classList.toggle('active',parseFloat(el.textContent).toFixed(3)===f.toFixed(3));
+  });
+}
+function updateFreqUI(){
+  const el=document.getElementById('fv');
+  if(!el) return;
+  el.textContent=G.freqVal.toFixed(3);
+  // signal bar - closer to 174.200, stronger
+  const dist=Math.abs(G.freqVal-174.200);
+  const strength=Math.max(0,Math.round(8*(1-dist/5)));
+  const bars='█'.repeat(strength)+'▁'.repeat(8-strength);
+  const sb=document.getElementById('sig-bar');
+  if(sb){sb.textContent=bars;sb.style.color=strength>5?'var(--safe)':strength>2?'var(--accent)':'var(--txtm)';}
+}
+function checkL1(){
+  if(Math.abs(G.freqVal-174.200)<0.001){
+    showMsg('l1msg','✅ 救援頻率接通！遠處傳來了回應聲……','ok');
+    addNote('✅ 無線電頻率鎖 解除（174.200 MHz）');
+    setTimeout(()=>{updateLockUI(1,true);closeModal();},1200);
+  } else {
+    const dist=Math.abs(G.freqVal-174.200);
+    const hint=dist<0.5?'非常接近了……':dist<2?'頻率有些偏差':dist<5?'偏離太多':'完全不對';
+    showMsg('l1msg',`❌ 雜訊頻道。${hint}，繼續嘗試。`,'err');
+  }
+}
+
+// ── LOCK 2: Mirror Signal ──
+// 5x5 grid, diagonal (0,6,12,18,24) must be: /, \, —, /, \
+// angles: 0=/, 1=\, 2=—, 3=|
+const M_CHARS=['/',`\\`,'—','|'];
+const M_ANS=[0,1,2,0,1]; // diagonal positions 0,6,12,18,24
+function initMirrorState(){
+  G.mirrorState=Array(25).fill(2); // start all as —
+  // randomize non-fixed cells
+  for(let i=0;i<25;i++){
+    if(![0,6,12,18,24].includes(i)) G.mirrorState[i]=Math.floor(Math.random()*4);
+  }
+}
+function showLock2Modal(){
+  openModal('🪞 鏡子訊號鎖','點擊鏡子格切換角度，讓訊號沿對角線反射出去：',[]);
+  const puz=document.getElementById('m-puzzle');
+  puz.innerHTML=`
+    <div style="font-size:.74rem;color:var(--txtm);margin-bottom:.5rem;font-family:'Space Mono',monospace">
+      格式：/ = 斜右 &nbsp; \\ = 斜左 &nbsp; — = 橫 &nbsp; | = 豎
+    </div>
+    <div class="mirror-grid" id="mirror-grid"></div>
+    <div style="font-size:.74rem;color:var(--txtm);margin:.4rem 0">
+      目標：讓<span style="color:var(--accent)">對角線（↘）</span>五個鏡子依序排列正確
+    </div>
+    <button class="kbtn" style="width:100%;margin-top:.6rem" onclick="checkL2()">✓ 啟動訊號陣列</button>
+    <div class="msg" id="l2msg"></div>`;
+  renderMirrors();
+}
+function renderMirrors(){
+  const grid=document.getElementById('mirror-grid');
+  if(!grid) return;
+  grid.innerHTML='';
+  const DIAG=[0,6,12,18,24];
+  for(let i=0;i<25;i++){
+    const cell=document.createElement('div');
+    cell.className='mirror-cell'+(DIAG.includes(i)?' lit':'');
+    const angle=G.mirrorState[i];
+    // draw mirror as SVG line
+    const lines={0:'10,42 42,10',1:'10,10 42,42',2:'4,26 48,26',3:'26,4 26,48'};
+    cell.innerHTML=`<svg width="52" height="52" viewBox="0 0 52 52">
+      <line x1="${lines[angle].split(' ')[0].split(',')[0]}" y1="${lines[angle].split(' ')[0].split(',')[1]}"
+            x2="${lines[angle].split(' ')[1].split(',')[0]}" y2="${lines[angle].split(' ')[1].split(',')[1]}"
+            stroke="${DIAG.includes(i)?'#c8a44a':'#4a7a8a'}" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>`;
+    if(!false){// all clickable
+      cell.onclick=()=>{G.mirrorState[i]=(G.mirrorState[i]+1)%4;renderMirrors();}
+    }
+    grid.appendChild(cell);
+  }
+}
+function checkL2(){
+  const DIAG=[0,6,12,18,24];
+  const correct=DIAG.every((pos,i)=>G.mirrorState[pos]===M_ANS[i]);
+  if(correct){
+    showMsg('l2msg','✅ 訊號對準！燈塔光束成功射向遠方的船隻！','ok');
+    addNote('✅ 鏡子訊號鎖 解除（/\\—/\\）');
+    setTimeout(()=>{updateLockUI(2,true);closeModal();},1200);
+  } else {
+    const DIAG=[0,6,12,18,24];
+    const wrong=DIAG.filter((pos,i)=>G.mirrorState[pos]!==M_ANS[i]).length;
+    showMsg('l2msg',`❌ 訊號散射。對角線有 ${wrong} 格方向錯誤，重新調整。`,'err');
+  }
+}
+
+// ── LOCK 3: Knot SOS ──
+// Answer: 🪢 ⚓ 🔱
+const KNOTS=[{s:'🪢',l:'S'},{s:'⚓',l:'O'},{s:'🔱',l:'S'},{s:'🪝',l:'R'},{s:'⛵',l:'U'},{s:'🌊',l:'N'}];
+function showLock3Modal(){
+  G.knotSel=[];
+  openModal('🪢 繩結密碼鎖','選擇三個繩結符號拼出暗語：',[]);
+  const puz=document.getElementById('m-puzzle');
+  puz.innerHTML=`
+    <div style="font-size:.74rem;color:var(--txtm);margin-bottom:.4rem;font-family:'Space Mono',monospace">
+      已選序列：
+    </div>
+    <div class="knot-slots" id="knot-slots">
+      <div class="knot-slot empty">_</div>
+      <div class="knot-slot empty">_</div>
+      <div class="knot-slot empty">_</div>
+    </div>
+    <div style="font-size:.74rem;color:var(--txtm);margin:.4rem 0">可用繩結：</div>
+    <div class="knot-sequence" id="knot-seq">
+      ${KNOTS.map((k,i)=>`<div class="knot-btn" onclick="knotPick(${i})">${k.s}<br><span style="font-size:.6rem;color:var(--txtm)">${k.l}</span></div>`).join('')}
+    </div>
+    <div style="display:flex;gap:.4rem;margin-top:.5rem">
+      <button class="kbtn" style="flex:1" onclick="checkL3()">✓ 送出暗語</button>
+      <button class="kbtn" onclick="knotClear()">清除</button>
+    </div>
+    <div class="msg" id="l3msg"></div>`;
+}
+function knotPick(i){
+  if(G.knotSel.length>=3) return;
+  G.knotSel.push(i);
+  renderKnotSlots();
+}
+function renderKnotSlots(){
+  const slots=document.getElementById('knot-slots');
+  if(!slots) return;
+  slots.innerHTML='';
+  for(let i=0;i<3;i++){
+    const d=document.createElement('div');
+    d.className='knot-slot'+(i>=G.knotSel.length?' empty':'');
+    d.textContent=i<G.knotSel.length?KNOTS[G.knotSel[i]].s:'_';
+    slots.appendChild(d);
+  }
+}
+function knotClear(){G.knotSel=[];renderKnotSlots();showMsg('l3msg','','');}
+function checkL3(){
+  if(G.knotSel.length<3){showMsg('l3msg','請選擇3個繩結符號','err');return;}
+  const ans=[0,1,2]; // 🪢⚓🔱
+  if(G.knotSel.every((v,i)=>v===ans[i])){
+    showMsg('l3msg','✅ 暗語正確！SOS，鎖具鬆開了！','ok');
+    addNote('✅ 繩結密碼鎖 解除（🪢⚓🔱 = SOS）');
+    setTimeout(()=>{updateLockUI(3,true);closeModal();},1200);
+  } else {
+    const letters=G.knotSel.map(i=>KNOTS[i].l).join('');
+    showMsg('l3msg',`❌ 「${letters}」不是正確暗語，再想想。`,'err');
+    setTimeout(knotClear,800);
+  }
+}
+
+// ── DOOR ──
+function openDoorPanel(){
+  const allOpen=G.locks[1]&&G.locks[2]&&G.locks[3];
+  if(allOpen){endGame(true);return;}
+  const st=n=>`${G.locks[n]?'🔓 已解除':'🔒 待解'} — ${['','無線電頻率鎖','鏡子訊號鎖','繩結密碼鎖'][n]}`;
+  openModal('🚪 出口鐵門',
+    `鐵門沉重無比，三道鎖具紋絲不動。<br><br>
+    <div style="font-family:'Space Mono',monospace;font-size:.8rem;line-height:2.2">
+    ${st(1)}<br>${st(2)}<br>${st(3)}
+    </div><br>
+    解開所有鎖具才能推開這扇通往自由的門。`,
+    [{label:'繼續搜查',fn:closeModal}]);
+}
+
+// ── HINTS ──
+function useHint(){
+  if(G.hintsLeft<=0){
+    openModal('無法求助','提示已全部用完。憑藉自己的觀察力吧。',[{label:'明白了',fn:closeModal}]);
+    return;
+  }
+  const idx=2-G.hintsLeft;
+  G.hintsLeft--;G.hintsUsed++;
+  document.getElementById('hint-badge').textContent=`HINT ×${G.hintsLeft}`;
+  openModal(`求助 ${idx+1}/2`,HINTS[idx]||'沒有更多提示了。',[{label:'了解',fn:closeModal}]);
+}
+
+// ── MODAL ──
+function openModal(title,body,acts){
+  document.getElementById('m-title').innerHTML=title;
+  document.getElementById('m-body').innerHTML=body;
+  document.getElementById('m-puzzle').innerHTML='';
+  const ma=document.getElementById('m-acts');
+  ma.innerHTML='';
+  acts.forEach(a=>{
+    const b=document.createElement('button');
+    b.className='btn btn-sm';b.innerHTML=a.label;b.onclick=a.fn;
+    ma.appendChild(b);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('open');}
+document.getElementById('overlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('overlay')) closeModal();
+});
+function showMsg(id,txt,cls){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.className='msg'+(cls?' '+cls:'');
+  el.innerHTML=txt;
+  if(!cls) el.style.display='none';
+}
+
+// ── END ──
+function endGame(won){
+  clearInterval(G.ti);
+  const m=Math.floor(G.secs/60),s=G.secs%60;
+  document.getElementById('end-ico').textContent=won?'🚢':'🌊';
+  document.getElementById('end-title').textContent=won?'成功脫逃！':'潮水淹沒了出口';
+  document.getElementById('end-desc').textContent=won
+    ?'你推開了燈塔的鐵門，衝上岸邊。救援船就在不遠處等候。麥爾斯·艾德蒙的消失之謎或許永遠無法解開，但你活下來了。那個秘密，隨著海浪沉入了深海。'
+    :'漲潮的海水切斷了退路，謎題未能解開。燈塔的秘密隨著你，沉入了海底。或許下一次，你能更快讀懂那些隱藏在黑夜中的線索。';
+  document.getElementById('st-time').textContent=won?`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:'00:00';
+  document.getElementById('st-hints').textContent=G.hintsUsed;
+  // score
+  const bonus=won?Math.floor(G.secs/30)*10:0;
+  const penalty=G.hintsUsed*50;
+  const score=Math.max(0,bonus-penalty+(won?200:0));
+  document.getElementById('st-score').textContent=score;
+  showScreen('s-end');
+}
+</script>
+</body>
+</html>

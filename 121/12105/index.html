@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> 千鶴千願神社- 線上參拜</title>
+    <style>
+        :root {
+            --shrine-red: #d11a2a;      /* 鳥居朱紅 */
+            --shrine-gold: #e5a93b;     /* 神社金箔 */
+            --washi-paper: rgba(251, 248, 243, 0.95);    /* 和紙米白（微透明化以融入背景） */
+            --ink-black: #1a1615;      /* 水墨深黑 */
+            --wood-brown: #4a3728;     /* 奉納箱木紋色 */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Hiragino Mincho ProN', 'Noto Serif TC', 'Microsoft JhengHei', serif;
+        }
+
+        body {
+            /* === 背景圖片設定 === */
+            background-image: url('神社.webp');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed; /* 讓背景固定，捲動時不走樣 */
+            
+            color: var(--ink-black);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 加上一層淡淡的暗色遮罩，提升文字對比度 */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        header::before {
+            content: "";
+            display: block;
+            width: 120px;
+            height: 8px;
+            background: var(--shrine-red);
+            margin: 0 auto 10px;
+            border-radius: 2px;
+            box-shadow: 0 4px 0 var(--wood-brown);
+        }
+
+        header h1 {
+            font-size: 2.3rem;
+            color: #ffffff;
+            letter-spacing: 4px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.9), 0 0 15px rgba(0,0,0,0.5);
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--shrine-gold);
+            font-size: 1rem;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.9);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--washi-paper);
+            border-radius: 4px;
+            padding: 2.5rem 1.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            border: 6px double var(--shrine-red);
+            position: relative;
+            z-index: 10;
+        }
+
+        .shimenawa {
+            text-align: center;
+            color: var(--shrine-red);
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            letter-spacing: 10px;
+        }
+
+        /* Tabs 分頁 */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            border-bottom: 3px solid var(--wood-brown);
+        }
+
+        .tab-btn {
+            background: #eadecd;
+            border: 1px solid var(--wood-brown);
+            border-bottom: none;
+            color: var(--wood-brown);
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 0.6rem 2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+        }
+
+        .tab-btn.active {
+            background: var(--shrine-red);
+            color: white;
+            border-color: var(--shrine-red);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .intro-text {
+            text-align: center;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .btn {
+            background: var(--shrine-red);
+            color: white;
+            border: 2px solid var(--wood-brown);
+            padding: 0.8rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: block;
+            margin: 1.5rem auto;
+            box-shadow: 0 4px 0 var(--wood-brown);
+            transition: all 0.1s;
+        }
+
+        .btn:hover {
+            background: #b51220;
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 var(--wood-brown);
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        /* === 御神籤顯示區 === */
+        .omikuji-display {
+            margin-top: 2rem;
+            border: 1px dashed var(--shrine-red);
+            background: #fff;
+            padding: 1.5rem;
+            position: relative;
+            min-height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .omikuji-display::before, .omikuji-display::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--shrine-red);
+        }
+        .omikuji-display::before { left: 8px; }
+        .omikuji-display::after { right: 8px; }
+
+        .omikuji-wrapper {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            width: 100%;
+        }
+
+        .omikuji-badge-box {
+            border: 2px solid var(--shrine-red);
+            background: rgba(209, 26, 42, 0.03);
+            padding: 1rem 0.5rem;
+            min-width: 55px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .omikuji-badge-text {
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--shrine-red);
+            letter-spacing: 4px;
+            margin: 0 auto;
+        }
+
+        .omikuji-content-box {
+            flex-grow: 1;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--ink-black);
+        }
+
+        /* === 御守顯示區 === */
+        .omamori-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .omamori-container {
+            width: 260px; 
+            height: 380px;
+            perspective: 1000px;
+            margin: 1.5rem 0;
+            cursor: pointer;
+        }
+
+        .omamori-card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .omamori-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .omamori-back, .omamori-front {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border: 4px solid var(--shrine-gold);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-radius: 8px; 
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 御守背面 */
+        .omamori-back {
+            background: var(--shrine-red);
+            color: var(--shrine-gold);
+            justify-content: center;
+        }
+
+        .omamori-back::before {
+            content: "🎀";
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .omamori-back-title {
+            writing-mode: vertical-rl;
+            font-size: 1.6rem;
+            letter-spacing: 8px;
+            font-weight: bold;
+        }
+
+        /* 御守正面 */
+        .omamori-front {
+            background-color: #faf6ee;
+            transform: rotateY(180deg);
+            color: var(--ink-black);
+            border: 4px solid var(--shrine-red);
+            justify-content: flex-start; 
+        }
+
+        .omamori-front::before {
+            content: "⛩️";
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            z-index: 5;
+        }
+
+        .omamori-name {
+            font-size: 1.4rem;
+            color: var(--shrine-red);
+            margin-bottom: 0.4rem;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+            z-index: 5; 
+        }
+
+        .omamori-luck {
+            font-size: 0.95rem;
+            background: var(--shrine-gold);
+            color: white;
+            padding: 0.2rem 0.8rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+            border-radius: 3px;
+            text-align: center;
+            z-index: 5; 
+        }
+
+        .omamori-desc {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            text-align: justify; 
+            width: 100%;
+            border-top: 1px dashed #ddd;
+            padding-top: 0.8rem;
+            z-index: 5; 
+        }
+
+        /* ==================== 特效樣式 ==================== */
+        
+        /* 1. 全螢幕櫻花飄落 (緣結) */
+        .global-sakura-field {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            display: none;
+        }
+        .global-petal {
+            position: absolute;
+            background: linear-gradient(135deg, #ffb7c5, #ff99b0);
+            border-radius: 150% 0 150% 150%;
+            opacity: 0.8;
+            animation: globalDrift 4s linear infinite;
+        }
+        @keyframes globalDrift {
+            0% { transform: translateY(-5vh) translateX(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.9; }
+            90% { opacity: 0.9; }
+            100% { transform: translateY(105vh) translateX(150px) rotate(720deg); opacity: 0; }
+        }
+
+        /* 2. 巨型霸氣金龍飛出效果 (金運) */
+        .global-dragon-layer {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .giant-dragon {
+            font-size: 25rem; 
+            filter: drop-shadow(0 0 50px rgba(229, 169, 59, 0.8));
+            transform: scale(0.1) rotate(0deg);
+            opacity: 0;
+        }
+        .dragon-active .giant-dragon {
+            animation: giantDragonFly 2s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+        @keyframes giantDragonFly {
+            0% { transform: scale(0.1) translate(-200px, 200px) rotate(30deg); opacity: 0; }
+            30% { opacity: 1; transform: scale(1.2) translate(0, 0) rotate(-10deg); }
+            70% { opacity: 1; transform: scale(1.5) translate(100px, -50px) rotate(-15deg); }
+            100% { transform: scale(3) translate(300px, -200px) rotate(-30deg); opacity: 0; }
+        }
+
+        /* 3. 巨大紅色正楷印章蓋出 (健康) */
+        .giant-stamp-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1; 
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .giant-stamp {
+            border: 4px dashed #e60012;
+            color: #e60012;
+            font-family: 'DFKai-SB', 'KaiTi', '標楷體', serif; 
+            font-weight: bold;
+            font-size: 1.4rem;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.3); 
+            letter-spacing: 1px;
+            transform: scale(6);
+            opacity: 0;
+            border-radius: 4px;
+            text-align: center;
+            box-shadow: inset 0 0 4px rgba(230,0,18,0.2);
+            mix-blend-mode: multiply; 
+        }
+        .stamp-active .giant-stamp {
+            animation: stampSlamSlow 1.8s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
+        }
+        @keyframes stampSlamSlow {
+            0% { transform: scale(6) rotate(-25deg); opacity: 0; }
+            40% { opacity: 0.3; }
+            85% { transform: scale(1) rotate(-4deg); opacity: 0.75; }
+            100% { transform: scale(1) rotate(-4deg); opacity: 0.8; filter: drop-shadow(0 0 1px #e60012); }
+        }
+
+        /* 4. 及哇哇滿版全螢幕霸佔 (勝守) */
+        .jiwawa-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85);
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s forwards;
+        }
+        .jiwawa-overlay img {
+            max-width: 95vw;
+            max-height: 95vh;
+            object-fit: contain;
+            border: 5px solid white;
+            box-shadow: 0 0 50px rgba(255,255,255,0.5);
+            animation: giantPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .close-jiwawa {
+            position: absolute;
+            top: 20px; right: 30px;
+            color: white; font-size: 2.5rem; cursor: pointer;
+            text-shadow: 0 0 10px black;
+            font-weight: bold;
+        }
+        @keyframes giantPop {
+            0% { transform: scale(0.5); }
+            100% { transform: scale(1); }
+        }
+
+        /* 基礎動畫 */
+        .shake { animation: shakeAnim 0.5s ease-in-out; }
+        @keyframes shakeAnim {
+            0%, 100% { transform: rotate(0deg); }
+            20% { transform: rotate(-5deg); }
+            40% { transform: rotate(5deg); }
+            60% { transform: rotate(-3deg); }
+            80% { transform: rotate(3deg); }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="global-sakura-field" id="global-sakura"></div>
+    <div class="global-dragon-layer" id="global-dragon"><div class="giant-dragon">🐉</div></div>
+    <div class="jiwawa-overlay" id="global-jiwawa">
+        <span class="close-jiwawa" onclick="closeJiwawa()">✕ 關閉占卜</span>
+        <img src="及哇哇.jpg" alt="勝守及哇哇">
+    </div>
+
+    <header>
+        <h1>千鶴御神體神社</h1>
+        <p>— 靜心神導，傾聽神明的神託之音 —</p>
+    </header>
+
+    <div class="container">
+        <div class="shimenawa">📿 ✦ ⛩️ ✦ 📿</div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('daily')">御神籤抽籤</button>
+            <button class="tab-btn" onclick="switchTab('omamori')">神道御守占</button>
+        </div>
+
+        <div id="daily-tab" class="tab-content active">
+            <div class="intro-text">
+                二拜二拍手一拜。<br>
+                請閉上雙眼，在心中默念您的姓名與所求之事，隨後搖動籤筒。
+            </div>
+            <button class="btn" onclick="drawOmikuji()">投幣奉納・抽御神籤</button>
+            
+            <div class="omikuji-display" id="omikuji-result">
+                <div style="color: #777; text-align: center;">
+                    【 神籤尚未抽出 】<br>誠心祈願後點擊上方按鈕取得神明示諭。
+                </div>
+            </div>
+        </div>
+
+        <div id="omamori-tab" class="tab-content">
+            <div class="intro-text">
+                神明將賜予您一枚守護此時此刻的「開運御守」。<br>
+                默念您近期的煩惱，隨後點擊御守將其翻開。
+            </div>
+            <div class="omamori-area">
+                <button class="btn" onclick="resetOmamori()">重新誠心洗牌</button>
+                <div class="omamori-container" onclick="flipOmamori()">
+                    <div class="omamori-card" id="omamori-card">
+                        <div class="omamori-back">
+                            <div class="omamori-back-title">御守護</div>
+                        </div>
+                        <div class="omamori-front" id="omamori-front-content" style="position: relative;">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if(tabName === 'daily') {
+                if(event) event.target.classList.add('active');
+                document.getElementById('daily-tab').classList.add('active');
+            } else {
+                if(event) event.target.classList.add('active');
+                document.getElementById('omamori-tab').classList.add('active');
+            }
+        }
+
+        // --- 御神籤數據 ---
+        const omikujiList = [
+            { title: "大吉", text: "【諸事皆宜】雲開見日之象。此時心願極易達成，不論事業、戀愛或財運皆有神明庇佑。宜多行善事以延續福報。" },
+            { title: "中吉", text: "【謀事有成】運勢平穩上升。雖然起初可能有些微耽擱，但只要保持誠信與毅力，最終必定能收穫美滿的果實。" },
+            { title: "吉", text: "【平順安康】雖無暴發之喜，卻是無憂之時。家宅平安，身體康健。多聽取長輩或前輩的建議，會帶來意想不到的好運。" },
+            { title: "末吉", text: "【先苦後甘】目前正處於蓄力階段，不宜操之過急。凡事多加忍耐與觀察，過了這段時期，好運自然會悄悄降臨。" },
+            { title: "凶", text: "【宜守不宜攻】黑雲罩頂之日，凡事需加倍謹慎。多言易失，外出注意安全。此籤乃神明提醒你停下腳步內省，明日之後運勢便會開泰，無需過度憂慮。" }
+        ];
+
+        function drawOmikuji() {
+            const resultDiv = document.getElementById('omikuji-result');
+            resultDiv.innerHTML = "";
+            resultDiv.classList.add('shake');
+            
+            const randomIndex = Math.floor(Math.random() * omikujiList.length);
+            const omikuji = omikujiList[randomIndex];
+            
+            setTimeout(() => {
+                resultDiv.classList.remove('shake');
+                resultDiv.innerHTML = `
+                    <div class="omikuji-wrapper">
+                        <div class="omikuji-badge-box">
+                            <div class="omikuji-badge-text">${omikuji.title}</div>
+                        </div>
+                        <div class="omikuji-content-box">
+                            ${omikuji.text}
+                        </div>
+                    </div>
+                `;
+            }, 500);
+        }
+
+        // --- 御守占卜數據 ---
+        const omamoriDeck = [
+            { id: "ekijo", name: "厄除御守", luck: "諸厄消除", desc: "洗淨身心塵埃的守護。神明正為你擋下身邊的流言蜚語與隱形障礙。" },
+            { id: "enmusubi", name: "緣結御守", luck: "良緣成就", desc: "象徵美好的相遇。不僅僅是愛情，也代表工作上的貴人即將出現。" },
+            { id: "kinun", name: "金運御守", luck: "商売繁盛", desc: "財富之泉湧出。近期的投資或努力將會轉化為實際的收益，宜開源節流。" },
+            { id: "kenkou", name: "健康御守", luck: "身體健全", desc: "身體與心靈的療癒力正旺盛。作息宜調整，多接觸大自然恢復細胞元氣。" },
+            { id: "katsu", name: "勝守", luck: "必勝祈願", desc: "面對挑戰、比賽或關鍵決策時的至高守護。神明賜予你斬斷怯弱的勇氣！" }
+        ];
+
+        let isFlipped = false;
+
+        function flipOmamori() {
+            const card = document.getElementById('omamori-card');
+            const frontContent = document.getElementById('omamori-front-content');
+            
+            if (!isFlipped) {
+                const randomIndex = Math.floor(Math.random() * omamoriDeck.length);
+                const drawn = omamoriDeck[randomIndex];
+                
+                clearEffects();
+
+                // 基礎佈局寫入
+                frontContent.innerHTML = `
+                    <div class="omamori-name">${drawn.name}</div>
+                    <div class="omamori-luck">${drawn.luck}</div>
+                    <div class="omamori-desc">${drawn.desc}</div>
+                `;
+
+                // 1. 厄除御守效果：底色直接改為白色
+                if (drawn.id === "ekijo") {
+                    frontContent.style.backgroundColor = "#ffffff";
+                } else {
+                    frontContent.style.backgroundColor = "#faf6ee";
+                }
+
+                // 開始翻轉
+                card.classList.add('flipped');
+                isFlipped = true;
+
+                // 翻面完成後觸發對應特效
+                setTimeout(() => {
+                    
+                    // 2. 緣結御守效果：全網頁背景飄落櫻花
+                    if (drawn.id === "enmusubi") {
+                        const sakuraField = document.getElementById('global-sakura');
+                        sakuraField.innerHTML = ""; 
+                        sakuraField.style.display = "block";
+                        for (let i = 0; i < 25; i++) {
+                            const petal = document.createElement('div');
+                            petal.className = 'global-petal';
+                            petal.style.left = Math.random() * 100 + 'vw';
+                            petal.style.top = (Math.random() * -20) + 'vh';
+                            petal.style.width = Math.random() * 12 + 8 + 'px';
+                            petal.style.height = Math.random() * 15 + 10 + 'px';
+                            petal.style.animationDelay = Math.random() * 3 + 's';
+                            sakuraField.appendChild(petal);
+                        }
+                    }
+
+                    // 3. 金運御守效果：全螢幕霸氣巨型金龍衝出
+                    if (drawn.id === "kinun") {
+                        const dragonLayer = document.getElementById('global-dragon');
+                        dragonLayer.style.display = "flex";
+                        dragonLayer.classList.add('dragon-active');
+                    }
+
+                    // 4. 健康御守效果：巨大紅色正楷印章（放慢特效速度，且置於文字下方背景層）
+                    if (drawn.id === "kenkou") {
+                        const stampContainer = document.createElement('div');
+                        stampContainer.className = 'giant-stamp-container';
+                        stampContainer.id = 'active-stamp-box';
+                        stampContainer.innerHTML = `<div class="giant-stamp">第五組<br>關心您</div>`;
+                        frontContent.appendChild(stampContainer);
+                        stampContainer.style.display = "flex";
+                        
+                        setTimeout(() => stampContainer.classList.add('stamp-active'), 50);
+                    }
+
+                    // 5. 勝守效果：全螢幕滿版霸佔及哇哇圖片
+                    if (drawn.id === "katsu") {
+                        document.getElementById('global-jiwawa').style.display = "flex";
+                    }
+
+                }, 400);
+            }
+        }
+
+        function clearEffects() {
+            document.getElementById('global-sakura').style.display = "none";
+            const dragonLayer = document.getElementById('global-dragon');
+            dragonLayer.style.display = "none";
+            dragonLayer.classList.remove('dragon-active');
+            document.getElementById('global-jiwawa').style.display = "none";
+            const oldStamp = document.getElementById('active-stamp-box');
+            if (oldStamp) oldStamp.remove();
+        }
+
+        function closeJiwawa() {
+            document.getElementById('global-jiwawa').style.display = "none";
+        }
+
+        function resetOmamori() {
+            const card = document.getElementById('omamori-card');
+            card.classList.remove('flipped');
+            isFlipped = false;
+            clearEffects();
+        }
+    </script>
+</body>
+</html>

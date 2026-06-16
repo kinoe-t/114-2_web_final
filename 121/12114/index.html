@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>記憶翻牌遊戲</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0e17;--surface:#1a1828;--card-back:#252338;--card-border:#3a3660;
+  --accent:#a78bfa;--accent2:#f472b6;--gold:#fbbf24;--text:#e2e0f0;
+  --text-muted:#8b87a8;--success:#34d399;--danger:#f87171;--radius:12px;
+}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  padding:1.5rem 1rem 3rem}
+h1{font-size:2rem;font-weight:700;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;letter-spacing:.05em;margin-bottom:.25rem;text-align:center}
+.subtitle{font-size:.85rem;color:var(--text-muted);letter-spacing:.08em;text-align:center;margin-bottom:1.5rem}
+
+/* ── OVERLAY ── */
+.overlay{position:fixed;inset:0;background:rgba(15,14,23,.9);display:flex;
+  align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(8px)}
+.overlay.hidden{display:none}
+.modal{background:var(--surface);border:1px solid var(--card-border);border-radius:20px;
+  padding:2.5rem 2rem;text-align:center;max-width:380px;width:90%}
+.modal h2{font-size:1.4rem;font-weight:700;color:var(--accent);margin-bottom:.5rem}
+.modal p{color:var(--text-muted);font-size:.88rem;line-height:1.6;margin-bottom:1.25rem}
+
+/* ── MODE SELECT ── */
+.mode-cards{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem}
+.mode-card{background:var(--card-back);border:1.5px solid var(--card-border);
+  border-radius:14px;padding:1.25rem .75rem;cursor:pointer;transition:all .2s}
+.mode-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.mode-card.selected{border-color:var(--accent);background:rgba(167,139,250,.1)}
+.mode-icon{font-size:2rem;margin-bottom:.4rem}
+.mode-title{font-size:.9rem;font-weight:700;color:var(--text)}
+.mode-desc{font-size:.72rem;color:var(--text-muted);margin-top:.25rem;line-height:1.4}
+
+/* ── ROOM UI ── */
+.room-section{margin-bottom:1.25rem}
+.room-section h3{font-size:.85rem;color:var(--text-muted);margin-bottom:.6rem;letter-spacing:.06em;text-transform:uppercase}
+.pin-row{display:flex;gap:.5rem;justify-content:center;margin-bottom:.75rem}
+.pin-digit{width:48px;height:60px;background:var(--card-back);border:1.5px solid var(--card-border);
+  border-radius:10px;font-size:1.6rem;font-weight:700;color:var(--accent);
+  text-align:center;font-family:inherit;caret-color:var(--accent);outline:none;
+  transition:border-color .2s}
+.pin-digit:focus{border-color:var(--accent)}
+.room-code-display{font-size:2.4rem;font-weight:700;letter-spacing:.25em;
+  color:var(--gold);background:rgba(251,191,36,.07);border:1px dashed rgba(251,191,36,.3);
+  border-radius:12px;padding:.5rem 1.5rem;margin:.5rem 0 .75rem;display:inline-block}
+.status-badge{display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;
+  padding:.3rem .9rem;border-radius:50px;margin-bottom:.75rem}
+.status-badge.waiting{background:rgba(251,191,36,.1);color:var(--gold);border:1px solid rgba(251,191,36,.3)}
+.status-badge.ready{background:rgba(52,211,153,.1);color:var(--success);border:1px solid rgba(52,211,153,.3)}
+.status-badge.error{background:rgba(248,113,113,.1);color:var(--danger);border:1px solid rgba(248,113,113,.3)}
+
+/* ── BUTTONS ── */
+button{padding:.55rem 1.4rem;border-radius:50px;font-size:.9rem;font-family:inherit;
+  font-weight:500;cursor:pointer;transition:all .2s;border:none}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-primary:hover{opacity:.88;transform:scale(1.03)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--card-border)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:rgba(248,113,113,.1);color:var(--danger);border:1px solid rgba(248,113,113,.3)}
+.btn-danger:hover{background:rgba(248,113,113,.2)}
+.btn-row{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-top:.5rem}
+
+/* ── STATS BAR ── */
+.stats-bar{display:flex;gap:1rem;margin-bottom:1.25rem;background:var(--surface);
+  border:1px solid var(--card-border);border-radius:50px;padding:.5rem 1.25rem;
+  align-items:center;flex-wrap:wrap;justify-content:center}
+.stat{display:flex;flex-direction:column;align-items:center}
+.stat-label{font-size:.68rem;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase}
+.stat-value{font-size:1.2rem;font-weight:700;color:var(--accent)}
+.stat-value.timer{color:var(--gold)}
+.stat-value.best{color:var(--success)}
+.divider{width:1px;height:26px;background:var(--card-border)}
+
+/* ── VERSUS BAR ── */
+.versus-bar{display:grid;grid-template-columns:1fr auto 1fr;gap:.75rem;
+  width:100%;max-width:700px;margin-bottom:1rem;align-items:center}
+.player-panel{background:var(--surface);border:1px solid var(--card-border);
+  border-radius:14px;padding:.6rem 1rem;text-align:center}
+.player-panel.me{border-color:var(--accent)}
+.player-panel.opponent{border-color:var(--accent2)}
+.player-name{font-size:.72rem;color:var(--text-muted);margin-bottom:.2rem}
+.player-score{font-size:1.6rem;font-weight:700}
+.player-panel.me .player-score{color:var(--accent)}
+.player-panel.opponent .player-score{color:var(--accent2)}
+.vs-label{font-size:1.1rem;font-weight:700;color:var(--text-muted);text-align:center}
+.turn-indicator{font-size:.72rem;margin-top:.2rem;color:var(--gold)}
+
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;
+  max-width:700px;width:100%;margin-bottom:1.5rem}
+
+/* ── CARDS ── */
+.card{aspect-ratio:3/4;perspective:800px;cursor:pointer}
+.card-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;
+  transition:transform .45s cubic-bezier(.4,0,.2,1);border-radius:var(--radius)}
+.card.flipped .card-inner,.card.matched .card-inner{transform:rotateY(180deg)}
+.card-face{position:absolute;inset:0;border-radius:var(--radius);
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+.card-back-face{background:var(--card-back);border:1px solid var(--card-border);flex-direction:column;gap:4px}
+.card-back-face::before{content:'';display:block;width:60%;height:60%;
+  border:2px solid var(--card-border);border-radius:8px;
+  background:repeating-linear-gradient(45deg,transparent,transparent 4px,
+    rgba(167,139,250,.06) 4px,rgba(167,139,250,.06) 8px)}
+.card-back-face .back-logo{font-size:1.1rem;color:var(--text-muted);opacity:.6}
+.card-front-face{background:var(--surface);border:1px solid var(--card-border);
+  transform:rotateY(180deg);flex-direction:column;gap:4px}
+.card.matched-me .card-front-face{border-color:var(--accent);background:rgba(167,139,250,.1);box-shadow:0 0 12px rgba(167,139,250,.25)}
+.card.matched-opp .card-front-face{border-color:var(--accent2);background:rgba(244,114,182,.1);box-shadow:0 0 12px rgba(244,114,182,.25)}
+.card.matched-solo .card-front-face{border-color:var(--success);background:rgba(52,211,153,.08);box-shadow:0 0 12px rgba(52,211,153,.2)}
+.card-emoji{font-size:clamp(1.4rem,3.5vw,2rem);line-height:1}
+.card-name{font-size:clamp(.55rem,1.2vw,.7rem);color:var(--text-muted);text-align:center;padding:0 2px}
+.card:not(.flipped):not(.matched-me):not(.matched-opp):not(.matched-solo):hover .card-inner{transform:translateY(-3px) scale(1.03);filter:brightness(1.1)}
+.card.disabled{cursor:not-allowed;opacity:.7}
+
+/* ── PROGRESS ── */
+.progress-bar-wrap{width:100%;max-width:700px;height:5px;background:var(--surface);
+  border-radius:10px;margin-bottom:1rem;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  border-radius:10px;transition:width .5s ease}
+
+/* ── MODAL STATS ── */
+.modal-stats{display:flex;justify-content:center;gap:1.5rem;margin-bottom:1.25rem;
+  padding:1rem;background:rgba(167,139,250,.07);border-radius:var(--radius);flex-wrap:wrap}
+.modal-stat-label{font-size:.72rem;color:var(--text-muted)}
+.modal-stat-value{font-size:1.35rem;font-weight:700;color:var(--accent)}
+
+/* ── WINNER PANEL ── */
+.winner-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem}
+.winner-card{border-radius:12px;padding:.75rem;text-align:center;border:1px solid}
+.winner-card.win{border-color:var(--gold);background:rgba(251,191,36,.08)}
+.winner-card.lose{border-color:var(--card-border);background:var(--card-back)}
+.winner-card .wc-name{font-size:.75rem;color:var(--text-muted);margin-bottom:.25rem}
+.winner-card .wc-score{font-size:2rem;font-weight:700}
+.winner-card.win .wc-score{color:var(--gold)}
+.winner-card.lose .wc-score{color:var(--text-muted)}
+.crown{font-size:1.2rem}
+
+/* ── ANIMS ── */
+.shake{animation:shake .45s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}
+  40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.burst{animation:burst .4s ease}
+@keyframes burst{0%{transform:scale(1)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+/* ── SECTION VISIBILITY ── */
+.game-area{width:100%;display:flex;flex-direction:column;align-items:center}
+.hidden{display:none!important}
+
+@media(max-width:500px){
+  .grid{grid-template-columns:repeat(4,1fr);gap:8px;max-width:100%}
+  h1{font-size:1.5rem}
+  .stats-bar{gap:.75rem;padding:.4rem .75rem}
+  .versus-bar{gap:.5rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>✦ 記憶翻牌 ✦</h1>
+  <p class="subtitle" id="subtitle">選擇遊戲模式</p>
+</header>
+
+<div class="game-area" id="gameArea">
+  <div class="stats-bar hidden" id="soloBar">
+    <div class="stat">
+      <span class="stat-label">翻牌次數</span>
+      <span class="stat-value" id="moves">0</span>
+    </div>
+    <div class="divider"></div>
+    <div class="stat">
+      <span class="stat-label">已配對</span>
+      <span class="stat-value" id="pairs">0 / 14</span>
+    </div>
+    <div class="divider"></div>
+    <div class="stat">
+      <span class="stat-label">計時</span>
+      <span class="stat-value timer" id="timer">0:00</span>
+    </div>
+    <div class="divider"></div>
+    <div class="stat">
+      <span class="stat-label">最佳紀錄</span>
+      <span class="stat-value best" id="bestDisplay">—</span>
+    </div>
+  </div>
+
+  <div class="versus-bar hidden" id="versusBar">
+    <div class="player-panel me">
+      <div class="player-name" id="myName">我</div>
+      <div class="player-score" id="myScore">0</div>
+      <div class="turn-indicator" id="myTurn"></div>
+    </div>
+    <div class="vs-label">VS</div>
+    <div class="player-panel opponent">
+      <div class="player-name" id="oppName">對手</div>
+      <div class="player-score" id="oppScore">0</div>
+      <div class="turn-indicator" id="oppTurn"></div>
+    </div>
+  </div>
+
+  <div class="progress-bar-wrap hidden" id="progressWrap">
+    <div class="progress-bar" id="progress" style="width:0%"></div>
+  </div>
+
+  <div class="grid hidden" id="grid"></div>
+
+  <div class="btn-row hidden" id="gameButtons">
+    <button class="btn-primary" onclick="restartOrBack()">🔀 再來一局</button>
+    <button class="btn-secondary" onclick="goHome()">🏠 回主選單</button>
+    <button class="btn-secondary" id="hintBtn" onclick="showHint()">💡 提示</button>
+  </div>
+</div>
+
+<!-- Mode Select -->
+<div class="overlay" id="overlayMode">
+  <div class="modal">
+    <div style="font-size:2.5rem;margin-bottom:.5rem">🃏</div>
+    <h2>記憶翻牌</h2>
+    <p>選擇你的遊戲模式</p>
+    <div class="mode-cards">
+      <div class="mode-card" onclick="pickMode('solo')">
+        <div class="mode-icon">🧘</div>
+        <div class="mode-title">單人練習</div>
+        <div class="mode-desc">挑戰自我最佳紀錄，計時計步數</div>
+      </div>
+      <div class="mode-card" onclick="pickMode('battle')">
+        <div class="mode-icon">⚔️</div>
+        <div class="mode-title">競賽模式</div>
+        <div class="mode-desc">與朋友即時對戰，搶配最多牌</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Solo Confirm -->
+<div class="overlay hidden" id="overlaySolo">
+  <div class="modal">
+    <div style="font-size:2.5rem;margin-bottom:.5rem">🧘</div>
+    <h2>單人練習</h2>
+    <p>翻開卡牌，找出所有 14 對相同圖案。<br>記住每張牌的位置，挑戰最少翻牌次數！</p>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="startSolo()">開始遊戲</button>
+      <button class="btn-secondary" onclick="showOverlay('overlayMode')">返回</button>
+    </div>
+  </div>
+</div>
+
+<!-- Battle Lobby -->
+<div class="overlay hidden" id="overlayBattle">
+  <div class="modal">
+    <div style="font-size:2.5rem;margin-bottom:.5rem">⚔️</div>
+    <h2>競賽模式</h2>
+    <p>建立或加入一個競技房間</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem">
+      <div class="mode-card" id="btnCreate" onclick="switchLobby('create')">
+        <div class="mode-icon">🏗️</div>
+        <div class="mode-title">建立房間</div>
+        <div class="mode-desc">設定 4 位數房間碼</div>
+      </div>
+      <div class="mode-card" id="btnJoin" onclick="switchLobby('join')">
+        <div class="mode-icon">🚪</div>
+        <div class="mode-title">加入房間</div>
+        <div class="mode-desc">輸入朋友的房間碼</div>
+      </div>
+    </div>
+    <div id="panelCreate" class="room-section hidden">
+      <h3>你的房間碼</h3>
+      <div class="room-code-display" id="createdCode">— — — —</div>
+      <div>
+        <div class="status-badge waiting" id="createStatus">
+          <span>⏳</span><span id="createStatusText">等待對手加入...</span>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary hidden" id="btnStartBattle" onclick="hostStartBattle()">開始對戰！</button>
+        <button class="btn-secondary" onclick="cancelRoom()">取消</button>
+      </div>
+    </div>
+    <div id="panelJoin" class="room-section hidden">
+      <h3>輸入房間碼（每格 0–9）</h3>
+      <div class="pin-row" id="pinRow">
+        <input class="pin-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" id="p0">
+        <input class="pin-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" id="p1">
+        <input class="pin-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" id="p2">
+        <input class="pin-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" id="p3">
+      </div>
+      <div id="joinStatusWrap" class="hidden">
+        <div class="status-badge" id="joinStatus"><span id="joinStatusText"></span></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" id="btnJoinRoom" onclick="joinRoom()">加入</button>
+        <button class="btn-secondary" onclick="showOverlay('overlayBattle');resetLobby()">返回</button>
+      </div>
+    </div>
+    <div id="lobbyDefault" class="btn-row">
+      <button class="btn-secondary" onclick="showOverlay('overlayMode')">返回主選單</button>
+    </div>
+  </div>
+</div>
+
+<!-- Win Modal -->
+<div class="overlay hidden" id="overlayWin">
+  <div class="modal" id="winModal"></div>
+</div>
+
+<script>
+const CARDS = [
+  {emoji:'🐉',name:'龍'},{emoji:'🦋',name:'蝴蝶'},{emoji:'🌸',name:'櫻花'},
+  {emoji:'🏮',name:'燈籠'},{emoji:'🦊',name:'狐狸'},{emoji:'🌙',name:'月亮'},
+  {emoji:'⚡',name:'閃電'},{emoji:'🎴',name:'花牌'},{emoji:'🦚',name:'孔雀'},
+  {emoji:'🍄',name:'蘑菇'},{emoji:'🔮',name:'水晶球'},{emoji:'🌊',name:'海浪'},
+  {emoji:'🎭',name:'面具'},{emoji:'🦁',name:'獅子'},
+];
+
+let deck=[], flipped=[], matched=[], moves=0, locked=false;
+let timerInterval=null, seconds=0, gameStarted=false;
+let best=JSON.parse(localStorage.getItem('memoryBest')||'null');
+let gameMode='';
+let myRole='', roomCode='', myTurnActive=false;
+let myMatchCount=0, oppMatchCount=0;
+let _pollInterval=null, _lastEventKeys=new Set();
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function fmtTime(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function $(id){return document.getElementById(id)}
+function show(id){$(id).classList.remove('hidden')}
+function hide(id){$(id).classList.add('hidden')}
+function showOverlay(id){
+  ['overlayMode','overlaySolo','overlayBattle','overlayWin'].forEach(o=>hide(o));
+  show(id);
+}
+
+function pickMode(mode){
+  if(mode==='solo') showOverlay('overlaySolo');
+  else{showOverlay('overlayBattle');resetLobby();}
+}
+
+function goHome(){
+  clearInterval(timerInterval);
+  cleanupBattle();
+  gameStarted=false;
+  hide('soloBar');hide('versusBar');hide('progressWrap');
+  hide('grid');hide('gameButtons');
+  $('subtitle').textContent='選擇遊戲模式';
+  showOverlay('overlayMode');
+}
+
+function startSolo(){
+  gameMode='solo';
+  hide('overlayMode');hide('overlaySolo');hide('overlayBattle');hide('overlayWin');
+  flipped=[];matched=[];moves=0;seconds=0;locked=false;gameStarted=true;
+  $('subtitle').textContent='單人練習模式';
+  $('moves').textContent='0';
+  $('pairs').textContent='0 / 14';
+  $('timer').textContent='0:00';
+  updateBestDisplay();
+  show('soloBar');hide('versusBar');
+  show('progressWrap');
+  $('progress').style.width='0%';
+  show('hintBtn');
+  deck=buildDeck();
+  renderGrid();
+  show('grid');show('gameButtons');
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{seconds++;$('timer').textContent=fmtTime(seconds);},1000);
+}
+
+function buildDeck(){
+  return shuffle(CARDS.flatMap(c=>[{...c,uid:c.name+'A'},{...c,uid:c.name+'B'}]));
+}
+
+function updateBestDisplay(){
+  if(!best){$('bestDisplay').textContent='—';return;}
+  $('bestDisplay').textContent=best.moves+'次·'+fmtTime(best.seconds);
+}
+
+function checkAndSaveBest(){
+  if(!best||moves<best.moves||(moves===best.moves&&seconds<best.seconds)){
+    best={moves,seconds};
+    localStorage.setItem('memoryBest',JSON.stringify(best));
+    return true;
+  }
+  return false;
+}
+
+function restartOrBack(){
+  if(gameMode==='solo') startSolo();
+  else goHome();
+}
+
+function renderGrid(){
+  const grid=$('grid');
+  grid.innerHTML='';
+  deck.forEach((card,i)=>{
+    const el=document.createElement('div');
+    const matchCls=card._matchedBy==='me'?'matched-me':card._matchedBy==='opp'?'matched-opp':card._matchedBy==='solo'?'matched-solo':'';
+    el.className='card'+(matchCls?' '+matchCls:'');
+    el.innerHTML=`<div class="card-inner">
+      <div class="card-face card-back-face"><span class="back-logo">✦</span></div>
+      <div class="card-face card-front-face">
+        <div class="card-emoji">${card.emoji}</div>
+        <div class="card-name">${card.name}</div>
+      </div></div>`;
+    el.addEventListener('click',()=>handleCardClick(i,el));
+    grid.appendChild(el);
+  });
+}
+
+function getCardEl(i){return $('grid').children[i]}
+
+function handleCardClick(index,el){
+  if(!gameStarted||locked) return;
+  if(gameMode==='battle'&&!myTurnActive) return;
+  if(flipped.includes(index)) return;
+  if(deck[index]._matchedBy) return;
+
+  flipped.push(index);
+  el.classList.add('flipped');
+  if(gameMode==='battle') broadcastFlip(index);
+
+  if(flipped.length===2){
+    if(gameMode==='solo') moves++;
+    locked=true;
+    if(gameMode==='solo') $('moves').textContent=moves;
+
+    const [a,b]=flipped;
+    if(deck[a].name===deck[b].name){
+      const by=gameMode==='solo'?'solo':'me';
+      deck[a]._matchedBy=by;deck[b]._matchedBy=by;
+      getCardEl(a).classList.add('matched-'+by,'burst');
+      getCardEl(b).classList.add('matched-'+by,'burst');
+      flipped=[];locked=false;
+
+      if(gameMode==='solo'){
+        const cnt=deck.filter(c=>c._matchedBy).length/2;
+        $('pairs').textContent=cnt+' / 14';
+        $('progress').style.width=(cnt/14*100)+'%';
+        if(cnt===14){clearInterval(timerInterval);setTimeout(showSoloWin,600);}
+      } else {
+        myMatchCount++;
+        updateVersusUI();
+        const total=deck.filter(c=>c._matchedBy).length/2;
+        $('progress').style.width=(total/14*100)+'%';
+        if(total===14) setTimeout(showBattleWin,600);
+        else myTurnActive=true;
+      }
+    } else {
+      setTimeout(()=>{
+        const ca=getCardEl(a),cb=getCardEl(b);
+        ca.classList.add('shake');cb.classList.add('shake');
+        setTimeout(()=>{
+          ca.classList.remove('flipped','shake');
+          cb.classList.remove('flipped','shake');
+          flipped=[];locked=false;
+          if(gameMode==='battle'){myTurnActive=false;broadcastTurnSwitch();}
+        },450);
+      },700);
+    }
+  }
+}
+
+function showSoloWin(){
+  const timeStr=fmtTime(seconds);
+  const rating=moves<=20?'⭐⭐⭐':moves<=30?'⭐⭐':'⭐';
+  const isNew=checkAndSaveBest();
+  updateBestDisplay();
+  const badge=isNew
+    ?`<div style="background:rgba(52,211,153,.12);border:1px solid var(--success);color:var(--success);border-radius:50px;padding:.3rem 1rem;font-size:.8rem;font-weight:500;margin-bottom:.75rem;display:inline-block">🏆 新紀錄！</div>`
+    :`<div style="color:var(--text-muted);font-size:.8rem;margin-bottom:.75rem">最佳：${best.moves}次·${fmtTime(best.seconds)}</div>`;
+  $('winModal').innerHTML=`
+    <div style="font-size:2.5rem;margin-bottom:.5rem">🎉</div>
+    <h2>恭喜完成！</h2>${badge}
+    <p style="margin-bottom:.75rem">全部 14 對配對！${rating}</p>
+    <div class="modal-stats">
+      <div><div class="modal-stat-value">${moves}</div><div class="modal-stat-label">翻牌次數</div></div>
+      <div><div class="modal-stat-value">${timeStr}</div><div class="modal-stat-label">完成時間</div></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="startSolo()">再玩一次</button>
+      <button class="btn-secondary" onclick="clearBest()">清除紀錄</button>
+      <button class="btn-secondary" onclick="goHome()">返回主選單</button>
+    </div>`;
+  showOverlay('overlayWin');
+}
+
+function clearBest(){best=null;localStorage.removeItem('memoryBest');updateBestDisplay();startSolo();}
+
+function showHint(){
+  if(!gameStarted||locked||gameMode==='battle') return;
+  if(flipped.length>0) return;
+  const unmatched=deck.map((c,i)=>({...c,i})).filter(c=>!c._matchedBy);
+  if(!unmatched.length) return;
+  const pick=unmatched[Math.floor(Math.random()*unmatched.length)];
+  const el=getCardEl(pick.i);
+  el.classList.add('flipped');
+  setTimeout(()=>el.classList.remove('flipped'),900);
+}
+
+// ── Battle / Room ──
+function genCode(){return String(Math.floor(1000+Math.random()*9000))}
+function roomKey(code){return 'room:'+code}
+function getRoom(code){return JSON.parse(localStorage.getItem(roomKey(code))||'null')}
+function setRoom(code,data){localStorage.setItem(roomKey(code),JSON.stringify(data))}
+function pushEvent(code,evt){
+  const k='room:'+code+':evt:'+Date.now()+':'+Math.random();
+  localStorage.setItem(k,JSON.stringify(evt));
+  setTimeout(()=>localStorage.removeItem(k),30000);
+}
+
+function resetLobby(){
+  hide('panelCreate');hide('panelJoin');
+  show('lobbyDefault');
+  $('btnCreate').classList.remove('selected');
+  $('btnJoin').classList.remove('selected');
+}
+
+function switchLobby(type){
+  hide('lobbyDefault');
+  if(type==='create'){
+    show('panelCreate');hide('panelJoin');
+    $('btnCreate').classList.add('selected');
+    $('btnJoin').classList.remove('selected');
+    createRoom();
+  } else {
+    hide('panelCreate');show('panelJoin');
+    $('btnJoin').classList.add('selected');
+    $('btnCreate').classList.remove('selected');
+    for(let i=0;i<4;i++)$('p'+i).value='';
+    hide('joinStatusWrap');
+    setupPinInputs();
+  }
+}
+
+function setupPinInputs(){
+  for(let i=0;i<4;i++){
+    const el=$('p'+i);
+    el.oninput=()=>{
+      el.value=el.value.replace(/[^0-9]/g,'').slice(-1);
+      if(el.value&&i<3)$('p'+(i+1)).focus();
+    };
+    el.onkeydown=(e)=>{if(e.key==='Backspace'&&!el.value&&i>0)$('p'+(i-1)).focus();};
+  }
+}
+
+function createRoom(){
+  roomCode=genCode();myRole='host';
+  const deckData=buildDeck();deck=deckData;
+  const roomData={code:roomCode,guestJoined:false,started:false,
+    deckSeed:deckData.map(c=>c.uid),turn:'host',hostScore:0,guestScore:0};
+  setRoom(roomCode,roomData);
+  $('createdCode').textContent=roomCode.split('').join(' ');
+  $('createStatusText').textContent='等待對手加入...';
+  $('createStatus').className='status-badge waiting';
+  hide('btnStartBattle');
+  startPolling(roomCode,'host');
+}
+
+function cancelRoom(){
+  stopPolling();
+  if(roomCode) localStorage.removeItem(roomKey(roomCode));
+  resetLobby();showOverlay('overlayBattle');
+}
+
+function joinRoom(){
+  const code=[0,1,2,3].map(i=>$('p'+i).value).join('');
+  if(code.length<4){showJoinStatus('error','請填寫完整 4 位數');return;}
+  const room=getRoom(code);
+  if(!room){showJoinStatus('error','找不到此房間，請確認號碼');return;}
+  if(room.guestJoined){showJoinStatus('error','此房間已有人加入');return;}
+  roomCode=code;myRole='guest';
+  room.guestJoined=true;setRoom(code,room);
+  pushEvent(code,{type:'guestJoined'});
+  showJoinStatus('ready','已加入！等待主持人開始...');
+  $('btnJoinRoom').disabled=true;
+  deck=rebuildDeckFromSeed(room.deckSeed);
+  startPolling(code,'guest');
+}
+
+function showJoinStatus(type,text){
+  show('joinStatusWrap');
+  $('joinStatus').className='status-badge '+type;
+  $('joinStatusText').textContent=type==='error'?'❌ '+text:type==='ready'?'✅ '+text:'⏳ '+text;
+}
+
+function rebuildDeckFromSeed(seed){
+  return seed.map(uid=>{
+    const name=uid.slice(0,-1);
+    const card=CARDS.find(c=>c.name===name);
+    return {...card,uid};
+  });
+}
+
+function hostStartBattle(){
+  const room=getRoom(roomCode);
+  room.started=true;room.turn='host';setRoom(roomCode,room);
+  pushEvent(roomCode,{type:'battleStart',turn:'host'});
+  launchBattle('host');
+}
+
+function launchBattle(startTurn){
+  stopPolling();cleanupBattle();
+  gameMode='battle';gameStarted=true;
+  flipped=[];matched=[];locked=false;
+  myMatchCount=0;oppMatchCount=0;
+  myTurnActive=(startTurn===myRole);
+  hide('overlayMode');hide('overlaySolo');hide('overlayBattle');hide('overlayWin');
+  hide('soloBar');show('versusBar');show('progressWrap');
+  $('progress').style.width='0%';
+  $('myName').textContent=myRole==='host'?'🏠 你（房主）':'🚪 你（加入者）';
+  $('oppName').textContent=myRole==='host'?'🚪 對手':'🏠 對手（房主）';
+  updateVersusUI();
+  $('subtitle').textContent='競賽模式';
+  hide('hintBtn');
+  renderGrid();show('grid');show('gameButtons');
+  startEventPolling();
+}
+
+function updateVersusUI(){
+  $('myScore').textContent=myMatchCount;
+  $('oppScore').textContent=oppMatchCount;
+  $('myTurn').textContent=myTurnActive?'● 你的回合':'';
+  $('oppTurn').textContent=myTurnActive?'':(!gameStarted?'':'● 對方的回合');
+}
+
+function startPolling(code,role){
+  _lastEventKeys=new Set(Object.keys(localStorage).filter(k=>k.startsWith('room:'+code+':evt:')));
+  _pollInterval=setInterval(()=>pollRoom(code,role),400);
+}
+
+function startEventPolling(){
+  _lastEventKeys=new Set(Object.keys(localStorage).filter(k=>k.startsWith('room:'+roomCode+':evt:')));
+  _pollInterval=setInterval(()=>pollEvents(roomCode),300);
+}
+
+function stopPolling(){clearInterval(_pollInterval);_pollInterval=null;}
+
+function pollRoom(code,role){
+  if(role==='host'){
+    const room=getRoom(code);
+    if(room&&room.guestJoined&&!room.started){
+      $('createStatusText').textContent='對手已加入！點擊開始對戰';
+      $('createStatus').className='status-badge ready';
+      show('btnStartBattle');
+    }
+  }
+  const newKeys=Object.keys(localStorage).filter(k=>k.startsWith('room:'+code+':evt:')&&!_lastEventKeys.has(k));
+  newKeys.forEach(k=>{
+    _lastEventKeys.add(k);
+    const evt=JSON.parse(localStorage.getItem(k)||'null');
+    if(!evt) return;
+    if(evt.type==='battleStart'&&role==='guest'){
+      deck=rebuildDeckFromSeed(getRoom(code).deckSeed);
+      stopPolling();launchBattle(evt.turn);
+    }
+  });
+}
+
+function pollEvents(code){
+  const newKeys=Object.keys(localStorage).filter(k=>k.startsWith('room:'+code+':evt:')&&!_lastEventKeys.has(k));
+  newKeys.forEach(k=>{
+    _lastEventKeys.add(k);
+    const evt=JSON.parse(localStorage.getItem(k)||'null');
+    if(!evt) return;
+    handleRemoteEvent(evt);
+  });
+}
+
+function handleRemoteEvent(evt){
+  if(evt.origin===myRole) return;
+  if(evt.type==='flip'){
+    const el=getCardEl(evt.index);
+    if(el&&!el.classList.contains('flipped')) el.classList.add('flipped');
+    if(!flipped.includes(evt.index)) flipped.push(evt.index);
+    if(flipped.length===2){
+      locked=true;
+      const [a,b]=flipped;
+      if(deck[a].name===deck[b].name){
+        deck[a]._matchedBy='opp';deck[b]._matchedBy='opp';
+        getCardEl(a).classList.add('matched-opp','burst');
+        getCardEl(b).classList.add('matched-opp','burst');
+        flipped=[];locked=false;oppMatchCount++;
+        updateVersusUI();
+        const total=deck.filter(c=>c._matchedBy).length/2;
+        $('progress').style.width=(total/14*100)+'%';
+        if(total===14) setTimeout(showBattleWin,600);
+      } else {
+        setTimeout(()=>{
+          getCardEl(a).classList.remove('flipped');
+          getCardEl(b).classList.remove('flipped');
+          flipped=[];locked=false;
+          myTurnActive=true;updateVersusUI();
+        },1150);
+      }
+    }
+  }
+  if(evt.type==='turnSwitch'){myTurnActive=true;updateVersusUI();}
+}
+
+function broadcastFlip(index){pushEvent(roomCode,{type:'flip',index,origin:myRole});}
+function broadcastTurnSwitch(){pushEvent(roomCode,{type:'turnSwitch',origin:myRole});updateVersusUI();}
+
+function cleanupBattle(){
+  stopPolling();
+  if(roomCode){
+    setTimeout(()=>{
+      localStorage.removeItem(roomKey(roomCode));
+      Object.keys(localStorage).filter(k=>k.startsWith('room:'+roomCode+':')).forEach(k=>localStorage.removeItem(k));
+    },3000);
+  }
+  roomCode='';myRole='';myTurnActive=false;myMatchCount=0;oppMatchCount=0;
+}
+
+function showBattleWin(){
+  cleanupBattle();gameStarted=false;
+  const iWin=myMatchCount>oppMatchCount;
+  const isTie=myMatchCount===oppMatchCount;
+  const title=isTie?'平手！':iWin?'🎉 你贏了！':'😢 對手獲勝';
+  const icon=isTie?'🤝':iWin?'🏆':'🥈';
+  $('winModal').innerHTML=`
+    <div style="font-size:2.5rem;margin-bottom:.5rem">${icon}</div>
+    <h2>${title}</h2>
+    <p style="margin-bottom:1rem">所有 14 對配對已完成</p>
+    <div class="winner-row">
+      <div class="winner-card ${iWin||isTie?'win':'lose'}">
+        <div class="wc-name">${iWin||isTie?'<span class="crown">👑</span> ':''}你</div>
+        <div class="wc-score">${myMatchCount}</div>
+      </div>
+      <div class="winner-card ${!iWin&&!isTie?'win':'lose'}">
+        <div class="wc-name">${!iWin&&!isTie?'<span class="crown">👑</span> ':''}對手</div>
+        <div class="wc-score">${oppMatchCount}</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="goHome()">返回主選單</button>
+    </div>`;
+  showOverlay('overlayWin');
+}
+
+updateBestDisplay();
+setupPinInputs();
+
+window.addEventListener('storage',e=>{
+  if(!e.key||!e.key.startsWith('room:')) return;
+  if(e.key.includes(':evt:')){
+    const evt=JSON.parse(e.newValue||'null');
+    if(evt&&gameMode==='battle') handleRemoteEvent(evt);
+    if(evt&&evt.type==='battleStart'&&myRole==='guest'&&!gameStarted){
+      deck=rebuildDeckFromSeed(getRoom(roomCode).deckSeed);
+      stopPolling();launchBattle(evt.turn);
+    }
+    if(evt&&evt.type==='guestJoined'&&myRole==='host'){
+      $('createStatusText').textContent='對手已加入！點擊開始對戰';
+      $('createStatus').className='status-badge ready';
+      show('btnStartBattle');
+    }
+  }
+});
+</script>
+</body>
+</html>

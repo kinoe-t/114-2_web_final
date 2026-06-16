@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>梗圖資料庫 MEME.SYS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #1a1a1a;
+      --border: #2a2a2a;
+      --accent: #ffe500;
+      --white: #ffffff;
+      --gray: #888;
+      --danger: #ff4444;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Courier New', Courier, monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+    }
+    .logo span { color: var(--white); }
+
+    .header-tag {
+      font-size: 0.7rem;
+      color: var(--gray);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      letter-spacing: 0.15em;
+    }
+
+    /* ── MAIN ── */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px 40px;
+      gap: 0;
+    }
+
+    /* ── INSTRUCTION ── */
+    .instruction {
+      font-size: 0.65rem;
+      color: var(--gray);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    /* ── TAG CLOUD ── */
+    .tag-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      max-width: 640px;
+    }
+
+    .tag {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--white);
+      padding: 12px 24px;
+      font-size: 0.9rem;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s, border-color 0.12s, transform 0.12s;
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tag::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.15s ease;
+      z-index: 0;
+    }
+
+    .tag span { position: relative; z-index: 1; }
+
+    .tag:hover::after { transform: scaleX(1); }
+    .tag:hover { color: var(--bg); border-color: var(--accent); transform: translateY(-3px); }
+    .tag:active { transform: scale(0.95) translateY(0); }
+
+    .tag.firing {
+      animation: tagfire 0.18s ease;
+    }
+
+    @keyframes tagfire {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── HINT LINE ── */
+    .hint {
+      margin-top: 32px;
+      font-size: 0.62rem;
+      color: #444;
+      letter-spacing: 0.2em;
+      text-align: center;
+    }
+
+    /* ── MODAL ── */
+    .modal-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+    }
+
+    .modal-bg.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      max-width: 500px;
+      width: 100%;
+      position: relative;
+      transform: scale(0.7) rotate(-3deg);
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s;
+    }
+
+    .modal.pop {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+
+    /* shake on re-roll */
+    .modal.shake {
+      animation: shake 0.35s cubic-bezier(0.36,0.07,0.19,0.97);
+    }
+
+    @keyframes shake {
+      0%,100% { transform: scale(1) rotate(0deg); }
+      15%      { transform: scale(0.96) rotate(-2deg); }
+      30%      { transform: scale(1.04) rotate(2deg); }
+      50%      { transform: scale(0.97) rotate(-1.5deg); }
+      70%      { transform: scale(1.03) rotate(1deg); }
+      85%      { transform: scale(0.99) rotate(-0.5deg); }
+    }
+
+    .modal-header {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .modal-cat {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .modal-header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-reroll {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      font-family: 'Courier New', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 5px 14px;
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+    .btn-reroll:hover { opacity: 0.8; }
+
+    .modal-close {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--gray);
+      font-family: 'Courier New', monospace;
+      font-size: 0.7rem;
+      padding: 5px 12px;
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .modal-close:hover { color: var(--danger); border-color: var(--danger); }
+
+    .modal-img-wrap {
+      width: 100%;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 180px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .modal-img-wrap img {
+      width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      display: block;
+      transition: opacity 0.15s;
+    }
+
+    .modal-img-wrap img.loading { opacity: 0; }
+
+    .modal-spinner {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: var(--gray);
+      letter-spacing: 0.2em;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .modal-spinner.show { opacity: 1; }
+
+    .modal-footer {
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .modal-info { flex: 1; min-width: 0; }
+
+    .modal-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .modal-desc {
+      font-size: 0.68rem;
+      color: var(--gray);
+      margin-top: 3px;
+      letter-spacing: 0.04em;
+      line-height: 1.5;
+    }
+
+    .modal-counter {
+      font-size: 0.6rem;
+      color: #555;
+      letter-spacing: 0.12em;
+      white-space: nowrap;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      color: var(--gray);
+      font-size: 0.62rem;
+      letter-spacing: 0.15em;
+    }
+
+    @media (max-width: 560px) {
+      header { padding: 14px 16px; }
+      main { padding: 36px 16px 32px; }
+      .tag { padding: 10px 18px; font-size: 0.82rem; }
+      footer { padding: 14px 16px; flex-direction: column; gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">MEME<span>.SYS</span></div>
+  <div class="header-tag">梗圖隨機召喚器</div>
+</header>
+
+<main>
+  <p class="instruction">// 選擇分類，隨機召喚一張梗圖</p>
+
+  <div class="tag-cloud">
+    <button class="tag" data-cat="all"><span>🎲 隨機</span></button>
+    <button class="tag" data-cat="食物"><span>🍜 食物</span></button>
+    <button class="tag" data-cat="動物"><span>🐾 動物</span></button>
+    <button class="tag" data-cat="人像"><span>🧍 人像</span></button>
+    <button class="tag" data-cat="諧音梗"><span>😬 諧音梗</span></button>
+  </div>
+
+  <p class="hint">// 再次點擊同分類 → 換一張</p>
+</main>
+
+<footer>
+  <span>MEME.SYS © 2025</span>
+  <span>梗圖不負責任典藏所</span>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <span class="modal-cat" id="modal-cat"></span>
+      <div class="modal-header-actions">
+        <button class="btn-reroll" id="btn-reroll">↻ 換一張</button>
+        <button class="modal-close" onclick="closeModal()">✕ 關閉</button>
+      </div>
+    </div>
+    <div class="modal-img-wrap">
+      <img id="modal-img" src="" alt="梗圖" />
+      <div class="modal-spinner" id="modal-spinner">// 載入中...</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const MEMES = [
+    // 食物
+    { id:1,  cat:'食物',   name:'這碗麵我能吃三碗',        desc:'台灣人的終極認可',            img:'f1.jpg' },
+    { id:2,  cat:'食物',   name:'減肥從明天開始',          desc:'今天的炸雞不算',              img:'f2.jpg' },
+    { id:3,  cat:'食物',   name:'吃飽了嗎',                desc:'台灣人的問候語',              img:'f3.jpg' },
+    { id:4,  cat:'食物',   name:'深夜泡麵的誘惑',          desc:'理智斷線，肚子接管',          img:'f4.jpg' },
+    { id:5,  cat:'食物',   name:'珍奶是我的精神支柱',      desc:'沒有珍奶解決不了的事',        img:'f5.jpg' },
+
+    // 動物
+    { id:6,  cat:'動物',   name:'這不關我的事',            desc:'遇到問題的貓貓表情',          img:'a1.jpg' },
+    { id:7,  cat:'動物',   name:'你說什麼',                desc:'聽不懂人話系列',              img:'a2.jpg' },
+    { id:8,  cat:'動物',   name:'我沒有在聽',              desc:'左耳進右耳出',                img:'a3.jpg' },
+    { id:9,  cat:'動物',   name:'快樂就這樣',              desc:'人生哲理：貓的版本',          img:'a4.jpg' },
+    { id:10, cat:'動物',   name:'狗狗的眼神殺',            desc:'牠知道你在偷吃',              img:'a5.jpg' },
+
+    // 人像
+    { id:11, cat:'人像',   name:'老闆說很簡單',            desc:'我臉上寫著相信嗎',            img:'p1.jpg' },
+    { id:12, cat:'人像',   name:'週一臉',                  desc:'系統偵測到不對勁',            img:'p2.jpg' },
+    { id:13, cat:'人像',   name:'假裝在工作',              desc:'Alt+Tab 人生',                img:'p3.jpg' },
+    { id:14, cat:'人像',   name:'聽到下班兩個字',          desc:'靈魂瞬間回到肉體',            img:'p4.jpg' },
+    { id:15, cat:'人像',   name:'zoom 視訊臉',             desc:'上半身西裝下半身睡褲',        img:'p5.jpg' },
+
+    // 諧音梗
+    { id:16, cat:'諧音梗', name:'我很「棒」',              desc:'棒棒糖：我辦到了',            img:'s1.jpg' },
+    { id:17, cat:'諧音梗', name:'人生「苦」短',            desc:'拿著苦瓜：深刻體會',          img:'s2.jpg' },
+    { id:18, cat:'諧音梗', name:'今天「魚」我無瓜',        desc:'拿著魚：真的沒關係',          img:'s3.jpg' },
+    { id:19, cat:'諧音梗', name:'你「豆」知道了',          desc:'拿著豆子：我懂了',            img:'s4.jpg' },
+    { id:20, cat:'諧音梗', name:'事情「糕」定了',          desc:'拿著蛋糕：大勢已定',          img:'s5.jpg' },
+  ];
+
+  let currentCat = null;
+  let lastId = null;
+
+  function getPool(cat) {
+    return cat === 'all' ? MEMES : MEMES.filter(m => m.cat === cat);
+  }
+
+  function pickRandom(cat) {
+    const pool = getPool(cat);
+    if (pool.length === 0) return null;
+    // avoid repeating last shown if pool is big enough
+    let candidates = pool.length > 1 ? pool.filter(m => m.id !== lastId) : pool;
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+
+  function showMeme(meme, cat, isReroll) {
+    const pool = getPool(cat);
+    lastId = meme.id;
+
+    document.getElementById('modal-cat').textContent = `// ${cat === 'all' ? '全部分類' : cat}`;
+
+    const img = document.getElementById('modal-img');
+    const spinner = document.getElementById('modal-spinner');
+    img.classList.add('loading');
+    spinner.classList.add('show');
+    img.onload = () => { img.classList.remove('loading'); spinner.classList.remove('show'); };
+    img.onerror = () => { spinner.classList.remove('show'); img.classList.remove('loading'); };
+    img.src = meme.img;
+
+    const modal = document.getElementById('modal');
+    if (isReroll) {
+      modal.classList.remove('shake');
+      void modal.offsetWidth; // reflow
+      modal.classList.add('shake');
+    }
+  }
+
+  function openModal(cat) {
+    const meme = pickRandom(cat);
+    if (!meme) return;
+    currentCat = cat;
+
+    const bg = document.getElementById('modal-bg');
+    const modal = document.getElementById('modal');
+    const alreadyOpen = bg.classList.contains('open');
+
+    showMeme(meme, cat, alreadyOpen);
+
+    if (!alreadyOpen) {
+      bg.classList.add('open');
+      requestAnimationFrame(() => requestAnimationFrame(() => modal.classList.add('pop')));
+    }
+  }
+
+  function closeModal() {
+    const bg = document.getElementById('modal-bg');
+    const modal = document.getElementById('modal');
+    modal.classList.remove('pop');
+    setTimeout(() => { bg.classList.remove('open'); currentCat = null; lastId = null; }, 220);
+  }
+
+  // Tag buttons
+  document.querySelectorAll('.tag').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.classList.add('firing');
+      btn.addEventListener('animationend', () => btn.classList.remove('firing'), { once: true });
+      openModal(btn.dataset.cat);
+    });
+  });
+
+  // Re-roll button
+  document.getElementById('btn-reroll').addEventListener('click', () => {
+    if (currentCat) openModal(currentCat);
+  });
+
+  // Close on bg click
+  document.getElementById('modal-bg').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-bg')) closeModal();
+  });
+
+  // ESC
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+    if (e.key === 'r' || e.key === 'R') { if (currentCat) openModal(currentCat); }
+  });
+</script>
+</body>
+</html>

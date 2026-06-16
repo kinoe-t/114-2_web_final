@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海龜湯推理學院</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 3D 翻牌核心動畫特效 */
+        .flip-card {
+            background-color: transparent;
+            perspective: 1000px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans flex flex-col items-center justify-center p-4 md:p-8">
+
+    <div id="game-main-wrapper" class="w-full max-w-6xl space-y-6">
+        <header class="text-center md:text-left flex flex-col md:flex-row justify-between items-center border-b border-slate-800 pb-4">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-wider text-emerald-400">🐢 海龜湯推理學院</h1>
+                <p class="text-slate-400 mt-1 text-sm">
+                    互動規則：可自由挑選關卡。輸入問題，湯主會給予<strong>【是/不是/無關】</strong>的回應與引導提示。
+                </p>
+            </div>
+            <button onclick="resetGame()" class="mt-4 md:mt-0 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 px-3 py-2 rounded-xl border border-red-500/20 transition-all">
+                🔄 重置所有過關紀錄
+            </button>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/50 space-y-4 lg:col-span-1">
+                <h2 class="text-lg font-bold text-slate-300 border-b border-slate-700 pb-2 flex items-center gap-2">
+                    🎯 關卡自由選
+                </h2>
+                <div id="level-list" class="space-y-2 max-h-[300px] lg:max-h-[600px] overflow-y-auto pr-1">
+                    </div>
+            </div>
+
+            <div class="lg:col-span-3 space-y-6">
+                
+                <div id="card-container" class="flip-card w-full h-80">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front bg-slate-800 border-2 border-emerald-500/20">
+                            <span id="level-badge" class="absolute top-4 left-4 bg-emerald-500/20 text-emerald-400 text-xs px-2 py-1 rounded font-bold">
+                                關卡 1
+                            </span>
+                            <p id="question-text" class="text-lg md:text-xl font-medium leading-relaxed text-slate-200 px-4 text-left w-full overflow-y-auto max-h-52">
+                                </p>
+                            <span id="status-hint" class="absolute bottom-4 text-xs text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                                🔒 請在下方輸入你的提問或推理
+                            </span>
+                        </div>
+                        <div class="flip-card-back bg-emerald-950 border-2 border-emerald-400/40">
+                            <span class="absolute top-4 left-4 bg-emerald-400 text-emerald-950 text-xs px-2 py-1 rounded font-bold tracking-widest">
+                                🎉 湯底解開！
+                            </span>
+                            <div class="text-left w-full overflow-y-auto max-h-52 px-4 space-y-2">
+                                <h4 class="text-emerald-400 font-bold text-sm">【完整真相】</h4>
+                                <p id="answer-text" class="text-base leading-relaxed text-emerald-100 whitespace-pre-line">
+                                    這裡會顯示真相。
+                                </p>
+                            </div>
+                            <span class="absolute bottom-4 text-xs text-emerald-400/60">此關卡已成功破解！可隨時切換挑戰其他關卡。</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/50 space-y-4">
+                    <div class="flex justify-between items-center text-xs">
+                        <label for="user-input" class="text-slate-300 font-medium text-sm">💡 提問範例：『這與主角的身體狀況有關嗎？』或直接輸入你猜測的完整真相：</label>
+                    </div>
+                    
+                    <textarea id="user-input" rows="3"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-emerald-500 transition-all placeholder:text-slate-600 resize-none"
+                        placeholder="請在這裡輸入你的提問或推理猜想..."></textarea>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="checkAnswer()" id="submit-btn"
+                            class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 px-6 rounded-xl transition-all duration-200 active:scale-98 shadow-md">
+                            詢問湯主 / 提交驗證
+                        </button>
+                    </div>
+
+                    <div id="feedback-msg" class="hidden text-sm p-4 rounded-xl font-medium leading-relaxed"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="success-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-slate-800 border-2 border-emerald-500 p-8 rounded-2xl max-w-md w-full text-center space-y-6 transform scale-90 transition-transform duration-300 shadow-2xl m-4">
+            <div class="text-7xl animate-bounce">🎉</div>
+            <div class="space-y-2">
+                <h3 class="text-2xl font-extrabold text-emerald-400 tracking-wide">精采絕倫的推理！</h3>
+                <p class="text-slate-300 text-sm">你已完美解開此關卡的湯底真相。接下來您想...</p>
+            </div>
+            <div class="flex flex-col gap-3 pt-2">
+                <button id="modal-next-btn" onclick="handleModalNext()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl transition-all shadow-md active:scale-98">
+                    ➡️ 前往下一關卡
+                </button>
+                <button onclick="handleModalLeave()" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-3 rounded-xl transition-all active:scale-98">
+                    🚪 結束並離開遊戲
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="thank-you-screen" class="hidden text-center space-y-6 max-w-md px-4 py-12 bg-slate-800/50 rounded-3xl border border-slate-700/40 shadow-2xl animate-fade-in">
+        <div class="text-7xl">🐢</div>
+        <h2 class="text-4xl font-extrabold text-emerald-400 tracking-wider">謝謝遊玩！</h2>
+        <p class="text-slate-300 leading-relaxed text-sm">
+            敏銳的直覺與縝密的思維是你最強大的武器。感謝你來到海龜湯推理學院，期待與你在下一個神祕案件中再次相遇！
+        </p>
+        <div class="pt-4">
+            <button onclick="returnToGame()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-3 px-8 rounded-xl transition-all text-sm shadow-md">
+                ↩️ 返回學院首頁
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 10 個經典海龜湯題庫
+        const levels = [
+              {
+                id: 1,
+                title: "著名的酒吧倒水",
+                q: "一名男子走進一家酒吧，向調酒師要了一杯水。調酒師卻突然從櫃檯下掏出一把槍指向他。男子說了聲「謝謝」便轉身離開。請問為什麼？",
+                a: "男子當時正在瘋狂打嗝。調酒師看出這一點，故意拔槍嚇他。男子受到驚嚇後，打嗝成功的好了，於是高興地道謝離開，不需要喝水了。",
+                keywords: "打嗝 嚇 驚嚇 好 好了 不需要 槍",
+                yes: [
+                    "打嗝", "嗝", "嚇", "槍", "驚嚇", "害怕", "好", "不用喝水", "痊癒", "治好",
+                    "止住", "收到驚嚇", "嚇一跳", "嚇到", "拔槍", "掏槍", "舉槍", "不需要水",
+                    "好了", "沒事了", "改善", "解決", "恢復", "生理反應", "恐嚇", "威脅"
+                ],
+                no: [
+                    "搶劫", "生氣", "口渴", "下毒", "仇人", "殺他", "買單", "付錢", "水有毒", "杯子",
+                    "洗杯子", "搶劫犯", "通緝犯", "沒錢", "搭訕", "調酒", "開槍", "子彈", "討債", "黑道",
+                    "開玩笑", "好玩", "惡作劇"
+                ],
+                help_hint: "提示：口渴的人想喝水，但為什麼被槍嚇到反而說謝謝？這跟他的某種「生理反應」被治好有關。"
+            },
+            {
+                id: 2,
+                title: "海邊的海龜湯",
+                q: "有一名男子在海邊的一家餐廳喝了一碗海龜湯。喝完之後，他走出餐廳，隨即跳海自殺了。請問為什麼？",
+                a: "幾年前男子與父親遭遇船難漂流到荒島。朋友做了一碗海龜湯給他喝才活下來，但父親卻去世。今天他在餐廳喝到正宗的海龜湯，發現味道完全不同，他才驚覺當年全盲的自己在島上喝的其實是父親屍體煮成的肉湯，悲痛欲絕下跳海自殺。",
+                keywords: "船難 荒島 父親 屍體 人肉 味道 不同 誤食",
+                yes: [
+                    "船難", "荒島", "父親", "人肉", "屍體", "味道", "不同", "以前吃過", "盲人", "瞎子",
+                    "死人", "爸爸", "肉湯", "吃人", "欺騙", "全盲", "看不見", "真相", "不一樣", "正宗",
+                    "真海龜", "不是海龜", "人肉湯", "悲痛", "內疚", "骨肉", "親人"
+                ],
+                no: [
+                    "難喝", "有毒", "過敏", "海龜報仇", "破產", "餐廳", "太貴", "難吃", "海豚", "海邊",
+                    "風景", "跳海", "淹死", "老闆", "投毒", "神經病", "憂鬱症", "想不開", "不好喝", "腥味"
+                ],
+                help_hint: "提示：多注意他喝湯時發現的『味道差異』。他以前在荒島上眼睛看不見，當時吃到的真的是海龜肉嗎？"
+            },
+            {
+                id: 3,
+                title: "葬禮上的帥哥",
+                q: "姊妹倆去參加母親的葬禮。妹妹在葬禮上遇到了一個非常帥的男子，一見鍾情。回到家後，妹妹隨即把姊姊殺了。請問為什麼？",
+                a: "因為妹妹是個變態殺人狂，她殺了姊姊是為了能再舉辦一次葬禮，這樣她就能在葬禮上再次見到那個心儀的帥哥。",
+                keywords: "再辦葬禮 見到帥哥 再一次 見面 殺人狂 變態",
+                yes: [
+                    "再辦葬禮", "想見帥哥", "再一次", "見到他", "男的會來", "帥哥", "再辦一次", "葬禮上見",
+                    "舉辦葬禮", "死掉", "製造機會", "再死一人", "再辦一場", "喪禮", "見面", "相遇", "連續殺人",
+                    "殺人魔", "反社會", "病態", "重逢", "再次出現"
+                ],
+                no: [
+                    "搶男人", "嫉妒", "爭遺產", "吵架", "姊姊反對", "報仇", "情敵", "暗戀", "看上同一個",
+                    "姐姐交往", "秘密", "告密", "媽媽的遺產", "分贓", "凶手是姐姐", "討厭姐姐", "看姐姐不爽"
+                ],
+                help_hint: "提示：妹妹殺姐姐的動機並不是因為仇恨或感情糾葛，而是為了製造機會，讓某個「特定場合」能再次發生。"
+            },
+            {
+                id: 4,
+                title: "滿地木屑的絕望",
+                q: "一個馬戲團的侏儒在回到自己的房間後，看到滿地的木屑，隨即絕望地自殺了。請問為什麼？",
+                a: "另一個馬戲團的侏儒為了爭奪唯一演出機會，偷偷把他的拐杖和所有家具的木頭腳都鋸短了。侏儒回到家量身高時以為自己突然長高了，不再是侏儒，意味著即將失去唯一的演出工作與謀生手段，絕望之下自殺。",
+                keywords: "長高 鋸短 拐杖 工作 失業 家具 另一個侏儒",
+                yes: [
+                    "長高", "鋸短", "拐杖", "家具", "失業", "工作", "木頭", "另一個侏儒", "馬戲團", "演出",
+                    "身高", "變高", "手杖", "椅子腳", "桌子腳", "鋸掉", "木屑", "不符合", "失去資格", "不能表演",
+                    "被開除", "沒飯吃", "同行", "陷害", "嫉妒", "競爭"
+                ],
+                no: [
+                    "白蟻", "做木工", "意外", "拆房子", "禮物", "瞎了", "眼盲", "木偶", "小木偶", "裝修",
+                    "搬家", "打掃", "長低", "變矮", "棺材", "惡作劇", "好玩", "沒原因"
+                ],
+                help_hint: "提示：滿地的木屑是某種木製品被「鋸短」留下的痕跡。對於矮小的侏儒來說，如果他誤以為自己長高了，他的工作會面臨什麼？"
+            },
+            {
+                id: 5,
+                title: "黑暗隧道的悲劇",
+                q: "一個男子坐火車去鄰城看病，看完病坐火車回程的路上。當火車經過一個隧道時，這個男子隨即跳車自殺了。請問為什麼？",
+                a: "這名男子原本是個盲人，去鄰城動了復明手術成功重見光明。回程時火車突然進入了漆黑的隧道，周圍一片漆黑，男子誤以為手術失敗自己又再度失明了，在巨大的打擊與絕望之下跳車自殺。",
+                keywords: "盲人 復明 手術 隧道 黑暗 以為又瞎了 看不見 失明",
+                yes: [
+                    "盲人", "瞎子", "手術", "復明", "治好", "隧道", "太黑", "以為又瞎了", "看不見", "失明",
+                    "眼睛", "看病", "醫生", "重見光明", "復原", "黑漆漆", "沒有燈", "眼疾", "再度失明", "失敗",
+                    "絕望", "崩潰", "誤會", "以為"
+                ],
+                no: [
+                    "火車事故", "劫匪", "坐錯車", "看錯醫生", "鬼故事", "撞車", "車禍", "跳軌", "臥軌",
+                    "火車壞了", "停電", "被推下去", "謀殺", "憂鬱症", "鬼魂", "幻覺", "絕症", "死刑", "逃跑"
+                ],
+                help_hint: "提示：火車進隧道時車廂會瞬間變黑。對於一個剛動完手術、人生第一次看見光明的人來說，突然的一片漆黑會讓他產生什麼誤會？"
+            },
+
+
+                        {
+                id: 6,
+                title: "暴風雨之夜的慘劇",
+                q: "一個男人在暴風雨的夜晚回到家，關了燈便上床睡覺。第二天早上他起床看報紙，隨即懊悔不已。請問為什麼？",
+                a: "他是個燈塔管理員。昨晚他回到燈塔關掉的不是家裡的燈，而是燈塔的指引大燈。這導致深夜有艘巨型客輪因失去指引而觸礁沉沒，死傷慘重。他看報紙得知此事後，因嚴重失職而深感愧疚。",
+                keywords: "燈塔 管理員 船 沉沒 觸礁 客輪 指引 關燈",
+                yes: [
+                    "燈塔", "管理員", "船", "沉船", "觸礁", "死很多人", "報紙", "指引", "工作", "指引燈",
+                    "大燈", "控制室", "開關", "船隻", "客輪", "撞擊", "礁石", "沉沒", "看新聞", "愧疚",
+                    "害死", "指引失誤", "熄滅", "海上", "導航", "職責", "疏忽", "關錯燈"
+                ],
+                no: [
+                    "省電", "怕黑", "有鬼", "小偷", "吵架", "生病", "欠錢", "破產", "絕症", "鬧鬼",
+                    "停電", "手電筒", "蠟燭", "老婆", "外遇", "被開除", "失業", "看錯字", "中毒", "情殺"
+                ],
+                help_hint: "提示：多注意男主角的「職業」。他關掉的不是普通客廳的電燈，而是一個攸關無數海上船隻安危的巨大光源。"
+            },
+            {
+                id: 7,
+                title: "七樓的秘密",
+                q: "一個男人住在公寓的十樓。他每天出門時都坐電梯直達一樓；但下班回家時，如果電梯裡沒人或沒下雨，他只坐到七樓，然後走樓梯上十樓。請問為什麼？",
+                a: "這個男人身材非常嬌小，身高太矮，手只能夠到電梯的「7」號按鈕。如果電梯裡有人，他可以請別人幫忙按「10」；如果下雨，他可以用隨身攜帶的雨傘去戳「10」號按鈕。",
+                keywords: "矮 身高 夠不到 按鈕 雨傘 幫忙 七樓 十樓",
+                yes: [
+                    "矮", "身高", "太矮", "按鈕", "雨傘", "拿東西", "幫忙", "手不夠長", "按不到",
+                    "矮子", "不夠高", "雨傘戳", "按鍵", "高度", "數字", "別人按", "代勞", "雨傘頂",
+                    "身材", "短小", "夠不著", "工具", "代按", "路人", "碰不到"
+                ],
+                no: [
+                    "運動", "減肥", "七樓有朋友", "鬧鬼", "停電", "電梯壞掉", "省電", "恐高", "害怕",
+                    "七樓開會", "散步", "走錯", "喝醉", "走樓梯", "鍛鍊", "回家", "搬家", "藏東西"
+                ],
+                help_hint: "提示：為什麼「有人在」或「下雨拿著雨傘」時他就能直接回十樓？這跟他的身體特徵以及如何接觸到高處的物品有關。"
+            },
+            {
+                id: 8,
+                title: "窗戶上的微笑",
+                q: "一個獨居的小女孩回到家，看到牆上貼著一張自己昨晚在房間微笑睡覺的照片，她卻當場嚇得哭出來。請問為什麼？",
+                a: "這張照片是從她房間窗戶外面偷拍的。小女孩住在高樓層（例如15樓），窗外根本沒有陽台，這意味著昨晚有人懸空在窗外偷拍她，是一個極度危險的跟蹤者。",
+                keywords: "偷拍 窗外 房間 外面 窗戶 監視 高樓",
+                yes: [
+                    "偷拍", "窗外", "外面", "跟蹤", "拍照", "窗戶", "高樓", "懸空",
+                    "偷窺", "外面拍", "沒有陽台", "跟蹤狂", "玻璃", "陌生人", "外面看", "高樓層",
+                    "吊著", "外面牆壁", "窗子", "洗窗工人", "惡意監視", "針孔"
+                ],
+                no: [
+                    "鬼", "靈異", "照片很醜", "惡作劇", "父母放的", "驚喜", "自拍", "夢遊", "鏡子",
+                    "手機不見", "鬧鬼", "娃娃", "監視器", "投影", "畫作", "禮物", "開玩笑"
+                ],
+                help_hint: "提示：照片的拍攝視角至關重要。小女孩家住得非常高且窗外沒有陽台，那麼拍照的人昨晚到底是在什麼位置拍下這張照片的？"
+            },
+            {
+                id: 9,
+                title: "消失的珠寶",
+                q: "一位富豪在暴風雨後發現書房窗戶破碎，保險箱裡的珠寶消失了。他在草地上發現了一些破碎的綠色玻璃片，於是警察馬上就知道珠寶其實是他自己藏起來的。請問警察如何發現的？",
+                a: "玻璃碎片掉在窗外的草地上。如果真的是外面的人破窗而入，碎片應該會掉在房間室內的地板上。這證明窗戶是從內部打破的，是一場偽造的竊案。",
+                keywords: "室內 室外 玻璃 破碎 碎片 方向 偽造",
+                yes: [
+                    "碎片", "草地", "外面", "方向", "由內向外", "打破", "偽造", "自導自演", "裡面碎",
+                    "位置", "物理", "力學", "破綻", "證據", "掉在哪", "珠寶", "室內地板"
+                ],
+                no: [
+                    "指紋", "腳印", "攝影機", "報警", "天氣", "小三", "僕人", "保險金", "暴雨", "雷擊"
+                ],
+                help_hint: "提示：注意玻璃碎片掉落的位置。通常物體被擊碎時，碎片的飛散方向會跟受力方向一致。"
+            },
+            {
+                id: 10,
+                title: "暴露預謀的旅行社",
+                q: "一對夫妻去國外登山，妻子不幸墜崖身亡。丈夫悲痛地獨自回國。幾天後，警察卻以謀殺罪逮捕了丈夫，因為旅行社提供了關鍵證據。請問證據是什麼？",
+                a: "丈夫在出發前，只幫妻子買了「去程」的單程機票，卻幫自己買了「來回」雙程機票。這證明他早就策劃好要讓妻子在當地消失，是有預謀的犯罪。",
+                keywords: "單程機票 來回機票 機票 預謀 旅行社 買機票 只有一張",
+                yes: [
+                    "機票", "單程", "來回", "回程", "只買一張", "預謀", "旅行社", "買機票", "往返", "一張機票",
+                    "雙程", "去程", "預約", "購票紀錄", "訂票", "沒有回程", "單程票", "來回票", "保險",
+                    "回程機票", "只有去", "沒買回來的", "破綻", "露餡"
+                ],
+                no: [
+                    "保險金", "監視器", "日記", "小三", "毒藥", "凶器", "行車紀錄器", "情書", "照片",
+                    "指紋", "聊天紀錄", "通話紀錄", "GOOGLE搜尋", "導遊看到", "飯店", "行李箱"
+                ],
+                help_hint: "提示：這項證據由「旅行社」提供，意味著跟出國的代辦手續有關。看看兩人在購買往返憑證時，數量上出了什麼致命的破綻？"
+            },
+
+
+                      {
+                id: 11,
+                title: "深夜的盲人與停電",
+                q: "深夜，一個男子正在房間裡看書，突然燈停電熄滅了。但他沒有開燈，也沒有點蠟燭，卻點燃了一根香菸。隨後他看著香菸的火光，突然崩潰大哭。請問為什麼？",
+                a: "這名男子是一位盲人，剛剛動完復明手術。他在深夜看書是因為他終於能看見世界了。突然停電時，他分不清是停電了，還是自己的眼睛再度失明。於是他點燃香菸，當看到香菸前端有紅色的火光時，他知道世界還有光，是停電了，因為過度安心與激動而崩潰大哭。",
+                keywords: "盲人 失明 復明 手術 停電 誤以為 煙火 火光 眼睛 瞎 復原 黑暗",
+                yes: [
+                    "盲人", "失明", "復明", "手術", "停電", "火光", "眼睛", "看見", "以為瞎了", "瞎子",
+                    "復原", "黑漆漆", "沒有燈", "眼疾", "再度失明", "失敗", "絕望", "崩潰", "誤會", "以為",
+                    "重見光明", "抽菸", "煙火", "打火機", "確認", "測試", "光線", "看得到", "安心", "激動"
+                ],
+                no: [
+                    "鬧鬼", "殺手", "火災", "毒氣", "香菸有毒", "打火機", "蠟燭", "遺書", "死刑", "小偷",
+                    "自殺", "有鬼", "幻覺", "看錯字", "中毒", "情殺", "欠錢", "破產", "絕症", "外遇"
+                ],
+                help_hint: "提示：男子在停電前看書，但停電後他點菸「不是為了照明」，而是為了確認『某個跟光線有關的殘酷事實』。想想看，什麼樣的人會對突然的黑暗產生極度的恐懼與疑惑？"
+            },
+            {
+                id: 12,
+                title: "致命的冰塊飲料",
+                q: "一對男女去餐廳用餐，點了兩杯一模一樣的冰鎮紅茶。男子因為很渴，三兩下就把紅茶喝光了；女子則一邊聊天一邊慢慢喝。結果女子當場中毒身亡，男子卻安然無恙。請問這是為什麼？",
+                a: "毒藥其實被下在「冰塊」裡。男子因為喝得太快，冰塊還來不及融化，他就已經把紅茶喝光了，所以沒有吸收到毒素；而女子因為慢慢喝，冰塊完全融化，毒藥釋放到茶水中，導致她中毒身亡。",
+                keywords: "冰塊 融化 喝得快 慢慢喝 毒藥 下毒 飲料 融解",
+                yes: [
+                    "冰塊", "融化", "喝太快", "慢慢喝", "融解", "下毒", "速度", "未融化", "結冰", "融化成水",
+                    "固體", "時間", "喝光", "來不及", "釋放", "茶水", "飲料", "一邊聊天", "喝的速度", "融化了",
+                    "化掉", "冰塊裡", "毒在冰", "還沒融", "溶化", "冰塊還沒化"
+                ],
+                no: [
+                    "杯子", "吸管", "茶葉", "解藥", "體質", "順序", "下在杯底", "服務生", "抗體", "性別",
+                    "體重", "調包", "下毒者", "口渴", "分開下", "加料", "過敏", "沒喝完", "倒掉", "不同杯"
+                ],
+                help_hint: "提示：兩杯紅茶本身都是乾淨無毒的。關鍵在於這杯「冰鎮」飲料隨著「時間流逝」，裡面的某個固體物理型態發生了變化，才把毒素釋放出來。"
+            },
+            {
+                id: 13,
+                title: "雨夜的計程車司機",
+                q: "在一個大雨傾盆的深夜，一個計程車司機開著車。雖然一路上都沒有路燈，車子的車頭燈也壞了，甚至連月光都沒有，但他卻能精準地避開路上所有試圖過馬路的行人。請問他是怎麼辦到的？",
+                a: "因為當時是「白天（正午）」，下大雨雖然天色稍暗，但並不影響白天的視線。題目中提到的「深夜」指的是司機的『工作班制』或是他個人的作息，或者是題目在故意用文字誤導環境。",
+                keywords: "白天 白天大雨 中午 太陽 光線 視線 沒天黑 白天落雨",
+                yes: [
+                    "白天", "中午", "太陽", "光線", "視線", "白天落雨", "沒天黑", "大白天", "早晨", "下午",
+                    "正午", "有日光", "日照", "天亮", "天是亮的", "不是晚上", "作息", "大太陽", "出太陽",
+                    "光亮", "看得很清楚", "視線好", "白天開車", "時間是白天"
+                ],
+                no: [
+                    "夜視鏡", "雷達", "自動駕駛", "鬼魂", "行人穿反光衣", "路熟", "第六感", "紅外線", "車速慢",
+                    "沒人過馬路", "瞎子", "導航", "熟路", "運氣好", "感應器", "貓眼", "路燈", "看得到鬼"
+                ],
+                help_hint: "提示：這是一題標準的文字陷阱。題目說「一路上沒有路燈、沒月光」，在什麼自然情況下，原本就不需要路燈 and 月光，大家也能看得一清二楚？"
+            },
+            {
+                id: 14,
+                title: "沾血的診斷書",
+                q: "一名男子發生嚴重車禍，被緊急送往醫院手術。醫生走進手術室，一看到躺在床上的病人便大驚失色，痛苦地說：「我不能幫他動手術，因為他是我的親生兒子！」但醫生絕對不是這名男子的父親。請問這是為什麼？",
+                a: "因為這位醫生是男子的「母親」。",
+                keywords: "母親 媽媽 女醫生 母子 醫生是女的",
+                yes: [
+                    "母親", "媽媽", "女醫生", "母子", "女性", "女的", "主刀醫生是女的", "生母", "阿母",
+                    "老媽", "親生母親", "醫生是媽媽", "不是男醫生", "女性醫生", "母子關係"
+                ],
+                no: [
+                    "繼父", "養父", "複製人", "繼承人", "前夫", "同性戀爸爸", "岳父", "乾爹", "叔叔", "舅舅",
+                    "同名同姓", "認錯人", "外公", "爺爺", "女婿", "堂哥", "表哥"
+                ],
+                help_hint: "提示：這題考的是人類的思維定勢（刻板印象）。除了「父親」之外，還有誰會稱呼這名男子為「親生兒子」？"
+            },
+
+
+                       {
+                id: 15,
+                title: "開錯門的陌生人",
+                q: "一位女士獨自待在飯店房間裡。此時突然有人敲門，接著門被推開，一個陌生男子走了進來。男子看到女士後愣了一下，連连忙道歉說：「對不起，我以為這是我的房間。」隨後便離開了。但女士隨即反鎖房門，並打電話給櫃檯報警。請問為什麼？",
+                a: "如果陌生男子真的以為這是「他自己的房間」，他絕對會直接拿鑰匙（或房卡）試圖開門，而「不會先敲門」。他先敲門的舉動，證明他是來踩點探路的竊賊，想確認裡面有沒有人住。",
+                keywords: "敲門 偷竊 小偷 房卡 鑰匙 試探 踩點 旅館 竊賊",
+                yes: [
+                    "敲門", "偷竊", "小偷", "試探", "踩點", "竊賊", "確認有人", "探路", "探聽", "房卡",
+                    "鑰匙", "自己的房間", "不會敲門", "直接開門", "直接刷卡", "露餡", "馬腳", "矛盾",
+                    "破綻", "強盜", "有鬼", "不對勁", "做賊心虛", "掩飾", "藉口", "謊言"
+                ],
+                no: [
+                    "走錯房間", "喝醉", "拿刀", "強姦", "眼神兇狠", "衣服沾血", "通緝犯", "變態", "跟蹤狂",
+                    "走錯", "拿錯鑰匙", "開錯門", "喝醉酒", "精神病", "認錯人", "有槍", "恐嚇", "搭訕"
+                ],
+                help_hint: "提示：請站在「回到自己房間」的正常人角度思考。當你回到自己房間門口時，你的第一個動作會是「敲門」嗎？這個男子的多餘動作暴露了他的真實目的。"
+            },
+            {
+                id: 16,
+                title: "報紙上的富豪之死",
+                q: "一位億萬富豪被發現死在自己的豪宅書房內，死因是中毒。桌上放著一疊他每天必讀的當天報紙，以及一杯喝剩的咖啡。警方調查後發現咖啡無毒，但最後判定富豪是死於他殺，且兇手就是他的管家。請問管家是怎麼下毒的？",
+                a: "管家知道富豪看報紙時，有「用手指沾口水來翻頁」的習慣。於是管家將劇毒塗抹在報紙的右上角邊緣。富豪在翻閱報紙時，指尖沾到毒藥並透過口水吞入腹中，中毒身亡。",
+                keywords: "沾口水 口水 翻頁 報紙 塗在報紙 習慣 翻報紙 舔手指",
+                yes: [
+                    "口水", "翻頁", "報紙", "塗在報紙", "習慣", "指尖", "舔", "沾口水", "舔手指", "手指",
+                    "手掌", "手沾", "口入", "吃進去", "吞下去", "吃毒", "右上角", "邊緣", "紙張", "印刷",
+                    "看報紙", "翻報", "小動作", "生理習慣", "下意識", "塗毒", "抹毒"
+                ],
+                no: [
+                    "咖啡", "空氣", "衣服", "眼鏡", "原子筆", "紙張割傷", "慢性毒", "吸入", "皮膚吸收",
+                    "鋼筆", "桌子", "椅子", "茶水", "下毒在杯子", "服務生", "香水", "中毒死", "慢性中毒"
+                ],
+                help_hint: "提示：毒不在咖啡裡，而在報紙上。但毒藥並不是透過皮膚吸收的，而是富豪在閱讀報紙的過程中，做了一個許多老一輩人翻閱紙張時常有的「下意識生理習慣動作」，導致毒素入口。"
+            },
+            {
+                id: 17,
+                title: "救生艇上的無聲慘案",
+                q: "一艘客輪在遠洋遭遇海難沉沒，幾名生還者擠在一艘狹小的救生艇上漂流。幾天後，搜救隊找到了救生艇，發現裡面的人全部都活著，但奇怪的是，所有人竟然都變成了「聾啞人士」（既聽不到也無法說話）。請問在漂流期間發生了什麼事？",
+                a: "救生艇在深夜遭遇了暴風雨，前方出現了恐怖的「海妖（或極度刺耳的暗礁風鳴、或是海嘯巨響）」。為了不被這種會讓人發瘋、精神崩潰的恐怖巨響折磨，或者是為了在極度飢餓恐懼中集體生存，生還者們在某個極端事件中「集體用利器刺聾了自己的雙耳」（或被雷擊巨響震聾），導致他們無法再聽到與說話。",
+                keywords: "巨響 刺聾 震聾 聲音 暴風雨 聾了 耳朵 聽不見",
+                yes: [
+                    "巨響", "刺聾", "震聾", "聲音", "海妖", "刺破耳膜", "噪音", "刺耳", "耳聾", "聽不見",
+                    "戳瞎", "戳聾", "雷擊", "雷聲", "爆炸聲", "巨大聲響", "聽覺", "耳朵", "發瘋", "精神崩潰",
+                    "受不了", "集體", "自己弄聾", "利器", "震碎", "鼓膜", "海嘯"
+                ],
+                no: [
+                    "傳染病", "毒魚", "海水", "互相殘殺", "裝死", "被割舌頭", "詛咒", "生病", "沒水喝",
+                    "食物中毒", "啞巴", "割掉", "毒氣", "外星人", "海怪吃掉", "詛咒死", "說謊"
+                ],
+                help_hint: "提示：他們不是天生聾啞，而是「主動或被動地在短時間內喪失了聽覺」。在絕望的海上，出現了某種單純靠耳朵聽就會讓人精神崩潰、甚至想跳海自殺的『致命聲音』..."
+            },
+            {
+                id: 18,
+                title: "半路停駛的電梯",
+                q: "一名男子住在 20 樓。他每天早上下樓上班時，都會直接搭電梯到 1 樓。但傍晚下班回家時，如果電梯裡沒有其他人，或是當天沒有下雨，他搭電梯時一律只按到 10 樓，再自己走 10 層樓梯回 20 樓的家。請問這是為什麼？",
+                a: "這名男子患有「侏儒症」（身高極矮）。他每天出門上班按 1 樓（最下方的按鈕）沒問題；但回家時因為身高不夠，最高只能按到 10 樓的按鈕。如果電梯有別人，他可以請人幫忙按 20 樓；如果下雨，他可以用隨身攜帶的「雨傘」去戳 20 樓的按鈕。",
+                keywords: "侏儒 矮 身高 矮子 按不到 按鈕 雨傘 別人 幫忙",
+                yes: [
+                    "侏儒", "身高", "矮", "按不到", "按鈕", "雨傘", "雨傘戳", "矮子", "不夠高", "手太短",
+                    "碰不到", "數字", "按鍵", "高度", "別人按", "代勞", "路人", "幫忙", "工具",
+                    "雨傘頂", "一樓在下面", "十樓在中間", "二十樓太高", "夠不著"
+                ],
+                no: [
+                    "減肥", "運動", "鬼魂", "電梯壞了", "十樓有朋友", "省電", "恐高", "鍛鍊", "回家",
+                    "散步", "走錯", "喝醉", "停電", "小偷", "看風景", "害怕", "卡住", "惡作劇"
+                ],
+                help_hint: "提示：請注意「沒有別人」和「沒下雨」這兩個條件。別人的存在可以幫他做一件事，而下雨天攜帶的『某樣長條形隨身物品』也可以代替別人幫他做到這件事。這跟他的特殊『身體特徵』有關。"
+            },
+
+
+                       {
+                id: 19,
+                title: "死亡直播的背景音",
+                q: "一名獨居的知名女網紅在自家公寓進行深夜吃播。直播到一半時，她突然對著鏡頭外的廚房喊了一句：「老公，幫我拿一下衛生紙。」隨後直播突然中斷。隔天警方在廚房發現了她的屍體。警方在沒有任何目擊者的情況下，第一時間就鎖定了兇手是她隔壁棟的瘋狂男粉絲，請問警方是怎麼推出來的？",
+                a: "因為女網紅是「獨居（根本沒有老公）」。她突然對著空無一人的廚房喊「老公」，是因為她透過客廳的鏡子或直覺，發現有變態潛入家裡並躲在廚房。她故意喊這句話是為了嚇退歹徒，或是向直播觀眾發出『求救暗號』，這證明當時廚房確實藏了人。",
+                keywords: "獨居 求救 暗號 嚇退 沒有老公 發現有人 潛入 藏在廚房",
+                yes: [
+                    "獨居", "求救", "暗號", "嚇退", "沒有老公", "發現有人", "藏在廚房", "單身", "沒有結婚",
+                    "一個人住", "空無一人", "藏人", "躲在裡面", "潛入", "入侵", "求救訊號", "鏡子反射",
+                    "警覺", "故意叫", "防衛", "虛張聲勢", "嚇走", "暗示", "有人躲", "歹徒", "變態"
+                ],
+                no: [
+                    "手機定位", "遺留指紋", "發票", "監視器", "鄰居看到", "按讚留言", "錄音", "看到臉",
+                    "腳印", "血跡", "開玩笑", "真正的老公", "演戲", "劇本", "打電話", "私訊", "監視器畫面"
+                ],
+                help_hint: "提示：這位網紅的公開資料顯示她一直是「單身且獨居」。在這種情況下，她突然對著廚房叫「老公」，絕對不是開玩笑，而是她發現了某個令人毛骨悚然的突發狀況，試圖用這句話保護自己..."
+            },
+            {
+                id: 20,
+                title: "不該出現的完美倒計時",
+                q: "一棟商業大樓發生了慘烈的定時炸彈爆炸案，死傷慘重。警方在調查廢墟時，找到了一個已經被炸毀、表面焦黑的電子時鐘。鑑識人員大喜過望，對長官說：「長官，兇手露出了致命馬腳，我們抓到他了！」請問這個時鐘藏了什麼破綻？",
+                a: "普通的電子時鐘在遭遇猛烈爆炸時，內部的晶片 and 電源會瞬間被摧毀，時鐘畫面應該會瞬間漆黑或停留在爆炸的那一刻。然而，這個時鐘的表面卻完美地融化並「定格在 00:00（倒計時結束）」，這證明它根本不是用來報時的時鐘，而是「炸彈本身的定時引爆器」，只有兇手會把它帶進來。",
+                keywords: "定時器 引爆器 零點 倒計時 炸彈 00:00 融化 定格",
+                yes: [
+                    "定時器", "引爆器", "零點", "倒計時", "炸彈", "00:00", "定格", "倒數", "歸零",
+                    "炸彈本身", "引爆", "不是時鐘", "破綻", "馬腳", "反常", "剛好歸零", "計時器", "爆炸時間",
+                    "摧毀", "停在零", "時間不對", "完美定格", "兇手的物品", "倒數結束"
+                ],
+                no: [
+                    "指紋", "指針", "購買紀錄", "發票", "鬧鐘響", "電池", "錄音", "齒輪", "遺留物",
+                    "指紋殘留", "保險箱", "發票收據", "監視器拍到", "時間走慢", "停電", "手錶"
+                ],
+                help_hint: "提示：一個正常的時鐘在被炸飛的「瞬間」，時間顯示應該是隨機的（例如爆炸發生在下午 3:14，時鐘就會壞在 3:14）。什麼情況下，一個時鐘會極其反常地剛好壞在「零點零分（倒數結束）」？"
+            }
+
+        ];
+
+        let currentLevelId = 1;
+        let solvedLevels = JSON.parse(localStorage.getItem('soup_solved_animated')) || [];
+
+        const cleanStr = str => str.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()？。，！：\s]/g, "");
+
+        // Levenshtein 核心計算 (僅在後台用來嚴格比對是否完全破解)
+        function getSimilarity(s1, s2, keywordsStr) {
+            const strA = cleanStr(s1);
+            const strB = cleanStr(s2);
+            if (strA.length === 0 || strB.length === 0) return 0;
+            
+            const track = Array(strB.length + 1).fill(null).map(() => Array(strA.length + 1).fill(null));
+            for (let i = 0; i <= strA.length; i += 1) track[0][i] = i;
+            for (let j = 0; j <= strB.length; j += 1) track[j][0] = j;
+            
+            for (let j = 1; j <= strB.length; j += 1) {
+                for (let i = 1; i <= strA.length; i += 1) {
+                    const indicator = strA[i - 1] === strB[j - 1] ? 0 : 1;
+                    track[j][i] = Math.min(
+                        track[j - 1][i] + 1, 
+                        track[j][i - 1] + 1, 
+                        track[j - 1][i - 1] + indicator 
+                    );
+                }
+            }
+            
+            const distance = track[strB.length][strA.length];
+            const maxLen = Math.max(strA.length, strB.length);
+            let baseScore = (maxLen - distance) / maxLen;
+
+            if (keywordsStr) {
+                const keywords = keywordsStr.split(" ");
+                let matchCount = 0;
+                keywords.forEach(kw => {
+                    if (strA.includes(cleanStr(kw))) matchCount++;
+                });
+                const keywordBonus = (matchCount / keywords.length) * 0.25; 
+                baseScore += keywordBonus;
+            }
+            return Math.min(Math.round(baseScore * 100), 100);
+        }
+
+        // 渲染選單 (全自由切換)
+        function renderLevelList() {
+            const listContainer = document.getElementById('level-list');
+            listContainer.innerHTML = '';
+
+            levels.forEach(level => {
+                const isSolved = solvedLevels.includes(level.id);
+                const isActive = currentLevelId === level.id;
+                
+                const btn = document.createElement('button');
+                let styleClass = isActive 
+                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 font-bold shadow-inner' 
+                    : 'bg-slate-800 hover:bg-slate-700/80 text-slate-300 border-slate-700';
+
+                btn.className = `w-full text-left p-3 rounded-xl flex items-center justify-between font-medium transition-all text-sm border-2 ${styleClass}`;
+                btn.onclick = () => loadLevel(level.id);
+
+                let icon = isSolved ? '✅' : '📖';
+                btn.innerHTML = `<span>${icon} 關卡 ${level.id} - ${level.title}</span>`;
+                
+                listContainer.appendChild(btn);
+            });
+        }
+
+        // 載入指定關卡
+        function loadLevel(id) {
+            currentLevelId = id;
+            const level = levels.find(l => l.id === id);
+            
+            document.getElementById('level-badge').innerText = `關卡 ${level.id}`;
+            document.getElementById('question-text').innerText = level.q;
+            document.getElementById('answer-text').innerText = level.a;
+            
+            if (solvedLevels.includes(id)) {
+                document.getElementById('card-container').classList.add('flipped');
+            } else {
+                document.getElementById('card-container').classList.remove('flipped');
+            }
+            
+            document.getElementById('user-input').value = '';
+            document.getElementById('feedback-msg').classList.add('hidden');
+
+            renderLevelList();
+        }
+
+        // 審查答案與觸發動畫彈窗
+        function checkAnswer() {
+            const input = document.getElementById('user-input').value;
+            const feedback = document.getElementById('feedback-msg');
+            const level = levels.find(l => l.id === currentLevelId);
+
+            if (!input.trim()) {
+                feedback.innerText = "⚠️ 請輸入你想詢問湯主的問題，或者輸入核心推理！";
+                feedback.className = "text-sm p-3 rounded-lg text-center font-medium bg-red-500/20 text-red-400 block";
+                return;
+            }
+
+            const cleanInput = cleanStr(input);
+            const score = getSimilarity(input, level.a, level.keywords);
+
+            // 🌟 【答對破案分支】：觸發卡片翻牌與彈出式動畫視窗
+            if (score >= 70) {
+                document.getElementById('card-container').classList.add('flipped');
+                feedback.innerHTML = `🔴 <strong>湯主回答：【是！】</strong><br><span class="text-sm">恭喜破案！完整真相已在上方翻牌揭曉。</span>`;
+                feedback.className = "text-sm p-4 rounded-xl text-left font-medium bg-emerald-500/20 text-emerald-300 block border-2 border-emerald-500/40 shadow-lg";
+                
+                if (!solvedLevels.includes(currentLevelId)) {
+                    solvedLevels.push(currentLevelId);
+                    localStorage.setItem('soup_solved_animated', JSON.stringify(solvedLevels));
+                    renderLevelList();
+                }
+
+                // 觸發彈窗與動畫效果
+                triggerSuccessModal();
+                return;
+            }
+
+            // 智慧型提問提示系統
+            const matchedYesKeyword = level.yes.find(kw => cleanInput.includes(cleanStr(kw)));
+            const matchedNoKeyword = level.no.find(kw => cleanInput.includes(cleanStr(kw)));
+
+            if (matchedYesKeyword) {
+                feedback.innerHTML = `🟢 湯主回答：<strong>【是】</strong><br>
+                <span class="text-xs text-slate-300 font-normal mt-2 block bg-slate-900/60 p-2 rounded border border-emerald-500/20">
+                     💡 <strong>湯主提示</strong>：沒錯，方向完全正確！這件事情跟<strong>「${matchedYesKeyword}」</strong>有著非常緊密的聯結，請沿著這個線索深入延伸！
+                </span>`;
+                feedback.className = "text-sm p-4 rounded-xl text-left font-medium bg-emerald-950/40 text-emerald-400 block border border-emerald-500/30";
+            } else if (matchedNoKeyword) {
+                feedback.innerHTML = `🟡 湯主回答：<strong>【不是】</strong><br>
+                <span class="text-xs text-slate-300 font-normal mt-2 block bg-slate-900/60 p-2 rounded border border-amber-500/20">
+                     💡 <strong>湯主提示</strong>：不對喔，這件事情跟<strong>「${matchedNoKeyword}」</strong>沒有任何關係。請清空這個假設，換個角度思考。
+                </span>`;
+                feedback.className = "text-sm p-4 rounded-xl text-left font-medium bg-amber-950/40 text-amber-400 block border border-amber-500/30";
+            } else {
+                feedback.innerHTML = `⚪ 湯主回答：<strong>【無關】</strong><br>
+                <span class="text-xs text-slate-300 font-normal mt-2 block bg-slate-900/60 p-2 rounded border border-slate-700">
+                     💡 <strong>破案引導</strong>：這個細節對真相並不重要。別灰心，${level.help_hint}
+                </span>`;
+                feedback.className = "text-sm p-4 rounded-xl text-left font-medium bg-slate-800 text-slate-400 block border border-slate-700";
+            }
+        }
+
+        // 顯示慶祝彈窗動畫
+        function triggerSuccessModal() {
+            const modal = document.getElementById('success-modal');
+            const nextBtn = document.getElementById('modal-next-btn');
+            
+            // 如果是最後一關，動態調整按鈕提示
+            if (currentLevelId === levels.length) {
+                nextBtn.innerText = "🔄 重新挑戰第 1 關";
+            } else {
+                nextBtn.innerText = "➡️ 前往下一關卡";
+            }
+
+            modal.classList.remove('hidden');
+            // 延遲加上不透明度與縮放，確保 CSS 產生順暢的動畫過渡
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div').classList.remove('scale-90');
+            }, 50);
+        }
+
+        // 關閉慶祝彈窗
+        function closeSuccessModal() {
+            const modal = document.getElementById('success-modal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // 選擇：下一關
+        function handleModalNext() {
+            closeSuccessModal();
+            if (currentLevelId === levels.length) {
+                loadLevel(1);
+            } else {
+                loadLevel(currentLevelId + 1);
+            }
+        }
+
+        // 選擇：離開
+        function handleModalLeave() {
+            closeSuccessModal();
+            // 自動隱藏主遊戲畫面，呈現致謝場景
+            document.getElementById('game-main-wrapper').classList.add('hidden');
+            document.getElementById('thank-you-screen').classList.remove('hidden');
+        }
+
+        // 從謝謝遊玩畫面重返遊戲
+        function returnToGame() {
+            document.getElementById('thank-you-screen').classList.add('hidden');
+            document.getElementById('game-main-wrapper').classList.remove('hidden');
+            loadLevel(currentLevelId);
+        }
+
+        // 重置功能
+        function resetGame() {
+            if(confirm("確定要清除所有關卡的過關紀錄嗎？")) {
+                localStorage.removeItem('soup_solved_animated');
+                solvedLevels = [];
+                loadLevel(1);
+            }
+        }
+
+        window.onload = () => {
+            renderLevelList();
+            loadLevel(currentLevelId);
+        };
+    </script>
+</body>
+</html>

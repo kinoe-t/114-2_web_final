@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深海共鳴 — 尋找你的 MBTI 靈魂靈感音樂</title>
+    <style>
+        :root {
+            --primary-blue: #0a192f;
+            --accent-cyan: #64ffda;
+            --text-light: #e6f1ff;
+            --glass-bg: rgba(10, 25, 47, 0.7);
+            --glass-border: rgba(100, 255, 218, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(180deg, #020c1b 0%, #0a192f 50%, #050510 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 真實水底波光效果 */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% -20%, rgba(100, 255, 218, 0.15) 0%, transparent 60%),
+                        radial-gradient(circle at 20% 40%, rgba(23, 42, 69, 0.4) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 水光波動動畫紋理 */
+        .water-caustic {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 45%, rgba(100, 255, 218, 0.03) 50%, transparent 55%);
+            background-size: 200% 200%;
+            animation: waterMove 8s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes waterMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 90%;
+            max-width: 650px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px 30px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            z-index: 1;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #fff;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(100, 255, 218, 0.5);
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #8892b0;
+            margin-bottom: 30px;
+        }
+
+        /* 進度條 */
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-bottom: 40px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #64ffda, #00b4d8);
+            box-shadow: 0 0 10px rgba(100, 255, 218, 0.8);
+            transition: width 0.4s ease;
+        }
+
+        /* 題目區域 */
+        .quiz-card {
+            display: none;
+            animation: fadeIn 0.6s ease;
+        }
+
+        .quiz-card.active {
+            display: block;
+        }
+
+        .question-text {
+            font-size: 1.15rem;
+            line-height: 1.6;
+            margin-bottom: 35px;
+            color: #f1f5f9;
+            text-align: justify;
+        }
+
+        /* 按鈕樣式 */
+        .options-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn-option {
+            background: rgba(23, 42, 69, 0.7);
+            border: 1px solid rgba(100, 255, 218, 0.3);
+            padding: 16px 20px;
+            border-radius: 12px;
+            color: var(--text-light);
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.25s ease;
+        }
+
+        .btn-option:hover {
+            background: rgba(100, 255, 218, 0.15);
+            border-color: var(--accent-cyan);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(100, 255, 218, 0.1);
+        }
+
+        /* 結果畫面優化 */
+        .result-view {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .mbti-badge {
+            display: inline-block;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--accent-cyan);
+            letter-spacing: 4px;
+            margin-bottom: 5px;
+            text-shadow: 0 0 20px rgba(100, 255, 218, 0.6);
+        }
+
+        .artist-name {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            margin-bottom: 25px;
+        }
+
+        .album-wrapper {
+            position: relative;
+            width: 240px;
+            height: 240px;
+            margin: 0 auto 25px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .album-cover {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .song-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .advice-box {
+            background: rgba(2, 12, 27, 0.6);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: left;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+            margin-bottom: 30px;
+            border-left: 4px solid var(--accent-cyan);
+        }
+
+        /* 海洋質感 YouTube 按鈕 */
+        .btn-yt {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #0077b6 0%, #00b4d8 100%);
+            color: #fff;
+            padding: 14px 30px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 4px 20px rgba(0, 180, 216, 0.4);
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-yt:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 180, 216, 0.6);
+            background: linear-gradient(135deg, #0096c7 0%, #48cae4 100%);
+        }
+
+        .btn-restart {
+            margin-top: 20px;
+            background: transparent;
+            border: none;
+            color: #8892b0;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .btn-restart:hover {
+            color: var(--accent-cyan);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="water-caustic"></div>
+
+    <div class="container" id="main-card">
+        <!-- 測驗進行介面 -->
+        <div id="quiz-view">
+            <h1>深海共鳴</h1>
+            <div class="subtitle">聆聽潛意識的水流，找到屬於你的人格音樂</div>
+            
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress"></div>
+            </div>
+
+            <div id="questions-container"></div>
+        </div>
+
+        <!-- 結果顯示介面 -->
+        <div id="result-view" class="result-view">
+            <div class="subtitle">深海為你撈起的靈魂旋律</div>
+            <div class="mbti-badge" id="res-mbti">ENTP</div>
+            <div class="artist-name" id="res-artist">代表歌手：SZA</div>
+            
+            <div class="album-wrapper">
+                <!-- 預設高品質非版權替代圖，由 JavaScript 動態更新 -->
+                <img id="res-img" src="" alt="音樂封面" class="album-cover">
+            </div>
+
+            <div class="song-title" id="res-song">最適合的歌：《Open Arms》</div>
+            <div class="advice-box" id="res-advice"></div>
+
+            <a href="#" target="_blank" class="btn-yt" id="res-yt">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                潛入音樂海洋串流
+            </a>
+            <br>
+            <button class="btn-restart" onclick="location.reload()">重新測驗 🌊</button>
+        </div>
+    </div>
+
+    <script>
+        // 原始 8 個題目數據及MBTI傾向對應
+        // weight定義：[維度代號, 同意時的分數, 不同意時的分數]
+        const baseQuestions = [
+            { text: "相較於有理有據的事實性理論，那些情真意切、能讓你感同身受的話更打動你。", axis: "TF", agree: "F", disagree: "T" },
+            { text: "你一想到要去拓展人脈，或是在陌生人前展示自我、推銷自己，便會心生怯意，對這種事望而卻步。", axis: "EI", agree: "I", disagree: "E" },
+            { text: "你熱衷於借助日程規劃和任務清單等組織整理工具。", axis: "JP", agree: "J", disagree: "P" },
+            { text: "你對於有關創意作品多元解讀的探討缺乏興致。", axis: "SN", agree: "S", disagree: "N" },
+            { text: "在抉擇行事之道時，你秉持就事論事、實事求是的態度，你優先考慮事實而不是人們的感受。", axis: "TF", agree: "T", disagree: "F" },
+            { text: "你樂於探索那些新奇且未經檢驗的方法，另闢蹊徑。", axis: "SN", agree: "N", disagree: "S" },
+            { text: "你時常心事重重，擔心事情會朝著更糟糕的方向發展。", axis: "JP", agree: "J", disagree: "P" }, // 輔助映射：焦慮常伴隨高度謹慎與預期規劃(J)
+            { text: "與喧囂的集體活動相比，你對那些能讓自己寧靜致遠的獨自愛好或活動情有獨鍾。", axis: "EI", agree: "I", disagree: "E" }
+        ];
+
+        // 16種 MBTI 歌手、歌曲、圖片與深海建議資料庫
+        const musicDatabase = {
+            "ENTJ": { artist: "Taeyeon (太妍)", song: "《INVU》", yt: "https://www.youtube.com/watch?v=IUoi85mRAO8", img: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=400", advice: "富有遠見且掌控力極強的你，就像海中的領航鯨。太妍冷冽而充滿力量的《INVU》最能共鳴你對完美的追求與強大的精神內核。建議你在高強度衝刺後，給自己留出一片無人的海域靜音休憩。" },
+            "ENFJ": { artist: "SZA", song: "《Open Arms》", yt: "https://www.youtube.com/watch?v=2nfUvSss_0s", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=400", advice: "你是天生的療癒大師，溫暖如熱帶洋流。SZA 的《Open Arms》用極致的包容感與情感流動完美貼合你的靈魂。你總是無條件支持他人，深海的建議是：記得也要張開雙臂，擁抱那個偶爾感到疲憊的自己。" },
+            "ENTP": { artist: "NewJeans", song: "《OMG》", yt: "https://www.youtube.com/watch?v=sVTy_wmn5SU", img: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=400", advice: "你思維跳躍、不拘一格，是熱愛打破常規的深海翻車魚，永遠充滿好奇心。NewJeans 靈動、充滿復古新鮮感的 Y2K 流行樂最對你的胃口。建議在瘋狂產出新點子的同時，偶爾沉澱到海底，聽聽內心沉靜的聲音。" },
+            "ENFP": { artist: "BABYMONSTER", song: "《SHEESH》", yt: "https://www.youtube.com/watch?v=2wA_b64IInU", img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400", advice: "你就像海面跳躍的飛魚，充滿無限的熱情與戲劇張力！BABYMONSTER 爆發力十足、充滿色彩與活力的曲風能瞬間點燃你的多普胺。建議在追逐無數璀璨浪花的同時，找一個錨點讓自己安心著陸。" },
+            "ESTJ": { artist: "hearts2hearts", song: "《Stuck On You》", yt: "https://www.youtube.com/watch?v=Kz6EwX1Xg7M", img: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?q=80&w=400", advice: "你是極具秩序感與責任心的定海神針。渴望高效與踏實的你，適合結構清晰且節奏明快的歐美獨立流行。放手讓緊繃的日程表隨波逐流一下吧，有些美麗的風景往往出現在計畫之外。" },
+            "ESFJ": { artist: "Justin Bieber", song: "《Ghost》", yt: "https://www.youtube.com/watch?v=F5tSoaJ93ac", img: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=400", advice: "你是充滿愛與連結的珊瑚礁，默默守護身邊的每一個人。小賈斯汀《Ghost》中那種真摯、關懷的流行旋律最能觸動你的心。深海的叮嚀：不要總是為了配合別人的節奏而打亂了自己的呼吸頻率。" },
+            "ESTP": { artist: "Olivia Dean", song: "《Dive》", yt: "https://www.youtube.com/watch?v=7M7Vv2KzY60", img: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=400", advice: "你是不畏風浪、活在當下的衝浪者。Olivia Dean 充滿律動與自由感、不加修飾的靈魂流行樂簡直就是你的寫照！《Dive》正邀請你大膽躍入生活。保持這份勇敢，但也別忘了水下也有需要細心觀察的暗流。" },
+            "ESFP": { artist: "Taylor Swift", song: "《Cruel Summer》", yt: "https://www.youtube.com/watch?v=ic8j13UFlI8", img: "https://images.unsplash.com/photo-1506157786151-b8491531f063?q=80&w=400", advice: "你就是那道照亮海面的盛夏陽光！泰勒絲的浪漫、盛大且極具情緒渲染力的神曲《Cruel Summer》與你百分百契合。生活就是你的舞台，盡情閃耀吧！但當潮退時，請記得享受寧靜帶給你的另一種滋養。" },
+            "INTJ": { artist: "Gracie Abrams", song: "《Close To You》", yt: "https://www.youtube.com/watch?v=8p_hL9M86U0", img: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=400", advice: "你是深海中最冷靜的觀察者，靈魂深邃且具備強大的戰略思維。Gracie Abrams 細緻、略帶疏離感卻極具內省層次的獨立流行樂最適合陪你思考。在高度理性的世界裡，偶爾允許感性在深海中沉溺一下吧。" },
+            "INFJ": { artist: "IU (李知恩)", song: "《Love wins all》", yt: "https://www.youtube.com/watch?v=CHf9n8u0AnA", img: "https://images.unsplash.com/photo-1487180142328-054b783fc471?q=80&w=400", advice: "你擁有深不見底的溫柔與精神世界，是神祕的深海發光生物。IU 充滿人文關懷、意境深遠的《Love wins all》能完全包裹住你的孤獨。別害怕向世界展現你的脆弱，你的共情力能融化任何冰山。" },
+            "INTP": { artist: "Tate McRae", song: "《greedy》", yt: "https://www.youtube.com/watch?v=TdrL3QxjyVw", img: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=400", advice: "你的大腦是一場永不停歇的風暴，習慣在冷靜的外表下解析世界。Tate McRae 帶有強烈節奏感、機智且略帶挑釁意味的現代流行曲風能刺激你的思考神經。放輕鬆，不是所有的事情都需要一個邏輯完美的超鏈接。" },
+            "INFP": { artist: "Olivia Rodrigo", song: "《deja vu》", yt: "https://www.youtube.com/watch?v=cii6ruuycQA", img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=400", advice: "你是無可救藥的浪漫主義者，靈魂隨著內在的情感潮汐起伏。Olivia Rodrigo 充滿細膩情感敘事與少女心碎美學的音樂完全是你的精神避風港。留在你豐富的內心世界很美好，但也別忘了偶爾游上海面曬曬太陽。" },
+            "ISTJ": { artist: "Daniel Caesar", song: "《Best Part》", yt: "https://www.youtube.com/watch?v=uQFVqltOXRg", img: "https://images.unsplash.com/photo-1446057032654-9d8885b76c2a?q=80&w=400", advice: "你是最可靠的洋流，安靜、穩健、始終如一。Daniel Caesar 經典、結構完美且經得起時間考驗的節奏藍調（R&B）最能撫平你的疲憊。你承載了太多責任，不妨在旋律中卸下防備，享受片刻的無重力漂浮。" },
+            "ISFJ": { artist: "Madison Beer", song: "《Reckless》", yt: "https://www.youtube.com/watch?v=J737g632wBY", img: "https://images.unsplash.com/photo-1453090927415-5f45085b65c0?q=80&w=400", advice: "你如同深夜溫和包容的海風，內斂卻充滿守護的力量。Madison Beer 聲音中那種細緻優雅、略帶憂傷卻無比堅韌的流行抒情最懂你的善解人意。請多留一點愛給自己，你不需要成為所有人的避風港。" },
+            "ISTP": { artist: "Billie Eilish", song: "《CHIHIRO》", yt: "https://www.youtube.com/watch?v=BY_X0Wk_ms4", img: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=400", advice: "你酷感十足，熱愛自由，是深海中的獨行鯊魚。怪奇比莉（Billie Eilish）低沉、極具實驗性且特立獨行的《CHIHIRO》與你那冷靜、不隨波逐流的靈魂完美契合。你不需要迎合任何人的審美，繼續酷下去就好。" },
+            "ISFP": { artist: "Ariana Grande", song: "《we can't be friends》", yt: "https://www.youtube.com/watch?v=KNtJGQkC-WI", img: "https://images.unsplash.com/photo-1509114397022-ed747cca3f65?q=80&w=400", advice: "你是沉浸在斑斕色彩中的藝術家。亞莉安娜（Ariana Grande）充滿美感流動、情感細膩如絲的流行音樂，最能捕捉你內心敏銳的藝術觸覺。讓情感隨著歌聲流淌，你創造的美就是治癒世界最好的解藥。" }
+        };
+
+        let currentQuestionIndex = 0;
+        let shuffledQuestions = [];
+        // 計分板
+        let scores = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+
+        // 陣列隨機排序 (Fisher-Yates 洗牌演算法)
+        function shuffleArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // 初始化測驗
+        function initQuiz() {
+            shuffledQuestions = shuffleArray(baseQuestions);
+            currentQuestionIndex = 0;
+            scores = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+            
+            const container = document.getElementById("questions-container");
+            container.innerHTML = "";
+
+            shuffledQuestions.forEach((q, index) => {
+                const card = document.createElement("div");
+                card.className = `quiz-card ${index === 0 ? 'active' : ''}`;
+                card.id = `q-${index}`;
+
+                card.innerHTML = `
+                    <div class="question-text">${q.text}</div>
+                    <div class="options-group">
+                        <button class="btn-option" onclick="handleAnswer('${q.axis}', '${q.agree}')">同意，這很符合我</button>
+                        <button class="btn-option" onclick="handleAnswer('${q.axis}', '${q.disagree}')">反對，這不像我的作風</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            updateProgressBar();
+        }
+
+        // 更新進度條
+        function updateProgressBar() {
+            const progressPercent = (currentQuestionIndex / shuffledQuestions.length) * 100;
+            document.getElementById("progress").style.width = `${progressPercent}%`;
+        }
+
+        // 處理點擊答案
+        function handleAnswer(axis, mbtiTrait) {
+            // 累加分數
+            scores[mbtiTrait]++;
+
+            // 切換下一題
+            const currentCard = document.getElementById(`q-${currentQuestionIndex}`);
+            currentCard.classList.remove('active');
+
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                updateProgressBar();
+                const nextCard = document.getElementById(`q-${currentQuestionIndex}`);
+                nextCard.classList.add('active');
+            } else {
+                document.getElementById("progress").style.width = `100%`;
+                setTimeout(showResult, 400); // 絲滑流暢過渡
+            }
+        }
+
+        // 計算並顯示結果
+        function showResult() {
+            // 判斷最終 MBTI 代碼
+            const mbti = 
+                (scores.E >= scores.I ? "E" : "I") +
+                (scores.N >= scores.S ? "N" : "S") +
+                (scores.T >= scores.F ? "T" : "F") +
+                (scores.JSON = scores.J >= scores.P ? "J" : "P");
+
+            const resultData = musicDatabase[mbti];
+
+            // 隱藏問題畫面，顯示結果畫面
+            document.getElementById("quiz-view").style.display = "none";
+            const resultView = document.getElementById("result-view");
+            resultView.style.display = "block";
+
+            // 渲染資料
+            document.getElementById("res-mbti").innerText = mbti;
+            document.getElementById("res-artist").innerText = `音樂靈魂：${resultData.artist}`;
+            document.getElementById("res-song").innerText = `命中旋律：${resultData.song}`;
+            document.getElementById("res-advice").innerText = resultData.advice;
+            
+            const ytBtn = document.getElementById("res-yt");
+            ytBtn.href = resultData.yt;
+            
+            // 設置圖片
+            document.getElementById("res-img").src = resultData.img;
+        }
+
+        // 啟動
+        window.onload = initQuiz;
+    </script>
+</body>
+</html>

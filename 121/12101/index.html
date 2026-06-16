@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雄女週邊餐點選擇器</title>
+    <style>
+        :root {
+            --primary-blue: #3a86c8; /* 淺藍主色調 */
+            --secondary-blue: #e8f4fd; /* 輕盈背景藍 */
+            --dark: #2c3e50;
+            --white: #ffffff;
+            --gray-light: #f8fbfd;
+            --border-color: #d0e3f5;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft JhengHei", sans-serif;
+            background-color: var(--secondary-blue);
+            color: var(--dark);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: var(--white);
+            max-width: 600px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(58, 134, 200, 0.1);
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: var(--primary-blue);
+            text-align: center;
+            font-size: 1.8rem;
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+
+        .filter-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .filter-box {
+            background: var(--gray-light);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--primary-blue);
+            font-size: 0.95rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            font-size: 0.95rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            border-color: var(--primary-blue);
+        }
+
+        .btn {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(58, 134, 200, 0.25);
+        }
+
+        .btn:hover {
+            background-color: #2a6ca5;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            background-color: #ccc;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* 結果卡片樣式 */
+        #result-card {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 12px;
+            background: #fbfdff;
+            border: 2px solid var(--primary-blue);
+            display: none;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .restaurant-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--secondary-blue);
+            padding-bottom: 8px;
+            text-align: center;
+        }
+
+        .info-row {
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .info-label {
+            font-weight: bold;
+            min-width: 85px;
+            color: #555;
+        }
+
+        .info-value {
+            color: #111;
+        }
+
+        /* 菜單區塊 */
+        .menu-box {
+            margin-top: 15px;
+            background: #e1edf5;
+            border-left: 4px solid var(--primary-blue);
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            text-align: left;
+        }
+
+        .menu-title {
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .menu-list {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>今天吃什麼？</h1>
+    <div class="subtitle">以雄女為基準 · 捷運輕軌一站內美食篩選</div>
+
+    <div class="filter-group">
+        <div class="filter-box">
+            <label for="price-filter">💰 預算上限</label>
+            <select id="price-filter" onchange="resetDisplay()">
+                <option value="100">100 元以下 (銅板小吃)</option>
+                <option value="200">200 元以下 (平價飽足/簡餐)</option>
+                <option value="400">400 元以下 (精緻聚餐/輕奢)</option>
+                <option value="600">600 元以下 (高檔餐廳/燒烤)</option>
+                <option value="999">不限金額</option>
+            </select>
+        </div>
+        
+        <div class="filter-box">
+            <label for="distance-filter">🏃 距離限制 (雄女起算)</label>
+            <select id="distance-filter" onchange="resetDisplay()">
+                <option value="300">300公尺內 (極近，過馬路就到)</option>
+                <option value="600">600公尺內 (步行約5-8分鐘)</option>
+                <option value="1200">1.2公里內 (步行15分/自強夜市或市中路)</option>
+                <option value="mrt">捷運/輕軌 1 站距離 (含鹽埕埔、中央公園)</option>
+            </select>
+        </div>
+    </div>
+
+    <button id="roll-btn" class="btn" onclick="pickLunch()">開始隨機抽選！</button>
+
+    <div id="result-card">
+        <div class="restaurant-title" id="res-name">餐廳名稱</div>
+        
+        <div class="info-row">
+            <span class="info-label">📍 位置資訊：</span>
+            <span class="info-value" id="res-location">--</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">💵 價位範圍：</span>
+            <span class="info-value" id="res-price">--</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">⏱️ 雄女基準：</span>
+            <span class="info-value" id="res-distance">--</span>
+        </div>
+
+        <div class="menu-box">
+            <div class="menu-title">📖 精選菜單 / 推薦招牌：</div>
+            <ul class="menu-list" id="res-menu">
+                </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 雄女週邊餐廳資料庫 (已加入圖片新增商家)
+    const restaurants = [
+        // --- 原有商家 ---
+        {
+            name: "小新乾麵",
+            maxPrice: 100,
+            priceRange: "NT$ 45 - 90",
+            distanceValue: 150,
+            isMrt: false,
+            distanceText: "距離約 150 公尺 (正對面巷內，步行2分鐘)",
+            location: "高雄市前金區成功一路268號",
+            menu: ["招牌乾麵 (小:$45 / 大:$55)", "麻醬麵 ($50)", "餛飩湯 ($30)", "綜合滷味"]
+        },
+        {
+            name: "勝黑店",
+            maxPrice: 100,
+            priceRange: "NT$ 1 - 100",
+            distanceValue: 100,
+            isMrt: false,
+            distanceText: "距離約 100 公尺 (大門右轉，步行1分鐘)",
+            location: "高雄市前金區博孝里五福三路128號",
+            menu: ["醬燒雞腿肉便當 ($90)", "炒泡麵 ($80)", "魚丸湯 ($25)", "冬瓜檸檬 ($30)"]
+        },
+        {
+            name: "前金黑輪伯",
+            maxPrice: 100,
+            priceRange: "NT$ 15 - 80",
+            distanceValue: 450,
+            isMrt: false,
+            distanceText: "距離約 450 公尺 (光復三街，步行約6分鐘)",
+            location: "高雄市前金區光復三街148號",
+            menu: ["烤黑輪片 ($30/兩片)", "大腸包小腸 ($65/組)", "各類關東煮米血、貢丸 ($15up)"]
+        },
+        {
+            name: "阿蓮河粉",
+            maxPrice: 150,
+            priceRange: "NT$ 90 - 160",
+            distanceValue: 650,
+            isMrt: false,
+            distanceText: "距離約 650 公尺 (自強夜市，步行約8-10分鐘)",
+            location: "高雄市苓雅區自強三路105號",
+            menu: ["牛肉河粉 ($120)", "雞肉炒河粉 ($110)", "越式炸春捲 ($70)"]
+        },
+        {
+            name: "港園牛肉麵",
+            maxPrice: 200,
+            priceRange: "NT$ 120 - 150",
+            distanceValue: 900,
+            isMrt: true,
+            distanceText: "輕軌真愛碼頭站 1 站 (下車步行約5分鐘)",
+            location: "高雄市鹽埕區大成街55號",
+            menu: ["牛肉拌麵 (乾/附湯) ($120)", "豬腳拌麵 ($120)", "精緻小菜"]
+        },
+        {
+            name: "銀座杏子日式豬排",
+            maxPrice: 400,
+            priceRange: "NT$ 280 - 450",
+            distanceValue: 400,
+            isMrt: false,
+            distanceText: "距離約 400 公尺 (大立百貨B1，步行約5分鐘)",
+            location: "高雄市前金區五福三路59號B1",
+            menu: ["腰內豬排套餐 ($330)", "里肌豬排套餐 ($300)", "套餐越光米飯免費續"]
+        },
+
+        // --- 圖片新增商家 ---
+        {
+            name: "冬粉王",
+            maxPrice: 200,
+            priceRange: "NT$ 100 - 200",
+            distanceValue: 1400,
+            isMrt: true, 
+            distanceText: "捷運鹽埕埔站 1 站 (出站步行約5分鐘)",
+            location: "高雄市鹽埕區七賢三路168號",
+            menu: ["綜合冬粉 ($110)", "豬肉冬粉 ($80)", "切盤切肉 / 綜合下水", "乾冬粉 ($50)"]
+        },
+        {
+            name: "Buga Better 不加比較好健康餐盒",
+            maxPrice: 200,
+            priceRange: "NT$ 120 - 180",
+            distanceValue: 1200,
+            isMrt: true, 
+            distanceText: "捷運鹽埕埔站 1 站 (新樂街商圈)",
+            location: "高雄市鹽埕區新樂街214號",
+            menu: ["舒肥嫩雞胸餐盒", "極鮮厚切鮭魚餐盒", "特選牛五花餐盒", "低卡高纖蔬菜蛋盒"]
+        },
+        {
+            name: "滿食屋汕頭陽春麵 (原林森店)",
+            maxPrice: 200,
+            priceRange: "NT$ 60 - 150",
+            distanceValue: 1100,
+            isMrt: false,
+            distanceText: "距離約 1.1 公里 (近七賢二路，步行約14分鐘 / 建議單車)",
+            location: "高雄市前金區七賢二路222號",
+            menu: ["汕頭陽春麵 ($60)", "招牌麻醬麵 ($65)", "餛飩湯麵", "各式招牌黑白切滷味"]
+        },
+        {
+            name: "二雄 (咖啡廳/簡餐)",
+            maxPrice: 400,
+            priceRange: "NT$ 200 - 400",
+            distanceValue: 450,
+            isMrt: false,
+            distanceText: "距離約 450 公尺 (市中一路，步行約6分鐘)",
+            location: "高雄市前金區市中一路2-2號",
+            menu: ["日式牛肉咖哩飯", "手作和風日式定食", "靜岡抹茶拿鐵", "昭和焦糖布丁"]
+        },
+        {
+            name: "禾秝食堂 (燒烤/居酒屋)",
+            maxPrice: 600,
+            priceRange: "NT$ 400 - 600",
+            distanceValue: 1100,
+            isMrt: false,
+            distanceText: "距離約 1.1 公里 (憲政路/較適合晚餐或外帶，單車約5分鐘)",
+            location: "高雄市苓雅區憲政路6號",
+            menu: ["鹽烤手羽先 (雞翅)", "醬燒牛肋串", "炭烤現撈鮮魚", "職人明太子山藥"]
+        },
+        {
+            name: "古早味碳火芳德豬肉冬粉",
+            maxPrice: 200,
+            priceRange: "NT$ 80 - 150",
+            distanceValue: 900,
+            isMrt: false,
+            distanceText: "距離約 900 公尺 (大同一路，步行約11分鐘)",
+            location: "高雄市前金區大同一路100號",
+            menu: ["碳火豬肉冬粉 ($90)", "乾冬粉 + 綜合湯組合", "招牌骨仔肉盤", "古早味貢丸湯"]
+        },
+        {
+            name: "小冬家 (老宅洋食)",
+            maxPrice: 400,
+            priceRange: "NT$ 250 - 380",
+            distanceValue: 550,
+            isMrt: false,
+            distanceText: "距離約 550 公尺 (光復三街老宅，步行約7分鐘)",
+            location: "高雄市前金區光復三街240-1號",
+            menu: ["經典義大利麵系列", "濃郁手作燉飯", "特製起司小點", "嚴選私房紅茶"]
+        }
+    ];
+
+    function resetDisplay() {
+        document.getElementById("result-card").style.display = "none";
+    }
+
+    function getFilteredList() {
+        const priceLimit = parseInt(document.getElementById("price-filter").value);
+        const distanceSetting = document.getElementById("distance-filter").value;
+
+        return restaurants.filter(res => {
+            // 價格過濾
+            if (res.maxPrice > priceLimit) return false;
+
+            // 距離過濾
+            if (distanceSetting === "mrt") {
+                return res.isMrt || res.distanceValue <= 1200;
+            } else {
+                const maxMeter = parseInt(distanceSetting);
+                if (res.isMrt && res.distanceValue > maxMeter) return false;
+                if (res.distanceValue > maxMeter) return false;
+            }
+            return true;
+        });
+    }
+
+    function pickLunch() {
+        const candidates = getFilteredList();
+        const btn = document.getElementById("roll-btn");
+        const resultCard = document.getElementById("result-card");
+
+        if (candidates.length === 0) {
+            alert("❌ 找不到符合此價格與距離條件的餐廳，請放寬篩選條件再試試看！");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "正在認真挑選中...";
+        resultCard.style.display = "block";
+
+        let timer = 0;
+        const interval = setInterval(() => {
+            const randomRes = candidates[Math.floor(Math.random() * candidates.length)];
+            
+            document.getElementById("res-name").innerText = randomRes.name;
+            document.getElementById("res-location").innerText = randomRes.location;
+            document.getElementById("res-price").innerText = randomRes.priceRange;
+            document.getElementById("res-distance").innerText = randomRes.distanceText;
+            
+            const menuUl = document.getElementById("res-menu");
+            menuUl.innerHTML = randomRes.menu.map(item => `<li>${item}</li>`).join('');
+
+            timer++;
+            if (timer > 12) {
+                clearInterval(interval);
+                
+                const finalChoice = candidates[Math.floor(Math.random() * candidates.length)];
+                
+                document.getElementById("res-name").innerText = `🎉 決定吃：${finalChoice.name}`;
+                document.getElementById("res-location").innerText = finalChoice.location;
+                document.getElementById("res-price").innerText = finalChoice.priceRange;
+                document.getElementById("res-distance").innerText = finalChoice.distanceText;
+                
+                menuUl.innerHTML = finalChoice.menu.map(item => `<li>${item}</li>`).join('');
+
+                btn.disabled = false;
+                btn.innerText = "換一間試試！";
+            }
+        }, 70);
+    }
+</script>
+
+</body>
+</html>

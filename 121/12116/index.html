@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>黃昏後的第二十四小時 — 末日人格測驗</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600;900&family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;400;700&display=swap');
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --green: #39ff71;
+  --amber: #e8a020;
+  --red: #ff3030;
+  --dim: rgba(0,0,0,0.72);
+  --glass: rgba(0,0,0,0.55);
+}
+
+html, body {
+  width:100%; min-height:100vh;
+  background:#000;
+  color:#d4c89a;
+  font-family:'Noto Sans TC', sans-serif;
+  overflow-x:hidden;
+}
+
+/* ─── CRT overlay ─── */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:9999; pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,.06) 3px, rgba(0,0,0,.06) 4px),
+    radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%);
+}
+
+/* ─── SCENE LAYER ─── */
+#scene {
+  position:fixed; inset:0; z-index:0;
+  transition: background 1.2s ease, opacity 0.5s;
+  will-change: background;
+}
+
+#scene canvas {
+  position:absolute; inset:0; width:100%; height:100%;
+}
+
+/* dust particles */
+#dust-canvas { position:fixed; inset:0; z-index:2; pointer-events:none; }
+
+/* ─── SCREENS ─── */
+#boot-screen, #quiz-screen, #result-screen {
+  position:relative; z-index:10;
+  min-height:100vh;
+}
+#quiz-screen, #result-screen { display:none; }
+
+/* ══════════════ BOOT ══════════════ */
+#boot-screen {
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:40px 20px;
+  background:radial-gradient(ellipse at center, rgba(20,8,0,0.9) 0%, rgba(0,0,0,0.97) 100%);
+}
+
+.boot-logo {
+  font-family:'Orbitron', monospace;
+  font-size:clamp(28px,8vw,72px);
+  font-weight:900;
+  color:#c8782a;
+  text-shadow: 0 0 20px rgba(200,120,42,0.6), 0 0 60px rgba(200,120,42,0.2);
+  letter-spacing:6px;
+  text-align:center;
+  animation: logoGlow 3s ease infinite;
+  line-height:1.1;
+  margin-bottom:12px;
+}
+.boot-logo-sub {
+  font-family:'Noto Serif TC', serif;
+  font-size:clamp(13px,3vw,18px);
+  color:rgba(200,120,42,0.5);
+  letter-spacing:8px;
+  text-align:center;
+  margin-bottom:50px;
+}
+
+@keyframes logoGlow {
+  0%,100% { text-shadow: 0 0 20px rgba(200,120,42,0.6), 0 0 60px rgba(200,120,42,0.2); }
+  50% { text-shadow: 0 0 40px rgba(200,120,42,0.9), 0 0 100px rgba(200,120,42,0.4), 0 0 160px rgba(200,120,42,0.15); }
+}
+
+.boot-terminal {
+  width:min(520px, 92vw);
+  background:rgba(0,0,0,0.8);
+  border:1px solid rgba(57,255,113,0.15);
+  padding:24px;
+  font-family:'Share Tech Mono', monospace;
+  font-size:12px;
+  color:rgba(57,255,113,0.7);
+  margin-bottom:50px;
+  position:relative;
+}
+.boot-terminal::before {
+  content:'TERMINAL // SYS:0x48FF';
+  position:absolute; top:-10px; left:20px;
+  font-size:10px; color:rgba(57,255,113,0.4);
+  background:#000; padding:0 8px;
+  letter-spacing:3px;
+}
+
+.boot-line { opacity:0; margin:4px 0; animation: lineFade 0.4s ease forwards; }
+.boot-line.warn { color:rgba(255,160,32,0.8); }
+.boot-line.err  { color:rgba(255,48,48,0.8); }
+@keyframes lineFade { to { opacity:1; } }
+
+.cursor-blink::after { content:'█'; animation: blink 0.7s step-end infinite; }
+@keyframes blink { 50% { opacity:0; } }
+
+.boot-enter-btn {
+  width:min(320px, 80vw);
+  padding:16px 0;
+  background:transparent;
+  border:1px solid rgba(200,120,42,0.5);
+  color:#c8782a;
+  font-family:'Orbitron', monospace;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:4px;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  transition:all 0.3s;
+  opacity:0;
+  animation: lineFade 0.5s ease 4.2s forwards;
+}
+.boot-enter-btn::before {
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(90deg, transparent, rgba(200,120,42,0.08), transparent);
+  transform:translateX(-100%);
+  transition:transform 0.5s;
+}
+.boot-enter-btn:hover { border-color:rgba(200,120,42,0.9); box-shadow:0 0 30px rgba(200,120,42,0.3), inset 0 0 30px rgba(200,120,42,0.05); color:#e8a020; }
+.boot-enter-btn:hover::before { transform:translateX(100%); }
+
+/* ══════════════ QUIZ ══════════════ */
+.quiz-wrap {
+  max-width:720px;
+  margin:0 auto;
+  padding:30px 24px 80px;
+}
+
+/* HUD bar */
+.hud-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 0 20px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  margin-bottom:30px;
+}
+.hud-label {
+  font-family:'Share Tech Mono', monospace;
+  font-size:10px;
+  color:rgba(200,120,42,0.5);
+  letter-spacing:3px;
+}
+.hud-qnum {
+  font-family:'Orbitron', monospace;
+  font-size:22px;
+  font-weight:900;
+  color:#c8782a;
+  text-shadow:0 0 20px rgba(200,120,42,0.5);
+  letter-spacing:2px;
+}
+.hud-prog-wrap { flex:1; margin:0 20px; }
+.hud-prog-track {
+  height:2px;
+  background:rgba(255,255,255,0.08);
+  position:relative;
+}
+.hud-prog-fill {
+  height:100%;
+  background:linear-gradient(90deg, #c8782a, #e8a020);
+  box-shadow:0 0 8px rgba(200,120,42,0.8);
+  transition:width 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.hud-dots {
+  display:flex; gap:6px;
+}
+.hud-dot {
+  width:6px; height:6px;
+  border:1px solid rgba(200,120,42,0.3);
+  border-radius:50%;
+  transition:all 0.3s;
+}
+.hud-dot.done { background:#c8782a; border-color:#c8782a; box-shadow:0 0 6px rgba(200,120,42,0.8); }
+.hud-dot.active { border-color:#e8a020; box-shadow:0 0 8px rgba(200,120,42,0.5); animation:dotPulse 1.5s ease infinite; }
+@keyframes dotPulse { 0%,100%{box-shadow:0 0 6px rgba(200,120,42,0.4);} 50%{box-shadow:0 0 14px rgba(200,120,42,0.9);} }
+
+/* Scene title overlay */
+.scene-title-block {
+  margin-bottom:28px;
+  animation:cardIn 0.5s ease;
+}
+.scene-eyebrow {
+  font-family:'Share Tech Mono', monospace;
+  font-size:10px;
+  color:rgba(57,255,113,0.5);
+  letter-spacing:4px;
+  margin-bottom:6px;
+}
+.scene-heading {
+  font-family:'Noto Serif TC', serif;
+  font-size:clamp(18px,4vw,26px);
+  font-weight:900;
+  color:#e8a020;
+  text-shadow:0 2px 20px rgba(232,160,32,0.3);
+  line-height:1.3;
+  margin-bottom:10px;
+}
+.scene-situation {
+  font-size:13px;
+  color:rgba(212,200,154,0.55);
+  line-height:1.9;
+  border-left:2px solid rgba(200,120,42,0.25);
+  padding-left:14px;
+  font-family:'Noto Serif TC', serif;
+  font-weight:300;
+}
+
+/* Question card */
+.q-card {
+  background:rgba(0,0,0,0.55);
+  border:1px solid rgba(200,120,42,0.18);
+  backdrop-filter:blur(6px);
+  padding:24px;
+  margin-bottom:16px;
+  position:relative;
+  animation:cardIn 0.6s ease;
+}
+.q-card::before {
+  content:'';
+  position:absolute; top:0; left:0;
+  width:3px; height:100%;
+  background:linear-gradient(180deg, #c8782a, transparent);
+}
+@keyframes cardIn {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.q-prompt {
+  font-family:'Noto Serif TC', serif;
+  font-size:15px;
+  color:#d4c89a;
+  line-height:1.8;
+  margin-bottom:24px;
+  text-shadow:0 1px 4px rgba(0,0,0,0.6);
+}
+
+/* Options */
+.options { display:flex; flex-direction:column; gap:10px; }
+.opt-btn {
+  background:rgba(0,0,0,0.45);
+  border:1px solid rgba(255,255,255,0.08);
+  color:rgba(212,200,154,0.8);
+  padding:14px 18px;
+  text-align:left;
+  cursor:pointer;
+  font-family:'Noto Sans TC', sans-serif;
+  font-size:13px;
+  line-height:1.7;
+  display:grid;
+  grid-template-columns:28px 1fr;
+  gap:12px;
+  align-items:start;
+  transition:all 0.2s;
+  position:relative;
+  overflow:hidden;
+}
+.opt-btn::after {
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(90deg, rgba(200,120,42,0.07), transparent);
+  opacity:0;
+  transition:opacity 0.2s;
+}
+.opt-btn:hover::after { opacity:1; }
+.opt-btn:hover {
+  border-color:rgba(200,120,42,0.35);
+  color:#d4c89a;
+  transform:translateX(3px);
+}
+.opt-btn.selected {
+  background:rgba(200,120,42,0.1);
+  border-color:rgba(200,120,42,0.6);
+  color:#e8c870;
+  box-shadow:0 0 20px rgba(200,120,42,0.15), inset 0 0 20px rgba(200,120,42,0.04);
+  transform:translateX(0);
+}
+.opt-btn.selected::after { opacity:1; }
+.opt-key {
+  font-family:'Orbitron', monospace;
+  font-size:10px;
+  font-weight:700;
+  color:rgba(200,120,42,0.6);
+  padding-top:3px;
+}
+.opt-btn.selected .opt-key { color:#e8a020; }
+
+/* Nav */
+.nav-row {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-top:24px;
+}
+.nav-btn {
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.1);
+  color:rgba(212,200,154,0.5);
+  padding:10px 28px;
+  font-family:'Share Tech Mono', monospace;
+  font-size:11px;
+  letter-spacing:2px;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.nav-btn:hover:not(:disabled) { border-color:rgba(200,120,42,0.4); color:#c8782a; }
+.nav-btn:disabled { opacity:0.2; cursor:default; }
+.nav-btn.primary {
+  border-color:rgba(200,120,42,0.4);
+  color:#c8782a;
+  box-shadow:0 0 12px rgba(200,120,42,0.1);
+}
+.nav-btn.primary:hover:not(:disabled) {
+  background:rgba(200,120,42,0.08);
+  box-shadow:0 0 24px rgba(200,120,42,0.25);
+  color:#e8a020;
+}
+
+/* ══════════════ COMPUTING ══════════════ */
+#computing-overlay {
+  display:none;
+  position:fixed; inset:0; z-index:50;
+  background:rgba(0,0,0,0.92);
+  backdrop-filter:blur(10px);
+  flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:24px;
+}
+.computing-ring {
+  width:80px; height:80px;
+  border:1px solid rgba(200,120,42,0.2);
+  border-top-color:#c8782a;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  box-shadow:0 0 20px rgba(200,120,42,0.2), inset 0 0 20px rgba(200,120,42,0.05);
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.computing-lbl {
+  font-family:'Orbitron', monospace;
+  font-size:12px;
+  color:#c8782a;
+  letter-spacing:5px;
+  animation:logoGlow 1.5s ease infinite;
+}
+.computing-bar {
+  width:260px; height:1px;
+  background:rgba(200,120,42,0.15);
+  position:relative; overflow:hidden;
+}
+.computing-bar-fill {
+  position:absolute; top:0; left:0;
+  height:100%;
+  background:linear-gradient(90deg, #c8782a, #e8a020);
+  box-shadow:0 0 8px rgba(200,120,42,0.9);
+  animation:barFill 2.2s ease forwards;
+}
+@keyframes barFill { 0%{width:0} 70%{width:75%} 100%{width:100%} }
+
+/* ══════════════ RESULT ══════════════ */
+#result-screen { background:radial-gradient(ellipse at center, rgba(12,4,0,0.95) 0%, rgba(0,0,0,0.98) 100%); }
+
+.result-wrap {
+  max-width:680px;
+  margin:0 auto;
+  padding:60px 24px 80px;
+  animation:cardIn 0.8s ease;
+}
+
+.result-stamp {
+  display:inline-block;
+  border:1px solid rgba(255,48,48,0.5);
+  color:rgba(255,48,48,0.7);
+  font-family:'Share Tech Mono', monospace;
+  font-size:10px;
+  letter-spacing:4px;
+  padding:4px 14px;
+  transform:rotate(-1.5deg);
+  margin-bottom:24px;
+  box-shadow:0 0 12px rgba(255,48,48,0.15);
+}
+.result-file {
+  font-family:'Share Tech Mono', monospace;
+  font-size:11px;
+  color:rgba(57,255,113,0.4);
+  letter-spacing:5px;
+  margin-bottom:8px;
+}
+.result-name {
+  font-family:'Noto Serif TC', serif;
+  font-size:clamp(24px,6vw,48px);
+  font-weight:900;
+  color:#e8a020;
+  text-shadow:0 0 30px rgba(232,160,32,0.4), 0 0 80px rgba(232,160,32,0.15);
+  letter-spacing:1px;
+  line-height:1.2;
+  margin-bottom:4px;
+}
+.result-en {
+  font-family:'Orbitron', monospace;
+  font-size:11px;
+  color:rgba(200,120,42,0.4);
+  letter-spacing:4px;
+  margin-bottom:40px;
+}
+
+.result-divider {
+  height:1px;
+  background:linear-gradient(90deg, transparent, rgba(200,120,42,0.3), transparent);
+  margin:28px 0;
+}
+
+/* Character reveal */
+.char-block {
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:28px;
+  align-items:start;
+  margin-bottom:32px;
+}
+@media(max-width:520px) { .char-block { grid-template-columns:1fr; } }
+
+.char-img-frame {
+  position:relative;
+  width:140px; flex-shrink:0;
+}
+.char-img-frame::before {
+  content:'';
+  position:absolute; inset:-4px;
+  border:1px solid rgba(200,120,42,0.25);
+  pointer-events:none;
+}
+.char-img-frame::after {
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(0,0,0,0.6), transparent 50%);
+}
+.char-img {
+  width:140px; height:175px;
+  object-fit:cover;
+  display:block;
+  filter:sepia(25%) contrast(1.05) saturate(0.9);
+}
+.char-img-fallback {
+  width:140px; height:175px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:60px;
+  background:rgba(200,120,42,0.04);
+  border:1px solid rgba(200,120,42,0.1);
+}
+.char-info { padding-top:4px; }
+.resonance-label {
+  font-family:'Share Tech Mono', monospace;
+  font-size:9px;
+  color:rgba(57,255,113,0.4);
+  letter-spacing:4px;
+  margin-bottom:8px;
+}
+.char-name {
+  font-family:'Noto Serif TC', serif;
+  font-size:24px;
+  font-weight:900;
+  color:#d4c89a;
+  text-shadow:0 0 20px rgba(212,200,154,0.2);
+  margin-bottom:2px;
+}
+.char-source {
+  font-size:12px;
+  color:rgba(200,120,42,0.5);
+  letter-spacing:2px;
+  margin-bottom:16px;
+  font-family:'Share Tech Mono', monospace;
+}
+.trait-list { display:flex; flex-wrap:wrap; gap:6px; }
+.trait {
+  font-family:'Share Tech Mono', monospace;
+  font-size:10px;
+  color:rgba(57,255,113,0.6);
+  border:1px solid rgba(57,255,113,0.2);
+  padding:3px 10px;
+  letter-spacing:1px;
+}
+
+/* Analysis */
+.analysis-section {
+  background:rgba(0,0,0,0.4);
+  border:1px solid rgba(200,120,42,0.12);
+  padding:24px;
+  position:relative;
+}
+.analysis-section::before {
+  content:'▌ PSYCHE PROFILE // CLASSIFIED ▐';
+  position:absolute; top:-9px; left:20px;
+  font-family:'Share Tech Mono', monospace;
+  font-size:9px;
+  color:rgba(255,48,48,0.5);
+  background:rgba(0,0,0,0.9);
+  padding:0 8px;
+  letter-spacing:3px;
+}
+.analysis-text {
+  font-family:'Noto Serif TC', serif;
+  font-size:14px;
+  line-height:2.1;
+  color:rgba(212,200,154,0.85);
+  font-weight:300;
+}
+.analysis-text em {
+  color:#e8c870;
+  font-style:normal;
+  font-weight:600;
+}
+
+.restart-btn {
+  display:block; width:100%;
+  padding:16px;
+  background:transparent;
+  border:1px solid rgba(200,120,42,0.2);
+  color:rgba(200,120,42,0.6);
+  font-family:'Share Tech Mono', monospace;
+  font-size:11px;
+  letter-spacing:4px;
+  cursor:pointer;
+  margin-top:36px;
+  transition:all 0.3s;
+}
+.restart-btn:hover {
+  border-color:rgba(200,120,42,0.5);
+  color:#c8782a;
+  box-shadow:0 0 20px rgba(200,120,42,0.1);
+}
+
+/* Noise vignette frame for immersion */
+.vignette {
+  position:fixed; inset:0; z-index:1; pointer-events:none;
+  background:radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.7) 100%);
+}
+
+/* Smoke/haze layer */
+#haze-canvas { position:fixed; inset:0; z-index:3; pointer-events:none; opacity:0.35; }
+</style>
+</head>
+<body>
+
+<!-- Atmospheric layers -->
+<div id="scene"></div>
+<div class="vignette"></div>
+<canvas id="dust-canvas"></canvas>
+<canvas id="haze-canvas"></canvas>
+
+<!-- ══════ BOOT ══════ -->
+<div id="boot-screen">
+  <div class="boot-logo">黃昏後<br>第二十四小時</div>
+  <div class="boot-logo-sub">DOOMSDAY PERSONA ASSESSMENT</div>
+  <div class="boot-terminal">
+    <div class="boot-line" style="animation-delay:.3s">▸ SYSTEM BOOT ........... [OK]</div>
+    <div class="boot-line" style="animation-delay:.7s">▸ 載入末日人格資料庫 ..... [OK]</div>
+    <div class="boot-line" style="animation-delay:1.1s">▸ 比對12份機密人格檔案 ... [OK]</div>
+    <div class="boot-line warn" style="animation-delay:1.6s">⚠ 文明存活率 &lt; 0.001% ... [CRITICAL]</div>
+    <div class="boot-line err" style="animation-delay:2.0s">✕ 不適者將被系統自動淘汰 . [WARNING]</div>
+    <div class="boot-line" style="animation-delay:2.5s">&nbsp;</div>
+    <div class="boot-line cursor-blink" style="animation-delay:2.9s">▸ 準備評估受測者靈魂適性_</div>
+  </div>
+  <button class="boot-enter-btn" onclick="startQuiz()">▶ 進入末日評估系統</button>
+</div>
+
+<!-- ══════ QUIZ ══════ -->
+<div id="quiz-screen">
+  <div class="quiz-wrap">
+    <div class="hud-bar">
+      <div>
+        <div class="hud-label">QUESTION</div>
+        <div class="hud-qnum" id="hud-num">01 / 07</div>
+      </div>
+      <div class="hud-prog-wrap">
+        <div class="hud-prog-track">
+          <div class="hud-prog-fill" id="prog-fill" style="width:14%"></div>
+        </div>
+      </div>
+      <div class="hud-dots" id="hud-dots"></div>
+    </div>
+
+    <div class="scene-title-block" id="scene-title-block">
+      <div class="scene-eyebrow" id="q-eyebrow">Q01 // SCENARIO ALPHA</div>
+      <div class="scene-heading" id="q-heading">-</div>
+      <div class="scene-situation" id="q-situation">-</div>
+    </div>
+
+    <div class="q-card" id="q-card">
+      <div class="q-prompt" id="q-prompt">-</div>
+      <div class="options" id="options"></div>
+    </div>
+
+    <div class="nav-row">
+      <button class="nav-btn" id="btn-prev" onclick="prevQ()" disabled>◀ BACK</button>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(200,120,42,0.3);letter-spacing:2px;">SELECT TO CONTINUE</span>
+      <button class="nav-btn primary" id="btn-next" onclick="nextQ()" disabled>NEXT ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ COMPUTING ══════ -->
+<div id="computing-overlay">
+  <div class="computing-ring"></div>
+  <div class="computing-lbl">ANALYZING SOUL MATRIX</div>
+  <div class="computing-bar"><div class="computing-bar-fill"></div></div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(57,255,113,0.35);letter-spacing:3px;margin-top:8px;">比對12份機密人格檔案中...</div>
+</div>
+
+<!-- ══════ RESULT ══════ -->
+<div id="result-screen">
+  <div class="result-wrap" id="result-wrap"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   SCENE BACKGROUNDS per question
+═══════════════════════════════════════ */
+const sceneBGs = [
+  // Q1 - collapsing shelter - heavy amber/brown debris
+  { bg:'radial-gradient(ellipse at 30% 70%, #1a0800 0%, #0d0400 50%, #000 100%)', dustColor:'#a06020', hazeColor:'rgba(80,30,0,' },
+  // Q2 - armed camp at night - cold blue-steel
+  { bg:'radial-gradient(ellipse at 70% 30%, #000a14 0%, #00050e 60%, #000 100%)', dustColor:'#304060', hazeColor:'rgba(10,20,50,' },
+  // Q3 - creature attack at night - green-black dread
+  { bg:'radial-gradient(ellipse at 50% 80%, #001208 0%, #000804 60%, #000 100%)', dustColor:'#102810', hazeColor:'rgba(0,20,8,' },
+  // Q4 - enemy camp deal - deep purple threat
+  { bg:'radial-gradient(ellipse at 20% 50%, #10000f 0%, #070007 60%, #000 100%)', dustColor:'#5a1060', hazeColor:'rgba(30,0,40,' },
+  // Q5 - abandoned lab - cold white-blue science
+  { bg:'radial-gradient(ellipse at 80% 20%, #080e18 0%, #030810 60%, #000 100%)', dustColor:'#203060', hazeColor:'rgba(15,25,55,' },
+  // Q6 - black market - dim lantern warmth
+  { bg:'radial-gradient(ellipse at 50% 60%, #120800 0%, #080400 50%, #000 100%)', dustColor:'#804010', hazeColor:'rgba(60,25,5,' },
+  // Q7 - inferno collapse - red apocalypse
+  { bg:'radial-gradient(ellipse at 50% 100%, #1a0200 0%, #0d0100 40%, #000 100%)', dustColor:'#c03010', hazeColor:'rgba(100,15,5,' },
+];
+
+/* ═══ QUESTIONS ═══ */
+const Qs = [
+  {
+    eyebrow:'Q01 // INITIAL RESOURCE: RUBBLE CHOICE',
+    heading:'廢墟中的生存抉擇',
+    situation:'文明崩潰後的第 24 小時。避難所的天花板正在大面積塌陷，鋼筋從頭頂穿落如雨。你在角落發現一箱標記「高級核心能源」的密封箱，但旁邊躺著一個昏迷的陌生人。逃生通道只能負荷一次搬運。',
+    prompt:'你的直覺反應是？',
+    opts:[
+      { k:'A', t:'東西拿走，人留下。在末日只有實力說話，強者不需要拖油瓶。', c:['absolute_god'] },
+      { k:'B', t:'快速估算兩者的重量與逃生路線，在不威脅自身安全的前提下，做出最有效率的撤退決策。', c:['grandmaster'] },
+      { k:'C', t:'兩邊都不要。沒必要為了來路不明的東西冒險，直接從通風口低調溜走。', c:['scavenger'] },
+      { k:'D', t:'小孩子才做選擇，老子全都要！一拳把擋路的落石砸開，粗暴地把兩邊一起扛走。', c:['iron_tyrant'] },
+    ]
+  },
+  {
+    eyebrow:'Q02 // OASIS LAW: SOCIAL COMPLIANCE',
+    heading:'面對強權的社會化適性',
+    situation:'你終於抵達一個安全的避難所，但這裡的統治者實施高壓軍事管理——沒收所有私有物資、強制十六小時勞動。巡邏隊正在逐一搜身，而你口袋裡藏著一劑珍貴的抗生素。',
+    prompt:'你會怎麼做？',
+    opts:[
+      { k:'A', t:'當晚直接暗殺負責檢查的衛兵，搶了基地的武器物資就走，誰管他的垃圾規則。', c:['absolute_god'] },
+      { k:'B', t:'表面掛著最完美的微笑順從配合，私下煽動不滿的難民，密謀推翻這個統治者。', c:['false_messiah','viper'] },
+      { k:'C', t:'靠著敏銳直覺找到監視器死角，把藥藏進牆縫，繼續扮豬吃老虎偽裝成廢物。', c:['chameleon'] },
+      { k:'D', t:'這種剝削是不對的！直接站出來痛罵管理員，哪怕被打得半死，也絕對不低頭。', c:['zealot'] },
+    ]
+  },
+  {
+    eyebrow:'Q03 // NIGHT BREACH: GROUP PANIC',
+    heading:'危機中的群體恐慌',
+    situation:'深夜。外牆傳來未知變異體的瘋狂撞擊聲，防線隨時可能崩潰。周圍的人開始大哭崩潰，尖叫聲在黑暗的廢墟走廊中迴響——每一聲都在為更多的怪物指路。',
+    prompt:'此時你會怎麼做？',
+    opts:[
+      { k:'A', t:'冷冷地把短刀架在哭鬧者的脖子上：「再發出一點聲音，我就先讓你解脫。」', c:['iron_tyrant','mad_scientist'] },
+      { k:'B', t:'露出溫柔且充滿同理心的神情走向哭泣的人，一邊安慰，一邊毫不猶豫地在背後把他打暈送去當誘餌。', c:['false_messiah','viper'] },
+      { k:'C', t:'默默戴上耳機縮在牆角，對周圍的尖叫和混亂完全免疫，等待一切結束。', c:['scavenger','ghost'] },
+      { k:'D', t:'大腦一片空白，一邊跟著大喊「完蛋了要被吃掉了啊啊啊！」一邊爆發出驚人的求生潛能，莫名其妙跑得比誰都快。', c:['unlucky_cargo'] },
+    ]
+  },
+  {
+    eyebrow:'Q04 // FATAL DEAL: SOUL VALUATION',
+    heading:'靈魂價值的質詢',
+    situation:'你落入了敵對陣營掠奪者首領的手中，被反綁在椅子上。他眼神銳利地看著你，說他看中了你的某種價值——只要出賣原來的隊友，就可以給你頂級物資和一個活下去的身分。',
+    prompt:'你的回應是？',
+    opts:[
+      { k:'A', t:'答應他。在敵方一邊享受資源，一邊用魅力和利益將首領玩弄於股掌之間，準備反客為主。', c:['grandmaster','viper'] },
+      { k:'B', t:'假裝順從，趁著幫他們分析裝備時，偷偷植入生化毒素，等著看他們暴斃。', c:['mad_scientist'] },
+      { k:'C', t:'跪地求饒大喊「大佬別殺我！」，雖然看起來毫無骨氣，但大腦已在瘋狂尋找逃跑路線。', c:['chameleon'] },
+      { k:'D', t:'呸！文明雖毀滅，道義不能丟。哪怕被折磨死，也絕對不吐出一個字。', c:['zealot'] },
+    ]
+  },
+  {
+    eyebrow:'Q05 // FORBIDDEN VIAL: TEMPTATION',
+    heading:'對禁忌力量的誘惑',
+    situation:'廢棄實驗室深處。防護玻璃後面，一管發著詭異微光的藥劑靜靜懸浮在支架上。旁邊散落的研究日誌寫著：「50% 機率獲得毀滅性力量，50% 機率大腦在三秒內完全溶解。」',
+    prompt:'這時你？',
+    opts:[
+      { k:'A', t:'根本不屑喝這種東西。我本身的存在就已是神級，不需要靠藥物。', c:['absolute_god'] },
+      { k:'B', t:'雙眼發亮！立刻拿出工具分析成分，甚至興奮地想把藥劑灌進旁邊變異生物嘴裡，看看會發生什麼。', c:['mad_scientist'] },
+      { k:'C', t:'帶有詛咒的古老物品對吧……冷漠地把它當成紀念品收進包包裡，繼續上路。', c:['scavenger','ghost'] },
+      { k:'D', t:'咦？聞起來好像很好吃……難道用這個醃製怪物的肉會變美味嗎？（開始研究食譜）', c:['unlucky_cargo'] },
+    ]
+  },
+  {
+    eyebrow:'Q06 // BLACK MARKET: LAST TICKET',
+    heading:'關於執念的價值評估',
+    situation:'一個蒙面神秘商人在黑市角落攔住你。他手上有最後一張「前往純淨新世界」的方舟船票，但不要物資——要求你用「你最珍視的某樣東西（記憶、情感、理想）」來交換。',
+    prompt:'你會怎麼做？',
+    opts:[
+      { k:'A', t:'票我要，珍視的東西我也要。在拿走票的瞬間，直接給商人致命一擊，將他的財產洗劫一空。', c:['absolute_god','iron_tyrant'] },
+      { k:'B', t:'用高超話術跟商人周旋，甚至用偽造的「假地圖」空手套白狼把船票騙過來。', c:['false_messiah'] },
+      { k:'C', t:'拒絕交換。末日裡根本沒有絕對安全，比起虛無縹緲的方舟，我更相信我手裡的刀。', c:['grandmaster','ghost'] },
+      { k:'D', t:'在路邊隨便撿到一個破爛玩具，商人看了一眼大喊「這就是傳說中的古董！」，莫名其妙把票給我了。', c:['unlucky_cargo'] },
+    ]
+  },
+  {
+    eyebrow:'Q07 // FINAL BREACH: ORDER COLLAPSES',
+    heading:'當秩序徹底崩解的瞬間',
+    situation:'避難所的外牆終於被變異潮攻破。火焰從東翼走廊蔓延而來，濃煙遮蔽了所有視線。全體大逃亡，世界再次洗牌，廢墟的烈火映紅了天空。',
+    prompt:'你靈魂深處最真實的衝動是？',
+    opts:[
+      { k:'A', t:'太棒了，舊的秩序終於死透了！拿著武器衝進火海，開啟純粹為了取悅自己的血色混亂。', c:['joker'] },
+      { k:'B', t:'冷眼看著這一切。在一片混亂中，優雅且毫無留戀地獨自離去。', c:['grandmaster','ghost'] },
+      { k:'C', t:'亂世出英雄，大混亂就是大洗牌。這正是我建立新秩序、成為新世界神明的最好時機。', c:['iron_tyrant','false_messiah'] },
+      { k:'D', t:'完蛋了完蛋了！一邊大哭大喊「好可怕啊啊啊！」一邊爆發驚人求生潛能，莫名其妙跑得比誰都快。', c:['chameleon','unlucky_cargo'] },
+    ]
+  }
+];
+
+const PERSONAS = {
+  absolute_god:{ fid:'FILE-01', name:'暴虐的孤高神明', en:'THE ABSOLUTE GOD', char:'鳴海弦', src:'怪獸八號', emoji:'⚡', traits:['極端自我中心','天災般的實力','漠視規則','興致至上'],
+    img:'https://upload.wikimedia.org/wikipedia/en/thumb/7/7e/Kafka_Hibino_Monster8.png/220px-Kafka_Hibino_Monster8.png',
+    analysis:'恭喜你，你在末日的人格已超越了「人類」的定義框架。你不是怪物，你就是<em>那場讓文明崩潰的天災本身</em>。別人在搶最後一罐罐頭，你在思考的是——這破世界值不值得讓你多看一眼。你最大的弱點？<em>根本沒有弱點可言，只有偶爾發作的、對「無聊」的不耐煩。</em>預測生存指數：∞／10（超出系統量測範圍）。'},
+  iron_tyrant:{ fid:'FILE-02', name:'鐵血的秩序怪物', en:'THE IRON TYRANT', char:'梅宮', src:'防風少年', emoji:'🔱', traits:['崇尚強權','絕對紀律','恐懼統治','鐵律至上'],
+    img:'https://upload.wikimedia.org/wikipedia/en/8/84/Bisco_Akaboshi.jpg',
+    analysis:'你相信一件事：<em>沒有鐵腕，人類就是一群等待腐爛的廢物。</em>在末日，你不是暴君，你是「唯一清醒的那個人」。別人在哭泣求饒，你已在白板上畫出了三十七條存活守則，並附上「違者立斬」的注腳。你最大的問題是——<em>就連你自己休息的時間表，也嚴格得令人窒息。</em>預測生存指數：9.2／10。'},
+  grandmaster:{ fid:'FILE-03', name:'算計的冷血棋手', en:'THE GRANDMASTER', char:'潔世一', src:'藍色監獄', emoji:'♟️', traits:['超高智商','面目高冷','末日即棋局','萬人皆棋子'],
+    img:'https://upload.wikimedia.org/wikipedia/en/thumb/c/c9/Yoichi_Isagi.png/220px-Yoichi_Isagi.png',
+    analysis:'你從第一題開始就已經算好了你的結果是什麼。<em>你不是在做測驗，你是在驗證自己的計算。</em>末日對你來說不是災難，是一場早就看穿結局的劇本，而你唯一感到無聊的時刻，是當其他人還以為自己有選擇的時候。你最危險的特質：<em>你永遠笑著，永遠不說真心話，永遠在三步之後等著所有人自投羅網。</em>預測生存指數：9.8／10。'},
+  mad_scientist:{ fid:'FILE-04', name:'瘋狂的異端狂人', en:'THE MAD SCIENTIST', char:'保科宗四郎', src:'怪獸八號', emoji:'🔬', traits:['崩潰邊緣','異常冷靜','病態執著','解剖一切'],
+    img:'https://upload.wikimedia.org/wikipedia/en/thumb/5/5a/Soshiro_Hoshina.png/220px-Soshiro_Hoshina.png',
+    analysis:'你的精神已在崩潰邊緣掛了很久了，但你的大腦從來沒有這麼<em>清醒</em>過。別人看到怪物是恐懼，你看到的是「研究樣本」。末日前你可能是個無趣的正常人，末日後你終於找到了人生的真正意義——<em>研究這一切到底是怎麼爛掉的。</em>你的危險在於：當所有人都在逃命，你會停下來蹲在屍體旁邊掏出記事本。預測生存指數：7.5／10（死因通常是「太入神而沒發現背後有怪物」）。'},
+  false_messiah:{ fid:'FILE-05', name:'操弄人心的布道者', en:'THE FALSE MESSIAH', char:'神木輝', src:'我推的孩子', emoji:'✝️', traits:['話術武器','溫柔假面','煽動人心','雙手不沾血'],
+    img:'https://upload.wikimedia.org/wikipedia/en/thumb/7/72/Aquamarine_Hoshino_Oshi_no_Ko.png/220px-Aquamarine_Hoshino_Oshi_no_Ko.png',
+    analysis:'你從來沒有親手殺過任何人。但在末日，<em>你害死的人比任何怪物都多。</em>你的嘴是這個廢土世界最強的武器——你能讓一個陌生人為你犧牲生命，還讓他在臨死前感謝你。你最可怕的地方在於：<em>你自己也不確定，自己說的那些「希望」，到底有幾分是真心的。</em>預測生存指數：8.9／10（只要身邊還有人相信你）。'},
+  viper:{ fid:'FILE-06', name:'致癮的劇毒香水', en:'THE VIPER', char:'壬氏', src:'藥師少女的呢喃', emoji:'🌸', traits:['極高魅力','示弱為術','依附強者','致命一擊'],
+    img:'https://upload.wikimedia.org/wikipedia/en/thumb/e/e9/Jinshi_Maomao_anime.jpg/220px-Jinshi_Maomao_anime.jpg',
+    analysis:'你看起來柔弱，但<em>靠近你的人有一種說不出的危機感</em>——那是獵食者才有的氣息。你不需要戰鬥，你的存在本身就是陷阱。你能讓末日最強的掠奪者，因為想保護你而做出最蠢的決定。你最毒的地方：<em>你永遠知道自己在做什麼，但看起來完全像是無辜的。</em>預測生存指數：9.0／10（條件：保持那雙無辜的眼神）。'},
+  scavenger:{ fid:'FILE-07', name:'厭世的極致孤狼', en:'THE SCAVENGER', char:'芙莉蓮', src:'葬送的芙莉蓮', emoji:'🐺', traits:['孤立主義','極度不信任','漁翁得利','超強抗壓'],
+    img:'https://upload.wikimedia.org/wikipedia/en/thumb/9/9f/Frieren_anime_visual.jpg/220px-Frieren_anime_visual.jpg',
+    analysis:'你不是消極，你只是看透了：<em>在末日，社交關係是最貴的奢侈品，而你從來買不起。</em>你的存活策略是讓所有人都以為你是可以無視的背景人物，然後等他們打得兩敗俱傷之後，<em>從死人堆裡優雅地撿走所有好東西。</em>你唯一的弱點是——偶爾，你會對某隻貓產生超出設定的情感。預測生存指數：9.5／10。'},
+  ghost:{ fid:'FILE-08', name:'沉溺幻覺的幽靈', en:'THE GHOST OF HEIAN', char:'夏油傑', src:'咒術迴戰', emoji:'👻', traits:['念舊固執','達觀超脫','優雅幻覺','守護過去'],
+    img:'https://upload.wikimedia.org/wikipedia/en/thumb/d/d5/Suguru_Geto_Jujutsu_Kaisen.png/220px-Suguru_Geto_Jujutsu_Kaisen.png',
+    analysis:'文明已經滅亡了，但你今天還是把衣服燙得平整，把頭髮梳得一絲不苟。<em>你不是在假裝世界沒有崩潰，你只是拒絕讓廢墟的塵埃沾染你的衣領。</em>你最可怕的不是戰鬥力，而是那種「我早就看穿了一切，現在只是懶得說破」的神情。你將以<em>令人窒息的優雅</em>，獨自走過廢土。預測生存指數：8.5／10（前提是你不嫌棄泥路弄髒鞋子）。'},
+  joker:{ fid:'FILE-09', name:'混亂的歡愉犯', en:'THE JOKER', char:'帕瓦', src:'鏈鋸人', emoji:'🃏', traits:['唯恐天下不亂','純粹享受混亂','不要權力要火焰','暗處大笑'],
+    img:'https://upload.wikimedia.org/wikipedia/en/thumb/b/b3/Power_Chainsaw_Man.png/220px-Power_Chainsaw_Man.png',
+    analysis:'你終於等到這一天了，對吧？<em>你一直知道，文明這層薄薄的表皮底下，藏著多少值得燃燒的東西。</em>你不貪婪，你不殘忍——你只是對「秩序崩潰時人類的醜態」有著超乎常人的審美欣賞力。你最讓人細思極恐的地方是：<em>你快樂得太真實了，而且看起來確實過得比所有人都好。</em>預測生存指數：???（你根本不在乎）。'},
+  chameleon:{ fid:'FILE-10', name:'偽裝的無害綿羊', en:'THE CHAMELEON', char:'安妮亞・佛傑', src:'間諜家家酒', emoji:'🐑', traits:['毫無特點即特點','極度隨波逐流','誰強跪誰','被忽略而存活'],
+    img:'https://upload.wikimedia.org/wikipedia/en/thumb/7/71/Anya_Forger.jpg/220px-Anya_Forger.jpg',
+    analysis:'你的超能力是<em>讓所有人都以為你沒有超能力。</em>在末日的食物鏈裡，你既不是獵人，也不是獵物——你是讓獵人和獵物都覺得不值得浪費時間的「背景板」。然後你就這樣活到了最後。你最讓人崩潰的真相是：<em>你這個「廢物」，到目前為止的生存率是在場所有人裡最高的。</em>預測生存指數：9.3／10（靠隱形、靠懵、靠「就是不死」）。'},
+  zealot:{ fid:'FILE-11', name:'盲目的正義狂信徒', en:'THE ZEALOT', char:'不死穿實彌', src:'鬼滅之刃', emoji:'⚔️', traits:['末日守法','道德綁架','愚蠢且沉重','正義感爆棚'],
+    img:'https://upload.wikimedia.org/wikipedia/en/thumb/3/31/Sanemi_Shinazugawa.png/220px-Sanemi_Shinazugawa.png',
+    analysis:'法律？文明規則？在廢土上，這些東西的實際重量比一張廁所用紙還輕。但你就是<em>不肯承認這件事，哪怕被打得鼻青臉腫還是在那邊吼「你這樣不對」。</em>你最可怕的地方不是戰鬥力，而是——你在末日的道德標準讓身邊所有人都活得更痛苦，但他們又莫名其妙地捨不得讓你去死。預測生存指數：7.0／10（因為身邊的人覺得有義務保護這個瘋子）。'},
+  unlucky_cargo:{ fid:'FILE-12', name:'倒楣的物資倉庫', en:'THE UNLUCKY CARGO', char:'萊歐斯', src:'迷宮飯', emoji:'🍖', traits:['運氣極差','神級撿寶','戰鬥力為零','所有人的目標'],
+    img:'https://upload.wikimedia.org/wikipedia/en/thumb/8/87/Laios_Dungeon_Meshi.png/220px-Laios_Dungeon_Meshi.png',
+    analysis:'你是末日裡的行走傳說——<em>完全沒有任何戰鬥力，卻能在廢墟的垃圾堆裡隨手撿到神裝。</em>你的人生就是：剛剛差點被怪物吃掉，回頭一看，怪物的巢穴裡有一整個倉庫的物資。你是所有大佬的「必爭之物」，不是因為你強，而是因為<em>跟著你走就是跟著運氣走。</em>唯一的問題是：你可能在研究怪物料理的時候忘了牠還沒死。預測生存指數：6.5／10（全靠運氣，一旦運氣沒了直接Game Over）。'},
+};
+
+/* ═════════ STATE ═════════ */
+let answers = new Array(7).fill(null);
+let cur = 0;
+
+/* ═════════ DUST PARTICLES ═════════ */
+(function initDust() {
+  const canvas = document.getElementById('dust-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+  let currentColor = '#a06020';
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function makeParticle() {
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 2.5 + 0.3,
+      vx: (Math.random() - 0.3) * 0.6,
+      vy: (Math.random() - 0.7) * 0.5,
+      alpha: Math.random() * 0.6 + 0.1,
+      life: Math.random()
+    };
+  }
+
+  for (let i = 0; i < 90; i++) particles.push(makeParticle());
+
+  function step() {
+    ctx.clearRect(0, 0, W, H);
+    for (let p of particles) {
+      p.x += p.vx + Math.sin(p.life * 3) * 0.2;
+      p.y += p.vy;
+      p.life += 0.003;
+      if (p.y < -10 || p.x < -10 || p.x > W + 10) Object.assign(p, makeParticle(), { y: H + 5 });
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = currentColor + (Math.floor(p.alpha * 255).toString(16).padStart(2,'0'));
+      ctx.fill();
+    }
+    requestAnimationFrame(step);
+  }
+  step();
+
+  window.setDustColor = c => { currentColor = c; };
+})();
+
+/* ═════════ HAZE ═════════ */
+(function initHaze() {
+  const canvas = document.getElementById('haze-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+  let hazeBase = 'rgba(80,30,0,';
+  let blobs = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (let i = 0; i < 4; i++) {
+    blobs.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: 150 + Math.random() * 250,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.08,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+
+  let t = 0;
+  function step() {
+    ctx.clearRect(0, 0, W, H);
+    t += 0.004;
+    for (let b of blobs) {
+      b.x += b.vx + Math.sin(t + b.phase) * 0.1;
+      b.y += b.vy + Math.cos(t + b.phase * 0.7) * 0.05;
+      if (b.x < -b.r) b.x = W + b.r;
+      if (b.x > W + b.r) b.x = -b.r;
+      if (b.y < -b.r) b.y = H + b.r;
+      if (b.y > H + b.r) b.y = -b.r;
+
+      const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+      const alpha = (0.06 + Math.sin(t + b.phase) * 0.02).toFixed(3);
+      grad.addColorStop(0, hazeBase + alpha + ')');
+      grad.addColorStop(1, hazeBase + '0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    requestAnimationFrame(step);
+  }
+  step();
+
+  window.setHazeColor = c => { hazeBase = c; };
+})();
+
+/* ═════════ SCENE TRANSITION ═════════ */
+function setScene(idx) {
+  const s = sceneBGs[idx] || sceneBGs[0];
+  document.getElementById('scene').style.background = s.bg;
+  window.setDustColor && window.setDustColor(s.dustColor);
+  window.setHazeColor && window.setHazeColor(s.hazeColor);
+}
+
+/* ═════════ HUD DOTS ═════════ */
+function buildDots() {
+  const el = document.getElementById('hud-dots');
+  el.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = document.createElement('div');
+    d.className = 'hud-dot' + (i < cur ? ' done' : i === cur ? ' active' : '');
+    el.appendChild(d);
+  }
+}
+
+/* ═════════ RENDER QUESTION ═════════ */
+function renderQ(idx) {
+  cur = idx;
+  const q = Qs[idx];
+  setScene(idx);
+  buildDots();
+
+  document.getElementById('hud-num').textContent = `0${idx+1} / 07`;
+  document.getElementById('prog-fill').style.width = `${(idx+1)/7*100}%`;
+  document.getElementById('q-eyebrow').textContent = q.eyebrow;
+  document.getElementById('q-heading').textContent = q.heading;
+  document.getElementById('q-situation').textContent = q.situation;
+  document.getElementById('q-prompt').textContent = q.prompt;
+
+  // Animate blocks
+  ['scene-title-block','q-card'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.animation = 'none';
+    el.offsetHeight;
+    el.style.animation = '';
+  });
+
+  const grid = document.getElementById('options');
+  grid.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn' + (answers[idx] === i ? ' selected' : '');
+    btn.innerHTML = `<span class="opt-key">${o.k}</span><span>${o.t}</span>`;
+    btn.onclick = () => selectOpt(idx, i);
+    grid.appendChild(btn);
+  });
+
+  document.getElementById('btn-prev').disabled = idx === 0;
+  document.getElementById('btn-next').disabled = answers[idx] === null;
+  document.getElementById('btn-next').textContent = idx === 6 ? '查看結果 ▶' : 'NEXT ▶';
+}
+
+function selectOpt(qIdx, optIdx) {
+  answers[qIdx] = optIdx;
+  document.querySelectorAll('.opt-btn').forEach((b,i) => b.classList.toggle('selected', i === optIdx));
+  document.getElementById('btn-next').disabled = false;
+}
+
+function nextQ() {
+  if (answers[cur] === null) return;
+  if (cur === 6) showComputing();
+  else renderQ(cur + 1);
+}
+function prevQ() { if (cur > 0) renderQ(cur - 1); }
+
+/* ═════════ COMPUTING ═════════ */
+function showComputing() {
+  const ov = document.getElementById('computing-overlay');
+  ov.style.display = 'flex';
+  // reset bar animation
+  const bar = ov.querySelector('.computing-bar-fill');
+  bar.style.animation = 'none';
+  bar.offsetHeight;
+  bar.style.animation = 'barFill 2.2s ease forwards';
+
+  setTimeout(() => {
+    ov.style.display = 'none';
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'block';
+    renderResult(calcResult());
+    document.getElementById('scene').style.background = 'radial-gradient(ellipse at center, #0e0300 0%, #000 100%)';
+    window.setDustColor('#804010');
+    window.setHazeColor('rgba(60,20,0,');
+  }, 2800);
+}
+
+/* ═════════ CALCULATE ═════════ */
+function calcResult() {
+  const s = {};
+  Object.keys(PERSONAS).forEach(k => s[k] = 0);
+  answers.forEach((ans, qi) => {
+    if (ans === null) return;
+    Qs[qi].opts[ans].c.forEach(c => { if (s[c] !== undefined) s[c]++; });
+  });
+  let max = -1, winner = null;
+  Object.entries(s).forEach(([k,v]) => { if (v > max) { max=v; winner=k; } });
+  const ties = Object.entries(s).filter(([,v])=>v===max).map(([k])=>k);
+  if (ties.length > 1 && answers[6] !== null) {
+    const q7c = Qs[6].opts[answers[6]].c;
+    const tw = q7c.find(c => ties.includes(c));
+    if (tw) winner = tw;
+  }
+  return PERSONAS[winner];
+}
+
+/* ═════════ RENDER RESULT ═════════ */
+function renderResult(p) {
+  const wrap = document.getElementById('result-wrap');
+  wrap.innerHTML = `
+    <div style="margin-bottom:6px"><span class="result-stamp">⚠ 末日人格評估完畢 ⚠</span></div>
+    <div class="result-file">◈ ${p.fid} // SOUL SCAN COMPLETE ◈</div>
+    <div class="result-name">${p.name}</div>
+    <div class="result-en">${p.en}</div>
+
+    <div class="result-divider"></div>
+
+    <div class="char-block">
+      <div class="char-img-frame">
+        <img class="char-img" src="${p.img}" alt="${p.char}"
+          onerror="this.style.display='none';document.getElementById('char-fb').style.display='flex'">
+        <div id="char-fb" class="char-img-fallback" style="display:none">${p.emoji}</div>
+      </div>
+      <div class="char-info">
+        <div class="resonance-label">▌ SOUL RESONANCE TARGET ▐</div>
+        <div class="char-name">${p.char}</div>
+        <div class="char-source">《${p.src}》</div>
+        <div class="trait-list">${p.traits.map(t=>`<span class="trait">▸ ${t}</span>`).join('')}</div>
+      </div>
+    </div>
+
+    <div class="result-divider"></div>
+
+    <div class="analysis-section">
+      <div class="analysis-text">${p.analysis}</div>
+    </div>
+
+    <button class="restart-btn" onclick="restartQuiz()">↺ 重新評估 &nbsp;// RESTART ASSESSMENT</button>
+  `;
+}
+
+/* ═════════ QUIZ START / RESTART ═════════ */
+function startQuiz() {
+  answers = new Array(7).fill(null);
+  document.getElementById('boot-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  renderQ(0);
+}
+
+function restartQuiz() {
+  answers = new Array(7).fill(null);
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  renderQ(0);
+}
+
+/* Boot screen scene */
+setScene(0);
+</script>
+</body>
+</html>

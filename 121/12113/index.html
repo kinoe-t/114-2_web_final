@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音樂風格隨機抽圖</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+            color: #2c3e50;
+        }
+
+        /* 頁面切換 */
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        /* 4選1 按鈕佈局 */
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 25px 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            background-color: #eef2f7;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+        }
+
+        /* 功能按鈕 */
+        .btn-action {
+            margin-top: 20px;
+            padding: 12px 25px;
+            background-color: #2d3748;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            margin-right: 5px;
+            margin-left: 5px;
+        }
+
+        .btn-action:hover {
+            background-color: #4a5568;
+        }
+
+        /* 圖片容器 */
+        .image-box {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: #edf2f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #cbd5e0;
+        }
+
+        .image-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="page1" class="page active">
+            <h1>請選擇音樂風格</h1>
+            <div class="btn-grid">
+                <button class="btn" onclick="goToGallery(1)">西洋</button>
+                <button class="btn" onclick="goToGallery(2)">K-POP</button>
+                <button class="btn" onclick="goToGallery(3)">J-POP</button>
+                <button class="btn" onclick="goToGallery(4)">團</button>
+            </div>
+        </div>
+
+        <div id="page2" class="page">
+            <h1 id="gallery-title">圖庫</h1>
+            
+            <div class="image-box">
+                <img id="display-img" src="" alt="隨機圖片">
+            </div>
+
+            <button class="btn-action" onclick="pickRandomImage()">再抽一張</button>
+            <button class="btn-action" style="background-color: #718096;" onclick="goBack()">返回首頁</button>
+        </div>
+    </div>
+
+    <script>
+        // 圖片設定檔
+        const fileExtension = '.jpg'; // 如果你的圖片是 .png，請改為 '.png'
+        
+        // 圖庫設定（自動利用迴圈產生你指定的檔名清單）
+        const galleries = {
+            1: {
+                name: '西洋庫 (western)',
+                images: Array.from({length: 12}, (_, i) => `1/西洋${i + 1}${fileExtension}`)
+            },
+            2: {
+                name: 'K-POP 庫 (kpop)',
+                images: Array.from({length: 22}, (_, i) => `2/韓${i + 1}${fileExtension}`)
+            },
+            3: {
+                name: 'J-POP 庫 (jpop)',
+                images: Array.from({length: 12}, (_, i) => `3/日${i + 1}${fileExtension}`)
+            },
+            4: {
+                name: '團庫 (band)',
+                images: Array.from({length: 19}, (_, i) => `4/團${i + 1}${fileExtension}`)
+            }
+        };
+
+        let currentGalleryId = null;
+
+        // 前往第二頁並載入對應圖庫
+        function goToGallery(id) {
+            currentGalleryId = id;
+            
+            // 更新標題
+            document.getElementById('gallery-title').innerText = galleries[id].name;
+            
+            // 隨機抽一張圖顯示
+            pickRandomImage();
+            
+            // 切換頁面
+            document.getElementById('page1').classList.remove('active');
+            document.getElementById('page2').classList.add('active');
+        }
+
+        // 從當前圖庫隨機挑選一張圖
+        function pickRandomImage() {
+            const currentList = galleries[currentGalleryId].images;
+            const randomIndex = Math.floor(Math.random() * currentList.length);
+            const selectedImgSrc = currentList[randomIndex];
+            
+            // 將圖片路徑賦值給 <img> 標籤
+            document.getElementById('display-img').src = selectedImgSrc;
+        }
+
+        // 返回第一頁
+        function goBack() {
+            document.getElementById('page2').classList.remove('active');
+            document.getElementById('page1').classList.add('active');
+        }
+    </script>
+</body>
+</html>

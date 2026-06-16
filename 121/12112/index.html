@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>色彩記憶與敏感度測驗</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft JhengHei";
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 25px;
+        }
+
+        /* 倒數計時器 */
+        #timer-display {
+            font-size: 32px;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 20px;
+            height: 40px;
+        }
+
+        /* 遊戲主要區域 */
+        .game-area {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            min-height: 220px;
+        }
+
+        /* 色塊基礎設定 */
+        .color-box {
+            width: 200px;
+            height: 200px;
+            border-radius: 12px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.1);
+            transition: background-color 0.1s ease;
+        }
+
+        #target-box {
+            background-color: #ddd;
+        }
+
+        #user-box {
+            background-color: #ffffff;
+            border: 2px dashed #ccc;
+        }
+
+        /* 控制面板（滑桿區域） */
+        .control-panel {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            text-align: left;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .slider-group label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* 客製化色階滑桿 */
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 15px;
+            border-radius: 8px;
+            outline: none;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #333;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        /* 按鈕設計 */
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: #357abd;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* 結果展示區域 */
+        .result-section {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px solid #ecf0f1;
+        }
+
+        #score-display {
+            font-size: 48px;
+            font-weight: 900;
+            color: #2ecc71;
+            margin-bottom: 20px;
+        }
+
+        .compare-area {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+        }
+
+        .compare-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        /* 隱藏元素用的 Class */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>色彩記憶與敏感度測驗</h1>
+        
+        <div id="timer-display">請記住這個顏色！ 10</div>
+
+        <div class="game-area">
+            <div id="target-box" class="color-box"></div>
+            <div id="user-box" class="color-box hidden"></div>
+
+            <div id="control-panel" class="control-panel hidden">
+                <div class="slider-group">
+                    <label>明度 (Lightness)</label>
+                    <input type="range" id="lightness-slider" min="0" max="100" value="50">
+                </div>
+                <div class="slider-group">
+                    <label>彩度/飽和度 (Saturation)</label>
+                    <input type="range" id="saturation-slider" min="0" max="100" value="100">
+                </div>
+            </div>
+        </div>
+
+        <div class="button-area">
+            <button id="start-btn" class="btn">開始測驗</button>
+            <button id="submit-btn" class="btn hidden">我調好了，看結果！</button>
+        </div>
+
+        <div id="result-section" class="result-section hidden">
+            <div id="score-display">0.00 分</div>
+            <div class="compare-area">
+                <div class="compare-item">
+                    <span>原始答案顏色</span>
+                    <div id="result-target" class="color-box"></div>
+                </div>
+                <div class="compare-item">
+                    <span>你的調色結果</span>
+                    <div id="result-user" class="color-box"></div>
+                </div>
+            </div>
+            <button id="restart-btn" class="btn" style="margin-top: 25px; background-color: #2ecc71; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">再玩一次</button>
+        </div>
+    </div>
+
+    <script>
+        // 宣告遊戲核心變數
+        let targetHue, targetSaturation, targetLightness;
+        let countdownInterval;
+        let timeLeft = 10;
+
+        // 獲取 DOM 元素
+        const timerDisplay = document.getElementById('timer-display');
+        const targetBox = document.getElementById('target-box');
+        const userBox = document.getElementById('user-box');
+        const controlPanel = document.getElementById('control-panel');
+        const lightnessSlider = document.getElementById('lightness-slider');
+        const saturationSlider = document.getElementById('saturation-slider');
+        const startBtn = document.getElementById('start-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const resultSection = document.getElementById('result-section');
+        const scoreDisplay = document.getElementById('score-display');
+        const resultTarget = document.getElementById('result-target');
+        const resultUser = document.getElementById('result-user');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // 初始化/開始遊戲
+        function initGame() {
+            // 隱藏不必要的介面
+            resultSection.classList.add('hidden');
+            submitBtn.classList.add('hidden');
+            userBox.classList.add('hidden');
+            controlPanel.classList.add('hidden');
+            startBtn.classList.add('hidden');
+            
+            // 隨機生成基礎色相 (0-360)，並固定或隨機生成飽和度與明度
+            // 為了讓題目更有豐富度且不會過黑過白，限制明度 20%-80%、飽和度 20%-100%
+            targetHue = Math.floor(Math.random() * 360);
+            targetSaturation = Math.floor(Math.random() * 81) + 20; 
+            targetLightness = Math.floor(Math.random() * 61) + 20;
+
+            // 顯示目標顏色
+            targetBox.style.backgroundColor = `hsl(${targetHue}, ${targetSaturation}%, ${targetLightness}%)`;
+            targetBox.classList.remove('hidden');
+
+            // 初始化滑桿背景色階圖
+            updateSliderBackgrounds();
+
+            // 開始倒數 10 秒
+            timeLeft = 10;
+            timerDisplay.style.color = '#e74c3c';
+            timerDisplay.textContent = `請記住這個顏色！ ${timeLeft}`;
+            
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    enterGuessPhase();
+                } else {
+                    timerDisplay.textContent = `請記住這個顏色！ ${timeLeft}`;
+                }
+            }, 1000);
+        }
+
+        // 進入盲調（猜測）階段
+        function enterGuessPhase() {
+            timerDisplay.style.color = '#2c3e50';
+            timerDisplay.textContent = "憑記憶調出剛才的顏色吧！";
+            
+            // 隱藏題目顏色
+            targetBox.classList.add('hidden');
+            
+            // 顯示調色區域
+            userBox.classList.remove('hidden');
+            controlPanel.classList.remove('hidden');
+            submitBtn.classList.remove('hidden');
+
+            // 讓滑桿回到隨機或預設位置（增加挑戰性，這裡設為中立值）
+            lightnessSlider.value = 50;
+            saturationSlider.value = 50;
+            
+            // 更新滑桿背景並套用顏色到使用者色塊
+            updateSliderBackgrounds();
+            updateUserColor();
+        }
+
+        // 動態更新「明度」與「彩度」滑桿的漸層背景（所有顏色漸層排列）
+        function updateSliderBackgrounds() {
+            const h = targetHue; // 固定題目色相，讓使用者專注微調明度與彩度
+            const s = saturationSlider.value;
+            const l = lightnessSlider.value;
+
+            // 明度滑桿背景：從黑 (0%) 到目前彩度再到白 (100%)
+            lightnessSlider.style.background = `linear-gradient(to right, hsl(${h}, ${s}%, 0%), hsl(${h}, ${s}%, 50%), hsl(${h}, ${s}%, 100%))`;
+            
+            // 彩度滑桿背景：從灰色 (0%) 到目前明度下的最鮮豔色 (100%)
+            saturationSlider.style.background = `linear-gradient(to right, hsl(${h}, 0%, ${l}%), hsl(${h}, 100%, ${l}%))`;
+        }
+
+        // 根據滑桿數值更新使用者看見的色塊
+        function updateUserColor() {
+            const h = targetHue;
+            const s = saturationSlider.value;
+            const l = lightnessSlider.value;
+            userBox.style.backgroundColor = `hsl(${h}, ${s}%, ${l}%)`;
+        }
+
+        // 監聽滑桿變動事件
+        lightnessSlider.addEventListener('input', () => {
+            updateSliderBackgrounds();
+            updateUserColor();
+        });
+
+        saturationSlider.addEventListener('input', () => {
+            updateSliderBackgrounds();
+            updateUserColor();
+        });
+
+        // 按下完成按鈕，計算分數並顯示結果
+        submitBtn.addEventListener('click', () => {
+            // 隱藏與停止調色功能
+            submitBtn.classList.add('hidden');
+            controlPanel.classList.add('hidden');
+            userBox.classList.add('hidden');
+            timerDisplay.textContent = "測驗結果";
+
+            // 取得使用者最後調出的數值
+            const userS = parseInt(saturationSlider.value);
+            const userL = parseInt(lightnessSlider.value);
+
+            // 計算精準分數 (利用歐幾里得距離計算 S 與 L 的差距)
+            // 由於兩者最大差距分別都是 100，最大總距離平方為 100^2 + 100^2 = 20000
+            const diffS = targetSaturation - userS;
+            const diffL = targetLightness - userL;
+            const maxDistance = Math.sqrt(20000);
+            const currentDistance = Math.sqrt(diffS * diffS + diffL * diffL);
+
+            // 將差距轉換為 0 到 10 分（到小數點第二位）
+            let score = (1 - (currentDistance / maxDistance)) * 10;
+            if (score < 0) score = 0;
+            
+            // 如果調得極度接近（例如差不到1%），給予滿分獎勵
+            if (score > 9.9) score = 10.00;
+
+            // 顯示結果資訊與對比色塊
+            scoreDisplay.textContent = `${score.toFixed(2)} 分`;
+            
+            // 給分數上色（高分綠色、低分紅色）
+            if (score >= 8) scoreDisplay.style.color = '#2ecc71';
+            else if (score >= 5) scoreDisplay.style.color = '#f39c12';
+            else scoreDisplay.style.color = '#e74c3c';
+
+            resultTarget.style.backgroundColor = `hsl(${targetHue}, ${targetSaturation}%, ${targetLightness}%)`;
+            resultUser.style.backgroundColor = `hsl(${targetHue}, ${userS}%, ${userL}%)`;
+
+            resultSection.classList.remove('hidden');
+        });
+
+        // 綁定按鈕點擊事件
+        startBtn.addEventListener('click', initGame);
+        restartBtn.addEventListener('click', initGame);
+    </script>
+</body>
+</html>

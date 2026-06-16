@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幸運抽抽樂</title>
+    <style>
+        /* 全螢幕漸層紫背景 */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b); /* 質感紫紅漸層 */
+            background: linear-gradient(180deg, #200122 0%, #6f0000 100%); /* 深邃紫紅 */
+            background: linear-gradient(135deg, #41295a 0%, #2f0743 100%); /* 皇家極光紫 */
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            color: #ffffff;
+        }
+
+        /* 抽抽樂主機台 */
+        .lottery-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 350px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 28px;
+            color: #f3d5ff;
+            text-shadow: 0 0 10px rgba(243, 213, 255, 0.6);
+            letter-spacing: 3px;
+            margin-bottom: 25px;
+        }
+
+        /* 圖片顯示視窗 */
+        .display-window {
+            width: 100%;
+            height: 250px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 16px;
+            border: 3px solid #b388ff;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 圖片樣式 */
+        .display-window img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 8px;
+            display: none;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        /* 預設提示文字與起動動畫 */
+        .status-text {
+            font-size: 20px;
+            color: #e1b1ff;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* 抽獎按鈕 */
+        .action-btn {
+            background: linear-gradient(90deg, #b388ff, #7c4dff);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(124, 77, 255, 0.4);
+            transition: all 0.2s ease;
+            width: 100%;
+            letter-spacing: 2px;
+        }
+
+        .action-btn:hover {
+            background: linear-gradient(90deg, #d1b3ff, #9e73ff);
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(124, 77, 255, 0.6);
+        }
+
+        .action-btn:active {
+            transform: translateY(1px);
+        }
+
+        .action-btn:disabled {
+            background: #555 !important;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* 搖晃與閃爍的抽獎特效 */
+        .shuffling {
+            animation: shake 0.1s infinite alternate;
+            background: rgba(179, 136, 255, 0.2) !important;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(2px, 2px) rotate(0deg); }
+            100% { transform: translate(-2px, -2px) rotate(1deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="lottery-box">
+        <h1>🔮 歡樂抽抽樂 🔮</h1>
+        
+        <div class="display-window" id="window">
+            <div class="status-text" id="statusLabel">❓ 點擊下方按鈕開始</div>
+            <img id="resultImage" src="" alt="抽中圖片">
+        </div>
+
+        <button class="action-btn" id="startBtn">按我抽獎！</button>
+    </div>
+
+    <script>
+        // 【圖片設定區】
+        // 目前指定您提供的 '1.png'
+        // 如果未來有 2.png, 3.png 也可以直接在後面加上去喔！
+        const imagePool = ['01.png','02.png','03.png','04.png','05.png','06.png','07.png','08.png','09.png','10.png','11.png','12.png','13.png','14.png','15.png','16.png','17.png','18.png','19.png','20.png']; 
+
+        const startBtn = document.getElementById('startBtn');
+        const resultImage = document.getElementById('resultImage');
+        const statusLabel = document.getElementById('statusLabel');
+        const displayWindow = document.getElementById('window');
+
+        startBtn.addEventListener('click', () => {
+            // 1. 進入抽獎狀態（鎖定按鈕、隱藏舊圖）
+            startBtn.disabled = true;
+            startBtn.innerText = '正在瘋狂抽取中...';
+            resultImage.style.display = 'none';
+            statusLabel.style.display = 'block';
+            
+            // 2. 啟動跑馬燈搖晃動畫
+            displayWindow.classList.add('shuffling');
+
+            // 模擬跑馬燈跳動的文字效果
+            let counter = 0;
+            const textAnimation = setInterval(() => {
+                const loadingTexts = ['🎲 咻咻咻...', '✨ 幸運之神降臨中...', '⚡ 正在決定結果...', '🔮 答案即將揭曉...'];
+                statusLabel.innerText = loadingTexts[counter % loadingTexts.length];
+                counter++;
+            }, 150);
+
+            // 3. 1.5 秒後停止動畫並顯示結果
+            setTimeout(() => {
+                clearInterval(textAnimation);
+                displayWindow.classList.remove('shuffling');
+
+                // 隨機抽取圖片
+                const randomIndex = Math.floor(Math.random() * imagePool.length);
+                const winnerImage = imagePool[randomIndex];
+
+                // 顯示結果圖片
+                resultImage.src = winnerImage;
+                resultImage.style.display = 'block';
+                resultImage.style.transform = 'scale(1)';
+                
+                // 隱藏文字提示
+                statusLabel.style.display = 'none';
+
+                // 恢復按鈕
+                startBtn.disabled = false;
+                startBtn.innerText = '再抽一次！';
+            }, 1500); // 1500毫秒 = 1.5秒抽獎時間
+        });
+    </script>
+
+</body>
+</html>

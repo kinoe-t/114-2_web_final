@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>醜照抽抽樂</title>
+    <style>
+        /* 整體背景與字體設定 */
+        body {
+            background-color: #F5F5DC; /* 米黃色背景 */
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* 標題區域樣式 */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #4A3B32;
+            font-size: 3rem;
+            margin: 0 0 10px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            color: #7A6855;
+            font-size: 1.2rem;
+            margin: 0;
+            background-color: #EEDC82;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        /* 主要內容區塊 */
+        .main-container {
+            display: flex;
+            width: 100%;
+            max-width: 1000px;
+            gap: 40px;
+            align-items: center;
+            justify-content: flex-start; /* 確保整體靠左對齊 */
+            padding: 20px;
+        }
+
+        /* 左側醜照容器 */
+        .photo-area {
+            flex: 0 0 55%; /* 固定佔用左邊 55% 的寬度 */
+            max-width: 550px;
+            height: 450px;
+            background-color: #E8E8D0;
+            border: 8px solid #4A3B32;
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .photo-area img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* 確保整張醜照完整顯示不被裁切 */
+            background-color: #E8E8D0;
+            transition: transform 0.1s ease;
+        }
+
+        /* 右側等級與資訊標籤 */
+        .info-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 等級標籤基礎樣式 */
+        .rarity-badge {
+            font-size: 2.5rem;
+            font-weight: bold;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: inline-block;
+            user-select: none;
+        }
+
+        /* 各等級的顏色定義 */
+        .rarity-普通 {
+            background-color: #A0A0A0;
+            color: #FFFFFF;
+            border: 3px solid #707070;
+        }
+
+        .rarity-稀有 {
+            background-color: #3A86FF;
+            color: #FFFFFF;
+            border: 3px solid #0056B3;
+        }
+
+        .rarity-傳說 {
+            background-color: #FFD700;
+            color: #4A3B32;
+            border: 3px solid #FF8C00;
+            box-shadow: 0 0 20px #FFD700;
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); box-shadow: 0 0 30px #FF8C00; }
+        }
+
+        /* 提示小文字 */
+        .hint {
+            color: #8B7355;
+            font-style: italic;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>醜照抽抽樂</h1>
+        <div class="subtitle">用鍵盤空白鍵來隨機切換醜照吧</div>
+    </header>
+
+    <div class="main-container">
+        <div class="photo-area">
+            <img id="ugly-photo" src="1.jpg" alt="醜照載入中...">
+        </div>
+
+        <div class="info-area">
+            <div style="font-size: 1.2rem; color: #4A3B32; font-weight: bold;">目前抽中等級：</div>
+            <div>
+                <span id="rarity-display" class="rarity-badge rarity-普通">普通</span>
+            </div>
+            <p class="hint">💡 按一下【空白鍵 (Space)】就能隨機切換下一張醜照！</p>
+        </div>
+    </div>
+
+    <script>
+        // 用迴圈自動生成 1.jpg 到 40.jpg 的圖片庫，並隨機分配等級
+        const photoPool = [];
+        const rarities = ["普通", "稀有", "傳說"];
+
+        for (let i = 1; i <= 40; i++) {
+            // 隨機權重：普通(60%)、稀有(30%)、傳說(10%)
+            let rarity = rarities[0]; 
+            const rand = Math.random();
+            if (rand > 0.9) {
+                rarity = rarities[2]; // 傳說
+            } else if (rand > 0.6) {
+                rarity = rarities[1]; // 稀有
+            }
+
+            photoPool.push({
+                url: `${i}.jpg`,
+                rarity: rarity
+            });
+        }
+
+        const photoEl = document.getElementById('ugly-photo');
+        const rarityEl = document.getElementById('rarity-display');
+
+        // 初始化顯示第一張
+        switchPhoto();
+
+        // 切換照片與等級的函式
+        function switchPhoto() {
+            // 隨機從 40 張中挑選一張
+            const randomIndex = Math.floor(Math.random() * photoPool.length);
+            const selected = photoPool[randomIndex];
+
+            // 更新圖片與等級
+            photoEl.src = selected.url;
+            rarityEl.textContent = selected.rarity;
+            rarityEl.className = `rarity-badge rarity-${selected.rarity}`;
+
+            // 按下時圖片縮放的小動效
+            photoEl.style.transform = 'scale(0.97)';
+            setTimeout(() => {
+                photoEl.style.transform = 'scale(1)';
+            }, 80);
+        }
+
+        // 監聽鍵盤事件
+        window.addEventListener('keydown', function(event) {
+            // 當按下空白鍵 (Space) 時執行
+            if (event.code === 'Space' || event.keyCode === 32) {
+                event.preventDefault(); // 防止網頁因空白鍵向下捲動
+                switchPhoto();
+            }
+        });
+    </script>
+</body>
+</html>
